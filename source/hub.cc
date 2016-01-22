@@ -10,9 +10,12 @@
 #include "logger.hh"
 #include "parsable.hh"
 
+using scarab::parsable;
+
+using std::string;
+
 namespace dripline
 {
-    using scarab::parsable;
 
     LOGGER( dlog, "hub" );
 
@@ -231,7 +234,7 @@ namespace dripline
             return a_reply_pkg.send_reply( retcode_t::device_error, "Unable to lock server" );;
         }
 
-        a_reply_pkg.f_payload.add( "key", new param_value( string_from_uuid( t_new_key ) ) );
+        a_reply_pkg.f_payload.add( "key", new scarab::param_value( string_from_uuid( t_new_key ) ) );
         return a_reply_pkg.send_reply( retcode_t::success, "Server is now locked" );
     }
 
@@ -254,7 +257,7 @@ namespace dripline
     bool hub::handle_is_locked_request( const request_ptr_t, hub::reply_package& a_reply_pkg )
     {
         bool t_is_locked = is_locked();
-        a_reply_pkg.f_payload.add( "is_locked", param_value( t_is_locked ) );
+        a_reply_pkg.f_payload.add( "is_locked", scarab::param_value( t_is_locked ) );
         if( t_is_locked ) a_reply_pkg.f_payload.add( "tag", f_lockout_tag );
         return a_reply_pkg.send_reply( retcode_t::success, "Checked lock status" );
     }
@@ -274,7 +277,7 @@ namespace dripline
             return false;
         }
 
-        reply_ptr_t t_reply = msg_reply::create( a_return_code, a_return_msg, new param_node( f_payload ), f_reply_to, message::encoding::json );
+        reply_ptr_t t_reply = msg_reply::create( a_return_code, a_return_msg, new scarab::param_node( f_payload ), f_reply_to, message::encoding::json );
         t_reply->correlation_id() = f_correlation_id;
 
         DEBUG( dlog, "Sending reply message to <" << f_reply_to << ">:\n" <<
@@ -291,7 +294,7 @@ namespace dripline
         return true;
     }
 
-    uuid_t hub::enable_lockout( const param_node& a_tag, uuid_t a_key )
+    uuid_t hub::enable_lockout( const scarab::param_node& a_tag, uuid_t a_key )
     {
         if( is_locked() ) return generate_nil_uuid();
         if( a_key.is_nil() ) f_lockout_key = generate_random_uuid();

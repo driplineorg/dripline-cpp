@@ -19,12 +19,20 @@
 
 #include <map>
 
+using std::shared_ptr;
+using std::make_shared;
+using std::string;
+
+using scarab::param_node;
+using scarab::param_value;
+using scarab::parsable;
+using scarab::param_input_json;
+using scarab::param_output_json;
+
+using std::string;
+
 namespace dripline
 {
-    using scarab::param_input_json;
-    using scarab::param_output_json;
-
-    using std::string;
 
     LOGGER( dlog, "message" );
 

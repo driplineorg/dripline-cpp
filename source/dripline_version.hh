@@ -26,7 +26,6 @@
 
 namespace dripline
 {
-    using std::string;
     
     class DRIPLINE_API version : public scarab::version_semver
     {
@@ -66,29 +65,29 @@ namespace dripline
                 return f_imp->patch_version();
             }
 
-            virtual const string& version_str() const
+            virtual const std::string& version_str() const
             {
                 return f_imp->version_str();
             }
 
-            virtual const string& package() const
+            virtual const std::string& package() const
             {
                 return f_imp->package();
             }
-            virtual const string& commit() const
+            virtual const std::string& commit() const
             {
                 return f_imp->commit();
             }
 
-            virtual const string& exe_name() const
+            virtual const std::string& exe_name() const
             {
                 return f_imp->exe_name();
             }
-            virtual const string& hostname() const
+            virtual const std::string& hostname() const
             {
                 return f_imp->hostname();
             }
-            virtual const string& username() const
+            virtual const std::string& username() const
             {
                 return f_imp->username();
             }

@@ -21,15 +21,12 @@
 
 namespace dripline
 {
-    using std::shared_ptr;
-    using std::string;
-    using std::set;
 
     class DRIPLINE_API service
     {
         public:
             service();
-            service( const string& a_address, unsigned a_port, const string& a_exchange, const string& a_queue_name = "", const string& a_auth_file = "" );
+            service( const std::string& a_address, unsigned a_port, const std::string& a_exchange, const std::string& a_queue_name = "", const std::string& a_auth_file = "" );
             virtual ~service();
 
         public:
@@ -49,22 +46,22 @@ namespace dripline
             struct receive_reply_pkg
             {
                 amqp_channel_ptr f_channel;
-                string f_consumer_tag;
+                std::string f_consumer_tag;
                 bool f_successful_send;
             };
-            typedef shared_ptr< receive_reply_pkg > rr_pkg_ptr;
+            typedef std::shared_ptr< receive_reply_pkg > rr_pkg_ptr;
 
             /// Sends a request message and returns a channel on which to listen for a reply.
-            rr_pkg_ptr send( request_ptr_t a_request, const string& a_exchange = "" ) const;
+            rr_pkg_ptr send( request_ptr_t a_request, const std::string& a_exchange = "" ) const;
 
             /// Sends a reply message
-            bool send( reply_ptr_t a_reply, const string& a_exchange = "" ) const;
+            bool send( reply_ptr_t a_reply, const std::string& a_exchange = "" ) const;
 
             /// Sends an info message
-            bool send( info_ptr_t a_info, const string& a_exchange = "" ) const;
+            bool send( info_ptr_t a_info, const std::string& a_exchange = "" ) const;
 
             /// Sends an alert message
-            bool send( alert_ptr_t a_alert, const string& a_exchange = "" ) const;
+            bool send( alert_ptr_t a_alert, const std::string& a_exchange = "" ) const;
 
             /// Wait for a reply message
             /// If the timeout is <= 0 ms, there will be no timeout
@@ -102,45 +99,45 @@ namespace dripline
         private:
             amqp_channel_ptr open_channel() const;
 
-            bool setup_exchange( amqp_channel_ptr a_channel, const string& a_exchange ) const;
+            bool setup_exchange( amqp_channel_ptr a_channel, const std::string& a_exchange ) const;
 
-            bool setup_queue( amqp_channel_ptr a_channel, const string& a_queue_name ) const;
+            bool setup_queue( amqp_channel_ptr a_channel, const std::string& a_queue_name ) const;
 
-            bool bind_keys( const set< string >& a_keys );
+            bool bind_keys( const std::set< std::string >& a_keys );
 
             bool start_consuming();
 
             /// return: if false, channel is no longer useable; if true, may be reused
-            bool listen_for_message( amqp_envelope_ptr& a_envelope, amqp_channel_ptr a_channel, const string& a_consumer_tag, int a_timeout_ms = 0 ) const;
+            bool listen_for_message( amqp_envelope_ptr& a_envelope, amqp_channel_ptr a_channel, const std::string& a_consumer_tag, int a_timeout_ms = 0 ) const;
 
             bool stop_consuming();
 
             bool remove_queue();
 
-            amqp_channel_ptr send_withreply( message_ptr_t a_message, string& a_reply_consumer_tag, const string& a_exchange = "" ) const;
+            amqp_channel_ptr send_withreply( message_ptr_t a_message, std::string& a_reply_consumer_tag, const std::string& a_exchange = "" ) const;
 
-            bool send_noreply( message_ptr_t a_message, const string& a_exchange = "" ) const;
+            bool send_noreply( message_ptr_t a_message, const std::string& a_exchange = "" ) const;
 
         public:
-            bool use_auth_file( const string& a_auth_file );
+            bool use_auth_file( const std::string& a_auth_file );
 
-            mv_referrable( string, address );
+            mv_referrable( std::string, address );
             mv_accessible( unsigned, port );
-            mv_referrable( string, username );
-            mv_referrable( string, password );
+            mv_referrable( std::string, username );
+            mv_referrable( std::string, password );
 
-            mv_referrable( string, exchange );
-            mv_referrable( string, queue_name );
+            mv_referrable( std::string, exchange );
+            mv_referrable( std::string, queue_name );
 
             mv_referrable_const( amqp_channel_ptr, channel );
 
-            mv_referrable_const( string, consumer_tag );
+            mv_referrable_const( std::string, consumer_tag );
 
-            mv_referrable( set< string >, keys );
-            mv_referrable( string, broadcast_key );
+            mv_referrable( std::set< std::string >, keys );
+            mv_referrable( std::string, broadcast_key );
 
         protected:
-            std::atomic_bool f_canceled;
+            std::atomic< bool > f_canceled;
     };
 
 } /* namespace dripline */

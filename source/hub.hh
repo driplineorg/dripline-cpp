@@ -14,17 +14,15 @@
 
 namespace dripline
 {
-    using std::weak_ptr;
-
     class DRIPLINE_API hub : public service
     {
         public:
             struct reply_package
             {
                 const service* f_service_ptr;
-                string f_reply_to;
-                string f_correlation_id;
-                param_node f_payload;
+                std::string f_reply_to;
+                std::string f_correlation_id;
+                scarab::param_node f_payload;
                 reply_package( const service* a_service, request_ptr_t a_request ) :
                     f_service_ptr( a_service ),
                     f_reply_to( a_request->reply_to() ),
@@ -37,10 +35,10 @@ namespace dripline
 
         public:
             hub();
-            hub( const string& a_address, unsigned a_port, const string& a_exchange, const string& a_queue_name = "", const string& a_auth_file = "" );
+            hub( const std::string& a_address, unsigned a_port, const std::string& a_exchange, const std::string& a_queue_name = "", const std::string& a_auth_file = "" );
             virtual ~hub();
 
-            bool dripline_setup( const string& a_address, unsigned a_port, const string& a_exchange, const string& a_queue_name = "", const string& a_auth_file = "" );
+            bool dripline_setup( const std::string& a_address, unsigned a_port, const std::string& a_exchange, const std::string& a_queue_name = "", const std::string& a_auth_file = "" );
 
         private:
             /// Handle request messages
@@ -79,20 +77,20 @@ namespace dripline
             //******************
 
             /// enable lockout with randomly-generated key
-            uuid_t enable_lockout( const param_node& a_tag );
+            uuid_t enable_lockout( const scarab::param_node& a_tag );
             /// enable lockout with user-supplied key
-            uuid_t enable_lockout( const param_node& a_tag, uuid_t a_key );
+            uuid_t enable_lockout( const scarab::param_node& a_tag, uuid_t a_key );
             bool disable_lockout( const uuid_t& a_key, bool a_force = false );
 
             bool is_locked() const;
-            const param_node& get_lockout_tag() const;
+            const scarab::param_node& get_lockout_tag() const;
             bool check_key( const uuid_t& a_key ) const;
 
         private:
             // Returns true if the server is unlocked or if it's locked and the key matches the lockout key; returns false otherwise.
             bool authenticate( const uuid_t& a_key ) const;
 
-            param_node f_lockout_tag;
+            scarab::param_node f_lockout_tag;
             uuid_t f_lockout_key;
 
     };
@@ -102,7 +100,7 @@ namespace dripline
         return send_reply( an_error.retcode(), an_error.what() );
     }
 
-    inline uuid_t hub::enable_lockout( const param_node& a_tag )
+    inline uuid_t hub::enable_lockout( const scarab::param_node& a_tag )
     {
         return enable_lockout( a_tag, generate_random_uuid() );
     }
@@ -112,7 +110,7 @@ namespace dripline
         return ! f_lockout_key.is_nil();
     }
 
-    inline const param_node& hub::get_lockout_tag() const
+    inline const scarab::param_node& hub::get_lockout_tag() const
     {
         return f_lockout_tag;
     }

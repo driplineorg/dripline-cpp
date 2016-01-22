@@ -7,14 +7,21 @@
 #include "logger.hh"
 #include "param.hh"
 
+using std::atomic;
+using std::string;
+using std::make_shared;
+using std::string;
+using std::static_pointer_cast;
+
+using scarab::param_node;
+
+using dripline::request_ptr_t;
+using dripline::alert_ptr_t;
+using dripline::info_ptr_t;
+using dripline::message_ptr_t;
+
 namespace dripline
 {
-    using std::make_shared;
-    using std::string;
-    using std::static_pointer_cast;
-
-    using scarab::param_node;
-
     LOGGER( dlog, "relayer" );
 
     relayer::relayer() :
