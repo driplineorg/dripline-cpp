@@ -19,8 +19,8 @@ pbuilder_prepare_project()
 # dripline options #
 ####################
 
-# require C++11
-set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11" )
+# always use C++11
+set_option( USE_CPP11 TRUE )
 
 
 #########################
@@ -33,7 +33,7 @@ set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11" )
 
 # set authentication build to TRUE
 # this will require Boost 1.46 or better
-set( Scarab_BUILD_AUTHENTICATION TRUE CACHE BOOL "" FORCE )
+set_option( Scarab_BUILD_AUTHENTICATION TRUE )
 
 pbuilder_add_submodule( Scarab scarab/library )
 
