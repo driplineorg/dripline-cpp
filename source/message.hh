@@ -68,7 +68,7 @@ namespace dripline
 
         public:
             /// from AMQP to message object
-            static message_ptr_t process_envelope( amqp_envelope_ptr a_envelope, const std::string& a_queue_name );
+            static message_ptr_t process_envelope( amqp_envelope_ptr a_envelope );
 
             /// from message object to AMQP
             amqp_message_ptr create_amqp_message() const;
@@ -375,7 +375,7 @@ namespace dripline
         return false;
     }
 
-    inline bool msg_request::derived_modify_amqp_message( amqp_message_ptr a_amqp_msg ) const
+    inline bool msg_request::derived_modify_amqp_message( amqp_message_ptr /*a_amqp_msg*/ ) const
     {
         return true;
     }

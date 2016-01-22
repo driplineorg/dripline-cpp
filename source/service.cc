@@ -110,7 +110,7 @@ namespace dripline
 
             try
             {
-                message_ptr_t t_message = message::process_envelope( t_envelope, f_queue_name );
+                message_ptr_t t_message = message::process_envelope( t_envelope );
 
                 bool t_msg_handled = true;
                 if( t_message->is_request() )
@@ -229,7 +229,7 @@ namespace dripline
 
         try
         {
-            message_ptr_t t_message = message::process_envelope( t_envelope, "" );
+            message_ptr_t t_message = message::process_envelope( t_envelope );
 
             if( t_message->is_reply() )
             {

@@ -74,7 +74,7 @@ namespace dripline
         delete f_payload;
     }
 
-    message_ptr_t message::process_envelope( amqp_envelope_ptr a_envelope, const std::string& a_queue_name )
+    message_ptr_t message::process_envelope( amqp_envelope_ptr a_envelope )
     {
         if( ! a_envelope )
         {
