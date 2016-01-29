@@ -17,12 +17,12 @@ namespace dripline
     version::version() :
             version_semver()
     {
-        f_major_ver = @dripline_VERSION_MAJOR@;
-        f_minor_ver = @dripline_VERSION_MINOR@;
-        f_patch_ver = @dripline_VERSION_PATCH@;
-        f_version = TOSTRING(@dripline_VERSION@);
-        f_package = TOSTRING(@dripline_PACKAGE_NAME@);
-        f_commit = TOSTRING(@dripline_GIT_COMMIT@);
+        f_major_ver = @Dripline_VERSION_MAJOR@;
+        f_minor_ver = @Dripline_VERSION_MINOR@;
+        f_patch_ver = @Dripline_VERSION_PATCH@;
+        f_version = TOSTRING(@Dripline_VERSION@);
+        f_package = TOSTRING(@Dripline_PACKAGE_NAME@);
+        f_commit = TOSTRING(@Dripline_GIT_COMMIT@);
     }
 
     version::~version()
