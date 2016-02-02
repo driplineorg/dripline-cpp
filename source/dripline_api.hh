@@ -3,6 +3,9 @@
  *
  *  Created on: Jan 1, 2016
  *      Author: nsoblath
+ *
+ *  This file contains the macros that allow Dripline to be compiled into a Windows DLL.
+ *  This does not define the actual API for the Dripline library, or anything like that.
  */
 
 #ifndef DRIPLINE_API_HH_

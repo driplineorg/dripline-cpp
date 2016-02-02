@@ -27,7 +27,7 @@
 namespace dripline
 {
     
-    class DRIPLINE_API version : public scarab::version_semver
+    class DRIPLINE_API version : public scarab::version_semantic
     {
         public:
             version();
@@ -44,7 +44,7 @@ namespace dripline
             ~version_wrapper();
 
         public:
-            void set_imp( scarab::version_semver* a_imp )
+            void set_imp( scarab::version_semantic* a_imp )
             {
                 delete f_imp;
                 f_imp = a_imp;
@@ -93,13 +93,13 @@ namespace dripline
             }
 
         private:
-            scarab::version_semver* f_imp;
+            scarab::version_semantic* f_imp;
     };
 
 
     struct DRIPLINE_API version_setter
     {
-            version_setter( scarab::version_semver* a_ver )
+            version_setter( scarab::version_semantic* a_ver )
             {
                 version_wrapper::get_instance()->set_imp( a_ver );
             }
