@@ -159,13 +159,14 @@ namespace dripline
         DEBUG( dlog, "Get operation request received" );
 
         string t_query_type;
-        if( ! a_request->get_parsed_rks()->empty() )
+        if( ! a_request->parsed_rks().empty() )
         {
-            t_query_type = a_request->get_parsed_rks()->begin()->first;
+            t_query_type = a_request->parsed_rks().front();
         }
 
         if( t_query_type == "is-locked" )
         {
+            a_request->parsed_rks().pop();
             return handle_is_locked_request( a_request, a_reply_pkg );
         }
 
@@ -193,9 +194,9 @@ namespace dripline
         DEBUG( dlog, "Cmd request received" );
 
         string t_instruction;
-        if( ! a_request->get_parsed_rks()->empty() )
+        if( ! a_request->parsed_rks().empty() )
         {
-            t_instruction = a_request->get_parsed_rks()->begin()->first;
+            t_instruction = a_request->parsed_rks().front();
         }
 
         //WARN( mtlog, "uuid string: " << a_request->get_payload().get_value( "key", "") << ", uuid: " << uuid_from_string( a_request->get_payload().get_value( "key", "") ) );
@@ -212,14 +213,17 @@ namespace dripline
 
         if( t_instruction == "lock" )
         {
+            a_request->parsed_rks().pop();
             return handle_lock_request( a_request, a_reply_pkg );
         }
         else if( t_instruction == "unlock" )
         {
+            a_request->parsed_rks().pop();
             return handle_unlock_request( a_request, a_reply_pkg );
         }
         else if( t_instruction == "ping" )
         {
+            a_request->parsed_rks().pop();
             return handle_ping_request( a_request, a_reply_pkg );
         }
 

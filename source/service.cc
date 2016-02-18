@@ -311,7 +311,7 @@ namespace dripline
 
         if( t_rk == t_prefix )
         {
-            a_message->set_routing_key_specifier( "", new parsable() );
+            a_message->set_routing_key_specifier( "", routing_key_specifier() );
         }
 
         if( t_rk[ t_prefix.size() ] != '.' )
@@ -321,7 +321,7 @@ namespace dripline
         }
 
         t_rk.erase( 0, t_prefix.size() + 1 ); // 1 added to remove the '.' that separates nodes
-        a_message->set_routing_key_specifier( t_rk, new parsable( t_rk ) );
+        a_message->set_routing_key_specifier( t_rk, routing_key_specifier( t_rk ) );
         return true;
     }
 

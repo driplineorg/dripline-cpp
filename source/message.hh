@@ -13,13 +13,13 @@
 #include "parsable.hh"
 
 #include "amqp.hh"
+#include "dripline_api.hh"
 #include "dripline_constants.hh"
+#include "routing_key_specifier.hh"
 #include "uuid.hh"
 
 #include <memory>
-
 #include <string>
-#include "dripline_api.hh"
 
 namespace dripline
 {
@@ -74,8 +74,8 @@ namespace dripline
 
         public:
             mv_referrable( std::string, routing_key );
-            mv_referrable( std::string, routing_key_specifier );
-            mv_assignable( scarab::parsable, parsed_rks );
+            mv_referrable( std::string, rks );
+            //mv_referrable( routing_key_specifier, parsed_rks );
             mv_referrable( std::string, correlation_id );
             mv_referrable( std::string, reply_to );
             mv_accessible( encoding, encoding );
@@ -89,8 +89,14 @@ namespace dripline
             mv_referrable_const( std::string, sender_username );
             mv_referrable_const( std::string, sender_service_name );
 
+        private:
+            mutable routing_key_specifier f_parsed_rks;
+
         public:
-            bool set_routing_key_specifier( const std::string& a_rks, scarab::parsable* a_parsed_rks );
+            routing_key_specifier& parsed_rks();
+            const routing_key_specifier& parsed_rks() const;
+
+            bool set_routing_key_specifier( const std::string& a_rks, const routing_key_specifier& a_parsed_rks );
 
             virtual msg_t message_type() const = 0;
 
@@ -345,6 +351,17 @@ namespace dripline
     {
         return *f_payload;
     }
+
+    inline routing_key_specifier& message::parsed_rks()
+    {
+        return f_parsed_rks;
+    }
+
+    const inline routing_key_specifier& message::parsed_rks() const
+    {
+        return f_parsed_rks;
+    }
+
 
     //***********
     // Request

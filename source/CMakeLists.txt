@@ -14,6 +14,7 @@ set( dripline_HEADERS
     ${dir}/hub.hh
     ${dir}/message.hh
     ${dir}/relayer.hh
+    ${dir}/routing_key_specifier.hh
     ${dir}/service.hh
     ${dir}/uuid.hh
 )
@@ -25,6 +26,7 @@ set( dripline_SOURCES
     ${dir}/hub.cc
     ${dir}/message.cc
     ${dir}/relayer.cc
+    ${dir}/routing_key_specifier.cc
     ${dir}/service.cc
     ${dir}/uuid.cc
 )

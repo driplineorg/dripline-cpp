@@ -42,8 +42,7 @@ namespace dripline
 
     message::message() :
             f_routing_key(),
-            f_routing_key_specifier(),
-            f_parsed_rks( new parsable() ),
+            f_rks(),
             f_correlation_id(),
             f_reply_to(),
             f_encoding( encoding::json ),
@@ -54,6 +53,7 @@ namespace dripline
             f_sender_commit( "N/A" ),
             f_sender_hostname( "N/A" ),
             f_sender_username( "N/A" ),
+            f_parsed_rks(),
             f_sender_info( new param_node() ),
             f_payload( new param_node() )
     {
@@ -254,10 +254,10 @@ namespace dripline
         }
     }
 
-    bool message::set_routing_key_specifier( const std::string& a_rks, parsable* a_parsed_rks )
+    bool message::set_routing_key_specifier( const std::string& a_rks, const routing_key_specifier& a_parsed_rks )
     {
-        routing_key_specifier() = a_rks;
-        set_parsed_rks( a_parsed_rks );
+        f_rks = a_rks;
+        f_parsed_rks = a_parsed_rks;
         return true;
     }
 
