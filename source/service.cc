@@ -69,11 +69,11 @@ namespace dripline
     {
         if( f_queue_name.empty() )
         {
-            WARN( dlog, "Service requires a queue name to be started" );
+            LWARN( dlog, "Service requires a queue name to be started" );
             return false;
         }
 
-        INFO( dlog, "Connecting to <" << f_address << ":" << f_port << ">" );
+        LINFO( dlog, "Connecting to <" << f_address << ":" << f_port << ">" );
 
         f_channel = open_channel();
         if( ! f_channel ) return false;
@@ -93,7 +93,7 @@ namespace dripline
 
     bool service::listen( int a_timeout_ms )
     {
-        INFO( dlog, "Listening for incoming messages on <" << f_queue_name << ">" );
+        LINFO( dlog, "Listening for incoming messages on <" << f_queue_name << ">" );
 
         while( ! f_canceled.load()  )
         {
@@ -102,7 +102,7 @@ namespace dripline
 
             if( f_canceled.load() )
             {
-                DEBUG( dlog, "Service canceled" );
+                LDEBUG( dlog, "Service canceled" );
                 return true;
             }
 
@@ -151,27 +151,27 @@ namespace dripline
                 }
                 catch( amqp_exception& e )
                 {
-                    ERROR( dlog, "AMQP exception caught while sending reply: (" << e.reply_code() << ") " << e.reply_text() );
+                    LERROR( dlog, "AMQP exception caught while sending reply: (" << e.reply_code() << ") " << e.reply_text() );
                 }
                 catch( amqp_lib_exception& e )
                 {
-                    ERROR( dlog, "AMQP Library Exception caught while sending reply: (" << e.ErrorCode() << ") " << e.what() );
+                    LERROR( dlog, "AMQP Library Exception caught while sending reply: (" << e.ErrorCode() << ") " << e.what() );
                 }
                 catch( std::exception& e )
                 {
-                    ERROR( dlog, "Standard exception caught while sending reply: " << e.what() );
+                    LERROR( dlog, "Standard exception caught while sending reply: " << e.what() );
                 }
             }
 
             if( ! t_channel_valid )
             {
-                ERROR( dlog, "Channel is no longer valid" );
+                LERROR( dlog, "Channel is no longer valid" );
                 return false;
             }
 
             if( f_canceled.load() )
             {
-                DEBUG( dlog, "Service canceled" );
+                LDEBUG( dlog, "Service canceled" );
                 return true;
             }
         }
@@ -180,7 +180,7 @@ namespace dripline
 
     bool service::stop()
     {
-        INFO( dlog, "Stopping service on <" << f_queue_name << ">" );
+        LINFO( dlog, "Stopping service on <" << f_queue_name << ">" );
 
         if( ! stop_consuming() ) return false;
 
@@ -192,7 +192,7 @@ namespace dripline
 
     service::rr_pkg_ptr service::send( request_ptr_t a_request, const string& a_exchange ) const
     {
-        DEBUG( dlog, "Sending request with routing key <" << a_request->routing_key() << ">" );
+        LDEBUG( dlog, "Sending request with routing key <" << a_request->routing_key() << ">" );
         rr_pkg_ptr t_receive_reply = std::make_shared< receive_reply_pkg >();
         t_receive_reply->f_channel = send_withreply( static_pointer_cast< message >( a_request ), t_receive_reply->f_consumer_tag, a_exchange );
         t_receive_reply->f_successful_send = t_receive_reply->f_channel.get() != nullptr;
@@ -201,19 +201,19 @@ namespace dripline
 
     bool service::send( reply_ptr_t a_reply, const string& a_exchange ) const
     {
-        DEBUG( dlog, "Sending reply with routing key <" << a_reply->routing_key() << ">" );
+        LDEBUG( dlog, "Sending reply with routing key <" << a_reply->routing_key() << ">" );
         return send_noreply( static_pointer_cast< message >( a_reply ), a_exchange );
     }
 
     bool service::send( info_ptr_t a_info, const string& a_exchange ) const
     {
-        DEBUG( dlog, "Sending info with routing key <" << a_info->routing_key() << ">" );
+        LDEBUG( dlog, "Sending info with routing key <" << a_info->routing_key() << ">" );
         return send_noreply( static_pointer_cast< message >( a_info ), a_exchange );
     }
 
     bool service::send( alert_ptr_t a_alert, const string& a_exchange ) const
     {
-        DEBUG( dlog, "Sending alert with routing key <" << a_alert->routing_key() << ">" );
+        LDEBUG( dlog, "Sending alert with routing key <" << a_alert->routing_key() << ">" );
         return send_noreply( static_pointer_cast< message >( a_alert ), a_exchange );
     }
 
@@ -225,7 +225,7 @@ namespace dripline
 
     reply_ptr_t service::wait_for_reply( const rr_pkg_ptr a_receive_reply, bool& a_chan_valid, int a_timeout_ms ) const
     {
-        DEBUG( dlog, "Waiting for a reply" );
+        LDEBUG( dlog, "Waiting for a reply" );
 
         amqp_envelope_ptr t_envelope;
         a_chan_valid = listen_for_message( t_envelope, a_receive_reply->f_channel, a_receive_reply->f_consumer_tag, a_timeout_ms );
@@ -240,13 +240,13 @@ namespace dripline
             }
             else
             {
-                ERROR( dlog, "Non-reply message received");
+                LERROR( dlog, "Non-reply message received");
                 return reply_ptr_t();
             }
         }
         catch( dripline_error& e )
         {
-            ERROR( dlog, "There was a problem processing the message: " << e.what() );
+            LERROR( dlog, "There was a problem processing the message: " << e.what() );
             return reply_ptr_t();
         }
     }
@@ -255,16 +255,16 @@ namespace dripline
     {
         try
         {
-            DEBUG( dlog, "Stopping consuming messages" );
+            LDEBUG( dlog, "Stopping consuming messages" );
             f_channel->BasicCancel( f_consumer_tag );
         }
         catch( amqp_exception& e )
         {
-            ERROR( dlog, "AMQP exception caught while canceling the channel: (" << e.reply_code() << ") " << e.reply_text() );
+            LERROR( dlog, "AMQP exception caught while canceling the channel: (" << e.reply_code() << ") " << e.reply_text() );
         }
         catch( amqp_lib_exception& e )
         {
-            ERROR( dlog, "AMQP library exception caught while canceling the channel: (" << e.ErrorCode() << ") " << e.what() );
+            LERROR( dlog, "AMQP library exception caught while canceling the channel: (" << e.ErrorCode() << ") " << e.what() );
         }
 
         a_channel.reset();
@@ -305,7 +305,7 @@ namespace dripline
         else if( t_rk.find( f_broadcast_key ) == 0 ) t_prefix = f_broadcast_key;
         else
         {
-            WARN( dlog, "Routing key not formatted properly; it does not start with either the queue name (" << f_queue_name << ") or the broadcast key (" << f_broadcast_key << "): <" << t_rk << ">" );
+            LWARN( dlog, "Routing key not formatted properly; it does not start with either the queue name (" << f_queue_name << ") or the broadcast key (" << f_broadcast_key << "): <" << t_rk << ">" );
             return false;
         }
 
@@ -316,7 +316,7 @@ namespace dripline
 
         if( t_rk[ t_prefix.size() ] != '.' )
         {
-            WARN( dlog, "Routing key not formatted properly; a single '.' does not follow the prefix: <" << t_rk << ">" );
+            LWARN( dlog, "Routing key not formatted properly; a single '.' does not follow the prefix: <" << t_rk << ">" );
             return false;
         }
 
@@ -339,13 +339,13 @@ namespace dripline
         amqp_channel_ptr t_channel = open_channel();
         if( ! t_channel )
         {
-            ERROR( dlog, "Unable to open channel to send a message to <" << a_message->routing_key() << "> using broker <" << f_address << ":" << f_port << ">" );
+            LERROR( dlog, "Unable to open channel to send a message to <" << a_message->routing_key() << "> using broker <" << f_address << ":" << f_port << ">" );
             return amqp_channel_ptr();
         }
 
         if( ! setup_exchange( t_channel, t_exchange ) )
         {
-            ERROR( dlog, "Unable to setup the exchange <" << t_exchange << ">" );
+            LERROR( dlog, "Unable to setup the exchange <" << t_exchange << ">" );
             return amqp_channel_ptr();
         }
 
@@ -356,8 +356,8 @@ namespace dripline
 
         // begin consuming on the reply-to queue
         a_reply_consumer_tag = t_channel->BasicConsume( t_reply_to );
-        DEBUG( dlog, "Reply-to for request: " << t_reply_to );
-        DEBUG( dlog, "Consumer tag for reply: " << a_reply_consumer_tag );
+        LDEBUG( dlog, "Reply-to for request: " << t_reply_to );
+        LDEBUG( dlog, "Consumer tag for reply: " << a_reply_consumer_tag );
 
         // convert the dripline::message object to an AMQP message
         amqp_message_ptr t_amqp_message = a_message->create_amqp_message();
@@ -365,17 +365,17 @@ namespace dripline
         try
         {
             t_channel->BasicPublish( t_exchange, a_message->routing_key(), t_amqp_message, true, false );
-            DEBUG( dlog, "Message sent" );
+            LDEBUG( dlog, "Message sent" );
             return t_channel;
         }
         catch( AmqpClient::MessageReturnedException& e )
         {
-            ERROR( dlog, "Message could not be sent: " << e.what() );
+            LERROR( dlog, "Message could not be sent: " << e.what() );
             return amqp_channel_ptr();
         }
         catch( std::exception& e )
         {
-            ERROR( dlog, "Error publishing request to queue: " << e.what() );
+            LERROR( dlog, "Error publishing request to queue: " << e.what() );
             return amqp_channel_ptr();
         }
     }
@@ -393,13 +393,13 @@ namespace dripline
         amqp_channel_ptr t_channel = open_channel();
         if( ! t_channel )
         {
-            ERROR( dlog, "Unable to open channel to send a message to <" << a_message->routing_key() << "> using broker <" << f_address << ":" << f_port << ">" );
+            LERROR( dlog, "Unable to open channel to send a message to <" << a_message->routing_key() << "> using broker <" << f_address << ":" << f_port << ">" );
             return false;
         }
 
         if( ! setup_exchange( t_channel, t_exchange ) )
         {
-            ERROR( dlog, "Unable to setup the exchange <" << t_exchange << ">" );
+            LERROR( dlog, "Unable to setup the exchange <" << t_exchange << ">" );
             return false;
         }
 
@@ -408,16 +408,16 @@ namespace dripline
         try
         {
             t_channel->BasicPublish( t_exchange, a_message->routing_key(), t_amqp_message, true, false );
-            DEBUG( dlog, "Message sent" );
+            LDEBUG( dlog, "Message sent" );
         }
         catch( AmqpClient::MessageReturnedException& e )
         {
-            ERROR( dlog, "Message could not be sent: " << e.what() );
+            LERROR( dlog, "Message could not be sent: " << e.what() );
             return false;
         }
         catch( std::exception& e )
         {
-            ERROR( dlog, "Error publishing request to queue: " << e.what() );
+            LERROR( dlog, "Error publishing request to queue: " << e.what() );
             return false;
         }
         return true;
@@ -427,23 +427,23 @@ namespace dripline
     {
         try
         {
-            DEBUG( dlog, "Opening AMQP connection and creating channel to " << f_address << ":" << f_port );
-            DEBUG( dlog, "Using broker authentication: " << f_username << ":" << f_password );
+            LDEBUG( dlog, "Opening AMQP connection and creating channel to " << f_address << ":" << f_port );
+            LDEBUG( dlog, "Using broker authentication: " << f_username << ":" << f_password );
             return AmqpClient::Channel::Create( f_address, f_port, f_username, f_password );
         }
         catch( amqp_exception& e )
         {
-            ERROR( dlog, "AMQP exception caught while opening channel: (" << e.reply_code() << ") " << e.reply_text() );
+            LERROR( dlog, "AMQP exception caught while opening channel: (" << e.reply_code() << ") " << e.reply_text() );
             return amqp_channel_ptr();
         }
         catch( amqp_lib_exception& e )
         {
-            ERROR( dlog, "AMQP Library Exception caught while creating channel: (" << e.ErrorCode() << ") " << e.what() );
+            LERROR( dlog, "AMQP Library Exception caught while creating channel: (" << e.ErrorCode() << ") " << e.what() );
             return amqp_channel_ptr();
         }
         catch( std::exception& e )
         {
-            ERROR( dlog, "Standard exception caught while creating channel: " << e.what() );
+            LERROR( dlog, "Standard exception caught while creating channel: " << e.what() );
             return amqp_channel_ptr();
         }
     }
@@ -452,18 +452,18 @@ namespace dripline
     {
         try
         {
-            DEBUG( dlog, "Declaring exchange <" << a_exchange << ">" );
+            LDEBUG( dlog, "Declaring exchange <" << a_exchange << ">" );
             a_channel->DeclareExchange( a_exchange, AmqpClient::Channel::EXCHANGE_TYPE_TOPIC, false, false, false );
             return true;
         }
         catch( amqp_exception& e )
         {
-            ERROR( dlog, "AMQP exception caught while declaring exchange: (" << e.reply_code() << ") " << e.reply_text() );
+            LERROR( dlog, "AMQP exception caught while declaring exchange: (" << e.reply_code() << ") " << e.reply_text() );
             return false;
         }
         catch( amqp_lib_exception& e )
         {
-            ERROR( dlog, "AMQP library exception caught while declaring exchange: (" << e.ErrorCode() << ") " << e.what() );
+            LERROR( dlog, "AMQP library exception caught while declaring exchange: (" << e.ErrorCode() << ") " << e.what() );
             return false;
         }
     }
@@ -472,18 +472,18 @@ namespace dripline
     {
         try
         {
-            DEBUG( dlog, "Declaring queue <" << a_queue_name << ">" );
+            LDEBUG( dlog, "Declaring queue <" << a_queue_name << ">" );
             a_channel->DeclareQueue( a_queue_name, false, false, true, true );
             return true;
         }
         catch( amqp_exception& e )
         {
-            ERROR( dlog, "AMQP exception caught while declaring queue: (" << e.reply_code() << ") " << e.reply_text() );
+            LERROR( dlog, "AMQP exception caught while declaring queue: (" << e.reply_code() << ") " << e.reply_text() );
             return false;
         }
         catch( amqp_lib_exception& e )
         {
-            ERROR( dlog, "AMQP library exception caught while declaring queue: (" << e.ErrorCode() << ") " << e.what() );
+            LERROR( dlog, "AMQP library exception caught while declaring queue: (" << e.ErrorCode() << ") " << e.what() );
             return false;
         }
 
@@ -502,12 +502,12 @@ namespace dripline
         }
         catch( amqp_exception& e )
         {
-            ERROR( dlog, "AMQP exception caught while declaring binding keys: (" << e.reply_code() << ") " << e.reply_text() );
+            LERROR( dlog, "AMQP exception caught while declaring binding keys: (" << e.reply_code() << ") " << e.reply_text() );
             return false;
         }
         catch( amqp_lib_exception& e )
         {
-            ERROR( dlog, "AMQP library exception caught while binding keys: (" << e.ErrorCode() << ") " << e.what() );
+            LERROR( dlog, "AMQP library exception caught while binding keys: (" << e.ErrorCode() << ") " << e.what() );
             return false;
         }
     }
@@ -516,19 +516,19 @@ namespace dripline
     {
         try
         {
-            DEBUG( dlog, "Starting to consume messages" );
+            LDEBUG( dlog, "Starting to consume messages" );
             // second bool is setting no_ack to false
             f_consumer_tag = f_channel->BasicConsume( f_queue_name, "", true, false );
             return true;
         }
         catch( amqp_exception& e )
         {
-            ERROR( dlog, "AMQP exception caught while starting consuming messages: (" << e.reply_code() << ") " << e.reply_text() );
+            LERROR( dlog, "AMQP exception caught while starting consuming messages: (" << e.reply_code() << ") " << e.reply_text() );
             return false;
         }
         catch( amqp_lib_exception& e )
         {
-            ERROR( dlog, "AMQP library exception caught while starting consuming messages: (" << e.ErrorCode() << ") " << e.what() );
+            LERROR( dlog, "AMQP library exception caught while starting consuming messages: (" << e.ErrorCode() << ") " << e.what() );
             return false;
         }
     }
@@ -552,32 +552,32 @@ namespace dripline
             }
             catch( AmqpClient::ConnectionClosedException& e )
             {
-                ERROR( dlog, "Fatal AMQP exception encountered: " << e.what() );
+                LERROR( dlog, "Fatal AMQP exception encountered: " << e.what() );
                 return false;
             }
             catch( AmqpClient::ConsumerCancelledException& e )
             {
-                ERROR( dlog, "Fatal AMQP exception encountered: " << e.what() );
+                LERROR( dlog, "Fatal AMQP exception encountered: " << e.what() );
                 return false;
             }
             catch( AmqpClient::AmqpException& e )
             {
                 if( e.is_soft_error() )
                 {
-                    WARN( dlog, "Non-fatal AMQP exception encountered: " << e.reply_text() );
+                    LWARN( dlog, "Non-fatal AMQP exception encountered: " << e.reply_text() );
                     return true;
                 }
-                ERROR( dlog, "Fatal AMQP exception encountered: " << e.reply_text() );
+                LERROR( dlog, "Fatal AMQP exception encountered: " << e.reply_text() );
                 return false;
             }
             catch( std::exception& e )
             {
-                ERROR( dlog, "Standard exception caught: " << e.what() );
+                LERROR( dlog, "Standard exception caught: " << e.what() );
                 return false;
             }
             catch(...)
             {
-                ERROR( dlog, "Unknown exception caught" );
+                LERROR( dlog, "Unknown exception caught" );
                 return false;
             }
         }
@@ -587,34 +587,34 @@ namespace dripline
     {
         try
         {
-            DEBUG( dlog, "Stopping consuming messages (consumer " << f_consumer_tag << ")" );
+            LDEBUG( dlog, "Stopping consuming messages (consumer " << f_consumer_tag << ")" );
             f_channel->BasicCancel( f_consumer_tag );
             f_consumer_tag.clear();
             return true;
         }
         catch( amqp_exception& e )
         {
-            ERROR( dlog, "AMQP exception caught while stopping consuming messages: (" << e.reply_code() << ") " << e.reply_text() );
+            LERROR( dlog, "AMQP exception caught while stopping consuming messages: (" << e.reply_code() << ") " << e.reply_text() );
             return false;
         }
         catch( amqp_lib_exception& e )
         {
-            ERROR( dlog, "AMQP library exception caught while stopping consuming messages: (" << e.ErrorCode() << ") " << e.what() );
+            LERROR( dlog, "AMQP library exception caught while stopping consuming messages: (" << e.ErrorCode() << ") " << e.what() );
             return false;
         }
         catch( AmqpClient::ConsumerTagNotFoundException& e )
         {
-            ERROR( dlog, "Fatal AMQP exception encountered: " << e.what() );
+            LERROR( dlog, "Fatal AMQP exception encountered: " << e.what() );
             return false;
         }
         catch( std::exception& e )
         {
-            ERROR( dlog, "Standard exception caught: " << e.what() );
+            LERROR( dlog, "Standard exception caught: " << e.what() );
             return false;
         }
         catch(...)
         {
-            ERROR( dlog, "Unknown exception caught" );
+            LERROR( dlog, "Unknown exception caught" );
             return false;
         }
     }
@@ -623,28 +623,28 @@ namespace dripline
     {
         try
         {
-            DEBUG( dlog, "Deleting queue <" << f_queue_name << ">" );
+            LDEBUG( dlog, "Deleting queue <" << f_queue_name << ">" );
             f_channel->DeleteQueue( f_queue_name, false );
             f_queue_name.clear();
         }
         catch( AmqpClient::ConnectionClosedException& e )
         {
-            ERROR( dlog, "Fatal AMQP exception encountered: " << e.what() );
+            LERROR( dlog, "Fatal AMQP exception encountered: " << e.what() );
             return false;
         }
         catch( amqp_lib_exception& e )
         {
-            ERROR( dlog, "AMQP library exception caught while removing queue: (" << e.ErrorCode() << ") " << e.what() );
+            LERROR( dlog, "AMQP library exception caught while removing queue: (" << e.ErrorCode() << ") " << e.what() );
             return false;
         }
         catch( std::exception& e )
         {
-            ERROR( dlog, "Standard exception caught: " << e.what() );
+            LERROR( dlog, "Standard exception caught: " << e.what() );
             return false;
         }
         catch(...)
         {
-            ERROR( dlog, "Unknown exception caught" );
+            LERROR( dlog, "Unknown exception caught" );
             return false;
         }
 
@@ -656,14 +656,14 @@ namespace dripline
         authentication t_auth( a_auth_file );
         if( ! t_auth.get_is_loaded() )
         {
-            ERROR( dlog, "Authentication file <" << a_auth_file << "> could not be loaded" );
+            LERROR( dlog, "Authentication file <" << a_auth_file << "> could not be loaded" );
             return false;
         }
 
         const param_node* t_amqp_auth = t_auth.node_at( "amqp" );
         if( t_amqp_auth == NULL || ! t_amqp_auth->has( "username" ) || ! t_amqp_auth->has( "password" ) )
         {
-            ERROR( dlog, "AMQP authentication is not available or is not complete" );
+            LERROR( dlog, "AMQP authentication is not available or is not complete" );
             return false;
         }
         f_username = t_amqp_auth->get_value( "username" );

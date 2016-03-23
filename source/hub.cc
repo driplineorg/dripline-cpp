@@ -56,7 +56,7 @@ namespace dripline
         {
             if( ! use_auth_file( a_auth_file ) )
             {
-                ERROR( dlog, "Unable to use authentication file <" << a_auth_file << ">" );
+                LERROR( dlog, "Unable to use authentication file <" << a_auth_file << ">" );
                 return false;
             }
         }
@@ -75,7 +75,7 @@ namespace dripline
         // the lockout key must be valid
         if( ! a_request->get_lockout_key_valid() )
         {
-            WARN( dlog, "Message had an invalid lockout key" );
+            LWARN( dlog, "Message had an invalid lockout key" );
             return t_reply_pkg.send_reply( retcode_t::message_error_invalid_key, "Lockout key could not be parsed" );;
         }
         else
@@ -106,7 +106,7 @@ namespace dripline
                     std::stringstream t_error_stream;
                     t_error_stream << "Unrecognized message operation: <" << a_request->get_message_type() << ">";
                     string t_error_msg( t_error_stream.str() );
-                    WARN( dlog, t_error_msg );
+                    LWARN( dlog, t_error_msg );
                     return t_reply_pkg.send_reply( retcode_t::message_error_invalid_method, t_error_msg );;
                     break;
             } // end switch on message type
@@ -116,38 +116,38 @@ namespace dripline
 
     bool hub::do_run_request( const request_ptr_t, reply_package& )
     {
-        WARN( dlog, "This hub does not accept run requests" );
+        LWARN( dlog, "This hub does not accept run requests" );
         return false;
     }
 
     bool hub::do_get_request( const request_ptr_t, reply_package& )
     {
-        WARN( dlog, "This hub does not accept get requests other than the basic dripline instructions" );
+        LWARN( dlog, "This hub does not accept get requests other than the basic dripline instructions" );
         return false;
     }
 
     bool hub::do_set_request( const request_ptr_t, reply_package& )
     {
-        WARN( dlog, "This hub does not accept set requests" );
+        LWARN( dlog, "This hub does not accept set requests" );
         return false;
     }
 
     bool hub::do_cmd_request( const request_ptr_t, reply_package& )
     {
-        WARN( dlog, "This hub does not accept cmd requests other than the basic dripline instructions" );
+        LWARN( dlog, "This hub does not accept cmd requests other than the basic dripline instructions" );
         return false;
     }
 
     bool hub::__do_run_request( const request_ptr_t a_request, hub::reply_package& a_reply_pkg )
     {
-        DEBUG( dlog, "Run operation request received" );
+        LDEBUG( dlog, "Run operation request received" );
 
         if( ! authenticate( a_request->lockout_key() ) )
         {
             std::stringstream t_conv;
             t_conv << a_request->lockout_key();
             string t_message( "Request denied due to lockout (key used: " + t_conv.str() + ")" );
-            INFO( dlog, t_message );
+            LINFO( dlog, t_message );
             return a_reply_pkg.send_reply( retcode_t::message_error_access_denied, t_message );;
         }
 
@@ -156,7 +156,7 @@ namespace dripline
 
     bool hub::__do_get_request( request_ptr_t a_request, hub::reply_package& a_reply_pkg )
     {
-        DEBUG( dlog, "Get operation request received" );
+        LDEBUG( dlog, "Get operation request received" );
 
         string t_query_type;
         if( ! a_request->parsed_rks().empty() )
@@ -175,14 +175,14 @@ namespace dripline
 
     bool hub::__do_set_request( const request_ptr_t a_request, hub::reply_package& a_reply_pkg )
     {
-        DEBUG( dlog, "Set request received" );
+        LDEBUG( dlog, "Set request received" );
 
         if( ! authenticate( a_request->lockout_key() ) )
         {
             std::stringstream t_conv;
             t_conv << a_request->lockout_key();
             string t_message( "Request denied due to lockout (key used: " + t_conv.str() + ")" );
-            INFO( dlog, t_message );
+            LINFO( dlog, t_message );
             return a_reply_pkg.send_reply( retcode_t::message_error_access_denied, t_message );;
         }
 
@@ -191,7 +191,7 @@ namespace dripline
 
     bool hub::__do_cmd_request( const request_ptr_t a_request, hub::reply_package& a_reply_pkg )
     {
-        DEBUG( dlog, "Cmd request received" );
+        LDEBUG( dlog, "Cmd request received" );
 
         string t_instruction;
         if( ! a_request->parsed_rks().empty() )
@@ -199,7 +199,7 @@ namespace dripline
             t_instruction = a_request->parsed_rks().front();
         }
 
-        //WARN( mtlog, "uuid string: " << a_request->get_payload().get_value( "key", "") << ", uuid: " << uuid_from_string( a_request->get_payload().get_value( "key", "") ) );
+        //LWARN( mtlog, "uuid string: " << a_request->get_payload().get_value( "key", "") << ", uuid: " << uuid_from_string( a_request->get_payload().get_value( "key", "") ) );
         // this condition includes the exception for the unlock instruction that allows us to force the unlock regardless of the key.
         // disable_key() checks the lockout key if it's not forced, so it's okay that we bypass this call to authenticate() for the unlock instruction.
         if( ! authenticate( a_request->lockout_key() ) && t_instruction != "unlock" && t_instruction != "ping" )
@@ -207,7 +207,7 @@ namespace dripline
             std::stringstream t_conv;
             t_conv << a_request->lockout_key();
             string t_message( "Request denied due to lockout (key used: " + t_conv.str() + ")" );
-            INFO( dlog, t_message );
+            LINFO( dlog, t_message );
             return a_reply_pkg.send_reply( retcode_t::message_error_access_denied, t_message );;
         }
 
@@ -277,21 +277,21 @@ namespace dripline
     {
         if( f_service_ptr == nullptr )
         {
-            WARN( dlog, "Service pointer is null; Unable to send reply" );
+            LWARN( dlog, "Service pointer is null; Unable to send reply" );
             return false;
         }
 
         reply_ptr_t t_reply = msg_reply::create( a_return_code, a_return_msg, new scarab::param_node( f_payload ), f_reply_to, message::encoding::json );
         t_reply->correlation_id() = f_correlation_id;
 
-        DEBUG( dlog, "Sending reply message to <" << f_reply_to << ">:\n" <<
+        LDEBUG( dlog, "Sending reply message to <" << f_reply_to << ">:\n" <<
                  "Return code: " << t_reply->get_return_code() << '\n' <<
                  "Return message: " << t_reply->return_msg() <<
                  f_payload );
 
         if( ! f_service_ptr->send( t_reply ) )
         {
-            WARN( dlog, "Something went wrong while sending the reply" );
+            LWARN( dlog, "Something went wrong while sending the reply" );
             return false;
         }
 
@@ -318,7 +318,7 @@ namespace dripline
 
     bool hub::authenticate( const uuid_t& a_key ) const
     {
-        DEBUG( dlog, "Authenticating with key <" << a_key << ">" );
+        LDEBUG( dlog, "Authenticating with key <" << a_key << ">" );
         if( is_locked() ) return check_key( a_key );
         return true;
     }

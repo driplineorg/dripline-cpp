@@ -107,7 +107,7 @@ namespace dripline
 
         string t_routing_key = a_envelope->RoutingKey();
 
-        DEBUG( dlog, "Processing message:\n" <<
+        LDEBUG( dlog, "Processing message:\n" <<
                  "Routing key: " << t_routing_key <<
                  *t_msg_node );
 
@@ -179,7 +179,7 @@ namespace dripline
             }
             else
             {
-                WARN( dlog, "Non-node payload is present; it will be ignored" );
+                LWARN( dlog, "Non-node payload is present; it will be ignored" );
                 t_message->set_payload( new param_node() );
             }
         }
@@ -196,7 +196,7 @@ namespace dripline
         string t_body;
         if( ! encode_message_body( t_body ) )
         {
-            ERROR( dlog, "Unable to encode message body" );
+            LERROR( dlog, "Unable to encode message body" );
             return amqp_message_ptr();
         }
 
@@ -219,7 +219,7 @@ namespace dripline
 
         if( ! this->derived_modify_message_body( t_body_node ) )
         {
-            ERROR( dlog, "Something went wrong in the derived-class modify_body_message function" );
+            LERROR( dlog, "Something went wrong in the derived-class modify_body_message function" );
             return false;
         }
 
@@ -228,13 +228,13 @@ namespace dripline
             case encoding::json:
                 if( ! param_output_json::write_string( t_body_node, a_body, param_output_json::k_compact ) )
                 {
-                    ERROR( dlog, "Could not convert message body to string" );
+                    LERROR( dlog, "Could not convert message body to string" );
                     return false;
                 }
                 return true;
                 break;
             default:
-                ERROR( dlog, "Cannot encode using <" << interpret_encoding() << "> (" << f_encoding << ")" );
+                LERROR( dlog, "Cannot encode using <" << interpret_encoding() << "> (" << f_encoding << ")" );
                 return false;
                 break;
         }

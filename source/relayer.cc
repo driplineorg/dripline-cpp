@@ -40,7 +40,7 @@ namespace dripline
 
     void relayer::execute_relayer()
     {
-        DEBUG( dlog, "Dripline relayer starting" );
+        LDEBUG( dlog, "Dripline relayer starting" );
         while( ! f_canceled.load() )
         {
             mar_ptr t_mar;
@@ -58,22 +58,22 @@ namespace dripline
                 case msg_t::alert:
                     if( ! service::send( static_pointer_cast< dripline::msg_alert >( t_mar->f_message ), f_alert_exchange ) )
                     {
-                        WARN( dlog, "Unable to send alert" );
+                        LWARN( dlog, "Unable to send alert" );
                     }
                     break;
                 case msg_t::info:
                     if( ! send( static_pointer_cast< dripline::msg_info >( t_mar->f_message ), f_info_exchange ) )
                     {
-                        WARN( dlog, "Unable to send info" );
+                        LWARN( dlog, "Unable to send info" );
                     }
                     break;
                 default:
-                    WARN( dlog, "Unsupported message type: " << t_mar->f_message->message_type() );
+                    LWARN( dlog, "Unsupported message type: " << t_mar->f_message->message_type() );
                     break;
             }
         }
 
-        DEBUG( dlog, "Exiting the Dripline relayer" );
+        LDEBUG( dlog, "Exiting the Dripline relayer" );
 
         return;
     }
@@ -81,7 +81,7 @@ namespace dripline
 
     void relayer::cancel_relayer()
     {
-        DEBUG( dlog, "Canceling relayer" );
+        LDEBUG( dlog, "Canceling relayer" );
         f_canceled.store( true );
         f_queue.interrupt();
         return;
@@ -91,12 +91,12 @@ namespace dripline
     {
         if( f_canceled.load() )
         {
-            WARN( dlog, "Relayer has been canceled; request not sent" );
+            LWARN( dlog, "Relayer has been canceled; request not sent" );
             cc_rr_pkg_ptr t_return;
             t_return->f_successful_send = false;
             return t_return;
         }
-        DEBUG( dlog, "Sending request to <" << a_request->routing_key() << ">" );
+        LDEBUG( dlog, "Sending request to <" << a_request->routing_key() << ">" );
         mar_ptr t_mar = make_shared< message_and_reply >();
         scoped_lock lock( t_mar->f_receive_reply->f_mutex );
         t_mar->f_message = static_pointer_cast< dripline::message >( a_request );
@@ -109,10 +109,10 @@ namespace dripline
     {
         if( f_canceled.load() )
         {
-            WARN( dlog, "Relayer has been canceled; request not sent" );
+            LWARN( dlog, "Relayer has been canceled; request not sent" );
             return false;
         }
-        DEBUG( dlog, "Sending request to <" << a_alert->routing_key() << ">" );
+        LDEBUG( dlog, "Sending request to <" << a_alert->routing_key() << ">" );
         mar_ptr t_mar = make_shared< message_and_reply >();
         t_mar->f_message = static_pointer_cast< dripline::message >( a_alert );
         f_queue.push( t_mar );
@@ -123,10 +123,10 @@ namespace dripline
     {
         if( f_canceled.load() )
         {
-            WARN( dlog, "Relayer has been canceled; request not sent" );
+            LWARN( dlog, "Relayer has been canceled; request not sent" );
             return false;
         }
-        DEBUG( dlog, "Sending request to <" << a_info->routing_key() << ">" );
+        LDEBUG( dlog, "Sending request to <" << a_info->routing_key() << ">" );
         mar_ptr t_mar = std::make_shared< message_and_reply >();
         t_mar->f_message = static_pointer_cast< dripline::message >( a_info );
         f_queue.push( t_mar );
