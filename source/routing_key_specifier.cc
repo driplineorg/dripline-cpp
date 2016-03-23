@@ -11,7 +11,7 @@ namespace dripline
 {
 
     routing_key_specifier::routing_key_specifier( const std::string& a_rk ) :
-            queue()
+            deque()
     {
         add_next( a_rk );
     }
@@ -22,10 +22,21 @@ namespace dripline
 
     void routing_key_specifier::parse( const std::string& a_rk )
     {
-        while( ! empty() ) pop();
+        while( ! empty() ) pop_front();
 
         add_next( a_rk );
         return;
+    }
+
+    std::string routing_key_specifier::to_string() const
+    {
+        std::string t_return;
+        for( container_type::const_iterator t_it = this->begin(); t_it != this->end(); ++t_it )
+        {
+            t_return += *t_it;
+            if( t_it != this->end() ) t_return += f_node_separator;
+        }
+        return t_return;
     }
 
     void routing_key_specifier::add_next( const std::string& a_addr )
@@ -33,10 +44,10 @@ namespace dripline
         size_t t_div_pos = a_addr.find( f_node_separator );
         if( t_div_pos == a_addr.npos )
         {
-            push( a_addr );
+            push_back( a_addr );
             return;
         }
-        push( a_addr.substr( 0, t_div_pos ) );
+        push_back( a_addr.substr( 0, t_div_pos ) );
         add_next( a_addr.substr( t_div_pos + 1 ) );
         return;
     }

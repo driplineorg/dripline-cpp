@@ -166,7 +166,7 @@ namespace dripline
 
         if( t_query_type == "is-locked" )
         {
-            a_request->parsed_rks().pop();
+            a_request->parsed_rks().pop_front();
             return handle_is_locked_request( a_request, a_reply_pkg );
         }
 
@@ -213,17 +213,17 @@ namespace dripline
 
         if( t_instruction == "lock" )
         {
-            a_request->parsed_rks().pop();
+            a_request->parsed_rks().pop_front();
             return handle_lock_request( a_request, a_reply_pkg );
         }
         else if( t_instruction == "unlock" )
         {
-            a_request->parsed_rks().pop();
+            a_request->parsed_rks().pop_front();
             return handle_unlock_request( a_request, a_reply_pkg );
         }
         else if( t_instruction == "ping" )
         {
-            a_request->parsed_rks().pop();
+            a_request->parsed_rks().pop_front();
             return handle_ping_request( a_request, a_reply_pkg );
         }
 
