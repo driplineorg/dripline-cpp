@@ -38,7 +38,7 @@ namespace dripline
     class DRIPLINE_API version_wrapper : public scarab::singleton< version_wrapper >, public scarab::version_ifc
     {
         protected:
-            friend class singleton< version_wrapper >;
+            friend class scarab::singleton< version_wrapper >;
             friend class scarab::destroyer< version_wrapper >;
             version_wrapper();
             ~version_wrapper();

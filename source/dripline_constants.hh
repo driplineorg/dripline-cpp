@@ -27,7 +27,7 @@ namespace dripline
             send = 7,
             run = 8,
             cmd = 9,
-            unknown = std::numeric_limits< uint32_t >::max()
+            unknown = ULONG_MAX
     };
 
     // Conversion functions for use when a numeric value is needed

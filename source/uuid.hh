@@ -15,6 +15,11 @@
 
 #include <string>
 
+// In Windows there's a preprocessor macro called uuid_t that conflicts with this typdef
+#ifdef uuid_t
+#undef uuid_t
+#endif
+
 namespace dripline
 {
     typedef boost::uuids::uuid uuid_t;
