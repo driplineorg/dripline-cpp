@@ -15,7 +15,7 @@
 namespace dripline
 {
     version::version() :
-            version_semantic()
+            scarab::version_semantic()
     {
         f_major_ver = @Dripline_VERSION_MAJOR@;
         f_minor_ver = @Dripline_VERSION_MINOR@;
