@@ -5,6 +5,8 @@
  *      Author: nsoblath
  */
 
+#define DRIPLINE_API_EXPORTS
+
 #include "service.hh"
 
 #include "dripline_error.hh"

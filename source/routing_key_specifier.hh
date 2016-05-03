@@ -8,13 +8,15 @@
 #ifndef DRIPLINE_ROUTING_KEY_SPECIFIER_HH_
 #define DRIPLINE_ROUTING_KEY_SPECIFIER_HH_
 
+#include "dripline_api.hh"
+
 #include <deque>
 #include <string>
 
 namespace dripline
 {
 
-    class routing_key_specifier : public std::deque< std::string >
+    class DRIPLINE_API routing_key_specifier : public std::deque< std::string >
     {
         public:
             typedef std::deque< std::string > container_type;

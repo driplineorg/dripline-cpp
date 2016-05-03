@@ -5,6 +5,8 @@
  *      Author: nsoblath
  */
 
+#define DRIPLINE_API_EXPORTS
+
 #include "hub.hh"
 
 #include "logger.hh"

@@ -127,7 +127,7 @@ namespace dripline
             scarab::param_node* f_payload;
     };
 
-    std::ostream& operator<<( std::ostream& a_os, message::encoding a_enc );
+    DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, message::encoding a_enc );
 
 
     //***********
@@ -155,12 +155,14 @@ namespace dripline
 
         public:
             virtual msg_t message_type() const;
-
-            mv_accessible_static_noset( msg_t, message_type );
+            static msg_t get_message_type();
 
             mv_referrable( uuid_t, lockout_key );
             mv_accessible( bool, lockout_key_valid );
             mv_accessible( op_t, message_op );
+
+        private:
+            static msg_t s_message_type;
 
     };
 
@@ -189,14 +191,16 @@ namespace dripline
 
         public:
             virtual msg_t message_type() const;
-
-            mv_accessible_static_noset( msg_t, message_type );
+            static msg_t get_message_type();
 
             mv_accessible( retcode_t, return_code );
             mv_referrable( std::string, return_msg );
 
         private:
             mutable std::string f_return_buffer;
+
+            static msg_t s_message_type;
+
     };
 
     //*********
@@ -222,8 +226,11 @@ namespace dripline
 
         public:
             virtual msg_t message_type() const;
+            static msg_t get_message_type();
 
-            mv_accessible_static_noset( msg_t, message_type );
+        private:
+            static msg_t s_message_type;
+
     };
 
     //********
@@ -247,8 +254,11 @@ namespace dripline
 
         public:
             virtual msg_t message_type() const;
+            static msg_t get_message_type();
 
-            mv_accessible_static_noset( msg_t, message_type );
+        private:
+            static msg_t s_message_type;
+
     };
 
 

@@ -294,6 +294,11 @@ namespace dripline
 
     msg_t msg_request::s_message_type = msg_t::request;
 
+    msg_t msg_request::get_message_type()
+    {
+        return msg_request::s_message_type;
+    }
+
     msg_t msg_request::message_type() const
     {
         return msg_request::s_message_type;
@@ -341,6 +346,11 @@ namespace dripline
 
     msg_t msg_reply::s_message_type = msg_t::reply;
 
+    msg_t msg_reply::get_message_type()
+    {
+        return msg_reply::s_message_type;
+    }
+
     msg_t msg_reply::message_type() const
     {
         return msg_reply::s_message_type;
@@ -373,6 +383,11 @@ namespace dripline
 
     msg_t msg_alert::s_message_type = msg_t::alert;
 
+    msg_t msg_alert::get_message_type()
+    {
+        return msg_alert::s_message_type;
+    }
+
     msg_t msg_alert::message_type() const
     {
         return msg_alert::s_message_type;
@@ -396,6 +411,11 @@ namespace dripline
 
     msg_t msg_info::s_message_type = msg_t::info;
 
+    msg_t msg_info::get_message_type()
+    {
+        return msg_info::s_message_type;
+    }
+
     msg_t msg_info::message_type() const
     {
         return msg_info::s_message_type;
@@ -403,7 +423,7 @@ namespace dripline
 
 
 
-    std::ostream& operator<<( std::ostream& a_os, message::encoding a_enc )
+    DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, message::encoding a_enc )
     {
         static std::map< message::encoding, string > s_enc_strings = { { message::encoding::json, "json" } };
         return a_os << s_enc_strings[ a_enc ];

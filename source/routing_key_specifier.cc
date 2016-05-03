@@ -5,6 +5,8 @@
  *      Author: nsoblath
  */
 
+#define DRIPLINE_API_EXPORTS
+
 #include "routing_key_specifier.hh"
 
 namespace dripline
