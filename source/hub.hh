@@ -14,25 +14,19 @@
 
 namespace dripline
 {
+    struct DRIPLINE_API reply_package
+    {
+        const service* f_service_ptr;
+        std::string f_reply_to;
+        std::string f_correlation_id;
+        scarab::param_node f_payload;
+        reply_package( const service* a_service, request_ptr_t a_request );
+        bool send_reply( retcode_t a_return_code, const std::string& a_return_msg ) const;
+        bool send_reply( const dripline_error& an_error ) const;
+    };
+
     class DRIPLINE_API hub : public service
     {
-        public:
-            struct reply_package
-            {
-                const service* f_service_ptr;
-                std::string f_reply_to;
-                std::string f_correlation_id;
-                scarab::param_node f_payload;
-                reply_package( const service* a_service, request_ptr_t a_request ) :
-                    f_service_ptr( a_service ),
-                    f_reply_to( a_request->reply_to() ),
-                    f_correlation_id( a_request->correlation_id() ),
-                    f_payload()
-                {}
-                bool send_reply( retcode_t a_return_code, const std::string& a_return_msg ) const;
-                bool send_reply( const dripline_error& an_error ) const;
-            };
-
         public:
             hub();
             hub( const std::string& a_address, unsigned a_port, const std::string& a_exchange, const std::string& a_queue_name = "", const std::string& a_auth_file = "" );
@@ -95,7 +89,7 @@ namespace dripline
 
     };
 
-    inline bool hub::reply_package::send_reply( const dripline_error& an_error ) const
+    inline bool reply_package::send_reply( const dripline_error& an_error ) const
     {
         return send_reply( an_error.retcode(), an_error.what() );
     }

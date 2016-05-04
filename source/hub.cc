@@ -140,7 +140,7 @@ namespace dripline
         return false;
     }
 
-    bool hub::__do_run_request( const request_ptr_t a_request, hub::reply_package& a_reply_pkg )
+    bool hub::__do_run_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
     {
         LDEBUG( dlog, "Run operation request received" );
 
@@ -156,7 +156,7 @@ namespace dripline
         return do_run_request( a_request, a_reply_pkg );
     }
 
-    bool hub::__do_get_request( request_ptr_t a_request, hub::reply_package& a_reply_pkg )
+    bool hub::__do_get_request( request_ptr_t a_request, reply_package& a_reply_pkg )
     {
         LDEBUG( dlog, "Get operation request received" );
 
@@ -175,7 +175,7 @@ namespace dripline
         return do_get_request( a_request, a_reply_pkg );
     }
 
-    bool hub::__do_set_request( const request_ptr_t a_request, hub::reply_package& a_reply_pkg )
+    bool hub::__do_set_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
     {
         LDEBUG( dlog, "Set request received" );
 
@@ -191,7 +191,7 @@ namespace dripline
         return do_set_request( a_request, a_reply_pkg );
     }
 
-    bool hub::__do_cmd_request( const request_ptr_t a_request, hub::reply_package& a_reply_pkg )
+    bool hub::__do_cmd_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
     {
         LDEBUG( dlog, "Cmd request received" );
 
@@ -232,7 +232,7 @@ namespace dripline
         return do_cmd_request( a_request, a_reply_pkg );
     }
 
-    bool hub::handle_lock_request( const request_ptr_t a_request, hub::reply_package& a_reply_pkg )
+    bool hub::handle_lock_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
     {
         uuid_t t_new_key = enable_lockout( a_request->get_sender_info(), a_request->lockout_key() );
         if( t_new_key.is_nil() )
@@ -244,7 +244,7 @@ namespace dripline
         return a_reply_pkg.send_reply( retcode_t::success, "Server is now locked" );
     }
 
-    bool hub::handle_unlock_request( const request_ptr_t a_request, hub::reply_package& a_reply_pkg )
+    bool hub::handle_unlock_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
     {
         if( ! is_locked() )
         {
@@ -260,7 +260,7 @@ namespace dripline
         return a_reply_pkg.send_reply( retcode_t::device_error, "Failed to unlock server" );;
     }
 
-    bool hub::handle_is_locked_request( const request_ptr_t, hub::reply_package& a_reply_pkg )
+    bool hub::handle_is_locked_request( const request_ptr_t, reply_package& a_reply_pkg )
     {
         bool t_is_locked = is_locked();
         a_reply_pkg.f_payload.add( "is_locked", scarab::param_value( t_is_locked ) );
@@ -268,14 +268,21 @@ namespace dripline
         return a_reply_pkg.send_reply( retcode_t::success, "Checked lock status" );
     }
 
-    bool hub::handle_ping_request( const request_ptr_t a_request, hub::reply_package& a_reply_pkg )
+    bool hub::handle_ping_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
     {
         string t_sender = a_request->sender_package();
         return a_reply_pkg.send_reply( retcode_t::success, "Hello, " + t_sender );
     }
 
 
-    bool hub::reply_package::send_reply( retcode_t a_return_code, const std::string& a_return_msg ) const
+    reply_package::reply_package( const service* a_service, request_ptr_t a_request ) :
+        f_service_ptr( a_service ),
+        f_reply_to( a_request->reply_to() ),
+        f_correlation_id( a_request->correlation_id() ),
+        f_payload()
+    {}
+
+    bool reply_package::send_reply( retcode_t a_return_code, const std::string& a_return_msg ) const
     {
         if( f_service_ptr == nullptr )
         {
