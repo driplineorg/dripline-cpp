@@ -29,7 +29,7 @@ namespace dripline
             send = 7,
             run = 8,
             cmd = 9,
-            unknown = ULONG_MAX
+            unknown = UINT32_MAX
     };
 
     // Conversion functions for use when a numeric value is needed
