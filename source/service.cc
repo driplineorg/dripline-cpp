@@ -313,7 +313,9 @@ namespace dripline
 
         if( t_rk == t_prefix )
         {
+        	// rk consists of only the prefix
             a_message->set_routing_key_specifier( "", routing_key_specifier() );
+            return true;
         }
 
         if( t_rk[ t_prefix.size() ] != '.' )
