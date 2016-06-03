@@ -194,12 +194,6 @@ namespace dripline
 
     request_ptr_t agent::create_run_request( const std::string& a_routing_key )
     {
-        if( ! f_config.has( "file" ) )
-        {
-            LERROR( dlog, "The filename to be saved must be specified with the \"file\" option" );
-            return NULL;
-        }
-
         param_node* t_payload_node = new param_node( f_config ); // copy of f_config, which should consist of only the request arguments
 
         return msg_request::create( t_payload_node, op_t::run, a_routing_key, "", message::encoding::json );
