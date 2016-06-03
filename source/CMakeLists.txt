@@ -7,6 +7,8 @@
 set( dir ${CMAKE_CURRENT_SOURCE_DIR} )
 
 set( dripline_HEADERS
+    ${dir}/agent.hh
+    ${dir}/agent_config.hh
     ${dir}/amqp.hh
     ${dir}/dripline_constants.hh
     ${dir}/dripline_error.hh
@@ -20,6 +22,8 @@ set( dripline_HEADERS
 )
 
 set( dripline_SOURCES
+    ${dir}/agent.cc
+    ${dir}/agent_config.cc
     ${dir}/dripline_constants.cc
     ${dir}/dripline_error.cc
     ${dir}/dripline_version.cc
@@ -44,3 +48,12 @@ pbuilder_library( Dripline dripline_SOURCES "" )
 
 pbuilder_install_headers( ${dripline_HEADERS} )
 
+if( Dripline_ENABLE_EXECUTABLES )
+    set( lib_dependencies 
+        Dripline
+    )
+    set( programs
+        dl_agent
+    )
+    pbuilder_executables( programs lib_dependencies )
+endif( Dripline_ENABLE_EXECUTABLES )

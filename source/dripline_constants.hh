@@ -17,6 +17,13 @@
 namespace dripline
 {
 
+    // Return value constants
+#define RETURN_SUCCESS 1
+#define RETURN_ERROR -1
+#define RETURN_CANCELED -2
+#define RETURN_REVOKED -3
+
+
     // Dripline message constants
     // Conforming to the dripline wire protocol: https://github.com/project8/hardware/wiki/Wire-Protocol
     // Please be sure that these constants are kept in sync with the dripline constants.
