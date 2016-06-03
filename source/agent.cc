@@ -122,7 +122,7 @@ namespace dripline
         dripline::service t_service( t_broker_node.get_value( "broker" ),
                                      t_broker_node.get_value< unsigned >( "broker-port" ),
                                      t_broker_node.get_value( "exchange" ),
-                                     "", ".project8_authentications.json" );
+                                     "", t_broker_node.get_value( "auth-file", "") );
 
         LDEBUG( dlog, "Sending message w/ msgop = " << t_request->get_message_op() << " to " << t_request->routing_key() );
 
@@ -140,7 +140,7 @@ namespace dripline
             LINFO( dlog, "Waiting for a reply from the server; use ctrl-c to cancel" );
 
             // timed blocking call to wait for incoming message
-            dripline::reply_ptr_t t_reply = t_service.wait_for_reply( t_receive_reply, t_broker_node.get_value< int >( "reply-timeout-ms" ) );
+            dripline::reply_ptr_t t_reply = t_service.wait_for_reply( t_receive_reply, t_broker_node.get_value( "reply-timeout-ms", 10000 ) );
 
             if( t_reply )
             {

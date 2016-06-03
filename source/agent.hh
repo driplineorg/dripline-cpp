@@ -12,6 +12,8 @@
  *          "broker" : "[address]",
  *          "broker-port" : [port],
  *          "exchange" : "[exchange]",
+ *          "auth-file" : "[authentication file]",  // optional; must live in the user's home directory
+ *          "reply-timeout-ms": [ms] // optional; default is 10000
  *      },
  *      "rk" : "[routing key]",
  *      "lockout-key" : "[uuid]",  // optional
