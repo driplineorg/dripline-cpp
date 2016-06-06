@@ -92,6 +92,11 @@ namespace dripline
                 return f_imp->username();
             }
 
+            virtual std::string version_info_string() const
+            {
+                return f_imp->version_info_string();
+            }
+
         private:
             scarab::version_semantic* f_imp;
     };
