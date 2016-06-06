@@ -105,7 +105,7 @@ void print_usage()
             << " - Filename to save reply: save=[filename] (optional)\n"
             << " - Filename for payload: load=[filename] (optional)\n";
 
-    LINFO( dlog, '\n\n'
+    LINFO( dlog, "\n\n"
            << t_use_stream.str() );
 
     return;
@@ -115,7 +115,7 @@ void print_version()
 {
     dripline::version t_dripver;
     scarab::version t_scarabver;
-    LINFO( dlog, '\n\n'
+    LINFO( dlog, "\n\n"
            << "You're using: " << t_dripver.exe_name() << '\n'
            << t_dripver.version_info_string() << '\n'
            << t_scarabver.version_info_string() );
