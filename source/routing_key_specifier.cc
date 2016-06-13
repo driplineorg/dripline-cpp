@@ -35,8 +35,8 @@ namespace dripline
         std::string t_return;
         for( container_type::const_iterator t_it = this->begin(); t_it != this->end(); ++t_it )
         {
+            if( t_it != this->begin() ) t_return += f_node_separator;
             t_return += *t_it;
-            if( t_it != this->end() ) t_return += f_node_separator;
         }
         return t_return;
     }

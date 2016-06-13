@@ -326,6 +326,7 @@ namespace dripline
 
         t_rk.erase( 0, t_prefix.size() + 1 ); // 1 added to remove the '.' that separates nodes
         a_message->set_routing_key_specifier( t_rk, routing_key_specifier( t_rk ) );
+        LDEBUG( dlog, "Determined the RKS to be <" << a_message->parsed_rks().to_string() << ">; size = " << a_message->parsed_rks().size() );
         return true;
     }
 
