@@ -30,10 +30,12 @@
 
 using std::string;
 
+using scarab::param;
 using scarab::param_array;
 using scarab::param_input_json;
 using scarab::param_node;
 using scarab::param_output_json;
+using scarab::param_value;
 
 namespace dripline
 {
@@ -166,7 +168,10 @@ namespace dripline
                         }
                         else
                         {
-                            param_output_json::write_file( *t_master_config_node, t_save_filename.string(), param_output_json::k_pretty );
+                            param_output_json t_output;
+                            static param_node t_output_options;
+                            if( t_output_options.empty() ) t_output_options.add( "style", new param_value( (unsigned)param_output_json::k_pretty ) );
+                            t_output.write_file( *t_master_config_node, t_save_filename.string(), &t_output_options );
                         }
                     }
                     else
@@ -245,15 +250,16 @@ namespace dripline
             }
 
             string t_load_filename( f_config.node_at( "load" )->get_value( "json" ) );
-            param_node* t_node_from_file = param_input_json::read_file( t_load_filename );
-            if( t_node_from_file == NULL )
+            param_input_json t_reader;
+            param* t_node_from_file = t_reader.read_file( t_load_filename );
+            if( t_node_from_file == NULL || ! t_node_from_file->is_node() )
             {
                 LERROR( dlog, "Unable to read JSON file <" << t_load_filename << ">" );
                 delete t_payload_node;
                 return NULL;
             }
 
-            t_payload_node->merge( *t_node_from_file );
+            t_payload_node->merge( t_node_from_file->as_node() );
             f_config.erase( "load" );
         }
 
