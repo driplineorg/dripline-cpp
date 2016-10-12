@@ -184,6 +184,10 @@ namespace dripline
             {
                 t_message->set_payload( new param_node( *(t_msg_node->node_at( "payload" ) ) ) );
             }
+            else if( (*t_msg_node)[ "payload" ].is_null() )
+            {
+                t_message->set_payload( new param_node() );
+            }
             else
             {
                 LWARN( dlog, "Non-node payload is present; it will be ignored" );
