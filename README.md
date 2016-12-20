@@ -3,7 +3,7 @@ C++ Implementation of the [Dripline](http://www.project8.org/dripline) framework
 
 ## Requirements
 
-* CMake 3.0
+* CMake 3.1
 * C++11
 * Boost 1.46
 * rabbitmqc
