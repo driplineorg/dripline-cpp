@@ -23,6 +23,7 @@ using std::shared_ptr;
 using std::make_shared;
 using std::string;
 
+using scarab::param;
 using scarab::param_node;
 using scarab::param_value;
 using scarab::parsable;
@@ -88,22 +89,28 @@ namespace dripline
         {
             throw dripline_error() << retcode_t::amqp_error << "Empty envelope received";
         }
-        param_node* t_msg_node = nullptr;
+        param* t_msg = nullptr;
         encoding t_encoding;
         if( a_envelope->Message()->ContentEncoding() == "application/json" )
         {
             t_encoding = encoding::json;
-            t_msg_node = param_input_json::read_string( a_envelope->Message()->Body() );
+            param_input_json t_input;
+            t_msg = t_input.read_string( a_envelope->Message()->Body() );
+            if( t_msg == nullptr )
+            {
+                throw dripline_error() << retcode_t::message_error_decoding_fail << "Message body could not be parsed; skipping request";
+            }
+            if( ! t_msg->is_node() )
+            {
+                throw dripline_error() << retcode_t::message_error_invalid_value << "Message did not parse into a node";
+            }
         }
         else
         {
             throw dripline_error() << retcode_t::message_error_decoding_fail << "Unable to parse message with content type <" << a_envelope->Message()->ContentEncoding() << ">";
         }
 
-        if( t_msg_node == NULL )
-        {
-            throw dripline_error() << retcode_t::message_error_decoding_fail << "Message body could not be parsed; skipping request";
-        }
+        param_node* t_msg_node = &t_msg->as_node();
 
         string t_routing_key = a_envelope->RoutingKey();
 
@@ -177,6 +184,10 @@ namespace dripline
             {
                 t_message->set_payload( new param_node( *(t_msg_node->node_at( "payload" ) ) ) );
             }
+            else if( (*t_msg_node)[ "payload" ].is_null() )
+            {
+                t_message->set_payload( new param_node() );
+            }
             else
             {
                 LWARN( dlog, "Non-node payload is present; it will be ignored" );
@@ -226,13 +237,16 @@ namespace dripline
         switch( f_encoding )
         {
             case encoding::json:
-                if( ! param_output_json::write_string( t_body_node, a_body, param_output_json::k_compact ) )
+            {
+                param_output_json t_output;
+                if( ! t_output.write_string( t_body_node, a_body ) )
                 {
                     LERROR( dlog, "Could not convert message body to string" );
                     return false;
                 }
                 return true;
                 break;
+            }
             default:
                 LERROR( dlog, "Cannot encode using <" << interpret_encoding() << "> (" << f_encoding << ")" );
                 return false;
