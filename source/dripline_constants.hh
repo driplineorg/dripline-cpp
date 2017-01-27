@@ -82,7 +82,15 @@ namespace dripline
         message_error_invalid_method = 306,
         message_error_access_denied = 307,
         message_error_invalid_key = 308,
-        message_error_dripline_deprecated = 309
+        message_error_dripline_deprecated = 309,
+
+        database_error = 400,
+
+        daq_error = 500,
+        daq_not_enabled = 501,
+        daq_running = 502,
+
+        unhandled_exception = 999
     };
 
     // Conversion functions for use when a numeric value is needed
