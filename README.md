@@ -1,6 +1,10 @@
 # dripline-cpp
 C++ Implementation of the [Dripline](http://www.project8.org/dripline) framework 
 
+## Protocol Compliance
+
+Dripline-cpp complies with Dripline v2.1.1.
+
 ## Requirements
 
 * CMake 3.1

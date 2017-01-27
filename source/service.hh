@@ -57,9 +57,6 @@ namespace dripline
             /// Sends a reply message
             bool send( reply_ptr_t a_reply, const std::string& a_exchange = "" ) const;
 
-            /// Sends an info message
-            bool send( info_ptr_t a_info, const std::string& a_exchange = "" ) const;
-
             /// Sends an alert message
             bool send( alert_ptr_t a_alert, const std::string& a_exchange = "" ) const;
 
@@ -86,10 +83,6 @@ namespace dripline
             /// Default alert handler; throws a dripline_error.
             /// Override this to enable handling of alerts.
             virtual bool on_alert_message( const alert_ptr_t a_alert );
-
-            /// Default info handler; throws a dripline_error.
-            /// Override this to enable handling of infos.
-            virtual bool on_info_message( const info_ptr_t a_info );
 
         protected:
             // set the routing key specifier by removing the queue name or broadcast key from the beginning of the routing key
