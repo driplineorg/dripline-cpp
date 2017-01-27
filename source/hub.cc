@@ -204,7 +204,7 @@ namespace dripline
         //LWARN( mtlog, "uuid string: " << a_request->get_payload().get_value( "key", "") << ", uuid: " << uuid_from_string( a_request->get_payload().get_value( "key", "") ) );
         // this condition includes the exception for the unlock instruction that allows us to force the unlock regardless of the key.
         // disable_key() checks the lockout key if it's not forced, so it's okay that we bypass this call to authenticate() for the unlock instruction.
-        if( ! authenticate( a_request->lockout_key() ) && t_instruction != "unlock" && t_instruction != "ping" )
+        if( ! authenticate( a_request->lockout_key() ) && t_instruction != "unlock" && t_instruction != "ping" && t_instruction != "set_condition" )
         {
             std::stringstream t_conv;
             t_conv << a_request->lockout_key();
@@ -227,6 +227,11 @@ namespace dripline
         {
             a_request->parsed_rks().pop_front();
             return handle_ping_request( a_request, a_reply_pkg );
+        }
+        else if( t_instruction == "set_condition" )
+        {
+            a_request->parsed_rks().pop_front();
+            return handle_set_condition_request( a_request, a_reply_pkg );
         }
 
         return do_cmd_request( a_request, a_reply_pkg );
@@ -258,6 +263,11 @@ namespace dripline
             return a_reply_pkg.send_reply( retcode_t::success, "Server unlocked" );
         }
         return a_reply_pkg.send_reply( retcode_t::device_error, "Failed to unlock server" );;
+    }
+
+    bool hub::handle_set_condition_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
+    {
+        return this->__do_handle_set_condition_request( a_request, a_reply_pkg );
     }
 
     bool hub::handle_is_locked_request( const request_ptr_t, reply_package& a_reply_pkg )

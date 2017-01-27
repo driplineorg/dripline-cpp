@@ -64,6 +64,7 @@ namespace dripline
             bool handle_unlock_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
             bool handle_is_locked_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
             bool handle_ping_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            bool handle_set_condition_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
 
         public:
             //******************
@@ -83,6 +84,8 @@ namespace dripline
         private:
             // Returns true if the server is unlocked or if it's locked and the key matches the lockout key; returns false otherwise.
             bool authenticate( const uuid_t& a_key ) const;
+
+            virtual bool __do_handle_set_condition_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
 
             scarab::param_node f_lockout_tag;
             uuid_t f_lockout_key;
@@ -114,7 +117,10 @@ namespace dripline
         return f_lockout_key == a_key;
     }
 
-
+    inline bool hub::__do_handle_set_condition_request( const request_ptr_t, reply_package& a_reply_pkg )
+    {
+        return a_reply_pkg.send_reply( retcode_t::success, "No action taken (default method)" );
+    }
 
 } /* namespace dripline */
 
