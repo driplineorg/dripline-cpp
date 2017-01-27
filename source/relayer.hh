@@ -62,7 +62,6 @@ namespace dripline
 
             cc_rr_pkg_ptr send_async( request_ptr_t a_request );
             bool send_async( alert_ptr_t a_alert );
-            bool send_async( info_ptr_t a_info );
 
             /// Wait for a reply message
             /// If the timeout is <= 0 ms, there will be no timeout

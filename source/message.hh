@@ -28,13 +28,11 @@ namespace dripline
     class message;
     class msg_request;
     class msg_reply;
-    class msg_info;
     class msg_alert;
 
     typedef std::shared_ptr< message > message_ptr_t;
     typedef std::shared_ptr< msg_request > request_ptr_t;
     typedef std::shared_ptr< msg_reply > reply_ptr_t;
-    typedef std::shared_ptr< msg_info > info_ptr_t;
     typedef std::shared_ptr< msg_alert > alert_ptr_t;
 
     //***********
@@ -56,7 +54,6 @@ namespace dripline
             virtual bool is_request() const = 0;
             virtual bool is_reply() const = 0;
             virtual bool is_alert() const = 0;
-            virtual bool is_info() const = 0;
 
         public:
             /// from AMQP to message object
@@ -145,7 +142,6 @@ namespace dripline
             bool is_request() const;
             bool is_reply() const;
             bool is_alert() const;
-            bool is_info() const;
 
             reply_ptr_t reply( retcode_t a_ret_code, const std::string& a_ret_msg ) const;
 
@@ -183,7 +179,6 @@ namespace dripline
             bool is_request() const;
             bool is_reply() const;
             bool is_alert() const;
-            bool is_info() const;
 
         private:
             bool derived_modify_amqp_message( amqp_message_ptr t_amqp_msg ) const;
@@ -218,35 +213,6 @@ namespace dripline
             bool is_request() const;
             bool is_reply() const;
             bool is_alert() const;
-            bool is_info() const;
-
-        private:
-            bool derived_modify_amqp_message( amqp_message_ptr t_amqp_msg ) const;
-            bool derived_modify_message_body( scarab::param_node& a_node ) const;
-
-        public:
-            virtual msg_t message_type() const;
-            static msg_t get_message_type();
-
-        private:
-            static msg_t s_message_type;
-
-    };
-
-    //********
-    // Info
-    //********
-
-    class DRIPLINE_API msg_info : public message
-    {
-        public:
-            msg_info();
-            virtual ~msg_info();
-
-            bool is_request() const;
-            bool is_reply() const;
-            bool is_alert() const;
-            bool is_info() const;
 
         private:
             bool derived_modify_amqp_message( amqp_message_ptr t_amqp_msg ) const;
@@ -389,10 +355,6 @@ namespace dripline
     {
         return false;
     }
-    inline bool msg_request::is_info() const
-    {
-        return false;
-    }
 
     inline bool msg_request::derived_modify_amqp_message( amqp_message_ptr /*a_amqp_msg*/ ) const
     {
@@ -433,10 +395,6 @@ namespace dripline
     {
         return false;
     }
-    inline bool msg_reply::is_info() const
-    {
-        return false;
-    }
 
     inline bool msg_reply::derived_modify_amqp_message( amqp_message_ptr /*a_amqp_msg*/ ) const
     {
@@ -466,10 +424,6 @@ namespace dripline
     {
         return true;
     }
-    inline bool msg_alert::is_info() const
-    {
-        return false;
-    }
 
     inline bool msg_alert::derived_modify_amqp_message( amqp_message_ptr /*a_amqp_msg*/ ) const
     {
@@ -480,41 +434,6 @@ namespace dripline
     {
         return true;
     }
-
-
-
-    //********
-    // Info
-    //********
-
-    inline bool msg_info::is_request() const
-    {
-        return false;
-    }
-    inline bool msg_info::is_reply() const
-    {
-        return false;
-    }
-    inline bool msg_info::is_alert() const
-    {
-        return false;
-    }
-    inline bool msg_info::is_info() const
-    {
-        return true;
-    }
-
-    inline bool msg_info::derived_modify_amqp_message( amqp_message_ptr /*a_amqp_msg*/ ) const
-    {
-        return true;
-    }
-
-    inline bool msg_info::derived_modify_message_body( scarab::param_node& /*a_node*/ ) const
-    {
-        return true;
-    }
-
-
 
 } /* namespace dripline */
 

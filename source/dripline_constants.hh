@@ -32,7 +32,7 @@ namespace dripline
     enum class op_t:uint32_t {
             set = 0,
             get = 1,
-            config = 6,
+            config = 6, // deprecated as of v2.0.0
             send = 7,
             run = 8,
             cmd = 9,
@@ -49,8 +49,7 @@ namespace dripline
     {
         reply = 2,
         request = 3,
-        alert = 4,
-        info = 5
+        alert = 4
     };
 
     // Conversion functions for use when a numeric value is needed
