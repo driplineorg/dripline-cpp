@@ -32,7 +32,7 @@ namespace dripline
     enum class op_t:uint32_t {
             set = 0,
             get = 1,
-            config = 6,
+            config = 6, // deprecated as of v2.0.0
             send = 7,
             run = 8,
             cmd = 9,
@@ -49,8 +49,7 @@ namespace dripline
     {
         reply = 2,
         request = 3,
-        alert = 4,
-        info = 5
+        alert = 4
     };
 
     // Conversion functions for use when a numeric value is needed
@@ -82,7 +81,15 @@ namespace dripline
         message_error_invalid_method = 306,
         message_error_access_denied = 307,
         message_error_invalid_key = 308,
-        message_error_dripline_deprecated = 309
+        message_error_dripline_deprecated = 309,
+
+        database_error = 400,
+
+        daq_error = 500,
+        daq_not_enabled = 501,
+        daq_running = 502,
+
+        unhandled_exception = 999
     };
 
     // Conversion functions for use when a numeric value is needed

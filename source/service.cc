@@ -131,10 +131,6 @@ namespace dripline
                 {
                     t_msg_handled = on_alert_message( static_pointer_cast< msg_alert >( t_message ) );
                 }
-                else if( t_message->is_info() )
-                {
-                    t_msg_handled = on_info_message( static_pointer_cast< msg_info >( t_message ) );
-                }
                 else if( t_message->is_reply() )
                 {
                     t_msg_handled = on_reply_message( static_pointer_cast< msg_reply >( t_message ) );
@@ -205,12 +201,6 @@ namespace dripline
     {
         LDEBUG( dlog, "Sending reply with routing key <" << a_reply->routing_key() << ">" );
         return send_noreply( static_pointer_cast< message >( a_reply ), a_exchange );
-    }
-
-    bool service::send( info_ptr_t a_info, const string& a_exchange ) const
-    {
-        LDEBUG( dlog, "Sending info with routing key <" << a_info->routing_key() << ">" );
-        return send_noreply( static_pointer_cast< message >( a_info ), a_exchange );
     }
 
     bool service::send( alert_ptr_t a_alert, const string& a_exchange ) const
@@ -289,12 +279,6 @@ namespace dripline
     bool service::on_alert_message( const alert_ptr_t )
     {
         throw dripline_error() << retcode_t::message_error_invalid_method << "Base service does not handle alert messages";
-        return false;
-    }
-
-    bool service::on_info_message( const info_ptr_t )
-    {
-        throw dripline_error() << retcode_t::message_error_invalid_method << "Base service does not handle info messages";
         return false;
     }
 

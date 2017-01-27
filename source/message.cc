@@ -159,12 +159,6 @@ namespace dripline
                 t_message = t_alert;
                 break;
             }
-            // TODO: handle info
-            case msg_t::info:
-            {
-                throw dripline_error() << retcode_t::message_error_invalid_method << "message::process_envelope does not handle info messages";
-                break;
-            }
             default:
             {
                 throw dripline_error() << retcode_t::message_error_invalid_method << "Message received with unhandled type: " << t_msg_node->get_value< uint32_t >( "msgtype" );
@@ -405,34 +399,6 @@ namespace dripline
     msg_t msg_alert::message_type() const
     {
         return msg_alert::s_message_type;
-    }
-
-
-    //********
-    // Info
-    //********
-
-    msg_info::msg_info() :
-            message()
-    {
-        f_correlation_id = string_from_uuid( generate_random_uuid() );
-    }
-
-    msg_info::~msg_info()
-    {
-
-    }
-
-    msg_t msg_info::s_message_type = msg_t::info;
-
-    msg_t msg_info::get_message_type()
-    {
-        return msg_info::s_message_type;
-    }
-
-    msg_t msg_info::message_type() const
-    {
-        return msg_info::s_message_type;
     }
 
 
