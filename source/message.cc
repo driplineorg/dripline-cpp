@@ -89,13 +89,13 @@ namespace dripline
         {
             throw dripline_error() << retcode_t::amqp_error << "Empty envelope received";
         }
-        param* t_msg = nullptr;
+        std::shared_ptr< param > t_msg;
         encoding t_encoding;
         if( a_envelope->Message()->ContentEncoding() == "application/json" )
         {
             t_encoding = encoding::json;
             param_input_json t_input;
-            t_msg = t_input.read_string( a_envelope->Message()->Body() );
+            t_msg.reset( t_input.read_string( a_envelope->Message()->Body() ) );
             if( t_msg == nullptr )
             {
                 throw dripline_error() << retcode_t::message_error_decoding_fail << "Message body could not be parsed; skipping request";
@@ -110,7 +110,7 @@ namespace dripline
             throw dripline_error() << retcode_t::message_error_decoding_fail << "Unable to parse message with content type <" << a_envelope->Message()->ContentEncoding() << ">";
         }
 
-        param_node* t_msg_node = &t_msg->as_node();
+        std::shared_ptr< param_node > t_msg_node = std::static_pointer_cast< param_node >( t_msg );
 
         string t_routing_key = a_envelope->RoutingKey();
 
@@ -124,7 +124,7 @@ namespace dripline
             case msg_t::request:
             {
                 request_ptr_t t_request = msg_request::create(
-                        t_msg_node->node_at( "payload" ),
+                        new param_node( t_msg_node->node_at( "payload" ) ),
                         to_op_t( t_msg_node->get_value< uint32_t >( "msgop", to_uint( op_t::unknown ) ) ),
                         t_routing_key,
                         a_envelope->Message()->ReplyTo(),
@@ -142,7 +142,7 @@ namespace dripline
                 reply_ptr_t t_reply = msg_reply::create(
                         to_retcode_t( t_msg_node->get_value< uint32_t >( "retcode" ) ),
                         t_msg_node->get_value( "return_msg", "" ),
-                        t_msg_node->node_at( "payload" ),
+                        new param_node( t_msg_node->node_at( "payload" ) ),
                         t_routing_key,
                         t_encoding);
 
@@ -152,7 +152,7 @@ namespace dripline
             case msg_t::alert:
             {
                 alert_ptr_t t_alert = msg_alert::create(
-                        t_msg_node->node_at( "payload" ),
+                        new param_node( t_msg_node->node_at( "payload" ) ),
                         t_routing_key,
                         t_encoding);
 
@@ -170,13 +170,13 @@ namespace dripline
         t_message->correlation_id() = a_envelope->Message()->CorrelationId();
         t_message->timestamp() = t_msg_node->get_value( "timestamp", "" );
 
-        t_message->set_sender_info( new param_node( *(t_msg_node->node_at( "sender_info" ) ) ) );
+        t_message->set_sender_info( new param_node( t_msg_node->node_at( "sender_info" ) ) );
 
         if( t_msg_node->has( "payload" ) )
         {
             if( (*t_msg_node)[ "payload" ].is_node() )
             {
-                t_message->set_payload( new param_node( *(t_msg_node->node_at( "payload" ) ) ) );
+                t_message->set_payload( new param_node( t_msg_node->node_at( "payload" ) ) );
             }
             else if( (*t_msg_node)[ "payload" ].is_null() )
             {

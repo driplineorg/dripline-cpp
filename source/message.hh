@@ -264,49 +264,49 @@ namespace dripline
 
     inline void message::set_sender_package( const std::string& a_pkg )
     {
-        f_sender_info->value_at( "package" )->set( a_pkg );
+        f_sender_info->value_at( "package" ).set( a_pkg );
         f_sender_package = a_pkg;
         return;
     }
 
     inline void message::set_sender_exe( const std::string& a_exe )
     {
-        f_sender_info->value_at( "exe" )->set( a_exe );
+        f_sender_info->value_at( "exe" ).set( a_exe );
         f_sender_exe = a_exe;
         return;
     }
 
     inline void message::set_sender_version( const std::string& a_vsn )
     {
-        f_sender_info->value_at( "version" )->set( a_vsn );
+        f_sender_info->value_at( "version" ).set( a_vsn );
         f_sender_version = a_vsn;
         return;
     }
 
     inline void message::set_sender_commit( const std::string& a_cmt )
     {
-        f_sender_info->value_at( "commit" )->set( a_cmt );
+        f_sender_info->value_at( "commit" ).set( a_cmt );
         f_sender_commit = a_cmt;
         return;
     }
 
     inline void message::set_sender_hostname( const std::string& a_host )
     {
-        f_sender_info->value_at( "hostname" )->set( a_host );
+        f_sender_info->value_at( "hostname" ).set( a_host );
         f_sender_hostname = a_host;
         return;
     }
 
     inline void message::set_sender_username( const std::string& a_user )
     {
-        f_sender_info->value_at( "username" )->set( a_user );
+        f_sender_info->value_at( "username" ).set( a_user );
         f_sender_username = a_user;
         return;
     }
 
     inline void message::set_sender_service_name( const std::string& a_service )
     {
-        f_sender_info->value_at( "service_name" )->set( a_service );
+        f_sender_info->value_at( "service_name" ).set( a_service );
         f_sender_service_name = a_service;
         return;
     }

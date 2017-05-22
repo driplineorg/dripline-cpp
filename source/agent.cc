@@ -74,7 +74,7 @@ namespace dripline
         param_node t_save_node;
         if( f_config.has( "save" ) )
         {
-            t_save_node = *(f_config.node_at( "save" ));
+            t_save_node = f_config.node_at( "save" );
         }
         f_config.erase( "save" );
 
@@ -242,14 +242,14 @@ namespace dripline
         // for the load instruction, the instruction node should be replaced by the contents of the file specified
         if( f_config.has( "load" ) )
         {
-            if( ! f_config.node_at( "load" )->has( "json" ) )
+            if( ! f_config.node_at( "load" ).has( "json" ) )
             {
                 LERROR( dlog, "Load instruction did not contain a valid file type");
                 delete t_payload_node;
                 return NULL;
             }
 
-            string t_load_filename( f_config.node_at( "load" )->get_value( "json" ) );
+            string t_load_filename( f_config.node_at( "load" ).get_value( "json" ) );
             param_input_json t_reader;
             param* t_node_from_file = t_reader.read_file( t_load_filename );
             if( t_node_from_file == NULL || ! t_node_from_file->is_node() )

@@ -649,7 +649,7 @@ namespace dripline
             return false;
         }
 
-        const param_node* t_amqp_auth = t_auth.node_at( "amqp" );
+        const param_node* t_amqp_auth = &t_auth.node_at( "amqp" );
         if( t_amqp_auth == NULL || ! t_amqp_auth->has( "username" ) || ! t_amqp_auth->has( "password" ) )
         {
             LERROR( dlog, "AMQP authentication is not available or is not complete" );
