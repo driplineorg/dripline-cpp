@@ -2,18 +2,15 @@
 #define DRIPLINE_AMQP_RELAYER_HH_
 
 
-#include "dripline_api.hh"
+#include "core.hh"
 
-#include "service.hh"
-
+#include "cancelable.hh"
 #include "concurrent_queue.hh"
-#include "member_variables.hh"
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/thread.hpp>
+//#include <boost/date_time/posix_time/posix_time.hpp>
 
-#include <atomic>
-#include <string>
+#include <condition_variable>
+#include <mutex>
 
 namespace scarab
 {
@@ -23,10 +20,10 @@ namespace scarab
 namespace dripline
 {
 
-    class DRIPLINE_API relayer : public service
+    class DRIPLINE_API relayer : public core, public scarab::cancelable
     {
         public:
-            relayer();
+            relayer( const scarab::param_node* a_config = nullptr, const std::string& a_broker_address = "", unsigned a_port = 0, const std::string& a_auth_file = "" );
             virtual ~relayer();
 
         public:
@@ -45,11 +42,11 @@ namespace dripline
             // asynchronous message submission
             //********************************
 
-            struct cc_receive_reply_pkg : service::receive_reply_pkg
+            struct cc_receive_reply_pkg : receive_reply_pkg
             {
-                mutable boost::mutex f_mutex;
-                mutable boost::condition_variable f_condition_var;
-                cc_receive_reply_pkg& operator=( service::receive_reply_pkg& a_orig )
+                mutable std::mutex f_mutex;
+                mutable std::condition_variable f_condition_var;
+                cc_receive_reply_pkg& operator=( const receive_reply_pkg& a_orig )
                 {
                     // not thread safe
                     f_channel = a_orig.f_channel;
@@ -67,27 +64,20 @@ namespace dripline
             /// If the timeout is <= 0 ms, there will be no timeout
             /// This function can be called multiple times to receive multiple replies
             /// The optional bool argument a_chan_valid will return whether or not the channel is still valid for use
-            reply_ptr_t wait_for_reply( const cc_rr_pkg_ptr a_receive_reply, int a_timeout_ms = 0 ) const;
-            reply_ptr_t wait_for_reply( const cc_rr_pkg_ptr a_receive_reply, bool& a_chan_valid, int a_timeout_ms = 0 ) const;
-
-        public:
-            mv_referrable( std::string, request_exchange );
-            mv_referrable( std::string, alert_exchange );
-            mv_referrable( std::string, info_exchange );
+            static reply_ptr_t wait_for_reply( const cc_rr_pkg_ptr a_receive_reply, int a_timeout_ms = 0 );
+            static reply_ptr_t wait_for_reply( const cc_rr_pkg_ptr a_receive_reply, bool& a_chan_valid, int a_timeout_ms = 0 );
 
         private:
+            void do_cancellation();
+
             struct message_and_reply
             {
                 message_ptr_t f_message;
                 cc_rr_pkg_ptr f_receive_reply;
             };
             typedef std::shared_ptr< message_and_reply > mar_ptr;
-            typedef boost::unique_lock< boost::mutex > scoped_lock;
 
             scarab::concurrent_queue< mar_ptr > f_queue;
-
-            std::atomic< bool > f_canceled;
-
 
     };
 

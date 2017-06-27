@@ -22,52 +22,16 @@ namespace dripline
     LOGGER( dlog, "hub" );
 
 
-    hub::hub() :
-            service(),
-            f_lockout_tag(),
-            f_lockout_key( generate_nil_uuid() )
-    {}
-
-    hub::hub( const string& a_address, unsigned a_port, const string& a_exchange, const string& a_queue_name, const string& a_auth_file ) :
-            service( a_address, a_port, a_exchange, a_queue_name, a_auth_file),
+    hub::hub( const scarab::param_node* a_config, const string& a_queue_name,  const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file ) :
+            service( a_config, a_queue_name, a_broker_address, a_port, a_auth_file ),
             f_lockout_tag(),
             f_lockout_key( generate_nil_uuid() )
     {
-        if( ! a_queue_name.empty() )
-        {
-            f_keys.insert( a_queue_name + string( ".#" ) );
-        }
+        f_keys.insert( f_queue_name + string( ".#" ) );
     }
 
     hub::~hub()
     {
-    }
-
-    bool hub::dripline_setup( const string& a_address, unsigned a_port, const string& a_exchange, const string& a_queue_name, const string& a_auth_file )
-    {
-        f_address = a_address;
-        f_port = a_port;
-        f_exchange = a_exchange;
-        f_queue_name = a_queue_name;
-        f_keys.clear();
-        if( ! f_queue_name.empty() )
-        {
-            f_keys.insert( f_queue_name + string( ".#" ) );
-        }
-        if( ! a_auth_file.empty() )
-        {
-            if( ! use_auth_file( a_auth_file ) )
-            {
-                LERROR( dlog, "Unable to use authentication file <" << a_auth_file << ">" );
-                return false;
-            }
-        }
-        else
-        {
-            f_username = "guest";
-            f_password = "guest";
-        }
-        return true;
     }
 
     bool hub::on_request_message( const request_ptr_t a_request )
@@ -308,7 +272,7 @@ namespace dripline
                  "Return message: " << t_reply->return_msg() <<
                  f_payload );
 
-        if( ! f_service_ptr->send( t_reply ) )
+        if( ! f_service_ptr->core::send( t_reply ) )
         {
             LWARN( dlog, "Something went wrong while sending the reply" );
             return false;

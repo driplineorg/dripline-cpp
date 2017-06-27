@@ -25,7 +25,8 @@
 #ifndef DRIPLINE_AGENT_HH_
 #define DRIPLINE_AGENT_HH_
 
-#include "dripline_api.hh"
+#include "core.hh"
+
 #include "message.hh"
 
 #include "param.hh"
@@ -33,7 +34,7 @@
 
 namespace dripline
 {
-    class DRIPLINE_API agent
+    class DRIPLINE_API agent : public core
     {
         public:
             agent( const scarab::param_node& a_node );
