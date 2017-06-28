@@ -31,14 +31,19 @@ namespace dripline
             bool t_have_message = f_queue.timed_wait_and_pop( t_mar ); // blocking call for next message to send; timed so that cancellation can be rechecked
             if( ! t_have_message ) continue;
 
-            std::unique_lock< std::mutex > lock( t_mar->f_receive_reply->f_mutex );
-
             switch( t_mar->f_message->message_type() )
             {
                 case msg_t::request:
+                { // add scope for controling the lock's existence
+                    std::unique_lock< std::mutex > lock( t_mar->f_receive_reply->f_mutex );
                     *t_mar->f_receive_reply = *core::send( std::static_pointer_cast< dripline::msg_request >( t_mar->f_message ) );
+                    if( ! t_mar->f_receive_reply->f_successful_send )
+                    {
+                        LWARN( dlog, "Unable to send request" );
+                    }
                     t_mar->f_receive_reply->f_condition_var.notify_one();
                     break;
+                }
                 case msg_t::alert:
                     if( ! core::send( std::static_pointer_cast< dripline::msg_alert >( t_mar->f_message ) ) )
                     {

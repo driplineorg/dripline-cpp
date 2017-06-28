@@ -34,9 +34,6 @@ namespace dripline
             /// main thread execution function: send any messages that are submitted via the send functions
             void execute_relayer();
 
-            /// asynchronous cancel
-            void cancel_relayer();
-
         public:
             //********************************
             // asynchronous message submission
