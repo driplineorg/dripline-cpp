@@ -26,7 +26,6 @@ namespace dripline
         param_node* t_amqp_node = new param_node();
         t_amqp_node->add( "broker-port", new param_value( 5672 ) );
         t_amqp_node->add( "broker", new param_value( "localhost" ) );
-        t_amqp_node->add( "exchange", new param_value( "requests" ) );
         t_amqp_node->add( "reply-timeout-ms", new param_value( 10000 ) );
 #ifdef DRIPLINE_AUTH_FILE
         t_amqp_node->add( "auth-file", new param_value( TOSTRING( DRIPLINE_AUTH_FILE ) ) );

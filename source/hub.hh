@@ -28,11 +28,8 @@ namespace dripline
     class DRIPLINE_API hub : public service
     {
         public:
-            hub();
-            hub( const std::string& a_address, unsigned a_port, const std::string& a_exchange, const std::string& a_queue_name = "", const std::string& a_auth_file = "" );
+            hub( const scarab::param_node* a_config = nullptr, const std::string& a_queue_name = "",  const std::string& a_broker_address = "", unsigned a_port = 0, const std::string& a_auth_file = ""  );
             virtual ~hub();
-
-            bool dripline_setup( const std::string& a_address, unsigned a_port, const std::string& a_exchange, const std::string& a_queue_name = "", const std::string& a_auth_file = "" );
 
         private:
             /// Handle request messages
