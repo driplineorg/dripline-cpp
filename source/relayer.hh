@@ -54,8 +54,8 @@ namespace dripline
             };
             typedef std::shared_ptr< cc_receive_reply_pkg > cc_rr_pkg_ptr;
 
-            cc_rr_pkg_ptr send_async( request_ptr_t a_request );
-            bool send_async( alert_ptr_t a_alert );
+            cc_rr_pkg_ptr send_async( request_ptr_t a_request ) const;
+            bool send_async( alert_ptr_t a_alert ) const;
 
             /// Wait for a reply message
             /// If the timeout is <= 0 ms, there will be no timeout
@@ -74,7 +74,7 @@ namespace dripline
             };
             typedef std::shared_ptr< message_and_reply > mar_ptr;
 
-            scarab::concurrent_queue< mar_ptr > f_queue;
+            mutable scarab::concurrent_queue< mar_ptr > f_queue;
 
     };
 

@@ -69,7 +69,7 @@ namespace dripline
         return;
     }
 
-    relayer::cc_rr_pkg_ptr relayer::send_async( request_ptr_t a_request )
+    relayer::cc_rr_pkg_ptr relayer::send_async( request_ptr_t a_request ) const
     {
         if( is_canceled() )
         {
@@ -87,7 +87,7 @@ namespace dripline
         return t_mar->f_receive_reply;
     }
 
-    bool relayer::send_async( alert_ptr_t a_alert )
+    bool relayer::send_async( alert_ptr_t a_alert ) const
     {
         if( is_canceled() )
         {
