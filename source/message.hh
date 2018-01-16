@@ -137,7 +137,7 @@ namespace dripline
             msg_request();
             virtual ~msg_request();
 
-            static request_ptr_t create( scarab::param_node* a_payload, op_t a_msg_op, const std::string& a_routing_key, const std::string& a_reply_to, message::encoding a_encoding );
+            static request_ptr_t create( scarab::param_node* a_payload, op_t a_msg_op, const std::string& a_routing_key, const std::string& a_reply_to, message::encoding a_encoding = encoding::json );
 
             bool is_request() const;
             bool is_reply() const;
@@ -173,8 +173,8 @@ namespace dripline
             msg_reply();
             virtual ~msg_reply();
 
-            static reply_ptr_t create( retcode_t a_retcode, const std::string& a_ret_msg, scarab::param_node* a_payload, const std::string& a_routing_key, message::encoding a_encoding );
-            static reply_ptr_t create( const dripline_error& a_error, const std::string& a_routing_key, message::encoding a_encoding );
+            static reply_ptr_t create( retcode_t a_retcode, const std::string& a_ret_msg, scarab::param_node* a_payload, const std::string& a_routing_key, message::encoding a_encoding = encoding::json );
+            static reply_ptr_t create( const dripline_error& a_error, const std::string& a_routing_key, message::encoding a_encoding = encoding::json );
 
             bool is_request() const;
             bool is_reply() const;
@@ -208,7 +208,7 @@ namespace dripline
             msg_alert();
             virtual ~msg_alert();
 
-            static alert_ptr_t create( scarab::param_node* a_payload, const std::string& a_routing_key, message::encoding a_encoding );
+            static alert_ptr_t create( scarab::param_node* a_payload, const std::string& a_routing_key, message::encoding a_encoding = encoding::json );
 
             bool is_request() const;
             bool is_reply() const;

@@ -5,6 +5,9 @@
  *      Author: nsoblath
  */
 
+#ifndef DRIPLINE_AMQP_HH_
+#define DRIPLINE_AMQP_HH_
+
 #include "SimpleAmqpClient/SimpleAmqpClient.h"
 
 #include "SimpleAmqpClient/AmqpException.h"
@@ -19,6 +22,7 @@ namespace dripline
 
     typedef AmqpClient::AmqpException amqp_exception;
     typedef AmqpClient::AmqpLibraryException amqp_lib_exception;
-}
 
+} /* namespace dripline */
 
+#endif /* DRIPLINE_AMPQ_HH_ */

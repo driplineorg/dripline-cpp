@@ -11,9 +11,8 @@
 #include "agent.hh"
 
 #include "dripline_constants.hh"
-#include "dripline_error.hh"
 #include "dripline_version.hh"
-#include "service.hh"
+#include "core.hh"
 #include "uuid.hh"
 
 #include "logger.hh"
@@ -28,8 +27,6 @@
 #undef uuid_t
 #endif
 
-using std::string;
-
 using scarab::param;
 using scarab::param_array;
 using scarab::param_input_json;
@@ -42,6 +39,7 @@ namespace dripline
     LOGGER( dlog, "agent" );
 
     agent::agent( const param_node& a_node ) :
+            core( a_node.node_at( "amqp" ) ),
             f_config( a_node ),
             f_return( 0 )
     {
@@ -121,14 +119,9 @@ namespace dripline
 
         param_node& t_broker_node = f_config.remove( "amqp" )->as_node();
 
-        dripline::service t_service( t_broker_node.get_value( "broker" ),
-                                     t_broker_node.get_value< unsigned >( "broker-port" ),
-                                     t_broker_node.get_value( "exchange" ),
-                                     "", t_broker_node.get_value( "auth-file", "") );
-
         LDEBUG( dlog, "Sending message w/ msgop = " << t_request->get_message_op() << " to " << t_request->routing_key() );
 
-        dripline::service::rr_pkg_ptr t_receive_reply = t_service.send( t_request );
+        rr_pkg_ptr t_receive_reply = send( t_request );
 
         if( ! t_receive_reply->f_successful_send )
         {
@@ -142,7 +135,7 @@ namespace dripline
             LINFO( dlog, "Waiting for a reply from the server; use ctrl-c to cancel" );
 
             // timed blocking call to wait for incoming message
-            dripline::reply_ptr_t t_reply = t_service.wait_for_reply( t_receive_reply, t_broker_node.get_value( "reply-timeout-ms", 10000 ) );
+            dripline::reply_ptr_t t_reply = wait_for_reply( t_receive_reply, t_broker_node.get_value( "reply-timeout-ms", 10000 ) );
 
             if( t_reply )
             {
@@ -249,7 +242,7 @@ namespace dripline
                 return NULL;
             }
 
-            string t_load_filename( f_config.node_at( "load" ).get_value( "json" ) );
+            std::string t_load_filename( f_config.node_at( "load" )->get_value( "json" ) );
             param_input_json t_reader;
             param* t_node_from_file = t_reader.read_file( t_load_filename );
             if( t_node_from_file == NULL || ! t_node_from_file->is_node() )
