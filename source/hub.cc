@@ -24,6 +24,10 @@ namespace dripline
 
     hub::hub( const scarab::param_node* a_config, const string& a_queue_name,  const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file ) :
             service( a_config, a_queue_name, a_broker_address, a_port, a_auth_file ),
+            f_run_handler(),
+            f_get_handlers(),
+            f_set_handlers(),
+            f_cmd_handlers(),
             f_lockout_tag(),
             f_lockout_key( generate_nil_uuid() )
     {
@@ -32,6 +36,73 @@ namespace dripline
 
     hub::~hub()
     {
+    }
+
+    void hub::set_run_handler( const handler_func_t& a_func )
+    {
+        f_run_handler = a_func;
+        LDEBUG( dlog, "Set RUN handler" );
+        return;
+    }
+
+    void hub::register_get_handler( const std::string& a_key, const handler_func_t& a_func )
+    {
+        f_get_handlers[ a_key ] = a_func;
+        LDEBUG( dlog, "Set GET handler for <" << a_key << ">" );
+        return;
+    }
+
+    void hub::register_set_handler( const std::string& a_key, const handler_func_t& a_func )
+    {
+        f_set_handlers[ a_key ] = a_func;
+        LDEBUG( dlog, "Set SET handler for <" << a_key << ">" );
+        return;
+    }
+
+    void hub::register_cmd_handler( const std::string& a_key, const handler_func_t& a_func )
+    {
+        f_cmd_handlers[ a_key ] = a_func;
+        LDEBUG( dlog, "Set CMD handler for <" << a_key << ">" );
+        return;
+    }
+
+    void hub::remove_get_handler( const std::string& a_key )
+    {
+        if( f_get_handlers.erase( a_key ) == 0 )
+        {
+            LWARN( dlog, "GET handler <" << a_key << "> was not present; nothing was removed" );
+        }
+        else
+        {
+            LDEBUG( dlog, "GET handler <" << a_key << "> was removed" );
+        }
+        return;
+    }
+
+    void hub::remove_set_handler( const std::string& a_key )
+    {
+        if( f_set_handlers.erase( a_key ) == 0 )
+        {
+            LWARN( dlog, "SET handler <" << a_key << "> was not present; nothing was removed" );
+        }
+        else
+        {
+            LDEBUG( dlog, "SET handler <" << a_key << "> was removed" );
+        }
+        return;
+    }
+
+    void hub::remove_cmd_handler( const std::string& a_key )
+    {
+        if( f_cmd_handlers.erase( a_key ) == 0 )
+        {
+            LWARN( dlog, "CMD handler <" << a_key << "> was not present; nothing was removed" );
+        }
+        else
+        {
+            LDEBUG( dlog, "CMD handler <" << a_key << "> was removed" );
+        }
+        return;
     }
 
     bool hub::on_request_message( const request_ptr_t a_request )
@@ -80,28 +151,59 @@ namespace dripline
         return false;
     }
 
-    bool hub::do_run_request( const request_ptr_t, reply_package& )
+    bool hub::do_run_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
     {
-        LWARN( dlog, "This hub does not accept run requests" );
-        return false;
+        return f_run_handler( a_request, a_reply_pkg );
     }
 
-    bool hub::do_get_request( const request_ptr_t, reply_package& )
+    bool hub::do_get_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
     {
-        LWARN( dlog, "This hub does not accept get requests other than the basic dripline instructions" );
-        return false;
+        std::string t_query_type = a_request->parsed_rks().front();
+        a_request->parsed_rks().pop_front();
+
+        try
+        {
+            return f_get_handlers.at( t_query_type )( a_request, a_reply_pkg );
+        }
+        catch( std::out_of_range& e )
+        {
+            LWARN( dlog, "GET query type <" << t_query_type << "> was not understood (" << e.what() << ")" );
+            return a_reply_pkg.send_reply( retcode_t::message_error_bad_payload, "Unrecognized query type or no query type provided: <" + t_query_type + ">" );;
+        }
     }
 
-    bool hub::do_set_request( const request_ptr_t, reply_package& )
+    bool hub::do_set_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
     {
-        LWARN( dlog, "This hub does not accept set requests" );
-        return false;
+        std::string t_set_type = a_request->parsed_rks().front();
+        a_request->parsed_rks().pop_front();
+
+        try
+        {
+            return f_set_handlers.at( t_set_type )( a_request, a_reply_pkg );
+        }
+        catch( std::out_of_range& e )
+        {
+            LWARN( dlog, "SET request <" << t_set_type << "> not understood (" << e.what() << ")" );
+            return a_reply_pkg.send_reply( retcode_t::message_error_bad_payload, "Unrecognized set request type or no set request type provided: <" + t_set_type + ">" );
+        }
     }
 
-    bool hub::do_cmd_request( const request_ptr_t, reply_package& )
+    bool hub::do_cmd_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
     {
-        LWARN( dlog, "This hub does not accept cmd requests other than the basic dripline instructions" );
-        return false;
+        // get the instruction before checking the lockout key authentication because we need to have the exception for
+        // the unlock instruction that allows us to force the unlock.
+        std::string t_instruction = a_request->parsed_rks().front();
+        a_request->parsed_rks().pop_front();
+
+        try
+        {
+            return f_cmd_handlers.at( t_instruction )( a_request, a_reply_pkg );
+        }
+        catch( std::out_of_range& e )
+        {
+            LWARN( dlog, "CMD instruction <" << t_instruction << "> not understood (" << e.what() << ")" );
+            return a_reply_pkg.send_reply( retcode_t::message_error_bad_payload, "Instruction <" + t_instruction + "> not understood" );;
+        }
     }
 
     bool hub::__do_run_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
