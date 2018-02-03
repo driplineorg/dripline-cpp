@@ -24,6 +24,8 @@ A hub is a service that is setup to receive requests and maps routing key specif
 This allows you to, for example, receive requests intended for a variety of destinations within 
 a single application and have the requests distributed accordingly.
 
+.. image:: ../images/DriplineHubDiagram.png
+
 Relayer
 =======
 
