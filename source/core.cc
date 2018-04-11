@@ -41,7 +41,7 @@ namespace dripline
         }
     }
 
-    core::core( const scarab::param_node* a_config, const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file, const bool a_make_connection ) :
+    core::core( const scarab::param_node* a_config, const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file ) :
             f_address( "localhost" ),
             f_port( 5672 ),
             f_username( "guest" ),
@@ -84,11 +84,19 @@ namespace dripline
             f_port = a_config->get_value( "broker-port", f_port );
             f_requests_exchange = a_config->get_value( "requests-exchange", f_requests_exchange );
             f_alerts_exchange = a_config->get_value( "alerts-exchange", f_alerts_exchange );
+            f_make_connection = a_config->get_value( "make-connection", f_make_connection );
         }
 
         // parameters override config file, auth file, and defaults
         if( ! a_broker_address.empty() ) f_address = a_broker_address;
         if( a_port != 0 ) f_port = a_port;
+    }
+
+    //TODO having this constructor just because bools are 2-state and i can't tell default value from provided value == default
+    core::core( const bool a_make_connection, const scarab::param_node* a_config ) :
+            core::core(a_config)
+    {
+        // this constructor overrides the default value of make_connection
         f_make_connection = a_make_connection;
     }
 
@@ -294,7 +302,7 @@ namespace dripline
     {
         if ( ! f_make_connection )
         {
-            LWARN( dlog, "Should not call open_channel when connections are disabled" );
+            throw dripline_error() << "Should not call open_channel when f_make_connection is false";
             return nullptr;
         }
         try

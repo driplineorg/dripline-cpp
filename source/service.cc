@@ -46,6 +46,18 @@ namespace dripline
         if( ! a_queue_name.empty() ) f_queue_name = a_queue_name;
     }
 
+    service::service( const bool a_make_connection, const scarab::param_node* a_config ) :
+            core( a_make_connection, a_config ),
+            f_queue_name( "" ),
+            f_channel(),
+            f_consumer_tag(),
+            f_keys(),
+            f_broadcast_key(),
+            f_listen_timeout_ms( 500 ),
+            f_canceled( false )
+    {
+    }
+
     service::~service()
     {
     }
@@ -70,6 +82,11 @@ namespace dripline
 
     bool service::start()
     {
+        if( ! f_make_connection )
+        {
+            LWARN( dlog, "Should not start service when make_connection is disabled" );
+            return true;
+        }
         if( f_queue_name.empty() )
         {
             LERROR( dlog, "Service requires a queue name to be started" );
