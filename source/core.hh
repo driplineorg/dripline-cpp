@@ -34,9 +34,10 @@ namespace dripline
             /// Parameters specified in a_config will override the default values.
             /// Parameters specified as individual parameters will override a_config.
             /// If the broker address is not specified, it will be requested from the authentication file.
-            core( const scarab::param_node* a_config = nullptr, const std::string& a_broker_address = "", unsigned a_port = 0, const std::string& a_auth_file = "" );
+            core( const scarab::param_node* a_config = nullptr, const std::string& a_broker_address = "", unsigned a_port = 0, const std::string& a_auth_file = "", const bool a_make_connection=true );
             core( const core& a_orig );
             core( core&& a_orig );
+            //core( const scarab::param_node* a_config = nullptr );
             virtual ~core();
 
             core& operator=( const core& a_orig );
@@ -69,6 +70,8 @@ namespace dripline
 
             mv_referrable( std::string, requests_exchange );
             mv_referrable( std::string, alerts_exchange );
+
+            mv_accessible( bool, make_connection );
 
         protected:
             amqp_channel_ptr send_withreply( message_ptr_t a_message, std::string& a_reply_consumer_tag, const std::string& a_exchange ) const;
