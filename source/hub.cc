@@ -374,7 +374,14 @@ namespace dripline
                  "Return message: " << t_reply->return_msg() <<
                  f_payload );
 
-        if( ! f_service_ptr->core::send( t_reply ) )
+        if ( f_reply_to.empty() )
+        {
+            //TODO should this be PROG?
+            LPROG( dlog, "Not sending reply (reply-to empty)\n" <<
+                         "    Return code: " << t_reply->get_return_code() << '\n' <<
+                         "    Return message: " << t_reply->return_msg() << f_payload );
+        }
+        else if( ! f_service_ptr->core::send( t_reply ) )
         {
             LWARN( dlog, "Something went wrong while sending the reply" );
             return false;
