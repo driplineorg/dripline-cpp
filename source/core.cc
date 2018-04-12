@@ -152,8 +152,9 @@ namespace dripline
 
     rr_pkg_ptr core::send( request_ptr_t a_request ) const
     {
-        if ( f_make_connection )
+        if ( ! f_make_connection )
         {
+            LWARN( dlog, "send called but make_connection is false, returning nullptr" );
             return nullptr;
         }
         LDEBUG( dlog, "Sending request with routing key <" << a_request->routing_key() << ">" );
@@ -165,12 +166,22 @@ namespace dripline
 
     bool core::send( reply_ptr_t a_reply ) const
     {
+        if ( ! f_make_connection )
+        {
+            LWARN( dlog, "send called but make_connection is false, returning nullptr" );
+            return false;
+        }
         LDEBUG( dlog, "Sending reply with routing key <" << a_reply->routing_key() << ">" );
         return send_noreply( std::static_pointer_cast< message >( a_reply ), f_requests_exchange );
     }
 
     bool core::send( alert_ptr_t a_alert ) const
     {
+        if ( ! f_make_connection )
+        {
+            LWARN( dlog, "send called but make_connection is false, returning nullptr" );
+            return false;
+        }
         LDEBUG( dlog, "Sending alert with routing key <" << a_alert->routing_key() << ">" );
         return send_noreply( std::static_pointer_cast< message >( a_alert ), f_alerts_exchange );
     }
@@ -183,6 +194,11 @@ namespace dripline
 
     reply_ptr_t core::wait_for_reply( const rr_pkg_ptr a_receive_reply, bool& a_chan_valid, int a_timeout_ms )
     {
+        if ( ! a_receive_reply->f_channel )
+        {
+            //throw dripline_error() << "cannot wait for reply with make_connection is false";
+            return reply_ptr_t();
+        }
         LDEBUG( dlog, "Waiting for a reply" );
 
         amqp_envelope_ptr t_envelope;
@@ -212,6 +228,10 @@ namespace dripline
 
     amqp_channel_ptr core::send_withreply( message_ptr_t a_message, std::string& a_reply_consumer_tag, const std::string& a_exchange ) const
     {
+        if ( ! f_make_connection )
+        {
+            throw dripline_error() << "cannot send reply with make_connection is false";
+        }
         amqp_channel_ptr t_channel = open_channel();
         if( ! t_channel )
         {
@@ -263,6 +283,7 @@ namespace dripline
         {
             LDEBUG( dlog, "does not make amqp connection, not sending payload:" );
             LDEBUG( dlog, a_message->get_payload() );
+            throw dripline_error() << "cannot send message with make_connection is false";
             return true;
         }
         amqp_channel_ptr t_channel = open_channel();
@@ -303,7 +324,6 @@ namespace dripline
         if ( ! f_make_connection )
         {
             throw dripline_error() << "Should not call open_channel when f_make_connection is false";
-            return nullptr;
         }
         try
         {
