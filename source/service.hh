@@ -52,6 +52,11 @@ namespace dripline
             /// If no queue was created, this does nothing.
             bool stop();
 
+        public:
+            bool submit_request_message( const request_ptr_t a_request );
+            bool submit_reply_message( const reply_ptr_t a_reply );
+            bool submit_alert_message( const alert_ptr_t a_alert );
+
         private:
             /// Default request handler; throws a dripline_error.
             /// Override this to enable handling of requests.

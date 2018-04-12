@@ -206,6 +206,22 @@ namespace dripline
     }
 
 
+    bool service::submit_request_message( const request_ptr_t a_request_ptr)
+    {
+        bool to_return = this->on_request_message( a_request_ptr );
+        return to_return;
+    }
+
+    bool service::submit_alert_message( const alert_ptr_t a_alert_ptr)
+    {
+        return this->on_alert_message( a_alert_ptr );
+    }
+
+    bool service::submit_reply_message( const reply_ptr_t a_reply_ptr)
+    {
+        return this->on_reply_message( a_reply_ptr );
+    }
+
     bool service::on_request_message( const request_ptr_t )
     {
         throw dripline_error() << retcode_t::message_error_invalid_method << "Base service does not handle request messages";
