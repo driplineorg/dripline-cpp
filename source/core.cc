@@ -41,14 +41,14 @@ namespace dripline
         }
     }
 
-    core::core( const scarab::param_node* a_config, const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file ) :
+    core::core( const scarab::param_node* a_config, const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file, const bool a_make_connection ) :
             f_address( "localhost" ),
             f_port( 5672 ),
             f_username( "guest" ),
             f_password( "guest" ),
             f_requests_exchange( "requests" ),
             f_alerts_exchange( "alerts" ),
-            f_make_connection( true )
+            f_make_connection( a_make_connection )
     {
         std::string t_auth_file = a_config->get_value( "auth-file", a_auth_file );
 

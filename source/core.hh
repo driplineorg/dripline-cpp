@@ -34,7 +34,7 @@ namespace dripline
             /// Parameters specified in a_config will override the default values.
             /// Parameters specified as individual parameters will override a_config.
             /// If the broker address is not specified, it will be requested from the authentication file.
-            core( const scarab::param_node* a_config = nullptr, const std::string& a_broker_address = "", unsigned a_port = 0, const std::string& a_auth_file = "" );
+            core( const scarab::param_node* a_config = nullptr, const std::string& a_broker_address = "", unsigned a_port = 0, const std::string& a_auth_file = "", const bool a_make_connection = true );
             core( const bool a_make_connection, const scarab::param_node* a_config = nullptr );
             core( const core& a_orig );
             core( core&& a_orig );

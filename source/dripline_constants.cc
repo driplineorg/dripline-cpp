@@ -8,6 +8,7 @@
 #define DRIPLINE_API_EXPORTS
 
 #include "dripline_constants.hh"
+#include "dripline_error.hh"
 
 namespace dripline
 {
@@ -36,6 +37,8 @@ namespace dripline
             case op_t::send: return "send";
             case op_t::run: return "run";
             case op_t::cmd: return "cmd";
+            case op_t::unknown: return "unknown";
+            default: throw dripline_error() << "op_t value <" << an_op << "> not recognized";
         }
         //TODO explicitly throw something here?
     }
@@ -47,6 +50,8 @@ namespace dripline
         if ( an_op_str == to_string( op_t::send ) ) return op_t::send;
         if ( an_op_str == to_string( op_t::run ) ) return op_t::run;
         if ( an_op_str == to_string( op_t::cmd ) ) return op_t::cmd;
+        if ( an_op_str == to_string( op_t::unknown ) ) return op_t::unknown;
+        throw dripline_error() << "unable to map <" << an_op_str << "> to an op_t value";
         //TODO explicitly throw something here?
     }
 

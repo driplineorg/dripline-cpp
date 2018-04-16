@@ -27,8 +27,8 @@ namespace dripline
 {
     LOGGER( dlog, "service" );
 
-    service::service( const scarab::param_node* a_config, const string& a_queue_name,  const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file ) :
-            core( a_config, a_broker_address, a_port, a_auth_file ),
+    service::service( const scarab::param_node* a_config, const string& a_queue_name,  const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file, const bool a_make_connection ) :
+            core( a_config, a_broker_address, a_port, a_auth_file, a_make_connection ),
             f_queue_name( "dlcpp_service" ),
             f_channel(),
             f_consumer_tag(),
@@ -117,6 +117,11 @@ namespace dripline
 
         while( ! f_canceled.load()  )
         {
+            //TODO
+            if ( ! f_make_connection )
+            {
+                continue;
+            }
             amqp_envelope_ptr t_envelope;
             bool t_channel_valid = listen_for_message( t_envelope, f_channel, f_consumer_tag, f_listen_timeout_ms );
 
@@ -255,7 +260,7 @@ namespace dripline
 
         if( t_rk == t_prefix )
         {
-        	// rk consists of only the prefix
+            // rk consists of only the prefix
             a_message->set_routing_key_specifier( "", routing_key_specifier() );
             return true;
         }
@@ -319,6 +324,11 @@ namespace dripline
 
     bool service::stop_consuming()
     {
+        if ( ! f_make_connection )
+        {
+            LDEBUG( dlog, "no consuming to start because connections disabled" );
+            return true;
+        }
         try
         {
             LDEBUG( dlog, "Stopping consuming messages (consumer " << f_consumer_tag << ")" );
@@ -355,6 +365,11 @@ namespace dripline
 
     bool service::remove_queue()
     {
+        if ( ! f_make_connection )
+        {
+            LDEBUG( dlog, "no queue to remove because make_connection is false" );
+            return true;
+        }
         try
         {
             LDEBUG( dlog, "Deleting queue <" << f_queue_name << ">" );
