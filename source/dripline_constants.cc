@@ -25,6 +25,30 @@ namespace dripline
     {
         return a_os << to_uint( an_op );
     }
+    // Conversion functions for use when string values are required
+    // TODO op_t->string isn't too bad, but the string->op_t seems super ugly
+    DRIPLINE_API std::string to_string( op_t an_op )
+    {
+        switch (an_op) {
+            case op_t::set: return "set";
+            case op_t::get: return "get";
+            case op_t::config: return "config";//config is deprecated
+            case op_t::send: return "send";
+            case op_t::run: return "run";
+            case op_t::cmd: return "cmd";
+        }
+        //TODO explicitly throw something here?
+    }
+    DRIPLINE_API op_t to_op_t( std::string an_op_str )
+    {
+        if ( an_op_str == to_string( op_t::set ) ) return op_t::set;
+        if ( an_op_str == to_string( op_t::get ) ) return op_t::get;
+        if ( an_op_str == to_string( op_t::config ) ) return op_t::config;
+        if ( an_op_str == to_string( op_t::send ) ) return op_t::send;
+        if ( an_op_str == to_string( op_t::run ) ) return op_t::run;
+        if ( an_op_str == to_string( op_t::cmd ) ) return op_t::cmd;
+        //TODO explicitly throw something here?
+    }
 
     // Conversion functions for use when a numeric value is needed
     DRIPLINE_API uint32_t to_uint( msg_t a_msg )
