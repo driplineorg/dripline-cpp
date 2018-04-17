@@ -114,14 +114,14 @@ namespace dripline
     bool service::listen()
     {
         LINFO( dlog, "Listening for incoming messages on <" << f_queue_name << ">" );
-
+        //TODO
+        if ( ! f_make_connection )
+        {
+            return true;
+        }
         while( ! f_canceled.load()  )
         {
-            //TODO
-            if ( ! f_make_connection )
-            {
-                continue;
-            }
+
             amqp_envelope_ptr t_envelope;
             bool t_channel_valid = listen_for_message( t_envelope, f_channel, f_consumer_tag, f_listen_timeout_ms );
 
