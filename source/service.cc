@@ -27,8 +27,8 @@ namespace dripline
 {
     LOGGER( dlog, "service" );
 
-    service::service( const scarab::param_node* a_config, const string& a_queue_name,  const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file ) :
-            core( a_config, a_broker_address, a_port, a_auth_file ),
+    service::service( const scarab::param_node* a_config, const string& a_queue_name,  const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file, const bool a_make_connection ) :
+            core( a_config, a_broker_address, a_port, a_auth_file, a_make_connection ),
             f_queue_name( "dlcpp_service" ),
             f_channel(),
             f_consumer_tag(),
@@ -44,6 +44,18 @@ namespace dripline
         }
 
         if( ! a_queue_name.empty() ) f_queue_name = a_queue_name;
+    }
+
+    service::service( const bool a_make_connection, const scarab::param_node* a_config ) :
+            core( a_make_connection, a_config ),
+            f_queue_name( "" ),
+            f_channel(),
+            f_consumer_tag(),
+            f_keys(),
+            f_broadcast_key(),
+            f_listen_timeout_ms( 500 ),
+            f_canceled( false )
+    {
     }
 
     service::~service()
@@ -70,6 +82,11 @@ namespace dripline
 
     bool service::start()
     {
+        if( ! f_make_connection )
+        {
+            LWARN( dlog, "Should not start service when make_connection is disabled" );
+            return true;
+        }
         if( f_queue_name.empty() )
         {
             LERROR( dlog, "Service requires a queue name to be started" );
@@ -97,9 +114,14 @@ namespace dripline
     bool service::listen()
     {
         LINFO( dlog, "Listening for incoming messages on <" << f_queue_name << ">" );
-
+        //TODO
+        if ( ! f_make_connection )
+        {
+            return true;
+        }
         while( ! f_canceled.load()  )
         {
+
             amqp_envelope_ptr t_envelope;
             bool t_channel_valid = listen_for_message( t_envelope, f_channel, f_consumer_tag, f_listen_timeout_ms );
 
@@ -189,6 +211,22 @@ namespace dripline
     }
 
 
+    bool service::submit_request_message( const request_ptr_t a_request_ptr)
+    {
+        bool to_return = this->on_request_message( a_request_ptr );
+        return to_return;
+    }
+
+    bool service::submit_alert_message( const alert_ptr_t a_alert_ptr)
+    {
+        return this->on_alert_message( a_alert_ptr );
+    }
+
+    bool service::submit_reply_message( const reply_ptr_t a_reply_ptr)
+    {
+        return this->on_reply_message( a_reply_ptr );
+    }
+
     bool service::on_request_message( const request_ptr_t )
     {
         throw dripline_error() << retcode_t::message_error_invalid_method << "Base service does not handle request messages";
@@ -222,7 +260,7 @@ namespace dripline
 
         if( t_rk == t_prefix )
         {
-        	// rk consists of only the prefix
+            // rk consists of only the prefix
             a_message->set_routing_key_specifier( "", routing_key_specifier() );
             return true;
         }
@@ -286,6 +324,11 @@ namespace dripline
 
     bool service::stop_consuming()
     {
+        if ( ! f_make_connection )
+        {
+            LDEBUG( dlog, "no consuming to start because connections disabled" );
+            return true;
+        }
         try
         {
             LDEBUG( dlog, "Stopping consuming messages (consumer " << f_consumer_tag << ")" );
@@ -322,6 +365,11 @@ namespace dripline
 
     bool service::remove_queue()
     {
+        if ( ! f_make_connection )
+        {
+            LDEBUG( dlog, "no queue to remove because make_connection is false" );
+            return true;
+        }
         try
         {
             LDEBUG( dlog, "Deleting queue <" << f_queue_name << ">" );

@@ -25,7 +25,8 @@ namespace dripline
     class DRIPLINE_API service : public core
     {
         public:
-            service( const scarab::param_node* a_config = nullptr, const std::string& a_queue_name = "",  const std::string& a_broker_address = "", unsigned a_port = 0, const std::string& a_auth_file = "" );
+            service( const scarab::param_node* a_config = nullptr, const std::string& a_queue_name = "",  const std::string& a_broker_address = "", unsigned a_port = 0, const std::string& a_auth_file = "", const bool a_make_connection = true );
+            service( const bool a_make_connection, const scarab::param_node* a_config = nullptr );
             virtual ~service();
 
         public:
@@ -50,6 +51,11 @@ namespace dripline
             /// Stops receiving messages and closes the connection to the broker.
             /// If no queue was created, this does nothing.
             bool stop();
+
+        public:
+            bool submit_request_message( const request_ptr_t a_request );
+            bool submit_reply_message( const reply_ptr_t a_reply );
+            bool submit_alert_message( const alert_ptr_t a_alert );
 
         private:
             /// Default request handler; throws a dripline_error.
