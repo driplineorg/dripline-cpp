@@ -41,16 +41,18 @@ namespace dripline
         }
     }
 
-    core::core( const scarab::param_node* a_config, const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file ) :
+    core::core( const scarab::param_node* a_config, const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file, const bool a_make_connection ) :
             f_address( "localhost" ),
             f_port( 5672 ),
             f_username( "guest" ),
             f_password( "guest" ),
             f_requests_exchange( "requests" ),
-            f_alerts_exchange( "alerts" )
+            f_alerts_exchange( "alerts" ),
+            f_make_connection( a_make_connection )
     {
         std::string t_auth_file = a_config->get_value( "auth-file", a_auth_file );
 
+        // get auth file contents and override defaults
         if( ! t_auth_file.empty() )
         {
             LDEBUG( dlog, "Using authentication file <" << t_auth_file << ">" );
@@ -82,11 +84,20 @@ namespace dripline
             f_port = a_config->get_value( "broker-port", f_port );
             f_requests_exchange = a_config->get_value( "requests-exchange", f_requests_exchange );
             f_alerts_exchange = a_config->get_value( "alerts-exchange", f_alerts_exchange );
+            f_make_connection = a_config->get_value( "make-connection", f_make_connection );
         }
 
         // parameters override config file, auth file, and defaults
         if( ! a_broker_address.empty() ) f_address = a_broker_address;
         if( a_port != 0 ) f_port = a_port;
+    }
+
+    //TODO having this constructor just because bools are 2-state and i can't tell default value from provided value == default
+    core::core( const bool a_make_connection, const scarab::param_node* a_config ) :
+            core::core(a_config)
+    {
+        // this constructor overrides the default value of make_connection
+        f_make_connection = a_make_connection;
     }
 
     core::core( const core& a_orig ) :
@@ -95,7 +106,8 @@ namespace dripline
             f_username( a_orig.f_username ),
             f_password( a_orig.f_password ),
             f_requests_exchange( a_orig.f_requests_exchange ),
-            f_alerts_exchange( a_orig.f_alerts_exchange )
+            f_alerts_exchange( a_orig.f_alerts_exchange ),
+            f_make_connection( a_orig.f_make_connection )
     {}
 
     core::core( core&& a_orig ) :
@@ -104,7 +116,8 @@ namespace dripline
             f_username( std::move( a_orig.f_username ) ),
             f_password( std::move( a_orig.f_password ) ),
             f_requests_exchange( std::move( a_orig.f_requests_exchange ) ),
-            f_alerts_exchange( std::move( a_orig.f_alerts_exchange) )
+            f_alerts_exchange( std::move( a_orig.f_alerts_exchange) ),
+            f_make_connection( std::move( a_orig.f_make_connection ) )
     {
         a_orig.f_port = 0;
     }
@@ -120,6 +133,7 @@ namespace dripline
         f_password = a_orig.f_password;
         f_requests_exchange = a_orig.f_requests_exchange;
         f_alerts_exchange = a_orig.f_alerts_exchange;
+        f_make_connection = a_orig.f_make_connection;
         return *this;
     }
 
@@ -132,11 +146,17 @@ namespace dripline
         f_password = std::move( a_orig.f_password );
         f_requests_exchange = std::move( a_orig.f_requests_exchange );
         f_alerts_exchange = std::move( a_orig.f_alerts_exchange );
+        f_make_connection = std::move( a_orig.f_make_connection );
         return *this;
     }
 
     rr_pkg_ptr core::send( request_ptr_t a_request ) const
     {
+        if ( ! f_make_connection )
+        {
+            LWARN( dlog, "send called but make_connection is false, returning nullptr" );
+            return nullptr;
+        }
         LDEBUG( dlog, "Sending request with routing key <" << a_request->routing_key() << ">" );
         rr_pkg_ptr t_receive_reply = std::make_shared< receive_reply_pkg >();
         t_receive_reply->f_channel = send_withreply( std::static_pointer_cast< message >( a_request ), t_receive_reply->f_consumer_tag, f_requests_exchange );
@@ -146,12 +166,22 @@ namespace dripline
 
     bool core::send( reply_ptr_t a_reply ) const
     {
+        if ( ! f_make_connection )
+        {
+            LWARN( dlog, "send called but make_connection is false, returning nullptr" );
+            return false;
+        }
         LDEBUG( dlog, "Sending reply with routing key <" << a_reply->routing_key() << ">" );
         return send_noreply( std::static_pointer_cast< message >( a_reply ), f_requests_exchange );
     }
 
     bool core::send( alert_ptr_t a_alert ) const
     {
+        if ( ! f_make_connection )
+        {
+            LWARN( dlog, "send called but make_connection is false, returning nullptr" );
+            return false;
+        }
         LDEBUG( dlog, "Sending alert with routing key <" << a_alert->routing_key() << ">" );
         return send_noreply( std::static_pointer_cast< message >( a_alert ), f_alerts_exchange );
     }
@@ -164,6 +194,11 @@ namespace dripline
 
     reply_ptr_t core::wait_for_reply( const rr_pkg_ptr a_receive_reply, bool& a_chan_valid, int a_timeout_ms )
     {
+        if ( ! a_receive_reply->f_channel )
+        {
+            //throw dripline_error() << "cannot wait for reply with make_connection is false";
+            return reply_ptr_t();
+        }
         LDEBUG( dlog, "Waiting for a reply" );
 
         amqp_envelope_ptr t_envelope;
@@ -193,6 +228,10 @@ namespace dripline
 
     amqp_channel_ptr core::send_withreply( message_ptr_t a_message, std::string& a_reply_consumer_tag, const std::string& a_exchange ) const
     {
+        if ( ! f_make_connection )
+        {
+            throw dripline_error() << "cannot send reply with make_connection is false";
+        }
         amqp_channel_ptr t_channel = open_channel();
         if( ! t_channel )
         {
@@ -240,6 +279,13 @@ namespace dripline
 
     bool core::send_noreply( message_ptr_t a_message, const std::string& a_exchange ) const
     {
+        if( ! f_make_connection )
+        {
+            LDEBUG( dlog, "does not make amqp connection, not sending payload:" );
+            LDEBUG( dlog, a_message->get_payload() );
+            throw dripline_error() << "cannot send message with make_connection is false";
+            return true;
+        }
         amqp_channel_ptr t_channel = open_channel();
         if( ! t_channel )
         {
@@ -275,6 +321,10 @@ namespace dripline
 
     amqp_channel_ptr core::open_channel() const
     {
+        if ( ! f_make_connection )
+        {
+            throw dripline_error() << "Should not call open_channel when f_make_connection is false";
+        }
         try
         {
             LDEBUG( dlog, "Opening AMQP connection and creating channel to " << f_address << ":" << f_port );

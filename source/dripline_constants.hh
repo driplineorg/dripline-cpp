@@ -43,6 +43,9 @@ namespace dripline
     DRIPLINE_API uint32_t to_uint( op_t an_op );
     DRIPLINE_API op_t to_op_t( uint32_t an_op_uint );
     DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, op_t an_op );
+    // Conversion functions for string values
+    DRIPLINE_API std::string to_string( op_t an_op );
+    DRIPLINE_API op_t to_op_t( std::string an_op_str );
 
     // Message type constants
     enum class msg_t:uint32_t

@@ -8,6 +8,7 @@
 #define DRIPLINE_API_EXPORTS
 
 #include "dripline_constants.hh"
+#include "dripline_error.hh"
 
 namespace dripline
 {
@@ -24,6 +25,34 @@ namespace dripline
     DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, op_t an_op )
     {
         return a_os << to_uint( an_op );
+    }
+    // Conversion functions for use when string values are required
+    // TODO op_t->string isn't too bad, but the string->op_t seems super ugly
+    DRIPLINE_API std::string to_string( op_t an_op )
+    {
+        switch (an_op) {
+            case op_t::set: return "set";
+            case op_t::get: return "get";
+            case op_t::config: return "config";//config is deprecated
+            case op_t::send: return "send";
+            case op_t::run: return "run";
+            case op_t::cmd: return "cmd";
+            case op_t::unknown: return "unknown";
+            default: throw dripline_error() << "op_t value <" << an_op << "> not recognized";
+        }
+        //TODO explicitly throw something here?
+    }
+    DRIPLINE_API op_t to_op_t( std::string an_op_str )
+    {
+        if ( an_op_str == to_string( op_t::set ) ) return op_t::set;
+        if ( an_op_str == to_string( op_t::get ) ) return op_t::get;
+        if ( an_op_str == to_string( op_t::config ) ) return op_t::config;
+        if ( an_op_str == to_string( op_t::send ) ) return op_t::send;
+        if ( an_op_str == to_string( op_t::run ) ) return op_t::run;
+        if ( an_op_str == to_string( op_t::cmd ) ) return op_t::cmd;
+        if ( an_op_str == to_string( op_t::unknown ) ) return op_t::unknown;
+        throw dripline_error() << "unable to map <" << an_op_str << "> to an op_t value";
+        //TODO explicitly throw something here?
     }
 
     // Conversion functions for use when a numeric value is needed

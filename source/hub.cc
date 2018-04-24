@@ -22,8 +22,8 @@ namespace dripline
     LOGGER( dlog, "hub" );
 
 
-    hub::hub( const scarab::param_node* a_config, const string& a_queue_name,  const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file ) :
-            service( a_config, a_queue_name, a_broker_address, a_port, a_auth_file ),
+    hub::hub( const scarab::param_node* a_config, const string& a_queue_name,  const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file, const bool a_make_connection) :
+            service( a_config, a_queue_name, a_broker_address, a_port, a_auth_file, a_make_connection ),
             f_run_handler(),
             f_get_handlers(),
             f_set_handlers(),
@@ -374,7 +374,14 @@ namespace dripline
                  "Return message: " << t_reply->return_msg() <<
                  f_payload );
 
-        if( ! f_service_ptr->core::send( t_reply ) )
+        if ( f_reply_to.empty() )
+        {
+            //TODO should this be PROG?
+            LPROG( dlog, "Not sending reply (reply-to empty)\n" <<
+                         "    Return code: " << t_reply->get_return_code() << '\n' <<
+                         "    Return message: " << t_reply->return_msg() << f_payload );
+        }
+        else if( ! f_service_ptr->core::send( t_reply ) )
         {
             LWARN( dlog, "Something went wrong while sending the reply" );
             return false;
