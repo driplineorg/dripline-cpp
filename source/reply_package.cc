@@ -2,10 +2,12 @@
  * reply_package.cc
  *
  *  Created on: Apr 26, 2018
- *      Author: obla999
+ *      Author: N.S. Oblath
  */
 
 #include "reply_package.hh"
+
+#include "service.hh"
 
 #include "logger.hh"
 
@@ -58,7 +60,7 @@ namespace dripline
             return t_reply_info;
         }
 
-        t_reply_info.f_return_code = true;
+        t_reply_info.f_send_result = true;
         return t_reply_info;
     }
 

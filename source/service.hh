@@ -10,7 +10,6 @@
 
 #include "core.hh"
 
-#include "message.hh"
 #include "reply_package.hh"
 
 #include "member_variables.hh"

@@ -19,7 +19,7 @@ namespace dripline
     class DRIPLINE_API hub : public service
     {
         private:
-            typedef std::function< bool( const dripline::request_ptr_t, dripline::reply_package& ) > handler_func_t;
+            typedef std::function< reply_info( const dripline::request_ptr_t, dripline::reply_package& ) > handler_func_t;
 
         public:
             hub( const scarab::param_node* a_config = nullptr, const std::string& a_queue_name = "",  const std::string& a_broker_address = "", unsigned a_port = 0, const std::string& a_auth_file = "" , const bool a_make_connection = true );

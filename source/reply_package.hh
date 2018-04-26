@@ -10,7 +10,9 @@
 
 #include "dripline_api.hh"
 #include "dripline_error.hh"
-#include "service.hh"
+#include "message.hh"
+
+#include "param.hh"
 
 #include <memory>
 
@@ -22,8 +24,10 @@ namespace dripline
         retcode_t f_return_code;
         std::string f_return_msg;
         reply_info( bool a_send_result, retcode_t a_return_code, const std::string& a_return_msg );
-        bool operator bool() const;
+        operator bool() const;
     };
+
+    class service;
 
     struct DRIPLINE_API reply_package
     {
@@ -36,7 +40,7 @@ namespace dripline
         reply_info send_reply( const dripline_error& an_error ) const;
     };
 
-    inline bool reply_info::operator bool() const
+    inline reply_info::operator bool() const
     {
         return f_send_result;
     }
