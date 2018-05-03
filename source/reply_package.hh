@@ -25,8 +25,9 @@ namespace dripline
         std::string f_return_msg;
         scarab::param_node f_payload;
         reply_info();
-        reply_info( bool a_send_result, retcode_t a_return_code, const std::string& a_return_msg, const scarab::param_node a_payload = scarab::param_node() );
+        reply_info( bool a_send_result, retcode_t a_return_code, const std::string& a_return_msg, const scarab::param_node& a_payload = scarab::param_node() );
         reply_info( const dripline::reply_info& a_reply_info );
+        reply_info& operator=( const reply_info& a_reply_info );
         operator bool() const;
     };
 

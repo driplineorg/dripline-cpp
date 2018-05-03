@@ -23,7 +23,7 @@ namespace dripline
         f_payload()
     {}
 
-    reply_info::reply_info( bool a_send_result, retcode_t a_return_code, const std::string& a_return_msg, const scarab::param_node a_payload ) :
+    reply_info::reply_info( bool a_send_result, retcode_t a_return_code, const std::string& a_return_msg, const scarab::param_node& a_payload ) :
             f_send_result( a_send_result ),
             f_return_code( a_return_code ),
             f_return_msg( a_return_msg ),
@@ -36,6 +36,15 @@ namespace dripline
         f_return_msg( a_reply_info.f_return_msg ),
         f_payload( a_reply_info.f_payload )
     {}
+
+    reply_info& reply_info::operator=( const reply_info& a_reply_info )
+    {
+        f_send_result = a_reply_info.f_send_result;
+        f_return_code = a_reply_info.f_return_code;
+        f_return_msg = a_reply_info.f_return_msg;
+        f_payload = a_reply_info.f_payload;
+        return *this;
+    }
 
     reply_package::reply_package( const service* a_service, request_ptr_t a_request ) :
         f_service_ptr( a_service ),

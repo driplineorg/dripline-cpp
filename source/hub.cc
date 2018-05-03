@@ -108,7 +108,6 @@ namespace dripline
     reply_info hub::on_request_message( const request_ptr_t a_request )
     {
         reply_package t_reply_pkg( this, a_request );
-        // not sure if this is the right way to deal with this thing
         reply_info t_reply_info;
 
         // the lockout key must be valid
@@ -123,25 +122,21 @@ namespace dripline
             {
                 case op_t::run:
                 {
-                    //return __do_run_request( a_request, t_reply_pkg );
                     t_reply_info =  __do_run_request( a_request, t_reply_pkg );
                     break;
                 }
                 case op_t::get:
                 {
-                    //return __do_get_request( a_request, t_reply_pkg );
                     t_reply_info =  __do_get_request( a_request, t_reply_pkg );
                     break;
                 } // end "get" operation
                 case op_t::set:
                 {
-                    //return __do_set_request( a_request, t_reply_pkg );
                     t_reply_info =  __do_set_request( a_request, t_reply_pkg );
                     break;
                 } // end "set" operation
                 case op_t::cmd:
                 {
-                    //return  __do_cmd_request( a_request, t_reply_pkg );
                     t_reply_info =  __do_cmd_request( a_request, t_reply_pkg );
                     break;
                 }
@@ -150,17 +145,14 @@ namespace dripline
                     t_error_stream << "Unrecognized message operation: <" << a_request->get_message_type() << ">";
                     string t_error_msg( t_error_stream.str() );
                     LWARN( dlog, t_error_msg );
-                    //return t_reply_pkg.send_reply( retcode_t::message_error_invalid_method, t_error_msg );
                     t_reply_info = t_reply_pkg.send_reply( retcode_t::message_error_invalid_method, t_error_msg );
                     break;
             } // end switch on message type
-            //TODO is this okay, or should each of the methods above implement this in the object they return?
             t_reply_info.f_payload = t_reply_pkg.f_payload;
             return t_reply_info;
         }
         // we shouldn't get here
         return reply_info( false, retcode_t::message_error_invalid_method, "" );
-;
     }
 
     reply_info hub::do_run_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
