@@ -10,7 +10,7 @@
 
 #include "core.hh"
 
-#include "message.hh"
+#include "reply_package.hh"
 
 #include "member_variables.hh"
 
@@ -53,14 +53,14 @@ namespace dripline
             bool stop();
 
         public:
-            bool submit_request_message( const request_ptr_t a_request );
+            reply_info submit_request_message( const request_ptr_t a_request );
             bool submit_reply_message( const reply_ptr_t a_reply );
             bool submit_alert_message( const alert_ptr_t a_alert );
 
         private:
             /// Default request handler; throws a dripline_error.
             /// Override this to enable handling of requests.
-            virtual bool on_request_message( const request_ptr_t a_request );
+            virtual reply_info on_request_message( const request_ptr_t a_request );
 
             /// Default reply handler; throws a dripline_error.
             /// Override this to enable handling of replies.

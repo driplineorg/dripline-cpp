@@ -16,21 +16,10 @@
 
 namespace dripline
 {
-    struct DRIPLINE_API reply_package
-    {
-        const service* f_service_ptr;
-        std::string f_reply_to;
-        std::string f_correlation_id;
-        scarab::param_node f_payload;
-        reply_package( const service* a_service, request_ptr_t a_request );
-        bool send_reply( retcode_t a_return_code, const std::string& a_return_msg ) const;
-        bool send_reply( const dripline_error& an_error ) const;
-    };
-
     class DRIPLINE_API hub : public service
     {
         private:
-            typedef std::function< bool( const dripline::request_ptr_t, dripline::reply_package& ) > handler_func_t;
+            typedef std::function< reply_info( const dripline::request_ptr_t, dripline::reply_package& ) > handler_func_t;
 
         public:
             hub( const scarab::param_node* a_config = nullptr, const std::string& a_queue_name = "",  const std::string& a_broker_address = "", unsigned a_port = 0, const std::string& a_auth_file = "" , const bool a_make_connection = true );
@@ -47,7 +36,7 @@ namespace dripline
 
         private:
             /// Handle request messages
-            virtual bool on_request_message( const request_ptr_t a_request );
+            virtual reply_info on_request_message( const request_ptr_t a_request );
 
             //*****************************
             // Default request distributors
@@ -55,10 +44,10 @@ namespace dripline
 
             // Override the relevant function to implement use of that type of message
 
-            virtual bool do_run_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            virtual bool do_get_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            virtual bool do_set_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            virtual bool do_cmd_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            virtual reply_info do_run_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            virtual reply_info do_get_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            virtual reply_info do_set_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            virtual reply_info do_cmd_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
 
             handler_func_t f_run_handler;
 
@@ -68,21 +57,21 @@ namespace dripline
             handler_funcs_t f_cmd_handlers;
 
         private:
-            bool __do_run_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            bool __do_get_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            bool __do_set_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            bool __do_cmd_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            reply_info __do_run_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            reply_info __do_get_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            reply_info __do_set_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            reply_info __do_cmd_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
 
         private:
             //*****************
             // Request handlers
             //*****************
 
-            bool handle_lock_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            bool handle_unlock_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            bool handle_is_locked_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            bool handle_ping_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            bool handle_set_condition_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            reply_info handle_lock_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            reply_info handle_unlock_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            reply_info handle_is_locked_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            reply_info handle_ping_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            reply_info handle_set_condition_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
 
         public:
             //******************
@@ -103,17 +92,12 @@ namespace dripline
             // Returns true if the server is unlocked or if it's locked and the key matches the lockout key; returns false otherwise.
             bool authenticate( const uuid_t& a_key ) const;
 
-            virtual bool __do_handle_set_condition_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            virtual reply_info __do_handle_set_condition_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
 
             scarab::param_node f_lockout_tag;
             uuid_t f_lockout_key;
 
     };
-
-    inline bool reply_package::send_reply( const dripline_error& an_error ) const
-    {
-        return send_reply( an_error.retcode(), an_error.what() );
-    }
 
     inline uuid_t hub::enable_lockout( const scarab::param_node& a_tag )
     {
@@ -135,7 +119,7 @@ namespace dripline
         return f_lockout_key == a_key;
     }
 
-    inline bool hub::__do_handle_set_condition_request( const request_ptr_t, reply_package& a_reply_pkg )
+    inline reply_info hub::__do_handle_set_condition_request( const request_ptr_t, reply_package& a_reply_pkg )
     {
         return a_reply_pkg.send_reply( retcode_t::success, "No action taken (default method)" );
     }
