@@ -11,6 +11,7 @@ set( dripline_HEADERS
     ${dir}/agent_config.hh
     ${dir}/amqp.hh
     ${dir}/core.hh
+    ${dir}/dripline_api.hh
     ${dir}/dripline_constants.hh
     ${dir}/dripline_error.hh
     ${dir}/dripline_version.hh
