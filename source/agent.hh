@@ -44,6 +44,8 @@ namespace dripline
             //void cancel();
 
             int get_return();
+            reply_ptr_t get_full_reply();
+            scarab::param_node get_reply_payload();
 
         private:
             request_ptr_t create_run_request( const std::string& a_routing_key );
@@ -52,6 +54,7 @@ namespace dripline
             request_ptr_t create_cmd_request( const std::string& a_routing_key );
 
             scarab::param_node f_config;
+            reply_ptr_t f_full_reply;
             int f_return;
     };
 
