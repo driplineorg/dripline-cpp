@@ -59,13 +59,13 @@ namespace dripline
             f_payload( new param_node() )
     {
         // make sure the sender_info node is filled out correctly
-        f_sender_info->add( "package", new param_value( "N/A" ) );
-        f_sender_info->add( "exe", new param_value( "N/A" ) );
-        f_sender_info->add( "version", new param_value( "N/A" ) );
-        f_sender_info->add( "commit", new param_value( "N/A" ) );
-        f_sender_info->add( "hostname", new param_value( "N/A" ) );
-        f_sender_info->add( "username", new param_value( "N/A" ) );
-        f_sender_info->add( "service_name", new param_value( "N/A" ) );
+        f_sender_info.add( "package", new param_value( "N/A" ) );
+        f_sender_info.add( "exe", new param_value( "N/A" ) );
+        f_sender_info.add( "version", new param_value( "N/A" ) );
+        f_sender_info.add( "commit", new param_value( "N/A" ) );
+        f_sender_info.add( "hostname", new param_value( "N/A" ) );
+        f_sender_info.add( "username", new param_value( "N/A" ) );
+        f_sender_info.add( "service_name", new param_value( "N/A" ) );
 
         // set the sender_info correctly for the server software
         version_wrapper* t_version = version_wrapper::get_instance();
@@ -110,28 +110,28 @@ namespace dripline
             throw dripline_error() << retcode_t::message_error_decoding_fail << "Unable to parse message with content type <" << a_envelope->Message()->ContentEncoding() << ">";
         }
 
-        param_node* t_msg_node = &t_msg->as_node();
+        param_node& t_msg_node = t_msg->as_node();
 
         string t_routing_key = a_envelope->RoutingKey();
 
         LDEBUG( dlog, "Processing message:\n" <<
                  "Routing key: " << t_routing_key <<
-                 *t_msg_node );
+                 t_msg_node );
 
         message_ptr_t t_message;
-        switch( to_msg_t( t_msg_node->get_value< uint32_t >( "msgtype" ) ) )
+        switch( to_msg_t( t_msg_node.get_value< uint32_t >( "msgtype" ) ) )
         {
             case msg_t::request:
             {
                 request_ptr_t t_request = msg_request::create(
-                        t_msg_node->node_at( "payload" ),
-                        to_op_t( t_msg_node->get_value< uint32_t >( "msgop", to_uint( op_t::unknown ) ) ),
+                        t_msg_node.node_at( "payload" ),
+                        to_op_t( t_msg_node.get_value< uint32_t >( "msgop", to_uint( op_t::unknown ) ) ),
                         t_routing_key,
                         a_envelope->Message()->ReplyTo(),
                         t_encoding);
 
                 bool t_lockout_key_valid = true;
-                t_request->lockout_key() = uuid_from_string( t_msg_node->get_value( "lockout_key", "" ), t_lockout_key_valid );
+                t_request->lockout_key() = uuid_from_string( t_msg_node.get_value( "lockout_key", "" ), t_lockout_key_valid );
                 t_request->set_lockout_key_valid( t_lockout_key_valid );
 
                 t_message = t_request;
@@ -140,9 +140,9 @@ namespace dripline
             case msg_t::reply:
             {
                 reply_ptr_t t_reply = msg_reply::create(
-                        to_retcode_t( t_msg_node->get_value< uint32_t >( "retcode" ) ),
-                        t_msg_node->get_value( "return_msg", "" ),
-                        t_msg_node->node_at( "payload" ),
+                        to_retcode_t( t_msg_node.get_value< uint32_t >( "retcode" ) ),
+                        t_msg_node.get_value( "return_msg", "" ),
+                        t_msg_node.node_at( "payload" ),
                         t_routing_key,
                         t_encoding);
 
@@ -152,7 +152,7 @@ namespace dripline
             case msg_t::alert:
             {
                 alert_ptr_t t_alert = msg_alert::create(
-                        t_msg_node->node_at( "payload" ),
+                        t_msg_node.node_at( "payload" ),
                         t_routing_key,
                         t_encoding);
 
@@ -161,36 +161,36 @@ namespace dripline
             }
             default:
             {
-                throw dripline_error() << retcode_t::message_error_invalid_method << "Message received with unhandled type: " << t_msg_node->get_value< uint32_t >( "msgtype" );
+                throw dripline_error() << retcode_t::message_error_invalid_method << "Message received with unhandled type: " << t_msg_node.get_value< uint32_t >( "msgtype" );
                 break;
             }
         }
 
         // set message fields
         t_message->correlation_id() = a_envelope->Message()->CorrelationId();
-        t_message->timestamp() = t_msg_node->get_value( "timestamp", "" );
+        t_message->timestamp() = t_msg_node.get_value( "timestamp", "" );
 
-        t_message->set_sender_info( new param_node( *(t_msg_node->node_at( "sender_info" ) ) ) );
+        t_message->set_sender_info( t_msg_node.node_at( "sender_info" ) );
 
-        if( t_msg_node->has( "payload" ) )
+        if( t_msg_node.has( "payload" ) )
         {
-            if( (*t_msg_node)[ "payload" ].is_node() )
+            if( t_msg_node[ "payload" ].is_node() )
             {
-                t_message->set_payload( new param_node( *(t_msg_node->node_at( "payload" ) ) ) );
+                t_message->payload() = t_msg_node.node_at( "payload" );
             }
-            else if( (*t_msg_node)[ "payload" ].is_null() )
+            else if( t_msg_node[ "payload" ].is_null() )
             {
-                t_message->set_payload( new param_node() );
+                t_message->payload().clear();
             }
             else
             {
                 LWARN( dlog, "Non-node payload is present; it will be ignored" );
-                t_message->set_payload( new param_node() );
+                t_message->payload().clear();
             }
         }
         else
         {
-            t_message->set_payload( new param_node() );
+            t_message->payload().clear();
         }
 
         return t_message;
