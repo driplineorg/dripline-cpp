@@ -41,7 +41,7 @@ namespace dripline
     agent::agent( const param_node& a_node ) :
             core( a_node.node_at( "amqp" ) ),
             f_config( a_node ),
-            f_full_reply( ),
+            f_reply( ),
             f_return( 0 )
     {
     }
@@ -190,16 +190,6 @@ namespace dripline
     int agent::get_return()
     {
         return f_return;
-    }
-
-    reply_ptr_t agent::get_full_reply()
-    {
-        return f_full_reply;
-    }
-
-    scarab::param_node agent::get_reply_payload()
-    {
-        return f_full_reply->get_payload();
     }
 
     request_ptr_t agent::create_run_request( const std::string& a_routing_key )
