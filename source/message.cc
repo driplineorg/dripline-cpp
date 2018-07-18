@@ -55,8 +55,8 @@ namespace dripline
             f_sender_hostname( "N/A" ),
             f_sender_username( "N/A" ),
             f_parsed_rks(),
-            f_sender_info( new param_node() ),
-            f_payload( new param_node() )
+            f_sender_info(),
+            f_payload()
     {
         // make sure the sender_info node is filled out correctly
         f_sender_info.add( "package", param_value( "N/A" ) );

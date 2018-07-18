@@ -216,19 +216,19 @@ namespace dripline
     inline void message::set_sender_info( const scarab::param_node& a_sender_info )
     {
         f_sender_info = a_sender_info;
-        if( ! f_sender_info.has( "package" ) ) f_sender_info.add( "package", new scarab::param_value( "N/A" ) );
+        f_sender_info.add( "package", scarab::param_value( "N/A" ) ); // sets default if not present
         f_sender_package = f_sender_info.get_value( "package" );
-        if( ! f_sender_info.has( "exe" ) ) f_sender_info.add( "exe", new scarab::param_value( "N/A" ) );
+        f_sender_info.add( "exe", scarab::param_value( "N/A" ) ); // sets default if not present
         f_sender_exe = f_sender_info.get_value( "exe" );
-        if( ! f_sender_info.has( "version" ) ) f_sender_info.add( "version", new scarab::param_value( "N/A" ) );
+        f_sender_info.add( "version", scarab::param_value( "N/A" ) ); // sets default if not present
         f_sender_version = f_sender_info.get_value( "version" );
-        if( ! f_sender_info.has( "commit" ) ) f_sender_info.add( "commit", new scarab::param_value( "N/A" ) );
+        f_sender_info.add( "commit", scarab::param_value( "N/A" ) ); // sets default if not present
         f_sender_commit = f_sender_info.get_value( "commit" );
-        if( ! f_sender_info.has( "hostname" ) ) f_sender_info.add( "hostname", new scarab::param_value( "N/A" ) );
+        f_sender_info.add( "hostname", scarab::param_value( "N/A" ) ); // sets default if not present
         f_sender_hostname = f_sender_info.get_value( "hostname" );
-        if( ! f_sender_info.has( "username" ) ) f_sender_info.add( "username", new scarab::param_value( "N/A" ) );
+        f_sender_info.add( "username", scarab::param_value( "N/A" ) ); // sets default if not present
         f_sender_username = f_sender_info.get_value( "username" );
-        if( ! f_sender_info.has( "service_name" ) ) f_sender_info.add( "service_name", new scarab::param_value( "N/A" ) );
+        f_sender_info.add( "service_name", scarab::param_value( "N/A" ) ); // sets default if not present
         f_sender_service_name = f_sender_info.get_value( "service_name" );
     }
 
