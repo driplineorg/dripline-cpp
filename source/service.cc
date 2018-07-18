@@ -27,7 +27,7 @@ namespace dripline
 {
     LOGGER( dlog, "service" );
 
-    service::service( const scarab::param_node* a_config, const string& a_queue_name,  const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file, const bool a_make_connection ) :
+    service::service( const scarab::param_node& a_config, const string& a_queue_name,  const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file, const bool a_make_connection ) :
             core( a_config, a_broker_address, a_port, a_auth_file, a_make_connection ),
             f_queue_name( "dlcpp_service" ),
             f_channel(),
@@ -37,16 +37,16 @@ namespace dripline
             f_listen_timeout_ms( 500 ),
             f_canceled( false )
     {
-        if( a_config != nullptr )
+        if( !a_config.empty() )
         {
-            f_queue_name = a_config->get_value( "queue", f_queue_name );
-            f_listen_timeout_ms = a_config->get_value( "listen-timeout-ms", f_listen_timeout_ms );
+            f_queue_name = a_config.get_value( "queue", f_queue_name );
+            f_listen_timeout_ms = a_config.get_value( "listen-timeout-ms", f_listen_timeout_ms );
         }
 
         if( ! a_queue_name.empty() ) f_queue_name = a_queue_name;
     }
 
-    service::service( const bool a_make_connection, const scarab::param_node* a_config ) :
+    service::service( const bool a_make_connection, const scarab::param_node& a_config ) :
             core( a_make_connection, a_config ),
             f_queue_name( "" ),
             f_channel(),
