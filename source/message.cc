@@ -59,13 +59,13 @@ namespace dripline
             f_payload( new param_node() )
     {
         // make sure the sender_info node is filled out correctly
-        f_sender_info.add( "package", new param_value( "N/A" ) );
-        f_sender_info.add( "exe", new param_value( "N/A" ) );
-        f_sender_info.add( "version", new param_value( "N/A" ) );
-        f_sender_info.add( "commit", new param_value( "N/A" ) );
-        f_sender_info.add( "hostname", new param_value( "N/A" ) );
-        f_sender_info.add( "username", new param_value( "N/A" ) );
-        f_sender_info.add( "service_name", new param_value( "N/A" ) );
+        f_sender_info.add( "package", param_value( "N/A" ) );
+        f_sender_info.add( "exe", param_value( "N/A" ) );
+        f_sender_info.add( "version", param_value( "N/A" ) );
+        f_sender_info.add( "commit", param_value( "N/A" ) );
+        f_sender_info.add( "hostname", param_value( "N/A" ) );
+        f_sender_info.add( "username", param_value( "N/A" ) );
+        f_sender_info.add( "service_name", param_value( "N/A" ) );
 
         // set the sender_info correctly for the server software
         version_wrapper* t_version = version_wrapper::get_instance();
@@ -89,14 +89,14 @@ namespace dripline
         {
             throw dripline_error() << retcode_t::amqp_error << "Empty envelope received";
         }
-        param* t_msg = nullptr;
+        param_ptr_t t_msg;
         encoding t_encoding;
         if( a_envelope->Message()->ContentEncoding() == "application/json" )
         {
             t_encoding = encoding::json;
             param_input_json t_input;
             t_msg = t_input.read_string( a_envelope->Message()->Body() );
-            if( t_msg == nullptr )
+            if( ! t_msg )
             {
                 throw dripline_error() << retcode_t::message_error_decoding_fail << "Message body could not be parsed; skipping request";
             }
@@ -219,8 +219,8 @@ namespace dripline
         param_node t_body_node;
         t_body_node.add( "msgtype", param_value( to_uint( message_type() ) ) );
         t_body_node.add( "timestamp", param_value( scarab::get_absolute_time_string() ) );
-        t_body_node.add( "sender_info", new param_node( *f_sender_info ) );
-        t_body_node.add( "payload", f_payload->clone() ); // use a clone of f_payload
+        t_body_node.add( "sender_info", f_sender_info );
+        t_body_node.add( "payload", f_payload );
 
         if( ! this->derived_modify_message_body( t_body_node ) )
         {
@@ -289,10 +289,10 @@ namespace dripline
 
     }
 
-    request_ptr_t msg_request::create( param_node* a_payload, op_t a_msg_op, const std::string& a_routing_key, const std::string& a_reply_to, message::encoding a_encoding )
+    request_ptr_t msg_request::create( const param_node& a_payload, op_t a_msg_op, const std::string& a_routing_key, const std::string& a_reply_to, message::encoding a_encoding )
     {
         request_ptr_t t_request = make_shared< msg_request >();
-        t_request->set_payload( a_payload );
+        t_request->payload() = a_payload;
         t_request->set_message_op( a_msg_op );
         t_request->routing_key() = a_routing_key;
         t_request->reply_to() = a_reply_to;
@@ -330,12 +330,12 @@ namespace dripline
 
     }
 
-    reply_ptr_t msg_reply::create( retcode_t a_retcode, const std::string& a_ret_msg, param_node* a_payload, const std::string& a_routing_key, message::encoding a_encoding )
+    reply_ptr_t msg_reply::create( retcode_t a_retcode, const std::string& a_ret_msg, const param_node& a_payload, const std::string& a_routing_key, message::encoding a_encoding )
     {
         reply_ptr_t t_reply = make_shared< msg_reply >();
         t_reply->set_return_code( a_retcode );
         t_reply->return_msg() = a_ret_msg;
-        t_reply->set_payload( a_payload );
+        t_reply->payload() = a_payload;
         t_reply->routing_key() = a_routing_key;
         t_reply->set_encoding( a_encoding );
         return t_reply;
@@ -346,7 +346,7 @@ namespace dripline
         reply_ptr_t t_reply = make_shared< msg_reply >();
         t_reply->set_return_code( a_error.retcode() );
         t_reply->return_msg() = a_error.what();
-        t_reply->set_payload( new param_node() );
+        t_reply->payload().clear();
         t_reply->routing_key() = a_routing_key;
         t_reply->set_encoding( a_encoding );
         return t_reply;
@@ -369,10 +369,10 @@ namespace dripline
     // Alert
     //*********
 
-    alert_ptr_t msg_alert::create( param_node* a_payload, const std::string& a_routing_key, message::encoding a_encoding )
+    alert_ptr_t msg_alert::create( const param_node& a_payload, const std::string& a_routing_key, message::encoding a_encoding )
     {
         alert_ptr_t t_alert = make_shared< msg_alert >();
-        t_alert->set_payload( a_payload );
+        t_alert->payload() = a_payload;
         t_alert->routing_key() = a_routing_key;
         t_alert->set_encoding( a_encoding );
         return t_alert;
