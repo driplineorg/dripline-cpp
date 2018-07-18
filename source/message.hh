@@ -356,8 +356,8 @@ namespace dripline
 
     inline bool msg_reply::derived_modify_message_body( scarab::param_node& a_node ) const
     {
-        a_node.add( "retcode", new scarab::param_value( to_uint(f_return_code) ) );
-        a_node.add( "return_msg", new scarab::param_value( f_return_msg ) );
+        a_node.add( "retcode", scarab::param_value( to_uint(f_return_code) ) );
+        a_node.add( "return_msg", scarab::param_value( f_return_msg ) );
         return true;
     }
 
