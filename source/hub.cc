@@ -22,7 +22,7 @@ namespace dripline
     LOGGER( dlog, "hub" );
 
 
-    hub::hub( const scarab::param_node* a_config, const string& a_queue_name,  const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file, const bool a_make_connection) :
+    hub::hub( const scarab::param_node& a_config, const string& a_queue_name,  const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file, const bool a_make_connection) :
             service( a_config, a_queue_name, a_broker_address, a_port, a_auth_file, a_make_connection ),
             f_run_handler(),
             f_get_handlers(),
@@ -309,13 +309,13 @@ namespace dripline
 
     reply_info hub::handle_lock_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
     {
-        uuid_t t_new_key = enable_lockout( a_request->get_sender_info(), a_request->lockout_key() );
+        uuid_t t_new_key = enable_lockout( a_request->sender_info(), a_request->lockout_key() );
         if( t_new_key.is_nil() )
         {
             return a_reply_pkg.send_reply( retcode_t::device_error, "Unable to lock server" );;
         }
 
-        a_reply_pkg.f_payload.add( "key", new scarab::param_value( string_from_uuid( t_new_key ) ) );
+        a_reply_pkg.f_payload.add( "key", scarab::param_value( string_from_uuid( t_new_key ) ) );
         return a_reply_pkg.send_reply( retcode_t::success, "Server is now locked" );
     }
 
@@ -326,7 +326,7 @@ namespace dripline
             return a_reply_pkg.send_reply( retcode_t::warning_no_action_taken, "Already unlocked" );
         }
 
-        bool t_force = a_request->get_payload().get_value( "force", false );
+        bool t_force = a_request->payload().get_value( "force", false );
 
         if( disable_lockout( a_request->lockout_key(), t_force ) )
         {

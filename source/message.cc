@@ -54,8 +54,8 @@ namespace dripline
             f_sender_commit( "N/A" ),
             f_sender_hostname( "N/A" ),
             f_sender_username( "N/A" ),
-            f_parsed_rks(),
             f_sender_info(),
+            f_parsed_rks(),
             f_payload()
     {
         // make sure the sender_info node is filled out correctly
@@ -80,7 +80,6 @@ namespace dripline
 
     message::~message()
     {
-        delete f_payload;
     }
 
     message_ptr_t message::process_envelope( amqp_envelope_ptr a_envelope )
@@ -89,7 +88,7 @@ namespace dripline
         {
             throw dripline_error() << retcode_t::amqp_error << "Empty envelope received";
         }
-        param_ptr_t t_msg;
+        scarab::param_ptr_t t_msg;
         encoding t_encoding;
         if( a_envelope->Message()->ContentEncoding() == "application/json" )
         {
@@ -302,11 +301,6 @@ namespace dripline
 
     msg_t msg_request::s_message_type = msg_t::request;
 
-    msg_t msg_request::get_message_type()
-    {
-        return msg_request::s_message_type;
-    }
-
     msg_t msg_request::message_type() const
     {
         return msg_request::s_message_type;
@@ -354,11 +348,6 @@ namespace dripline
 
     msg_t msg_reply::s_message_type = msg_t::reply;
 
-    msg_t msg_reply::get_message_type()
-    {
-        return msg_reply::s_message_type;
-    }
-
     msg_t msg_reply::message_type() const
     {
         return msg_reply::s_message_type;
@@ -390,11 +379,6 @@ namespace dripline
     }
 
     msg_t msg_alert::s_message_type = msg_t::alert;
-
-    msg_t msg_alert::get_message_type()
-    {
-        return msg_alert::s_message_type;
-    }
 
     msg_t msg_alert::message_type() const
     {
