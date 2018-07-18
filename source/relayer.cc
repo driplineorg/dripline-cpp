@@ -11,7 +11,7 @@ namespace dripline
 {
     LOGGER( dlog, "relayer" );
 
-    relayer::relayer( const scarab::param_node* a_config, const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file ) :
+    relayer::relayer( const scarab::param_node& a_config, const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file ) :
             core( a_config, a_broker_address, a_port, a_auth_file ),
             scarab::cancelable(),
             f_queue()
