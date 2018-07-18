@@ -316,8 +316,8 @@ namespace dripline
 
     inline bool msg_request::derived_modify_message_body( scarab::param_node& a_node ) const
     {
-        a_node.add( "msgop", new scarab::param_value( to_uint(f_message_op) ) );
-        a_node.add( "lockout_key", new scarab::param_value( string_from_uuid( lockout_key() ) ) );
+        a_node.add( "msgop", scarab::param_value( to_uint(f_message_op) ) );
+        a_node.add( "lockout_key", scarab::param_value( string_from_uuid( lockout_key() ) ) );
         return true;
     }
 
