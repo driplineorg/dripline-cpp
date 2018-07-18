@@ -44,6 +44,7 @@ namespace dripline
             //void cancel();
 
             int get_return();
+            mv_accessible_noset( reply_ptr_t, reply );
 
         private:
             request_ptr_t create_run_request( const std::string& a_routing_key );

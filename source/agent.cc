@@ -40,6 +40,7 @@ namespace dripline
 
     agent::agent( const param_node& a_node ) :
             core( a_node.node_at( "amqp" ) ),
+            f_reply( ),
             f_config( a_node ),
             f_return( 0 )
     {
@@ -178,6 +179,7 @@ namespace dripline
             {
                 LWARN( dlog, "Timed out waiting for reply" );
             }
+            f_reply = t_reply;
         }
 
         f_return = RETURN_SUCCESS;
