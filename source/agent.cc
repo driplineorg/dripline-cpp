@@ -118,7 +118,7 @@ namespace dripline
 
         LINFO( dlog, "Connecting to AMQP broker" );
 
-        param_node t_broker_node = f_config.remove( "amqp" )->as_node();
+        const param_node& t_broker_node = f_config.node_at( "amqp" );
 
         LDEBUG( dlog, "Sending message w/ msgop = " << t_request->get_message_op() << " to " << t_request->routing_key() );
 
@@ -142,7 +142,7 @@ namespace dripline
             {
                 LINFO( dlog, "Response received" );
 
-                const param_node t_payload = t_reply->payload();
+                const param_node& t_payload = t_reply->payload();
 
                 LINFO( dlog, "Response:\n" <<
                         "Return code: " << t_reply->get_return_code() << '\n' <<
@@ -155,8 +155,7 @@ namespace dripline
                     if( t_save_node.has( "json" ) )
                     {
                         scarab::path t_save_filename( scarab::expand_path( t_save_node.get_value( "json" ) ) );
-                        const param_node t_master_config_node = t_payload;
-                        if( t_master_config_node.empty() )
+                        if( t_payload.empty() )
                         {
                             LERROR( dlog, "Payload is not present" );
                         }
@@ -165,7 +164,7 @@ namespace dripline
                             param_output_json t_output;
                             static param_node t_output_options;
                             if( t_output_options.empty() ) t_output_options.add( "style", param_value( (unsigned)param_output_json::k_pretty ) );
-                            t_output.write_file( t_master_config_node, t_save_filename.string(), t_output_options );
+                            t_output.write_file( t_payload, t_save_filename.string(), t_output_options );
                         }
                     }
                     else
@@ -194,21 +193,20 @@ namespace dripline
 
     request_ptr_t agent::create_run_request( const std::string& a_routing_key )
     {
-        param_node t_payload_node = param_node( f_config ); // copy of f_config, which should consist of only the request arguments
+        param_node t_payload_node( f_config ); // copy of f_config, which should consist of only the request arguments
 
         return msg_request::create( t_payload_node, op_t::run, a_routing_key, "", message::encoding::json );
     }
 
     request_ptr_t agent::create_get_request( const std::string& a_routing_key )
     {
-        param_node t_payload_node = param_node();
+        param_node t_payload_node;
 
         if( f_config.has( "value" ) )
         {
-            //TODO there is maybe a way to compress these lines with the new syntax, if push_back supports it
             param_array t_values_array;
             t_values_array.push_back( f_config.remove( "value" ) );
-            t_payload_node.add( "values", t_values_array );
+            t_payload_node.add( "values", std::move(t_values_array) );
         }
 
         return msg_request::create( t_payload_node, op_t::get, a_routing_key, "", message::encoding::json );
@@ -226,7 +224,7 @@ namespace dripline
         t_values_array.push_back( f_config.remove( "value" ) );
 
         param_node t_payload_node;
-        t_payload_node.add( "values", t_values_array );
+        t_payload_node.add( "values", std::move(t_values_array) );
 
         return msg_request::create( t_payload_node, op_t::set, a_routing_key, "", message::encoding::json );
     }

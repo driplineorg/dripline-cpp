@@ -37,12 +37,11 @@ namespace dripline
             f_listen_timeout_ms( 500 ),
             f_canceled( false )
     {
-        if( !a_config.empty() )
-        {
-            f_queue_name = a_config.get_value( "queue", f_queue_name );
-            f_listen_timeout_ms = a_config.get_value( "listen-timeout-ms", f_listen_timeout_ms );
-        }
+        // get values from the config
+        f_queue_name = a_config.get_value( "queue", f_queue_name );
+        f_listen_timeout_ms = a_config.get_value( "listen-timeout-ms", f_listen_timeout_ms );
 
+        // override if specified as a separate argument
         if( ! a_queue_name.empty() ) f_queue_name = a_queue_name;
     }
 
