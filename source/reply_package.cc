@@ -63,7 +63,7 @@ namespace dripline
             return t_reply_info;
         }
 
-        reply_ptr_t t_reply = msg_reply::create( a_return_code, a_return_msg, new scarab::param_node( f_payload ), f_reply_to, message::encoding::json );
+        reply_ptr_t t_reply = msg_reply::create( a_return_code, a_return_msg, scarab::param_node( f_payload ), f_reply_to, message::encoding::json );
         t_reply->correlation_id() = f_correlation_id;
 
         LDEBUG( dlog, "Sending reply message to <" << f_reply_to << ">:\n" <<
