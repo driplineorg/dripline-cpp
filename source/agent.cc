@@ -118,7 +118,7 @@ namespace dripline
 
         LINFO( dlog, "Connecting to AMQP broker" );
 
-        param_node& t_broker_node = f_config.remove( "amqp" )->as_node();
+        param_node t_broker_node = f_config.remove( "amqp" )->as_node();
 
         LDEBUG( dlog, "Sending message w/ msgop = " << t_request->get_message_op() << " to " << t_request->routing_key() );
 
