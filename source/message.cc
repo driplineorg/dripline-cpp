@@ -118,12 +118,12 @@ namespace dripline
                  t_msg_node );
 
         message_ptr_t t_message;
-        switch( to_msg_t( t_msg_node.get_value< uint32_t >( "msgtype" ) ) )
+        switch( to_msg_t( t_msg_node["msgtype"]().as_uint() ) )
         {
             case msg_t::request:
             {
                 request_ptr_t t_request = msg_request::create(
-                        t_msg_node.node_at( "payload" ),
+                        t_msg_node["payload"].as_node(),
                         to_op_t( t_msg_node.get_value< uint32_t >( "msgop", to_uint( op_t::unknown ) ) ),
                         t_routing_key,
                         a_envelope->Message()->ReplyTo(),
@@ -139,9 +139,9 @@ namespace dripline
             case msg_t::reply:
             {
                 reply_ptr_t t_reply = msg_reply::create(
-                        to_retcode_t( t_msg_node.get_value< uint32_t >( "retcode" ) ),
+                        to_retcode_t( t_msg_node["retcode"]().as_uint() ),
                         t_msg_node.get_value( "return_msg", "" ),
-                        t_msg_node.node_at( "payload" ),
+                        t_msg_node["payload"].as_node(),
                         t_routing_key,
                         t_encoding);
 
@@ -151,7 +151,7 @@ namespace dripline
             case msg_t::alert:
             {
                 alert_ptr_t t_alert = msg_alert::create(
-                        t_msg_node.node_at( "payload" ),
+                        t_msg_node["payload"].as_node(),
                         t_routing_key,
                         t_encoding);
 
@@ -160,7 +160,7 @@ namespace dripline
             }
             default:
             {
-                throw dripline_error() << retcode_t::message_error_invalid_method << "Message received with unhandled type: " << t_msg_node.get_value< uint32_t >( "msgtype" );
+                throw dripline_error() << retcode_t::message_error_invalid_method << "Message received with unhandled type: " << t_msg_node["msgtype"]().as_uint();
                 break;
             }
         }
@@ -169,13 +169,13 @@ namespace dripline
         t_message->correlation_id() = a_envelope->Message()->CorrelationId();
         t_message->timestamp() = t_msg_node.get_value( "timestamp", "" );
 
-        t_message->set_sender_info( t_msg_node.node_at( "sender_info" ) );
+        t_message->set_sender_info( t_msg_node["sender_info"].as_node() );
 
         if( t_msg_node.has( "payload" ) )
         {
             if( t_msg_node[ "payload" ].is_node() )
             {
-                t_message->payload() = t_msg_node.node_at( "payload" );
+                t_message->payload() = t_msg_node["payload"].as_node();
             }
             else if( t_msg_node[ "payload" ].is_null() )
             {
@@ -216,8 +216,8 @@ namespace dripline
     bool message::encode_message_body( std::string& a_body ) const
     {
         param_node t_body_node;
-        t_body_node.add( "msgtype", param_value( to_uint( message_type() ) ) );
-        t_body_node.add( "timestamp", param_value( scarab::get_formatted_now() ) );
+        t_body_node.add( "msgtype", to_uint( message_type() ) );
+        t_body_node.add( "timestamp", scarab::get_formatted_now() );
         t_body_node.add( "sender_info", f_sender_info );
         t_body_node.add( "payload", f_payload );
 

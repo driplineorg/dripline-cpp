@@ -22,11 +22,11 @@ namespace dripline
         // default agent configuration
 
         param_node t_amqp_node;
-        t_amqp_node.add( "broker-port", param_value( 5672 ) );
-        t_amqp_node.add( "broker", param_value( "localhost" ) );
-        t_amqp_node.add( "reply-timeout-ms", param_value( 10000 ) );
+        t_amqp_node.add( "broker-port", 5672 );
+        t_amqp_node.add( "broker", "localhost" );
+        t_amqp_node.add( "reply-timeout-ms", 10000 );
 #ifdef DRIPLINE_AUTH_FILE
-        t_amqp_node.add( "auth-file", param_value( TOSTRING( DRIPLINE_AUTH_FILE ) ) );
+        t_amqp_node.add( "auth-file", TOSTRING( DRIPLINE_AUTH_FILE ) );
 #endif
         add( "amqp", std::move(t_amqp_node) );
     }

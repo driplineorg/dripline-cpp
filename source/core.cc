@@ -65,17 +65,17 @@ namespace dripline
 
             //TODO what is the desired behavior here, the prior check as if t_amqp_auth was NULL, that case
             //     now causes scarab::error in the next line. Do we need to catch that and throw as dripline_error?
-            const scarab::param_node& t_amqp_auth = t_auth.node_at( "amqp" );
+            const scarab::param_node& t_amqp_auth = t_auth["amqp"].as_node();
             if( ! t_amqp_auth.has( "username" ) || ! t_amqp_auth.has( "password" ) )
             {
                 throw dripline_error() <<  "AMQP authentication is not available or is not complete";
             }
-            f_username = t_amqp_auth.get_value( "username" );
-            f_password = t_amqp_auth.get_value( "password" );
+            f_username = t_amqp_auth["username"]().as_string();
+            f_password = t_amqp_auth["password"]().as_string();
 
             if( f_address.empty() && t_amqp_auth.has( "broker" ) )
             {
-                f_address = t_amqp_auth.get_value( "broker" );
+                f_address = t_amqp_auth["broker"]().as_string();
             }
         }
 

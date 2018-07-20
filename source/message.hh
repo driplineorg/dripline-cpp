@@ -216,67 +216,67 @@ namespace dripline
     inline void message::set_sender_info( const scarab::param_node& a_sender_info )
     {
         f_sender_info = a_sender_info;
-        f_sender_info.add( "package", scarab::param_value( "N/A" ) ); // sets default if not present
-        f_sender_package = f_sender_info.get_value( "package" );
-        f_sender_info.add( "exe", scarab::param_value( "N/A" ) ); // sets default if not present
-        f_sender_exe = f_sender_info.get_value( "exe" );
-        f_sender_info.add( "version", scarab::param_value( "N/A" ) ); // sets default if not present
-        f_sender_version = f_sender_info.get_value( "version" );
-        f_sender_info.add( "commit", scarab::param_value( "N/A" ) ); // sets default if not present
-        f_sender_commit = f_sender_info.get_value( "commit" );
-        f_sender_info.add( "hostname", scarab::param_value( "N/A" ) ); // sets default if not present
-        f_sender_hostname = f_sender_info.get_value( "hostname" );
-        f_sender_info.add( "username", scarab::param_value( "N/A" ) ); // sets default if not present
-        f_sender_username = f_sender_info.get_value( "username" );
-        f_sender_info.add( "service_name", scarab::param_value( "N/A" ) ); // sets default if not present
-        f_sender_service_name = f_sender_info.get_value( "service_name" );
+        f_sender_info.add( "package", "N/A" ); // sets default if not present
+        f_sender_package = f_sender_info["package"]().as_string();
+        f_sender_info.add( "exe", "N/A" ); // sets default if not present
+        f_sender_exe = f_sender_info["exe"]().as_string();
+        f_sender_info.add( "version", "N/A" ); // sets default if not present
+        f_sender_version = f_sender_info["version"]().as_string();
+        f_sender_info.add( "commit", "N/A" ); // sets default if not present
+        f_sender_commit = f_sender_info["commit"]().as_string();
+        f_sender_info.add( "hostname", "N/A" ); // sets default if not present
+        f_sender_hostname = f_sender_info["hostname"]().as_string();
+        f_sender_info.add( "username", "N/A" ); // sets default if not present
+        f_sender_username = f_sender_info["username"]().as_string();
+        f_sender_info.add( "service_name", "N/A" ); // sets default if not present
+        f_sender_service_name = f_sender_info["service_name"]().as_string();
     }
 
     inline void message::set_sender_package( const std::string& a_pkg )
     {
-        f_sender_info.value_at( "package" ).set( a_pkg );
+        f_sender_info["package"]().set( a_pkg );
         f_sender_package = a_pkg;
         return;
     }
 
     inline void message::set_sender_exe( const std::string& a_exe )
     {
-        f_sender_info.value_at( "exe" ).set( a_exe );
+        f_sender_info["exe"]().set( a_exe );
         f_sender_exe = a_exe;
         return;
     }
 
     inline void message::set_sender_version( const std::string& a_vsn )
     {
-        f_sender_info.value_at( "version" ).set( a_vsn );
+        f_sender_info["version"]().set( a_vsn );
         f_sender_version = a_vsn;
         return;
     }
 
     inline void message::set_sender_commit( const std::string& a_cmt )
     {
-        f_sender_info.value_at( "commit" ).set( a_cmt );
+        f_sender_info["commit"]().set( a_cmt );
         f_sender_commit = a_cmt;
         return;
     }
 
     inline void message::set_sender_hostname( const std::string& a_host )
     {
-        f_sender_info.value_at( "hostname" ).set( a_host );
+        f_sender_info["hostname"]().set( a_host );
         f_sender_hostname = a_host;
         return;
     }
 
     inline void message::set_sender_username( const std::string& a_user )
     {
-        f_sender_info.value_at( "username" ).set( a_user );
+        f_sender_info["username"]().set( a_user );
         f_sender_username = a_user;
         return;
     }
 
     inline void message::set_sender_service_name( const std::string& a_service )
     {
-        f_sender_info.value_at( "service_name" ).set( a_service );
+        f_sender_info["service_name"]().set( a_service );
         f_sender_service_name = a_service;
         return;
     }
@@ -316,8 +316,8 @@ namespace dripline
 
     inline bool msg_request::derived_modify_message_body( scarab::param_node& a_node ) const
     {
-        a_node.add( "msgop", scarab::param_value( to_uint(f_message_op) ) );
-        a_node.add( "lockout_key", scarab::param_value( string_from_uuid( lockout_key() ) ) );
+        a_node.add( "msgop", to_uint(f_message_op) );
+        a_node.add( "lockout_key", string_from_uuid( lockout_key() ) );
         return true;
     }
 
@@ -356,8 +356,8 @@ namespace dripline
 
     inline bool msg_reply::derived_modify_message_body( scarab::param_node& a_node ) const
     {
-        a_node.add( "retcode", scarab::param_value( to_uint(f_return_code) ) );
-        a_node.add( "return_msg", scarab::param_value( f_return_msg ) );
+        a_node.add( "retcode", to_uint(f_return_code) );
+        a_node.add( "return_msg", f_return_msg );
         return true;
     }
 

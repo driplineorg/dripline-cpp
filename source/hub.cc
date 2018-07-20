@@ -315,7 +315,7 @@ namespace dripline
             return a_reply_pkg.send_reply( retcode_t::device_error, "Unable to lock server" );;
         }
 
-        a_reply_pkg.f_payload.add( "key", scarab::param_value( string_from_uuid( t_new_key ) ) );
+        a_reply_pkg.f_payload.add( "key", string_from_uuid( t_new_key ) );
         return a_reply_pkg.send_reply( retcode_t::success, "Server is now locked" );
     }
 
@@ -343,7 +343,7 @@ namespace dripline
     reply_info hub::handle_is_locked_request( const request_ptr_t, reply_package& a_reply_pkg )
     {
         bool t_is_locked = is_locked();
-        a_reply_pkg.f_payload.add( "is_locked", scarab::param_value( t_is_locked ) );
+        a_reply_pkg.f_payload.add( "is_locked", t_is_locked );
         if( t_is_locked ) a_reply_pkg.f_payload.add( "tag", f_lockout_tag );
         return a_reply_pkg.send_reply( retcode_t::success, "Checked lock status" );
     }
