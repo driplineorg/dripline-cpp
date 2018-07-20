@@ -39,7 +39,7 @@ namespace dripline
     LOGGER( dlog, "agent" );
 
     agent::agent( const param_node& a_node ) :
-            core( a_node.node_at( "amqp" ) ),
+            core( a_node["amqp"].as_node() ),
             f_reply( ),
             f_config( a_node ),
             f_return( 0 )
@@ -73,7 +73,7 @@ namespace dripline
         param_node t_save_node;
         if( f_config.has( "save" ) )
         {
-            t_save_node = f_config.node_at( "save" );
+            t_save_node = f_config["save"].as_node();
         }
         f_config.erase( "save" );
 
@@ -118,7 +118,7 @@ namespace dripline
 
         LINFO( dlog, "Connecting to AMQP broker" );
 
-        const param_node& t_broker_node = f_config.node_at( "amqp" );
+        const param_node& t_broker_node = f_config["amqp"].as_node();
 
         LDEBUG( dlog, "Sending message w/ msgop = " << t_request->get_message_op() << " to " << t_request->routing_key() );
 
@@ -154,7 +154,7 @@ namespace dripline
                 {
                     if( t_save_node.has( "json" ) )
                     {
-                        scarab::path t_save_filename( scarab::expand_path( t_save_node.get_value( "json" ) ) );
+                        scarab::path t_save_filename( scarab::expand_path( t_save_node["json"]().as_string() ) );
                         if( t_payload.empty() )
                         {
                             LERROR( dlog, "Payload is not present" );
@@ -163,7 +163,7 @@ namespace dripline
                         {
                             param_output_json t_output;
                             static param_node t_output_options;
-                            if( t_output_options.empty() ) t_output_options.add( "style", param_value( (unsigned)param_output_json::k_pretty ) );
+                            if( t_output_options.empty() ) t_output_options.add( "style", (unsigned)param_output_json::k_pretty );
                             t_output.write_file( t_payload, t_save_filename.string(), t_output_options );
                         }
                     }
@@ -236,13 +236,13 @@ namespace dripline
         // for the load instruction, the instruction node should be replaced by the contents of the file specified
         if( f_config.has( "load" ) )
         {
-            if( ! f_config.node_at( "load" ).has( "json" ) )
+            if( ! f_config["load"].as_node().has( "json" ) )
             {
                 LERROR( dlog, "Load instruction did not contain a valid file type");
                 return NULL;
             }
 
-            std::string t_load_filename( f_config.node_at( "load" ).get_value( "json" ) );
+            std::string t_load_filename( f_config["load"]["json"]().as_string() );
             param_input_json t_reader;
             scarab::param_ptr_t t_node_from_file = t_reader.read_file( t_load_filename );
             if( t_node_from_file == NULL || ! t_node_from_file->is_node() )
