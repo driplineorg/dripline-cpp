@@ -62,6 +62,9 @@ namespace dripline
             /// from message object to AMQP
             amqp_message_ptr create_amqp_message() const;
 
+            /// from message object to string
+            bool encode_message_body( std::string& a_body ) const;
+
         protected:
             virtual bool derived_modify_amqp_message( amqp_message_ptr t_amqp_msg ) const = 0;
             virtual bool derived_modify_message_body( scarab::param_node& a_node ) const = 0;
@@ -69,7 +72,6 @@ namespace dripline
             std::string interpret_encoding() const;
 
         public:
-            bool encode_message_body( std::string& a_body ) const;
             mv_referrable( std::string, routing_key );
             mv_referrable( std::string, rks );
             //mv_referrable( routing_key_specifier, parsed_rks );
