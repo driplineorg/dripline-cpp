@@ -66,10 +66,10 @@ namespace dripline
             virtual bool derived_modify_amqp_message( amqp_message_ptr t_amqp_msg ) const = 0;
             virtual bool derived_modify_message_body( scarab::param_node& a_node ) const = 0;
 
-            bool encode_message_body( std::string& a_body ) const;
             std::string interpret_encoding() const;
 
         public:
+            bool encode_message_body( std::string& a_body ) const;
             mv_referrable( std::string, routing_key );
             mv_referrable( std::string, rks );
             //mv_referrable( routing_key_specifier, parsed_rks );
@@ -126,6 +126,7 @@ namespace dripline
 
     DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, message::encoding a_enc );
 
+    DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, const message& a_message );
 
     //***********
     // Request

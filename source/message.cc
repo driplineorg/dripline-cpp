@@ -409,5 +409,12 @@ namespace dripline
         return a_os << s_enc_strings[ a_enc ];
     }
 
+    DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, const message& a_message )
+    {
+        std::string t_msg;
+        a_message.encode_message_body( t_msg );
+        return a_os << t_msg;
+    }
+
 
 } /* namespace dripline */
