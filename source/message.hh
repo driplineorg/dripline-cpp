@@ -72,7 +72,6 @@ namespace dripline
             std::string interpret_encoding() const;
 
         public:
-            bool encode_message_body( std::string& a_body ) const;
             mv_referrable( std::string, routing_key );
             mv_referrable( std::string, rks );
             //mv_referrable( routing_key_specifier, parsed_rks );
