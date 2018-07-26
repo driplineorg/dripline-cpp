@@ -41,7 +41,7 @@ namespace dripline
         }
     }
 
-    core::core( const scarab::param_node* a_config, const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file, const bool a_make_connection ) :
+    core::core( const scarab::param_node& a_config, const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file, const bool a_make_connection ) :
             f_address( "localhost" ),
             f_port( 5672 ),
             f_username( "guest" ),
@@ -50,7 +50,7 @@ namespace dripline
             f_alerts_exchange( "alerts" ),
             f_make_connection( a_make_connection )
     {
-        std::string t_auth_file = a_config->get_value( "auth-file", a_auth_file );
+        std::string t_auth_file = a_config.get_value( "auth-file", a_auth_file );
 
         // get auth file contents and override defaults
         if( ! t_auth_file.empty() )
@@ -63,28 +63,30 @@ namespace dripline
                 throw dripline_error() << "Authentication file <" << a_auth_file << "> could not be loaded";
             }
 
-            const scarab::param_node* t_amqp_auth = t_auth.node_at( "amqp" );
-            if( t_amqp_auth == NULL || ! t_amqp_auth->has( "username" ) || ! t_amqp_auth->has( "password" ) )
+            //TODO what is the desired behavior here, the prior check as if t_amqp_auth was NULL, that case
+            //     now causes scarab::error in the next line. Do we need to catch that and throw as dripline_error?
+            const scarab::param_node& t_amqp_auth = t_auth["amqp"].as_node();
+            if( ! t_amqp_auth.has( "username" ) || ! t_amqp_auth.has( "password" ) )
             {
                 throw dripline_error() <<  "AMQP authentication is not available or is not complete";
             }
-            f_username = t_amqp_auth->get_value( "username" );
-            f_password = t_amqp_auth->get_value( "password" );
+            f_username = t_amqp_auth["username"]().as_string();
+            f_password = t_amqp_auth["password"]().as_string();
 
-            if( f_address.empty() && t_amqp_auth->has( "broker" ) )
+            if( f_address.empty() && t_amqp_auth.has( "broker" ) )
             {
-                f_address = t_amqp_auth->get_value( "broker" );
+                f_address = t_amqp_auth["broker"]().as_string();
             }
         }
 
         // config file overrides auth file and defaults
-        if( a_config != nullptr )
+        if( !a_config.empty() )
         {
-            f_address = a_config->get_value( "broker", f_address );
-            f_port = a_config->get_value( "broker-port", f_port );
-            f_requests_exchange = a_config->get_value( "requests-exchange", f_requests_exchange );
-            f_alerts_exchange = a_config->get_value( "alerts-exchange", f_alerts_exchange );
-            f_make_connection = a_config->get_value( "make-connection", f_make_connection );
+            f_address = a_config.get_value( "broker", f_address );
+            f_port = a_config.get_value( "broker-port", f_port );
+            f_requests_exchange = a_config.get_value( "requests-exchange", f_requests_exchange );
+            f_alerts_exchange = a_config.get_value( "alerts-exchange", f_alerts_exchange );
+            f_make_connection = a_config.get_value( "make-connection", f_make_connection );
         }
 
         // parameters override config file, auth file, and defaults
@@ -93,7 +95,7 @@ namespace dripline
     }
 
     //TODO having this constructor just because bools are 2-state and i can't tell default value from provided value == default
-    core::core( const bool a_make_connection, const scarab::param_node* a_config ) :
+    core::core( const bool a_make_connection, const scarab::param_node& a_config ) :
             core::core(a_config)
     {
         // this constructor overrides the default value of make_connection
@@ -282,7 +284,7 @@ namespace dripline
         if( ! f_make_connection )
         {
             LDEBUG( dlog, "does not make amqp connection, not sending payload:" );
-            LDEBUG( dlog, a_message->get_payload() );
+            LDEBUG( dlog, a_message->payload() );
             throw dripline_error() << "cannot send message with make_connection is false";
             return true;
         }

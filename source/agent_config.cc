@@ -9,11 +9,9 @@
 
 #include "agent_config.hh"
 
-#include "logger.hh"
+#include "macros.hh"
 
-#include<string>
 using std::string;
-
 using scarab::param_value;
 
 namespace dripline
@@ -23,14 +21,14 @@ namespace dripline
     {
         // default agent configuration
 
-        param_node* t_amqp_node = new param_node();
-        t_amqp_node->add( "broker-port", new param_value( 5672 ) );
-        t_amqp_node->add( "broker", new param_value( "localhost" ) );
-        t_amqp_node->add( "reply-timeout-ms", new param_value( 10000 ) );
+        param_node t_amqp_node;
+        t_amqp_node.add( "broker-port", 5672 );
+        t_amqp_node.add( "broker", "localhost" );
+        t_amqp_node.add( "reply-timeout-ms", 10000 );
 #ifdef DRIPLINE_AUTH_FILE
-        t_amqp_node->add( "auth-file", new param_value( TOSTRING( DRIPLINE_AUTH_FILE ) ) );
+        t_amqp_node.add( "auth-file", TOSTRING( DRIPLINE_AUTH_FILE ) );
 #endif
-        add( "amqp", t_amqp_node );
+        add( "amqp", std::move(t_amqp_node) );
     }
 
     agent_config::~agent_config()

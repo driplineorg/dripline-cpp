@@ -54,18 +54,18 @@ namespace dripline
             f_sender_commit( "N/A" ),
             f_sender_hostname( "N/A" ),
             f_sender_username( "N/A" ),
+            f_sender_info(),
             f_parsed_rks(),
-            f_sender_info( new param_node() ),
-            f_payload( new param_node() )
+            f_payload()
     {
         // make sure the sender_info node is filled out correctly
-        f_sender_info->add( "package", new param_value( "N/A" ) );
-        f_sender_info->add( "exe", new param_value( "N/A" ) );
-        f_sender_info->add( "version", new param_value( "N/A" ) );
-        f_sender_info->add( "commit", new param_value( "N/A" ) );
-        f_sender_info->add( "hostname", new param_value( "N/A" ) );
-        f_sender_info->add( "username", new param_value( "N/A" ) );
-        f_sender_info->add( "service_name", new param_value( "N/A" ) );
+        f_sender_info.add( "package", param_value( "N/A" ) );
+        f_sender_info.add( "exe", param_value( "N/A" ) );
+        f_sender_info.add( "version", param_value( "N/A" ) );
+        f_sender_info.add( "commit", param_value( "N/A" ) );
+        f_sender_info.add( "hostname", param_value( "N/A" ) );
+        f_sender_info.add( "username", param_value( "N/A" ) );
+        f_sender_info.add( "service_name", param_value( "N/A" ) );
 
         // set the sender_info correctly for the server software
         version_wrapper* t_version = version_wrapper::get_instance();
@@ -80,7 +80,6 @@ namespace dripline
 
     message::~message()
     {
-        delete f_payload;
     }
 
     message_ptr_t message::process_envelope( amqp_envelope_ptr a_envelope )
@@ -89,14 +88,14 @@ namespace dripline
         {
             throw dripline_error() << retcode_t::amqp_error << "Empty envelope received";
         }
-        param* t_msg = nullptr;
+        scarab::param_ptr_t t_msg;
         encoding t_encoding;
         if( a_envelope->Message()->ContentEncoding() == "application/json" )
         {
             t_encoding = encoding::json;
             param_input_json t_input;
             t_msg = t_input.read_string( a_envelope->Message()->Body() );
-            if( t_msg == nullptr )
+            if( ! t_msg )
             {
                 throw dripline_error() << retcode_t::message_error_decoding_fail << "Message body could not be parsed; skipping request";
             }
@@ -110,28 +109,28 @@ namespace dripline
             throw dripline_error() << retcode_t::message_error_decoding_fail << "Unable to parse message with content type <" << a_envelope->Message()->ContentEncoding() << ">";
         }
 
-        param_node* t_msg_node = &t_msg->as_node();
+        param_node& t_msg_node = t_msg->as_node();
 
         string t_routing_key = a_envelope->RoutingKey();
 
         LDEBUG( dlog, "Processing message:\n" <<
                  "Routing key: " << t_routing_key <<
-                 *t_msg_node );
+                 t_msg_node );
 
         message_ptr_t t_message;
-        switch( to_msg_t( t_msg_node->get_value< uint32_t >( "msgtype" ) ) )
+        switch( to_msg_t( t_msg_node["msgtype"]().as_uint() ) )
         {
             case msg_t::request:
             {
                 request_ptr_t t_request = msg_request::create(
-                        t_msg_node->node_at( "payload" ),
-                        to_op_t( t_msg_node->get_value< uint32_t >( "msgop", to_uint( op_t::unknown ) ) ),
+                        t_msg_node["payload"].as_node(),
+                        to_op_t( t_msg_node.get_value< uint32_t >( "msgop", to_uint( op_t::unknown ) ) ),
                         t_routing_key,
                         a_envelope->Message()->ReplyTo(),
                         t_encoding);
 
                 bool t_lockout_key_valid = true;
-                t_request->lockout_key() = uuid_from_string( t_msg_node->get_value( "lockout_key", "" ), t_lockout_key_valid );
+                t_request->lockout_key() = uuid_from_string( t_msg_node.get_value( "lockout_key", "" ), t_lockout_key_valid );
                 t_request->set_lockout_key_valid( t_lockout_key_valid );
 
                 t_message = t_request;
@@ -140,9 +139,9 @@ namespace dripline
             case msg_t::reply:
             {
                 reply_ptr_t t_reply = msg_reply::create(
-                        to_retcode_t( t_msg_node->get_value< uint32_t >( "retcode" ) ),
-                        t_msg_node->get_value( "return_msg", "" ),
-                        t_msg_node->node_at( "payload" ),
+                        to_retcode_t( t_msg_node["retcode"]().as_uint() ),
+                        t_msg_node.get_value( "return_msg", "" ),
+                        t_msg_node["payload"].as_node(),
                         t_routing_key,
                         t_encoding);
 
@@ -152,7 +151,7 @@ namespace dripline
             case msg_t::alert:
             {
                 alert_ptr_t t_alert = msg_alert::create(
-                        t_msg_node->node_at( "payload" ),
+                        t_msg_node["payload"].as_node(),
                         t_routing_key,
                         t_encoding);
 
@@ -161,36 +160,36 @@ namespace dripline
             }
             default:
             {
-                throw dripline_error() << retcode_t::message_error_invalid_method << "Message received with unhandled type: " << t_msg_node->get_value< uint32_t >( "msgtype" );
+                throw dripline_error() << retcode_t::message_error_invalid_method << "Message received with unhandled type: " << t_msg_node["msgtype"]().as_uint();
                 break;
             }
         }
 
         // set message fields
         t_message->correlation_id() = a_envelope->Message()->CorrelationId();
-        t_message->timestamp() = t_msg_node->get_value( "timestamp", "" );
+        t_message->timestamp() = t_msg_node.get_value( "timestamp", "" );
 
-        t_message->set_sender_info( new param_node( *(t_msg_node->node_at( "sender_info" ) ) ) );
+        t_message->set_sender_info( t_msg_node["sender_info"].as_node() );
 
-        if( t_msg_node->has( "payload" ) )
+        if( t_msg_node.has( "payload" ) )
         {
-            if( (*t_msg_node)[ "payload" ].is_node() )
+            if( t_msg_node[ "payload" ].is_node() )
             {
-                t_message->set_payload( new param_node( *(t_msg_node->node_at( "payload" ) ) ) );
+                t_message->payload() = t_msg_node["payload"].as_node();
             }
-            else if( (*t_msg_node)[ "payload" ].is_null() )
+            else if( t_msg_node[ "payload" ].is_null() )
             {
-                t_message->set_payload( new param_node() );
+                t_message->payload().clear();
             }
             else
             {
                 LWARN( dlog, "Non-node payload is present; it will be ignored" );
-                t_message->set_payload( new param_node() );
+                t_message->payload().clear();
             }
         }
         else
         {
-            t_message->set_payload( new param_node() );
+            t_message->payload().clear();
         }
 
         return t_message;
@@ -217,10 +216,10 @@ namespace dripline
     bool message::encode_message_body( std::string& a_body ) const
     {
         param_node t_body_node;
-        t_body_node.add( "msgtype", param_value( to_uint( message_type() ) ) );
-        t_body_node.add( "timestamp", param_value( scarab::get_absolute_time_string() ) );
-        t_body_node.add( "sender_info", new param_node( *f_sender_info ) );
-        t_body_node.add( "payload", f_payload->clone() ); // use a clone of f_payload
+        t_body_node.add( "msgtype", to_uint( message_type() ) );
+        t_body_node.add( "timestamp", scarab::get_formatted_now() );
+        t_body_node.add( "sender_info", f_sender_info );
+        t_body_node.add( "payload", f_payload );
 
         if( ! this->derived_modify_message_body( t_body_node ) )
         {
@@ -289,10 +288,10 @@ namespace dripline
 
     }
 
-    request_ptr_t msg_request::create( param_node* a_payload, op_t a_msg_op, const std::string& a_routing_key, const std::string& a_reply_to, message::encoding a_encoding )
+    request_ptr_t msg_request::create( const param_node& a_payload, op_t a_msg_op, const std::string& a_routing_key, const std::string& a_reply_to, message::encoding a_encoding )
     {
         request_ptr_t t_request = make_shared< msg_request >();
-        t_request->set_payload( a_payload );
+        t_request->payload() = a_payload;
         t_request->set_message_op( a_msg_op );
         t_request->routing_key() = a_routing_key;
         t_request->reply_to() = a_reply_to;
@@ -301,11 +300,6 @@ namespace dripline
     }
 
     msg_t msg_request::s_message_type = msg_t::request;
-
-    msg_t msg_request::get_message_type()
-    {
-        return msg_request::s_message_type;
-    }
 
     msg_t msg_request::message_type() const
     {
@@ -330,12 +324,12 @@ namespace dripline
 
     }
 
-    reply_ptr_t msg_reply::create( retcode_t a_retcode, const std::string& a_ret_msg, param_node* a_payload, const std::string& a_routing_key, message::encoding a_encoding )
+    reply_ptr_t msg_reply::create( retcode_t a_retcode, const std::string& a_ret_msg, const param_node& a_payload, const std::string& a_routing_key, message::encoding a_encoding )
     {
         reply_ptr_t t_reply = make_shared< msg_reply >();
         t_reply->set_return_code( a_retcode );
         t_reply->return_msg() = a_ret_msg;
-        t_reply->set_payload( a_payload );
+        t_reply->payload() = a_payload;
         t_reply->routing_key() = a_routing_key;
         t_reply->set_encoding( a_encoding );
         return t_reply;
@@ -346,18 +340,13 @@ namespace dripline
         reply_ptr_t t_reply = make_shared< msg_reply >();
         t_reply->set_return_code( a_error.retcode() );
         t_reply->return_msg() = a_error.what();
-        t_reply->set_payload( new param_node() );
+        t_reply->payload().clear();
         t_reply->routing_key() = a_routing_key;
         t_reply->set_encoding( a_encoding );
         return t_reply;
     }
 
     msg_t msg_reply::s_message_type = msg_t::reply;
-
-    msg_t msg_reply::get_message_type()
-    {
-        return msg_reply::s_message_type;
-    }
 
     msg_t msg_reply::message_type() const
     {
@@ -369,10 +358,10 @@ namespace dripline
     // Alert
     //*********
 
-    alert_ptr_t msg_alert::create( param_node* a_payload, const std::string& a_routing_key, message::encoding a_encoding )
+    alert_ptr_t msg_alert::create( const param_node& a_payload, const std::string& a_routing_key, message::encoding a_encoding )
     {
         alert_ptr_t t_alert = make_shared< msg_alert >();
-        t_alert->set_payload( a_payload );
+        t_alert->payload() = a_payload;
         t_alert->routing_key() = a_routing_key;
         t_alert->set_encoding( a_encoding );
         return t_alert;
@@ -390,11 +379,6 @@ namespace dripline
     }
 
     msg_t msg_alert::s_message_type = msg_t::alert;
-
-    msg_t msg_alert::get_message_type()
-    {
-        return msg_alert::s_message_type;
-    }
 
     msg_t msg_alert::message_type() const
     {
