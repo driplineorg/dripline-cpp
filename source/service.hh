@@ -25,8 +25,8 @@ namespace dripline
     class DRIPLINE_API service : public core
     {
         public:
-            service( const scarab::param_node* a_config = nullptr, const std::string& a_queue_name = "",  const std::string& a_broker_address = "", unsigned a_port = 0, const std::string& a_auth_file = "", const bool a_make_connection = true );
-            service( const bool a_make_connection, const scarab::param_node* a_config = nullptr );
+            service( const scarab::param_node& a_config = scarab::param_node(), const std::string& a_queue_name = "",  const std::string& a_broker_address = "", unsigned a_port = 0, const std::string& a_auth_file = "", const bool a_make_connection = true );
+            service( const bool a_make_connection, const scarab::param_node& a_config = scarab::param_node() );
             virtual ~service();
 
         public:

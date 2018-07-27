@@ -37,7 +37,7 @@ int main( int argc, char** argv )
     try
     {
         agent_config t_cc;
-        scarab::configurator t_configurator( argc, argv, &t_cc );
+        scarab::configurator t_configurator( argc, argv, t_cc );
 
         if( t_configurator.help_flag() )
         {

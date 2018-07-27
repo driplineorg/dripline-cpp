@@ -39,7 +39,8 @@ namespace dripline
     LOGGER( dlog, "agent" );
 
     agent::agent( const param_node& a_node ) :
-            core( a_node.node_at( "amqp" ) ),
+            core( a_node["amqp"].as_node() ),
+            f_reply( ),
             f_config( a_node ),
             f_return( 0 )
     {
@@ -72,7 +73,7 @@ namespace dripline
         param_node t_save_node;
         if( f_config.has( "save" ) )
         {
-            t_save_node = *(f_config.node_at( "save" ));
+            t_save_node = f_config["save"].as_node();
         }
         f_config.erase( "save" );
 
@@ -117,7 +118,7 @@ namespace dripline
 
         LINFO( dlog, "Connecting to AMQP broker" );
 
-        param_node& t_broker_node = f_config.remove( "amqp" )->as_node();
+        const param_node& t_broker_node = f_config["amqp"].as_node();
 
         LDEBUG( dlog, "Sending message w/ msgop = " << t_request->get_message_op() << " to " << t_request->routing_key() );
 
@@ -141,21 +142,20 @@ namespace dripline
             {
                 LINFO( dlog, "Response received" );
 
-                const param_node* t_payload = &( t_reply->get_payload() );
+                const param_node& t_payload = t_reply->payload();
 
                 LINFO( dlog, "Response:\n" <<
                         "Return code: " << t_reply->get_return_code() << '\n' <<
                         "Return message: " << t_reply->return_msg() << '\n' <<
-                        *t_payload );
+                        t_payload );
 
                 // optionally save "master-config" from the response
                 if( t_save_node.size() != 0 )
                 {
                     if( t_save_node.has( "json" ) )
                     {
-                        scarab::path t_save_filename( scarab::expand_path( t_save_node.get_value( "json" ) ) );
-                        const param_node* t_master_config_node = t_payload;
-                        if( t_master_config_node == NULL )
+                        scarab::path t_save_filename( scarab::expand_path( t_save_node["json"]().as_string() ) );
+                        if( t_payload.empty() )
                         {
                             LERROR( dlog, "Payload is not present" );
                         }
@@ -163,8 +163,8 @@ namespace dripline
                         {
                             param_output_json t_output;
                             static param_node t_output_options;
-                            if( t_output_options.empty() ) t_output_options.add( "style", new param_value( (unsigned)param_output_json::k_pretty ) );
-                            t_output.write_file( *t_master_config_node, t_save_filename.string(), &t_output_options );
+                            if( t_output_options.empty() ) t_output_options.add( "style", (unsigned)param_output_json::k_pretty );
+                            t_output.write_file( t_payload, t_save_filename.string(), t_output_options );
                         }
                     }
                     else
@@ -178,6 +178,7 @@ namespace dripline
             {
                 LWARN( dlog, "Timed out waiting for reply" );
             }
+            f_reply = t_reply;
         }
 
         f_return = RETURN_SUCCESS;
@@ -192,20 +193,20 @@ namespace dripline
 
     request_ptr_t agent::create_run_request( const std::string& a_routing_key )
     {
-        param_node* t_payload_node = new param_node( f_config ); // copy of f_config, which should consist of only the request arguments
+        param_node t_payload_node( f_config ); // copy of f_config, which should consist of only the request arguments
 
         return msg_request::create( t_payload_node, op_t::run, a_routing_key, "", message::encoding::json );
     }
 
     request_ptr_t agent::create_get_request( const std::string& a_routing_key )
     {
-        param_node* t_payload_node = new param_node();
+        param_node t_payload_node;
 
         if( f_config.has( "value" ) )
         {
-            param_array* t_values_array = new param_array();
-            t_values_array->push_back( f_config.remove( "value" ) );
-            t_payload_node->add( "values", t_values_array );
+            param_array t_values_array;
+            t_values_array.push_back( f_config.remove( "value" ) );
+            t_payload_node.add( "values", std::move(t_values_array) );
         }
 
         return msg_request::create( t_payload_node, op_t::get, a_routing_key, "", message::encoding::json );
@@ -219,45 +220,43 @@ namespace dripline
             return NULL;
         }
 
-        param_array* t_values_array = new param_array();
-        t_values_array->push_back( f_config.remove( "value" ) );
+        param_array t_values_array;
+        t_values_array.push_back( f_config.remove( "value" ) );
 
-        param_node* t_payload_node = new param_node();
-        t_payload_node->add( "values", t_values_array );
+        param_node t_payload_node;
+        t_payload_node.add( "values", std::move(t_values_array) );
 
         return msg_request::create( t_payload_node, op_t::set, a_routing_key, "", message::encoding::json );
     }
 
     request_ptr_t agent::create_cmd_request( const std::string& a_routing_key )
     {
-        param_node* t_payload_node = new param_node();
+        param_node t_payload_node;
 
         // for the load instruction, the instruction node should be replaced by the contents of the file specified
         if( f_config.has( "load" ) )
         {
-            if( ! f_config.node_at( "load" )->has( "json" ) )
+            if( ! f_config["load"].as_node().has( "json" ) )
             {
                 LERROR( dlog, "Load instruction did not contain a valid file type");
-                delete t_payload_node;
                 return NULL;
             }
 
-            std::string t_load_filename( f_config.node_at( "load" )->get_value( "json" ) );
+            std::string t_load_filename( f_config["load"]["json"]().as_string() );
             param_input_json t_reader;
-            param* t_node_from_file = t_reader.read_file( t_load_filename );
+            scarab::param_ptr_t t_node_from_file = t_reader.read_file( t_load_filename );
             if( t_node_from_file == NULL || ! t_node_from_file->is_node() )
             {
                 LERROR( dlog, "Unable to read JSON file <" << t_load_filename << ">" );
-                delete t_payload_node;
                 return NULL;
             }
 
-            t_payload_node->merge( t_node_from_file->as_node() );
+            t_payload_node.merge( t_node_from_file->as_node() );
             f_config.erase( "load" );
         }
 
         // at this point, all that remains in f_config should be other options that we want to add to the payload node
-        t_payload_node->merge( f_config ); // copy f_config
+        t_payload_node.merge( f_config ); // copy f_config
 
         return msg_request::create( t_payload_node, op_t::cmd, a_routing_key, "", message::encoding::json );
     }
