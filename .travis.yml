@@ -1,24 +1,14 @@
 language: cpp
 
-os:
-  - linux
-  - osx
-
-compiler:
-  - gcc
-  - clang
-
 addons:
   apt:
     packages:
       - libboost-all-dev
       - librabbitmq-dev
 
-before_install:
+before_script:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install rabbitmq-c; fi
-
-before_script:
   - mkdir build
   - cd build
   - cmake ..
@@ -26,9 +16,6 @@ before_script:
 script: make
   
 matrix:
-  exclude:
-    - os: osx
-      compiler: gcc
   include:
     - os: linux
       compiler: gcc
