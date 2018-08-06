@@ -10,6 +10,8 @@ before_script:
 script: make
   
 matrix:
+  allow_failures:
+    - os: linux  # trusty's version of rabbitmq-c is 0.4.1, which is too old, so the build fails; a docker build should be used instead
   include:
     - os: linux
       compiler: gcc
