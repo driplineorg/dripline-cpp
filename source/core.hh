@@ -1,5 +1,5 @@
 /*
- * mt_amqp.hh
+ * core.hh
  *
  *  Created on: Jul 13, 2015
  *      Author: nsoblath

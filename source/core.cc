@@ -1,5 +1,5 @@
 /*
- * amqp.cc
+ * core.cc
  *
  *  Created on: Jun 27, 2017
  *      Author: obla999
