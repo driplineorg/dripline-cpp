@@ -15,6 +15,7 @@ set( dripline_HEADERS
     ${dir}/dripline_constants.hh
     ${dir}/dripline_error.hh
     ${dir}/dripline_version.hh
+    ${dir}/endpoint.hh
     ${dir}/hub.hh
     ${dir}/message.hh
     ${dir}/relayer.hh
@@ -31,6 +32,7 @@ set( dripline_SOURCES
     ${dir}/dripline_constants.cc
     ${dir}/dripline_error.cc
     ${dir}/dripline_version.cc
+    ${dir}/endpoint.cc
     ${dir}/hub.cc
     ${dir}/message.cc
     ${dir}/relayer.cc

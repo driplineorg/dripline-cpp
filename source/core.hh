@@ -1,5 +1,5 @@
 /*
- * mt_amqp.hh
+ * core.hh
  *
  *  Created on: Jul 13, 2015
  *      Author: nsoblath
@@ -8,7 +8,6 @@
 #ifndef DRIPLINE_CORE_HH_
 #define DRIPLINE_CORE_HH_
 
-#include "dripline_api.hh"
 #include "message.hh"
 
 

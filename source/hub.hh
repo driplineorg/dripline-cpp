@@ -35,14 +35,9 @@ namespace dripline
             void remove_cmd_handler( const std::string& a_key );
 
         private:
-            /// Handle request messages
-            virtual reply_info on_request_message( const request_ptr_t a_request );
-
-            //*****************************
-            // Default request distributors
-            //*****************************
-
-            // Override the relevant function to implement use of that type of message
+            //*************************
+            // Hub request distributors
+            //*************************
 
             virtual reply_info do_run_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
             virtual reply_info do_get_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
@@ -56,73 +51,7 @@ namespace dripline
             handler_funcs_t f_set_handlers;
             handler_funcs_t f_cmd_handlers;
 
-        private:
-            reply_info __do_run_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            reply_info __do_get_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            reply_info __do_set_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            reply_info __do_cmd_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-
-        private:
-            //*****************
-            // Request handlers
-            //*****************
-
-            reply_info handle_lock_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            reply_info handle_unlock_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            reply_info handle_is_locked_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            reply_info handle_ping_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            reply_info handle_set_condition_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-
-        public:
-            //******************
-            // Lockout functions
-            //******************
-
-            /// enable lockout with randomly-generated key
-            uuid_t enable_lockout( const scarab::param_node& a_tag );
-            /// enable lockout with user-supplied key
-            uuid_t enable_lockout( const scarab::param_node& a_tag, uuid_t a_key );
-            bool disable_lockout( const uuid_t& a_key, bool a_force = false );
-
-            bool is_locked() const;
-            const scarab::param_node& get_lockout_tag() const;
-            bool check_key( const uuid_t& a_key ) const;
-
-        private:
-            // Returns true if the server is unlocked or if it's locked and the key matches the lockout key; returns false otherwise.
-            bool authenticate( const uuid_t& a_key ) const;
-
-            virtual reply_info __do_handle_set_condition_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-
-            scarab::param_node f_lockout_tag;
-            uuid_t f_lockout_key;
-
     };
-
-    inline uuid_t hub::enable_lockout( const scarab::param_node& a_tag )
-    {
-        return enable_lockout( a_tag, generate_random_uuid() );
-    }
-
-    inline bool hub::is_locked() const
-    {
-        return ! f_lockout_key.is_nil();
-    }
-
-    inline const scarab::param_node& hub::get_lockout_tag() const
-    {
-        return f_lockout_tag;
-    }
-
-    inline bool hub::check_key( const uuid_t& a_key ) const
-    {
-        return f_lockout_key == a_key;
-    }
-
-    inline reply_info hub::__do_handle_set_condition_request( const request_ptr_t, reply_package& a_reply_pkg )
-    {
-        return a_reply_pkg.send_reply( retcode_t::success, "No action taken (default method)" );
-    }
 
 } /* namespace dripline */
 
