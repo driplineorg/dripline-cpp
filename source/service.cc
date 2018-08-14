@@ -39,7 +39,9 @@ namespace dripline
             f_keys(),
             f_broadcast_key( "broadcast" ),
             f_listen_timeout_ms( 500 ),
-            f_canceled( false )
+            f_canceled( false ),
+            f_lockout_tag(),
+            f_lockout_key( generate_nil_uuid() )
     {
         // get values from the config
         f_listen_timeout_ms = a_config.get_value( "listen-timeout-ms", f_listen_timeout_ms );
@@ -56,7 +58,9 @@ namespace dripline
             f_keys(),
             f_broadcast_key(),
             f_listen_timeout_ms( 500 ),
-            f_canceled( false )
+            f_canceled( false ),
+            f_lockout_tag(),
+            f_lockout_key( generate_nil_uuid() )
     {
     }
 
@@ -365,6 +369,72 @@ namespace dripline
         }
 
         return true;
+    }
+
+    uuid_t service::enable_lockout( const scarab::param_node& a_tag, uuid_t a_key )
+    {
+        if( is_locked() ) return generate_nil_uuid();
+        if( a_key.is_nil() ) f_lockout_key = generate_random_uuid();
+        else f_lockout_key = a_key;
+        f_lockout_tag = a_tag;
+        return f_lockout_key;
+    }
+
+    bool service::disable_lockout( const uuid_t& a_key, bool a_force )
+    {
+        if( ! is_locked() ) return true;
+        if( ! a_force && a_key != f_lockout_key ) return false;
+        f_lockout_key = generate_nil_uuid();
+        f_lockout_tag.clear();
+        return true;
+    }
+
+    bool service::authenticate( const uuid_t& a_key ) const
+    {
+        LDEBUG( dlog, "Authenticating with key <" << a_key << ">" );
+        if( is_locked() ) return check_key( a_key );
+        return true;
+    }
+
+    reply_info service::handle_lock_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
+    {
+        uuid_t t_new_key = enable_lockout( a_request->sender_info(), a_request->lockout_key() );
+        if( t_new_key.is_nil() )
+        {
+            return a_reply_pkg.send_reply( retcode_t::device_error, "Unable to lock server" );;
+        }
+
+        a_reply_pkg.f_payload.add( "key", string_from_uuid( t_new_key ) );
+        return a_reply_pkg.send_reply( retcode_t::success, "Server is now locked" );
+    }
+
+    reply_info service::handle_unlock_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
+    {
+        if( ! is_locked() )
+        {
+            return a_reply_pkg.send_reply( retcode_t::warning_no_action_taken, "Already unlocked" );
+        }
+
+        bool t_force = a_request->payload().get_value( "force", false );
+
+        if( disable_lockout( a_request->lockout_key(), t_force ) )
+        {
+            return a_reply_pkg.send_reply( retcode_t::success, "Server unlocked" );
+        }
+        return a_reply_pkg.send_reply( retcode_t::device_error, "Failed to unlock server" );;
+    }
+
+    reply_info service::handle_set_condition_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
+    {
+        return this->__do_handle_set_condition_request( a_request, a_reply_pkg );
+    }
+
+    reply_info service::handle_is_locked_request( const request_ptr_t, reply_package& a_reply_pkg )
+    {
+        bool t_is_locked = is_locked();
+        a_reply_pkg.f_payload.add( "is_locked", t_is_locked );
+        if( t_is_locked ) a_reply_pkg.f_payload.add( "tag", f_lockout_tag );
+        return a_reply_pkg.send_reply( retcode_t::success, "Checked lock status" );
     }
 
 } /* namespace dripline */

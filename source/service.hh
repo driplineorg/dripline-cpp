@@ -79,9 +79,53 @@ namespace dripline
 
             mv_accessible( unsigned, listen_timeout_ms );
 
+        public:
+            //******************
+            // Lockout functions
+            //******************
+
+            /// enable lockout with randomly-generated key
+            uuid_t enable_lockout( const scarab::param_node& a_tag );
+            /// enable lockout with user-supplied key
+            uuid_t enable_lockout( const scarab::param_node& a_tag, uuid_t a_key );
+            bool disable_lockout( const uuid_t& a_key, bool a_force = false );
+
+        private:
+            friend class endpoint;
+
+            /// Returns true if the server is unlocked or if it's locked and the key matches the lockout key; returns false otherwise.
+            bool authenticate( const uuid_t& a_key ) const;
+
+            scarab::param_node f_lockout_tag;
+            uuid_t f_lockout_key;
+
+        private:
+            //*****************
+            // Request handlers
+            //*****************
+
+            reply_info handle_lock_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            reply_info handle_unlock_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            reply_info handle_is_locked_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            reply_info handle_set_condition_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+
+        private:
+            /// Default set-condition: no action taken; override for different behavior
+            virtual reply_info __do_handle_set_condition_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+
         protected:
             std::atomic< bool > f_canceled;
     };
+
+    inline uuid_t service::enable_lockout( const scarab::param_node& a_tag )
+    {
+        return enable_lockout( a_tag, generate_random_uuid() );
+    }
+
+    inline reply_info service::__do_handle_set_condition_request( const request_ptr_t, reply_package& a_reply_pkg )
+    {
+        return a_reply_pkg.send_reply( retcode_t::success, "No action taken (default method)" );
+    }
 
 } /* namespace dripline */
 
