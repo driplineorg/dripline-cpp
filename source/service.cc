@@ -29,7 +29,11 @@ namespace dripline
 
     service::service( const scarab::param_node& a_config, const string& a_queue_name,  const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file, const bool a_make_connection ) :
             core( a_config, a_broker_address, a_port, a_auth_file, a_make_connection ),
-            f_queue_name( "dlcpp_service" ),
+            // logic for setting the name:
+            //   a_queue_name if provided
+            //   otherwise a_config["queue"] if it exists
+            //   otherwise "dlcpp_service"
+            endpoint( a_queue_name.empty() ? a_config.get_value( "queue", "dlcpp_service" ) : a_queue_name, *this ),
             f_channel(),
             f_consumer_tag(),
             f_keys(),
@@ -38,16 +42,15 @@ namespace dripline
             f_canceled( false )
     {
         // get values from the config
-        f_queue_name = a_config.get_value( "queue", f_queue_name );
         f_listen_timeout_ms = a_config.get_value( "listen-timeout-ms", f_listen_timeout_ms );
 
         // override if specified as a separate argument
-        if( ! a_queue_name.empty() ) f_queue_name = a_queue_name;
+        if( ! a_queue_name.empty() ) f_name = a_queue_name;
     }
 
     service::service( const bool a_make_connection, const scarab::param_node& a_config ) :
             core( a_make_connection, a_config ),
-            f_queue_name( "" ),
+            endpoint( "", *this ),
             f_channel(),
             f_consumer_tag(),
             f_keys(),
@@ -63,19 +66,19 @@ namespace dripline
 
     rr_pkg_ptr service::send( request_ptr_t a_request ) const
     {
-        a_request->set_sender_service_name( f_queue_name );
+        a_request->set_sender_service_name( f_name );
         return core::send( a_request );
     }
 
     bool service::send( reply_ptr_t a_reply ) const
     {
-        a_reply->set_sender_service_name( f_queue_name );
+        a_reply->set_sender_service_name( f_name );
         return core::send( a_reply );
     }
 
     bool service::send( alert_ptr_t a_alert ) const
     {
-        a_alert->set_sender_service_name( f_queue_name );
+        a_alert->set_sender_service_name( f_name );
         return core::send( a_alert );
     }
 
@@ -86,7 +89,7 @@ namespace dripline
             LWARN( dlog, "Should not start service when make_connection is disabled" );
             return true;
         }
-        if( f_queue_name.empty() )
+        if( f_name.empty() )
         {
             LERROR( dlog, "Service requires a queue name to be started" );
             return false;
@@ -99,7 +102,7 @@ namespace dripline
 
         if( ! setup_exchange( f_channel, f_requests_exchange ) ) return false;
 
-        if( ! setup_queue( f_channel, f_queue_name ) ) return false;
+        if( ! setup_queue( f_channel, f_name ) ) return false;
 
         if( ! bind_keys( f_keys ) ) return false;
 
@@ -112,7 +115,7 @@ namespace dripline
 
     bool service::listen()
     {
-        LINFO( dlog, "Listening for incoming messages on <" << f_queue_name << ">" );
+        LINFO( dlog, "Listening for incoming messages on <" << f_name << ">" );
         //TODO
         if ( ! f_make_connection )
         {
@@ -200,7 +203,7 @@ namespace dripline
 
     bool service::stop()
     {
-        LINFO( dlog, "Stopping service on <" << f_queue_name << ">" );
+        LINFO( dlog, "Stopping service on <" << f_name << ">" );
 
         if( ! stop_consuming() ) return false;
 
@@ -210,49 +213,15 @@ namespace dripline
     }
 
 
-    reply_info service::submit_request_message( const request_ptr_t a_request_ptr)
-    {
-        return this->on_request_message( a_request_ptr );;
-    }
-
-    bool service::submit_alert_message( const alert_ptr_t a_alert_ptr)
-    {
-        return this->on_alert_message( a_alert_ptr );
-    }
-
-    bool service::submit_reply_message( const reply_ptr_t a_reply_ptr)
-    {
-        return this->on_reply_message( a_reply_ptr );
-    }
-
-    reply_info service::on_request_message( const request_ptr_t )
-    {
-        throw dripline_error() << retcode_t::message_error_invalid_method << "Base service does not handle request messages";
-        return reply_info( false, retcode_t::message_error_invalid_method, "" );
-    }
-
-    bool service::on_reply_message( const reply_ptr_t )
-    {
-        throw dripline_error() << retcode_t::message_error_invalid_method << "Base service does not handle reply messages";
-        return false;
-    }
-
-    bool service::on_alert_message( const alert_ptr_t )
-    {
-        throw dripline_error() << retcode_t::message_error_invalid_method << "Base service does not handle alert messages";
-        return false;
-    }
-
-
     bool service::set_routing_key_specifier( message_ptr_t a_message ) const
     {
         string t_rk( a_message->routing_key() );
         string t_prefix;
-        if( t_rk.find( f_queue_name ) == 0 ) t_prefix = f_queue_name;
+        if( t_rk.find( f_name ) == 0 ) t_prefix = f_name;
         else if( t_rk.find( f_broadcast_key ) == 0 ) t_prefix = f_broadcast_key;
         else
         {
-            LWARN( dlog, "Routing key not formatted properly; it does not start with either the queue name (" << f_queue_name << ") or the broadcast key (" << f_broadcast_key << "): <" << t_rk << ">" );
+            LWARN( dlog, "Routing key not formatted properly; it does not start with either the queue name (" << f_name << ") or the broadcast key (" << f_broadcast_key << "): <" << t_rk << ">" );
             return false;
         }
 
@@ -282,9 +251,9 @@ namespace dripline
         {
             for( set< string >::const_iterator t_key_it = a_keys.begin(); t_key_it != a_keys.end(); ++t_key_it )
             {
-                f_channel->BindQueue( f_queue_name, f_requests_exchange, *t_key_it );
+                f_channel->BindQueue( f_name, f_requests_exchange, *t_key_it );
             }
-            f_channel->BindQueue( f_queue_name, f_requests_exchange, f_broadcast_key + ".#" );
+            f_channel->BindQueue( f_name, f_requests_exchange, f_broadcast_key + ".#" );
             return true;
         }
         catch( amqp_exception& e )
@@ -305,7 +274,7 @@ namespace dripline
         {
             LDEBUG( dlog, "Starting to consume messages" );
             // second bool is setting no_ack to false
-            f_consumer_tag = f_channel->BasicConsume( f_queue_name, "", true, false );
+            f_consumer_tag = f_channel->BasicConsume( f_name, "", true, false );
             return true;
         }
         catch( amqp_exception& e )
@@ -370,9 +339,9 @@ namespace dripline
         }
         try
         {
-            LDEBUG( dlog, "Deleting queue <" << f_queue_name << ">" );
-            f_channel->DeleteQueue( f_queue_name, false );
-            f_queue_name.clear();
+            LDEBUG( dlog, "Deleting queue <" << f_name << ">" );
+            f_channel->DeleteQueue( f_name, false );
+            f_name.clear();
         }
         catch( AmqpClient::ConnectionClosedException& e )
         {

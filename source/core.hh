@@ -8,7 +8,6 @@
 #ifndef DRIPLINE_CORE_HH_
 #define DRIPLINE_CORE_HH_
 
-#include "dripline_api.hh"
 #include "message.hh"
 
 

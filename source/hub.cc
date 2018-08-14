@@ -31,7 +31,7 @@ namespace dripline
             f_lockout_tag(),
             f_lockout_key( generate_nil_uuid() )
     {
-        f_keys.insert( f_queue_name + string( ".#" ) );
+        f_keys.insert( f_name + string( ".#" ) );
     }
 
     hub::~hub()
