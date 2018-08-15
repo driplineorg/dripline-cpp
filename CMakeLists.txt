@@ -57,6 +57,14 @@ include_directories( BEFORE
 
 add_subdirectory( source )
 
+#########
+# Tests #
+#########
+
+if( Dripline_ENABLE_TESTING )
+    add_subdirectory( testing )
+endif()
+
 ################################
 # Variables for parent project #
 ################################
