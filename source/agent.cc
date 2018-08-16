@@ -38,10 +38,11 @@ namespace dripline
 {
     LOGGER( dlog, "agent" );
 
-    agent::agent( const param_node& a_node ) :
-            core( a_node["amqp"].as_node() ),
-            f_reply( ),
-            f_config( a_node ),
+    agent::agent() :
+            f_config(),
+            f_routing_key(),
+            f_lockout_key( generate_nil_uuid() ),
+            f_reply(),
             f_return( 0 )
     {
     }
@@ -50,60 +51,73 @@ namespace dripline
     {
     }
 
-    void agent::execute()
+    void agent::do_run( const scarab::param_node& a_node )
+    {
+        f_create_request_ptr = [this]()->request_ptr_t
+                { return this->create_run_request(); };
+        execute( a_node );
+    }
+
+    void agent::do_get( const scarab::param_node& a_node )
+    {
+        f_create_request_ptr = [this]()->request_ptr_t
+                { return this->create_get_request(); };
+        execute( a_node );
+    }
+
+    void agent::do_set( const scarab::param_node& a_node )
+    {
+        f_create_request_ptr = [this]()->request_ptr_t
+                { return this->create_set_request(); };
+        execute( a_node );
+    }
+
+    void agent::do_cmd( const scarab::param_node& a_node )
+    {
+        f_create_request_ptr = [this]()->request_ptr_t
+                { return this->create_cmd_request(); };
+        execute( a_node );
+    }
+
+
+    void agent::execute( const scarab::param_node& a_node )
     {
         LINFO( dlog, "Creating request" );
 
+        // create a copy of the config that will be pared down by removing expected elements
+        f_config( a_node );
+
+        param_node t_amqp_node( std::move(f_config.remove( "amqp" )->as_node()) );
+        unsigned t_timeout = t_amqp_node.get_value( "reply-timeout-ms", 10000 );
+
+        core t_core( t_amqp_node );
+
         // pull the special CL arguments out of the configuration
 
-        std::string t_routing_key( f_config.get_value( "rk", "my_queue" ) );
+        f_routing_key( f_config.get_value( "rk", f_routing_key ) );
         f_config.erase( "rk" );
 
-        std::string t_lockout_key_str( f_config.get_value( "lockout-key", "" ) );
-        f_config.erase( "key" );
-        bool t_lk_valid = true;
-        dripline::uuid_t t_lockout_key = dripline::uuid_from_string( t_lockout_key_str, t_lk_valid );
-        if( ! t_lk_valid )
+        if( f_config.has( "lockout-key" ) )
         {
-            LERROR( dlog, "Invalid lockout key provided: <" << t_lockout_key_str << ">" );
-            f_return = RETURN_ERROR;
-            return;
+            bool t_lk_valid = true;
+            f_lockout_key = dripline::uuid_from_string( f_config["lockout-key"]().as_string(), t_lk_valid );
+            f_config.erase( "key" );
+            if( ! t_lk_valid )
+            {
+                LERROR( dlog, "Invalid lockout key provided: <" << f_config.get_value( "lockout-key", "" ) << ">" );
+                f_return = RETURN_ERROR;
+                return;
+            }
         }
 
         param_node t_save_node;
         if( f_config.has( "save" ) )
         {
-            t_save_node = f_config["save"].as_node();
+            t_save_node = f_config.remove( "save" )->as_node();
         }
-        f_config.erase( "save" );
 
-        request_ptr_t t_request;
-        if( f_config.has( "run" ) )
-        {
-            f_config.erase( "run" );
-            t_request = create_run_request( t_routing_key );
-        }
-        else if( f_config.has( "get" ) )
-        {
-            f_config.erase( "get" );
-            t_request = create_get_request( t_routing_key );
-        }
-        else if( f_config.has( "set" ) )
-        {
-            f_config.erase( "set" );
-            t_request = create_set_request( t_routing_key );
-        }
-        else if( f_config.has( "cmd" ) )
-        {
-            f_config.erase( "cmd" );
-            t_request = create_cmd_request( t_routing_key );
-        }
-        else
-        {
-            LERROR( dlog, "Unknown or missing request type" );
-            f_return = RETURN_ERROR;
-            return;
-        }
+        // create the request
+        request_ptr_t t_request = f_create_request_ptr( f_routing_key );
 
         if( t_request == NULL )
         {
@@ -114,11 +128,11 @@ namespace dripline
 
         // now all that remains in f_config should be values to pass to the server as arguments to the request
 
-        t_request->lockout_key() = t_lockout_key;
+        t_request->lockout_key() = f_lockout_key;
 
         LINFO( dlog, "Connecting to AMQP broker" );
 
-        const param_node& t_broker_node = f_config["amqp"].as_node();
+        //const param_node& t_broker_node = t_config["amqp"].as_node();
 
         LDEBUG( dlog, "Sending message w/ msgop = " << t_request->get_message_op() << " to " << t_request->routing_key() );
 
@@ -136,7 +150,7 @@ namespace dripline
             LINFO( dlog, "Waiting for a reply from the server; use ctrl-c to cancel" );
 
             // timed blocking call to wait for incoming message
-            dripline::reply_ptr_t t_reply = wait_for_reply( t_receive_reply, t_broker_node.get_value( "reply-timeout-ms", 10000 ) );
+            dripline::reply_ptr_t t_reply = wait_for_reply( t_receive_reply, t_timeout );
 
             if( t_reply )
             {
@@ -195,7 +209,7 @@ namespace dripline
     {
         param_node t_payload_node( f_config ); // copy of f_config, which should consist of only the request arguments
 
-        return msg_request::create( t_payload_node, op_t::run, a_routing_key, "", message::encoding::json );
+        return msg_request::create( t_payload_node, op_t::run, f_routing_key, "", message::encoding::json );
     }
 
     request_ptr_t agent::create_get_request( const std::string& a_routing_key )
@@ -209,7 +223,7 @@ namespace dripline
             t_payload_node.add( "values", std::move(t_values_array) );
         }
 
-        return msg_request::create( t_payload_node, op_t::get, a_routing_key, "", message::encoding::json );
+        return msg_request::create( t_payload_node, op_t::get, f_routing_key, "", message::encoding::json );
     }
 
     request_ptr_t agent::create_set_request( const std::string& a_routing_key )
@@ -226,7 +240,7 @@ namespace dripline
         param_node t_payload_node;
         t_payload_node.add( "values", std::move(t_values_array) );
 
-        return msg_request::create( t_payload_node, op_t::set, a_routing_key, "", message::encoding::json );
+        return msg_request::create( t_payload_node, op_t::set, f_routing_key, "", message::encoding::json );
     }
 
     request_ptr_t agent::create_cmd_request( const std::string& a_routing_key )
@@ -258,7 +272,7 @@ namespace dripline
         // at this point, all that remains in f_config should be other options that we want to add to the payload node
         t_payload_node.merge( f_config ); // copy f_config
 
-        return msg_request::create( t_payload_node, op_t::cmd, a_routing_key, "", message::encoding::json );
+        return msg_request::create( t_payload_node, op_t::cmd, f_routing_key, "", message::encoding::json );
     }
 
 } /* namespace dripline */

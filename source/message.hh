@@ -10,7 +10,6 @@
 
 #include "member_variables.hh"
 #include "param.hh"
-#include "parsable.hh"
 
 #include "amqp.hh"
 #include "dripline_api.hh"

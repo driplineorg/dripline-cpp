@@ -13,12 +13,14 @@
 #define DRIPLINE_API_EXPORTS
 #define SCARAB_API_EXPORTS
 
+#include "application.hh"
+
+
 #include "agent.hh"
 #include "agent_config.hh"
 #include "dripline_constants.hh"
 #include "dripline_version.hh"
 
-#include "configurator.hh"
 #include "logger.hh"
 
 using namespace dripline;
@@ -26,14 +28,53 @@ using namespace dripline;
 
 LOGGER( dlog, "mantis_client" );
 
-set_version( dripline, version );
-
-void print_usage();
-void print_version();
-
 int main( int argc, char** argv )
 {
-    dripline::version_setter s_vsetter_mantis_version( new dripline::version() );
+    scarab::main_app the_main;
+    the_main.require_subcommand();
+    the_main.fallthrough();
+
+    the_main.set_version( new dripline::version() );
+
+    // options
+    //std::string t_broker;
+    //the_main.add_option( "-b,--broker", , "RabbitMQ broker" );
+
+
+
+    agent the_agent;
+
+    // subcommands
+    scarab::app* t_agent_run = the_main.add_subcommand( "run", "Send an OP_RUN request" );
+    t_agent_run->callback(
+            [&the_agent]() { the_agent.do_run(); }
+    );
+
+    scarab::app* t_agent_get = the_main.add_subcommand( "get", "Send an OP_GET request" );
+    t_agent_run->callback(
+            [&the_agent]() { the_agent.do_get(); }
+    );
+
+    scarab::app* t_agent_set = the_main.add_subcommand( "set", "Send an OP_SET request" );
+    t_agent_run->callback(
+            [&the_agent]() { the_agent.do_set(); }
+    );
+
+    scarab::app* t_agent_cmd = the_main.add_subcommand( "cmd", "Send an OP_CMD request" );
+    t_agent_run->callback(
+            [&the_agent]() { the_agent.do_cmd(); }
+    );
+
+    CLI11_PARSE( the_main, argc, argv );
+
+    return RETURN_SUCCESS;
+
+
+
+
+
+/*
+
     try
     {
         agent_config t_cc;
@@ -71,53 +112,6 @@ int main( int argc, char** argv )
     }
 
     return RETURN_ERROR;
+    */
 }
 
-
-void print_usage()
-{
-    std::stringstream t_use_stream;
-    t_use_stream << "dl_agent: utility for sending dripline requests\n"
-                 << "===============================================\n\n";
-
-    t_use_stream << "Use\n"
-                 << "---\n\n"
-                 << "  > dl_agent [command] [options]\n\n";
-
-    t_use_stream << "Commands\n"
-                 << "--------\n\n"
-            << "  The four dripline commands are available as:\n"
-            << "   - run\n"
-            << "   - get\n"
-            << "   - set\n"
-            << "   - cmd\n\n";
-
-    t_use_stream << "Options\n"
-                 << "-------\n\n"
-            << " - Routing key: rk=[routing key] (required)\n"
-            << " - Value for set: value=[a_value] (required for ``set``)\n"
-            << " - Broker address: amqp.broker=[address] (default is ``localhost``)\n"
-            << " - Broker port: amqp.broker-port=[port] (default is 5672)\n"
-            << " - Exchange: amqp.exchange=[exchange] (default is ``requests``)\n"
-            << " - Reply timeout: amqp.reply-timeout-ms=[ms] (default is ``10000``)\n"
-            << " - Authentications file: amqp.auth-file=[filename] (default is none)\n"
-            << " - Lockout key: lockout-key=[uuid]\n"
-            << " - Filename to save reply: save=[filename] (optional)\n"
-            << " - Filename for payload: load=[filename] (optional)\n";
-
-    LINFO( dlog, "\n\n"
-           << t_use_stream.str() );
-
-    return;
-}
-
-void print_version()
-{
-    dripline::version t_dripver;
-    scarab::version t_scarabver;
-    LINFO( dlog, "\n\n"
-           << "You're using: " << t_dripver.exe_name() << '\n'
-           << t_dripver.version_info_string() << '\n'
-           << t_scarabver.version_info_string() );
-    return;
-}

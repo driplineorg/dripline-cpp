@@ -10,9 +10,6 @@
 #include "hub.hh"
 
 #include "logger.hh"
-#include "parsable.hh"
-
-using scarab::parsable;
 
 using std::string;
 

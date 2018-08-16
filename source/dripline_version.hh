@@ -20,8 +20,8 @@
 
 
 
-#define set_version( version_namespace, version_class ) \
-    static dripline::version_setter s_vsetter_##version_namespace##_##version_class( new version_namespace::version_class() );
+//#define set_version( version_namespace, version_class ) \
+//    static dripline::version_setter s_vsetter_##version_namespace##_##version_class( new version_namespace::version_class() );
 
 
 namespace dripline

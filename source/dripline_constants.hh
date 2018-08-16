@@ -18,10 +18,10 @@ namespace dripline
 {
 
     // Return value constants
-#define RETURN_SUCCESS 1
-#define RETURN_ERROR -1
-#define RETURN_CANCELED -2
-#define RETURN_REVOKED -3
+#define RETURN_SUCCESS 0
+#define RETURN_ERROR 1
+#define RETURN_CANCELED 2
+#define RETURN_REVOKED 3
 
 
     // Dripline message constants

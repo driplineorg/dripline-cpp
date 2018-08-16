@@ -26,7 +26,6 @@ using std::string;
 using scarab::param;
 using scarab::param_node;
 using scarab::param_value;
-using scarab::parsable;
 using scarab::param_input_json;
 using scarab::param_output_json;
 

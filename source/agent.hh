@@ -25,8 +25,6 @@
 #ifndef DRIPLINE_AGENT_HH_
 #define DRIPLINE_AGENT_HH_
 
-#include "core.hh"
-
 #include "message.hh"
 
 #include "param.hh"
@@ -34,26 +32,37 @@
 
 namespace dripline
 {
-    class DRIPLINE_API agent : public core
+    class DRIPLINE_API agent
     {
         public:
-            agent( const scarab::param_node& a_node );
-            ~agent();
+            agent();
+            virtual ~agent();
 
-            void execute();
+            void do_run( const scarab::param_node& a_node );
+            void do_get( const scarab::param_node& a_node );
+            void do_set( const scarab::param_node& a_node );
+            void do_cmd( const scarab::param_node& a_node );
+
+            void execute( const scarab::param_node& a_node );
             //void cancel();
 
-            int get_return();
+            mv_referrable( scarab::param_node, config );
+
+            mv_referrable( std::string, routing_key );
+            mv_accessible( uuid_t, lockout_key );
+
             mv_accessible_noset( reply_ptr_t, reply );
 
-        private:
-            request_ptr_t create_run_request( const std::string& a_routing_key );
-            request_ptr_t create_get_request( const std::string& a_routing_key );
-            request_ptr_t create_set_request( const std::string& a_routing_key );
-            request_ptr_t create_cmd_request( const std::string& a_routing_key );
+            mv_accessible_noset( int, return );
 
-            scarab::param_node f_config;
-            int f_return;
+        private:
+            typedef std::function< request_ptr_t() > create_request_t;
+            create_request_t f_create_request_ptr;
+
+            request_ptr_t create_run_request();
+            request_ptr_t create_get_request();
+            request_ptr_t create_set_request();
+            request_ptr_t create_cmd_request();
     };
 
 } /* namespace dripline */

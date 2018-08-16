@@ -17,7 +17,6 @@
 using scarab::authentication;
 using scarab::param_node;
 using scarab::param_value;
-using scarab::parsable;
 
 using std::static_pointer_cast;
 using std::string;
@@ -39,9 +38,9 @@ namespace dripline
             f_keys(),
             f_broadcast_key( "broadcast" ),
             f_listen_timeout_ms( 500 ),
-            f_canceled( false ),
             f_lockout_tag(),
-            f_lockout_key( generate_nil_uuid() )
+            f_lockout_key( generate_nil_uuid() ),
+            f_canceled( false )
     {
         // get values from the config
         f_listen_timeout_ms = a_config.get_value( "listen-timeout-ms", f_listen_timeout_ms );
@@ -58,9 +57,9 @@ namespace dripline
             f_keys(),
             f_broadcast_key(),
             f_listen_timeout_ms( 500 ),
-            f_canceled( false ),
             f_lockout_tag(),
-            f_lockout_key( generate_nil_uuid() )
+            f_lockout_key( generate_nil_uuid() ),
+            f_canceled( false )
     {
     }
 
