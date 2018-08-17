@@ -43,7 +43,6 @@ namespace dripline
             void do_set( const scarab::param_node& a_node );
             void do_cmd( const scarab::param_node& a_node );
 
-            void execute( const scarab::param_node& a_node );
             //void cancel();
 
             mv_referrable( scarab::param_node, config );
@@ -56,6 +55,8 @@ namespace dripline
             mv_accessible_noset( int, return );
 
         private:
+            void execute( const scarab::param_node& a_node );
+
             typedef std::function< request_ptr_t() > create_request_t;
             create_request_t f_create_request_ptr;
 

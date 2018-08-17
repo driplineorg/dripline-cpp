@@ -55,6 +55,9 @@ pbuilder_library( Dripline dripline_SOURCES "" )
 
 pbuilder_install_headers( ${dripline_HEADERS} )
 
+    get_property( all_libs GLOBAL PROPERTY Dripline_LIBRARIES )
+    message(STATUS "Dripline exectuables library dependencies: ${all_libs}" )
+
 if( Dripline_ENABLE_EXECUTABLES )
     set( lib_dependencies 
         Dripline
