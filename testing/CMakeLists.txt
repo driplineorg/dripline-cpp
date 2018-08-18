@@ -8,6 +8,7 @@ set( testing_HEADERS
 )
 
 set( testing_SOURCES
+    test_agent.cc
     test_lockout.cc
     use_catch.cc
 )

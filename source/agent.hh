@@ -35,36 +35,80 @@ namespace dripline
     class DRIPLINE_API agent
     {
         public:
+            class sub_agent
+            {
+                public:
+                    sub_agent( agent* an_agent ) : f_agent( an_agent ) {};
+                    virtual ~sub_agent() {};
+
+                    void execute( const scarab::param_node& a_node );
+                    virtual request_ptr_t create_request() = 0;
+
+                protected:
+                    agent* f_agent;
+            };
+
+            class sub_agent_run : public sub_agent
+            {
+                public:
+                    sub_agent_run( agent* an_agent ) : sub_agent( an_agent ) {}
+                    virtual ~sub_agent_run() {}
+
+                    virtual request_ptr_t create_request();
+            };
+
+            class sub_agent_get : public sub_agent
+            {
+                public:
+                    sub_agent_get( agent* an_agent ) : sub_agent( an_agent ) {}
+                    virtual ~sub_agent_get() {}
+
+                    virtual request_ptr_t create_request();
+            };
+
+            class sub_agent_set : public sub_agent
+            {
+                public:
+                    sub_agent_set( agent* an_agent ) : sub_agent( an_agent ) {}
+                    virtual ~sub_agent_set() {}
+
+                    virtual request_ptr_t create_request();
+            };
+
+            class sub_agent_cmd : public sub_agent
+            {
+                public:
+                    sub_agent_cmd( agent* an_agent ) : sub_agent( an_agent ) {}
+                    virtual ~sub_agent_cmd() {}
+
+                    virtual request_ptr_t create_request();
+            };
+
+        public:
             agent();
             virtual ~agent();
 
-            void do_run( const scarab::param_node& a_node );
-            void do_get( const scarab::param_node& a_node );
-            void do_set( const scarab::param_node& a_node );
-            void do_cmd( const scarab::param_node& a_node );
-
-            //void cancel();
+            template< typename sub_agent_type >
+            void execute( const scarab::param_node& a_node );
 
             mv_referrable( scarab::param_node, config );
 
             mv_referrable( std::string, routing_key );
-            mv_accessible( uuid_t, lockout_key );
+            mv_referrable( uuid_t, lockout_key );
 
-            mv_accessible_noset( reply_ptr_t, reply );
+            mv_accessible( reply_ptr_t, reply );
 
-            mv_accessible_noset( int, return );
+            mv_accessible( int, return );
 
-        private:
-            void execute( const scarab::param_node& a_node );
-
-            typedef std::function< request_ptr_t() > create_request_t;
-            create_request_t f_create_request_ptr;
-
-            request_ptr_t create_run_request();
-            request_ptr_t create_get_request();
-            request_ptr_t create_set_request();
-            request_ptr_t create_cmd_request();
     };
+
+    template< typename sub_agent_type >
+    void agent::execute( const scarab::param_node& a_node )
+    {
+        sub_agent_type t_sub_agent( this );
+        t_sub_agent.execute( a_node );
+        return;
+    }
 
 } /* namespace dripline */
 
