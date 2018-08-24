@@ -33,14 +33,14 @@ namespace dripline
             //   otherwise a_config["queue"] if it exists
             //   otherwise "dlcpp_service"
             endpoint( a_queue_name.empty() ? a_config.get_value( "queue", "dlcpp_service" ) : a_queue_name, *this ),
+            cancelable(),
             f_channel(),
             f_consumer_tag(),
             f_keys(),
             f_broadcast_key( "broadcast" ),
             f_listen_timeout_ms( 500 ),
             f_lockout_tag(),
-            f_lockout_key( generate_nil_uuid() ),
-            f_canceled( false )
+            f_lockout_key( generate_nil_uuid() )
     {
         // get values from the config
         f_listen_timeout_ms = a_config.get_value( "listen-timeout-ms", f_listen_timeout_ms );
@@ -52,14 +52,14 @@ namespace dripline
     service::service( const bool a_make_connection, const scarab::param_node& a_config ) :
             core( a_make_connection, a_config ),
             endpoint( "", *this ),
+            cancelable(),
             f_channel(),
             f_consumer_tag(),
             f_keys(),
             f_broadcast_key(),
             f_listen_timeout_ms( 500 ),
             f_lockout_tag(),
-            f_lockout_key( generate_nil_uuid() ),
-            f_canceled( false )
+            f_lockout_key( generate_nil_uuid() )
     {
     }
 

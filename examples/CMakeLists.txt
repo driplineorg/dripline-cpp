@@ -5,11 +5,11 @@
 ##########
 
 set( dripline_examples_HEADERS
-    simple_service.hh
+    run_simple_service.hh
 )
 
 set( dripline_examples_SOURCES
-    simple_service.cc
+    run_simple_service.cc
 )
 
 set ( dripline_examples_LIBS
@@ -28,7 +28,7 @@ if( Dripline_ENABLE_EXECUTABLES )
         DriplineExamples
     )
     set( programs
-        run_simple_service
+        simple_service
     )
     pbuilder_executables( programs lib_dependencies )
 endif( Dripline_ENABLE_EXECUTABLES )

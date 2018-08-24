@@ -5,41 +5,49 @@
  *      Author: N.S. Oblath
  */
 
-#include "application.hh"
-
-#include "simple_service.hh"
-
-#include "agent_config.hh"
-#include "dripline_constants.hh"
-#include "dripline_version.hh"
+#include "run_simple_service.hh"
 
 #include "logger.hh"
+#include "signal_handler.hh"
 
-using namespace dripline;
+#include <chrono>
+#include <thread>
 
-LOGGER( dlog, "run_simple_service" );
+LOGGER( dlog, "run_simple_service" )
 
-int main( int argc, char** argv )
+namespace dripline
 {
-    scarab::main_app the_main;
 
-    the_main.set_version( new dripline::version() );
+    run_simple_service::run_simple_service( const scarab::param_node& a_config ) :
+            service( a_config, "simple" ),
+            f_return( RETURN_SUCCESS )
+    {
+    }
 
-    the_main.default_config() = agent_config();
+    run_simple_service::~run_simple_service()
+    {
+    }
 
-    // options
-    //std::string t_broker;
-    //the_main.add_option( "-b,--broker", , "RabbitMQ broker" );
+    void run_simple_service::execute()
+    {
+        scarab::signal_handler t_sig_hand;
+        t_sig_hand.add_cancelable( this );
 
-    simple_service the_service;
+        try
+        {
+            if( ! start() ) throw dripline_error() << "Unable to start service";
 
-    auto t_service_callback = [&](){
-        the_service.execute();
-    };
+            if( ! listen() ) throw dripline_error() << "Unable to start listening";
 
-    the_main.callback( t_service_callback );
+            if( ! stop() ) throw dripline_error() << "Unable to stop service";
+        }
+        catch( std::exception& e )
+        {
+            LERROR( dlog, "Exception caught: " << e.what() );
+            f_return = RETURN_ERROR;
+        }
 
-    CLI11_PARSE( the_main, argc, argv );
+        return;
+    }
 
-    return the_service.get_return();
-}
+} /* namespace dripline */
