@@ -50,35 +50,6 @@ namespace dripline
     agent::~agent()
     {
     }
-/*
-    void agent::do_run( const scarab::param_node& a_node )
-    {
-        f_create_request_ptr = [this]()->request_ptr_t
-                { return this->create_run_request(); };
-        execute( a_node );
-    }
-
-    void agent::do_get( const scarab::param_node& a_node )
-    {
-        f_create_request_ptr = [this]()->request_ptr_t
-                { return this->create_get_request(); };
-        execute( a_node );
-    }
-
-    void agent::do_set( const scarab::param_node& a_node )
-    {
-        f_create_request_ptr = [this]()->request_ptr_t
-                { return this->create_set_request(); };
-        execute( a_node );
-    }
-
-    void agent::do_cmd( const scarab::param_node& a_node )
-    {
-        f_create_request_ptr = [this]()->request_ptr_t
-                { return this->create_cmd_request(); };
-        execute( a_node );
-    }
-*/
 
     void agent::sub_agent::execute( const param_node& a_node )
     {
@@ -111,11 +82,8 @@ namespace dripline
             }
         }
 
-        param_node t_save_node;
-        if( t_config.has( "save" ) )
-        {
-            t_save_node = t_config.remove( "save" )->as_node();
-        }
+        std::string t_save_filename( t_config.get_value( "save", "" ) );
+        t_config.erase( "save" );
 
         // create the request
         request_ptr_t t_request = this->create_request();
@@ -164,29 +132,14 @@ namespace dripline
                         "Return message: " << t_reply->return_msg() << '\n' <<
                         t_payload );
 
-                // optionally save "master-config" from the response
-                if( t_save_node.size() != 0 )
+                if( ! t_save_filename.empty() && ! t_payload.empty() )
                 {
-                    if( t_save_node.has( "json" ) )
+                    scarab::param_translator t_translator;
+                    if( ! t_translator.write_file( t_payload, t_save_filename ) )
                     {
-                        scarab::path t_save_filename( scarab::expand_path( t_save_node["json"]().as_string() ) );
-                        if( t_payload.empty() )
-                        {
-                            LERROR( dlog, "Payload is not present" );
-                        }
-                        else
-                        {
-                            param_output_json t_output;
-                            static param_node t_output_options;
-                            if( t_output_options.empty() ) t_output_options.add( "style", (unsigned)param_output_json::k_pretty );
-                            t_output.write_file( t_payload, t_save_filename.string(), t_output_options );
-                        }
+                        LERROR( dlog, "Unable to write out payload" );
+                        f_agent->set_return( RETURN_ERROR );
                     }
-                    else
-                    {
-                        LERROR( dlog, "Save instruction did not contain a valid file type");
-                    }
-
                 }
             }
             else
@@ -216,7 +169,7 @@ namespace dripline
         {
             param_array t_values_array;
             t_values_array.push_back( f_agent->config().remove( "value" ) );
-            t_payload_node.add( "values", std::move(t_values_array) );
+            t_payload_node.add( "values", t_values_array );
         }
 
         return msg_request::create( t_payload_node, op_t::get, f_agent->routing_key(), "", message::encoding::json );
@@ -227,14 +180,14 @@ namespace dripline
         if( ! f_agent->config().has( "value" ) )
         {
             LERROR( dlog, "No \"value\" option given" );
-            return NULL;
+            return nullptr;
         }
 
         param_array t_values_array;
         t_values_array.push_back( f_agent->config().remove( "value" ) );
 
         param_node t_payload_node;
-        t_payload_node.add( "values", std::move(t_values_array) );
+        t_payload_node.add( "values", t_values_array );
 
         return msg_request::create( t_payload_node, op_t::set, f_agent->routing_key(), "", message::encoding::json );
     }
@@ -249,16 +202,16 @@ namespace dripline
             if( ! f_agent->config()["load"].as_node().has( "json" ) )
             {
                 LERROR( dlog, "Load instruction did not contain a valid file type");
-                return NULL;
+                return nullptr;
             }
 
-            std::string t_load_filename( f_agent->config()["load"]["json"]().as_string() );
-            param_input_json t_reader;
-            scarab::param_ptr_t t_node_from_file = t_reader.read_file( t_load_filename );
-            if( t_node_from_file == NULL || ! t_node_from_file->is_node() )
+            std::string t_load_filename( f_agent->config()["load"]().as_string() );
+            scarab::param_translator t_translator;
+            scarab::param_ptr_t t_node_from_file = t_translator.read_file( t_load_filename );
+            if( t_node_from_file == nullptr || ! t_node_from_file->is_node() )
             {
                 LERROR( dlog, "Unable to read JSON file <" << t_load_filename << ">" );
-                return NULL;
+                return nullptr;
             }
 
             t_payload_node.merge( t_node_from_file->as_node() );

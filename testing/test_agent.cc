@@ -20,6 +20,67 @@ TEST_CASE( "sub_agent_run", "[agent]" )
     REQUIRE( t_request->get_message_op() == dripline::op_t::run );
 }
 
+TEST_CASE( "sub_agent_get", "[agent]" )
+{
+    std::unique_ptr< dripline::agent > t_agent( new dripline::agent() );
+    dripline::agent::sub_agent_get t_sag( t_agent.get() );
+
+    t_agent->config().add( "value", 5 );
+
+    dripline::request_ptr_t t_request = t_sag.create_request();
+
+    REQUIRE( t_request->get_message_type() == dripline::msg_t::request );
+    REQUIRE( t_request->get_message_op() == dripline::op_t::get );
+    REQUIRE( ! t_request->payload().empty() );
+    REQUIRE( t_request->payload().has( "values" ) );
+    REQUIRE( ! t_request->payload().has( "value" ) );
+    REQUIRE( t_request->payload()["values"][0]().as_uint() == 5 );
+}
+
+TEST_CASE( "sub_agent_set", "[agent]" )
+{
+    std::unique_ptr< dripline::agent > t_agent( new dripline::agent() );
+    dripline::agent::sub_agent_set t_sas( t_agent.get() );
+
+    SECTION( "No value set" )
+    {
+        dripline::request_ptr_t t_request = t_sas.create_request();
+
+        REQUIRE( ! t_request );
+    }
+
+    SECTION( "Value set" )
+    {
+        t_agent->config().add( "value", 5 );
+
+        dripline::request_ptr_t t_request = t_sas.create_request();
+
+        REQUIRE( t_request->get_message_type() == dripline::msg_t::request );
+        REQUIRE( t_request->get_message_op() == dripline::op_t::set );
+        REQUIRE( ! t_request->payload().empty() );
+        REQUIRE( t_request->payload().has( "values" ) );
+        REQUIRE( ! t_request->payload().has( "value" ) );
+        REQUIRE( t_request->payload()["values"][0]().as_uint() == 5 );
+    }
+}
+
+TEST_CASE( "sub_agent_cmd", "[agent]" )
+{
+    std::unique_ptr< dripline::agent > t_agent( new dripline::agent() );
+    dripline::agent::sub_agent_cmd t_sac( t_agent.get() );
+
+    t_agent->config().add( "value", 5 );
+
+    dripline::request_ptr_t t_request = t_sac.create_request();
+
+    REQUIRE( t_request->get_message_type() == dripline::msg_t::request );
+    REQUIRE( t_request->get_message_op() == dripline::op_t::cmd );
+    REQUIRE( ! t_request->payload().empty() );
+    REQUIRE( ! t_request->payload().has( "values" ) );
+    REQUIRE( t_request->payload().has( "value" ) );
+    REQUIRE( t_request->payload()["value"]().as_uint() == 5 );
+}
+
 TEST_CASE( "agent", "[agent]" )
 {
     dripline::agent t_agent;
