@@ -19,6 +19,8 @@ pbuilder_prepare_project()
 # dripline options #
 ####################
 
+option( Dripline_BUILD_EXAMPLES "Flag to enable building the examples" FALSE )
+
 # always use C++11
 set_option( USE_CPP11 TRUE )
 
@@ -56,6 +58,14 @@ include_directories( BEFORE
 )
 
 add_subdirectory( source )
+
+############
+# Examples #
+############
+
+if( Dripline_BUILD_EXAMPLES )
+    add_subdirectory( examples )
+endif()
 
 #########
 # Tests #

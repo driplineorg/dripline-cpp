@@ -26,7 +26,7 @@
 using namespace dripline;
 
 
-LOGGER( dlog, "mantis_client" );
+LOGGER( dlog, "dl_agent" );
 
 int main( int argc, char** argv )
 {
