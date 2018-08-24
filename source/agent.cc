@@ -57,8 +57,13 @@ namespace dripline
         param_node& t_config = f_agent->config();
         t_config = a_node;
 
-        param_node t_amqp_node( std::move(t_config.remove( "amqp" )->as_node()) );
-        unsigned t_timeout = t_amqp_node.get_value( "reply-timeout-ms", 10000 );
+        param_node t_amqp_node;
+        unsigned t_timeout = 0;
+        if( t_config.has( "amqp" ) )
+        {
+            t_amqp_node = std::move(t_config.remove( "amqp" )->as_node());
+            t_timeout = t_amqp_node.get_value( "reply-timeout-ms", 10000 );
+        }
 
         core t_core( t_amqp_node );
 

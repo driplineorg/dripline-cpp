@@ -36,6 +36,8 @@ int main( int argc, char** argv )
 
     the_main.set_version( new dripline::version() );
 
+    the_main.default_config() = agent_config();
+
     // options
     //std::string t_broker;
     //the_main.add_option( "-b,--broker", , "RabbitMQ broker" );
