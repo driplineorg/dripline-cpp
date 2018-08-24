@@ -16,7 +16,7 @@
 #include "uuid.hh"
 
 #include "logger.hh"
-#include "param_json.hh"
+#include "param_codec.hh"
 #include "path.hh"
 
 #include <algorithm> // for min
@@ -29,9 +29,7 @@
 
 using scarab::param;
 using scarab::param_array;
-using scarab::param_input_json;
 using scarab::param_node;
-using scarab::param_output_json;
 using scarab::param_value;
 
 namespace dripline
@@ -88,7 +86,7 @@ namespace dripline
         // create the request
         request_ptr_t t_request = this->create_request();
 
-        if( t_request == NULL )
+        if( ! t_request )
         {
             LERROR( dlog, "Unable to create request" );
             f_agent->set_return( RETURN_ERROR );
