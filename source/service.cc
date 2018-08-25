@@ -256,6 +256,7 @@ namespace dripline
             {
                 f_channel->BindQueue( f_name, f_requests_exchange, *t_key_it );
             }
+            f_channel->BindQueue( f_name, f_requests_exchange, f_name + ".#" );
             f_channel->BindQueue( f_name, f_requests_exchange, f_broadcast_key + ".#" );
             return true;
         }
