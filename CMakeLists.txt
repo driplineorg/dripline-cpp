@@ -54,16 +54,24 @@ set( Scarab_BUILD_CODEC_MSGPACK TRUE CACHE BOOL "" FORCE )
 ##################
 
 include_directories( BEFORE
-    ${PROJECT_SOURCE_DIR}/source
+    ${PROJECT_SOURCE_DIR}/library
 )
 
-add_subdirectory( source )
+add_subdirectory( library )
+
+if( Dripline_ENABLE_EXECUTABLES )
+    add_subdirectory( executables )
+endif()
 
 ############
 # Examples #
 ############
 
 if( Dripline_BUILD_EXAMPLES )
+    include_directories( BEFORE
+        ${PROJECT_SOURCE_DIR}/examples
+    )
+
     add_subdirectory( examples )
 endif()
 
