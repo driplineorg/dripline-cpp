@@ -11,6 +11,7 @@
 #include "core.hh"
 #include "endpoint.hh"
 
+#include "cancelable.hh"
 #include "member_variables.hh"
 
 #include <atomic>
@@ -21,7 +22,7 @@
 namespace dripline
 {
 
-    class DRIPLINE_API service : public core, public endpoint
+    class DRIPLINE_API service : public core, public endpoint, public scarab::cancelable
     {
         public:
             service( const scarab::param_node& a_config = scarab::param_node(), const std::string& a_queue_name = "",  const std::string& a_broker_address = "", unsigned a_port = 0, const std::string& a_auth_file = "", const bool a_make_connection = true );
@@ -112,9 +113,6 @@ namespace dripline
         private:
             /// Default set-condition: no action taken; override for different behavior
             virtual reply_info __do_handle_set_condition_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-
-        protected:
-            std::atomic< bool > f_canceled;
     };
 
     inline uuid_t service::enable_lockout( const scarab::param_node& a_tag )

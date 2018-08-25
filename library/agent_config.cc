@@ -28,7 +28,7 @@ namespace dripline
 #ifdef DRIPLINE_AUTH_FILE
         t_amqp_node.add( "auth-file", TOSTRING( DRIPLINE_AUTH_FILE ) );
 #endif
-        add( "amqp", std::move(t_amqp_node) );
+        add( "amqp", t_amqp_node );
     }
 
     agent_config::~agent_config()

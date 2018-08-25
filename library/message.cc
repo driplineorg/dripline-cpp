@@ -16,6 +16,7 @@
 #include "logger.hh"
 #include "param_json.hh"
 #include "time.hh"
+#include "version_wrapper.hh"
 
 #include <map>
 
@@ -26,7 +27,6 @@ using std::string;
 using scarab::param;
 using scarab::param_node;
 using scarab::param_value;
-using scarab::parsable;
 using scarab::param_input_json;
 using scarab::param_output_json;
 
@@ -68,7 +68,7 @@ namespace dripline
         f_sender_info.add( "service_name", param_value( "N/A" ) );
 
         // set the sender_info correctly for the server software
-        version_wrapper* t_version = version_wrapper::get_instance();
+        scarab::version_wrapper* t_version = scarab::version_wrapper::get_instance();
         set_sender_commit( t_version->commit() );
         set_sender_version( t_version->version_str() );
         set_sender_package( t_version->package() );
