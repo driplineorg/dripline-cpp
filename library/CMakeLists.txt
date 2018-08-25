@@ -18,6 +18,7 @@ set( dripline_HEADERS
     message.hh
     relayer.hh
     reply_package.hh
+    return_codes.hh
     routing_key_specifier.hh
     service.hh
     uuid.hh
@@ -35,6 +36,7 @@ set( dripline_SOURCES
     message.cc
     relayer.cc
     reply_package.cc
+    return_codes.cc
     routing_key_specifier.cc
     service.cc
     uuid.cc
