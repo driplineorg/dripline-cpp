@@ -9,7 +9,7 @@
 
 namespace dripline
 {
-    unsigned return_success::f_code = 0;
+    IMPL_DL_RET_CODE( success, 0 );
 
     return_code::return_code() :
             f_message()
