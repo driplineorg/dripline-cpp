@@ -37,14 +37,19 @@ namespace dripline
             mv_referrable( std::string, message );
     };
 
-    class DRIPLINE_API return_success : public return_code
-    {
-        public:
-            return_success() : return_code() {}
-            virtual ~return_success() {}
-
-            static unsigned f_code;
+#define DEFINE_DL_RET_CODE( name ) \
+    class DRIPLINE_API return_##name : public return_code \
+    { \
+        public: \
+            return_##name() : return_code() {} \
+            virtual ~return_##name() {} \
+            static const unsigned f_code; \
     };
+    
+#define IMPL_DL_RET_CODE( name, the_code ) \
+    const unsigned return_##name::f_code = the_code;
+    
+    DEFINE_DL_RET_CODE( success );
 
     template< class x_streamable >
     return_code& return_code::operator<<( x_streamable a_fragment )
