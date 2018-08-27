@@ -41,34 +41,38 @@ namespace dripline
     IMPL_DL_RET_CODE( unhandled_exception, 999 );
 
 
-    return_code::return_code() :
-            f_message()
+    reply_package_2::reply_package_2() :
+            f_message(),
+            f_code()
     {
     }
-
-    return_code::return_code( const return_code& a_orig ) :
-            f_message( a_orig.f_message )
+/*
+    reply_package_2::reply_package_2( const reply_package_2& a_orig ) :
+            f_message( a_orig.f_message ),
+            f_code( ??? )
     {
     }
-
-    return_code::return_code( return_code&& a_orig ) :
+*/
+    reply_package_2::reply_package_2( reply_package_2&& a_orig ) :
             f_message( std::move(a_orig.f_message) )
     {
     }
 
-    return_code::~return_code()
+    reply_package_2::~reply_package_2()
     {
     }
-
-    return_code& return_code::operator=( const return_code& a_orig )
+/*
+    reply_package_2& reply_package_2::operator=( const reply_package_2& a_orig )
     {
         f_message = a_orig.f_message;
+        f_code = ???;
         return *this;
     }
-
-    return_code& return_code::operator=( return_code&& a_orig )
+*/
+    reply_package_2& reply_package_2::operator=( reply_package_2&& a_orig )
     {
         f_message = std::move(a_orig.f_message);
+        f_code = std::move(a_orig.f_code);
         return *this;
     }
 
