@@ -36,11 +36,6 @@ namespace dripline
             reply_package_2& operator=( const reply_package_2& a_orig ) = delete;
             reply_package_2& operator=( reply_package_2&& a_orig );
 
-            template< class x_streamable >
-            reply_package_2& operator<<( x_streamable a_fragment );
-            reply_package_2& operator<<( const std::string& a_fragment );
-            reply_package_2& operator<<( const char* a_fragment );
-
         public:
             unsigned retcode() const;
 
@@ -51,6 +46,11 @@ namespace dripline
             const scarab::param& payload() const;
 
             reply_package_2& set_payload( scarab::param_ptr_t a_payload );
+
+            template< class x_streamable >
+            reply_package_2& operator<<( x_streamable a_fragment );
+            reply_package_2& operator<<( const std::string& a_fragment );
+            reply_package_2& operator<<( const char* a_fragment );
 
             mv_referrable( std::string, message );
 
