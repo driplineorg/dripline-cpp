@@ -19,29 +19,44 @@ namespace dripline
             ~dripline_error() throw ();
 
             template< class x_streamable >
-            dripline_error& operator<<( const x_streamable& a_fragment )
-            {
-                f_error << a_fragment;
-                return *this;
-            }
-
-            dripline_error& operator<<( retcode_t a_code )
-            {
-                f_retcode = a_code;
-                return *this;
-            }
+            dripline_error& operator<<( x_streamable a_fragment );
+            dripline_error& operator<<( const std::string& a_fragment );
+            dripline_error& operator<<( const char* a_fragment );
 
             virtual const char* what() const throw();
 
-            retcode_t retcode() const
-            {
-                return f_retcode;
-            }
+            retcode_t retcode() const;
 
         private:
-            ::std::stringstream f_error;
+            std::string f_error;
             retcode_t f_retcode;
     };
+
+    template< class x_streamable >
+    dripline_error& dripline_error::operator<<( x_streamable a_fragment )
+    {
+        std::stringstream stream;
+        stream << a_fragment;
+        stream >> f_error;
+        return *this;
+    }
+
+    inline dripline_error& dripline_error::operator<<( const std::string& a_fragment )
+    {
+        f_error += a_fragment;
+        return *this;
+    }
+
+    inline dripline_error& dripline_error::operator<<( const char* a_fragment )
+    {
+        f_error += std::string( a_fragment );
+        return *this;
+    }
+
+    inline retcode_t dripline_error::retcode() const
+    {
+        return f_retcode;
+    }
 
 }
 

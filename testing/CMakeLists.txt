@@ -10,6 +10,7 @@ set( testing_HEADERS
 set( testing_SOURCES
     test_agent.cc
     test_lockout.cc
+    test_return_codes.cc
     use_catch.cc
 )
 
