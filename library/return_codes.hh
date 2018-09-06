@@ -25,10 +25,13 @@ namespace dripline
         virtual unsigned retcode() const = 0;
     };
 
+    // TODO: move this to reply_package.hh/cc and rename
     class DRIPLINE_API reply_package_2
     {
         public:
             reply_package_2();
+            template< typename x_retcode >
+            reply_package_2( const std::string& a_message, scarab::param_ptr_t a_payload = nullptr );
             reply_package_2( const reply_package_2& a_orig ) = delete;
             reply_package_2( reply_package_2&& a_orig );
             virtual ~reply_package_2();
@@ -39,7 +42,7 @@ namespace dripline
         public:
             unsigned retcode() const;
 
-            template< typename XRetCode >
+            template< typename x_retcode >
             reply_package_2& set_retcode();
 
             scarab::param& payload();
@@ -102,6 +105,15 @@ namespace dripline
 
     DEFINE_DL_RET_CODE( unhandled_exception );
 
+
+    template< typename x_retcode >
+    reply_package_2::reply_package_2( const std::string& a_message, scarab::param_ptr_t a_payload = nullptr ) :
+        f_message( a_message ),
+        f_code( new x_retcode() ),
+        f_payload( a_payload )
+    {
+
+    }
 
     template< class x_streamable >
     reply_package_2& reply_package_2::operator<<( x_streamable a_fragment )

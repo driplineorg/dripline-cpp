@@ -396,7 +396,7 @@ namespace dripline
         return true;
     }
 
-    reply_info service::handle_lock_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
+    reply_ptr_t service::handle_lock_request( const request_ptr_t a_request )
     {
         uuid_t t_new_key = enable_lockout( a_request->sender_info(), a_request->lockout_key() );
         if( t_new_key.is_nil() )
@@ -408,7 +408,7 @@ namespace dripline
         return a_reply_pkg.send_reply( retcode_t::success, "Server is now locked" );
     }
 
-    reply_info service::handle_unlock_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
+    reply_ptr_t service::handle_unlock_request( const request_ptr_t a_request )
     {
         if( ! is_locked() )
         {
@@ -424,16 +424,19 @@ namespace dripline
         return a_reply_pkg.send_reply( retcode_t::device_error, "Failed to unlock server" );;
     }
 
-    reply_info service::handle_set_condition_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
+    reply_ptr_t service::handle_set_condition_request( const request_ptr_t a_request )
     {
         return this->__do_handle_set_condition_request( a_request, a_reply_pkg );
     }
 
-    reply_info service::handle_is_locked_request( const request_ptr_t, reply_package& a_reply_pkg )
+    reply_ptr_t service::handle_is_locked_request( const request_ptr_t a_request )
     {
         bool t_is_locked = is_locked();
-        a_reply_pkg.f_payload.add( "is_locked", t_is_locked );
-        if( t_is_locked ) a_reply_pkg.f_payload.add( "tag", f_lockout_tag );
+        scarab::param_ptr_t t_reply_payload( new param_node() );
+        scarab::param_node t_reply_node;
+        t_reply_node.add( "is_locked", t_is_locked );
+        if( t_is_locked ) t_reply_node.add( "tag", f_lockout_tag );
+        return a_request.send< dl_success >( "Checked lock status", )
         return a_reply_pkg.send_reply( retcode_t::success, "Checked lock status" );
     }
 
