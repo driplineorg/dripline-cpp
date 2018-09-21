@@ -19,7 +19,7 @@ namespace dripline
     class DRIPLINE_API hub : public service
     {
         private:
-            typedef std::function< reply_info( const dripline::request_ptr_t, dripline::reply_package& ) > handler_func_t;
+            typedef std::function< reply_ptr_t( const dripline::request_ptr_t ) > handler_func_t;
 
         public:
             hub( const scarab::param_node& a_config = scarab::param_node(), const std::string& a_queue_name = "",  const std::string& a_broker_address = "", unsigned a_port = 0, const std::string& a_auth_file = "" , const bool a_make_connection = true );
@@ -39,10 +39,10 @@ namespace dripline
             // Hub request distributors
             //*************************
 
-            virtual reply_info do_run_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            virtual reply_info do_get_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            virtual reply_info do_set_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            virtual reply_info do_cmd_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            virtual reply_ptr_t do_run_request( const request_ptr_t a_request );
+            virtual reply_ptr_t do_get_request( const request_ptr_t a_request );
+            virtual reply_ptr_t do_set_request( const request_ptr_t a_request );
+            virtual reply_ptr_t do_cmd_request( const request_ptr_t a_request );
 
             handler_func_t f_run_handler;
 

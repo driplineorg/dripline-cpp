@@ -24,7 +24,7 @@ namespace dripline
         virtual ~return_code() {};
         virtual unsigned retcode() const = 0;
     };
-
+/*
     // TODO: move this to reply_package.hh/cc and rename
     class DRIPLINE_API reply_package_2
     {
@@ -62,7 +62,7 @@ namespace dripline
 
             scarab::param_ptr_t f_payload;
     };
-
+*/
 #define DEFINE_DL_RET_CODE( name ) \
     struct DRIPLINE_API dl_##name : public return_code \
     { \
@@ -105,9 +105,9 @@ namespace dripline
 
     DEFINE_DL_RET_CODE( unhandled_exception );
 
-
+/*
     template< typename x_retcode >
-    reply_package_2::reply_package_2( const std::string& a_message, scarab::param_ptr_t a_payload = nullptr ) :
+    reply_package_2::reply_package_2( const std::string& a_message, scarab::param_ptr_t a_payload ) :
         f_message( a_message ),
         f_code( new x_retcode() ),
         f_payload( a_payload )
@@ -163,7 +163,7 @@ namespace dripline
         f_payload = std::move(a_payload);
         return *this;
     }
-
+*/
 } /* namespace dripline */
 
 #endif /* DRIPLINE_RETURN_CODES_HH_ */

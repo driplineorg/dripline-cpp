@@ -40,7 +40,7 @@ namespace dripline
 
     IMPL_DL_RET_CODE( unhandled_exception, 999 );
 
-
+/*
     reply_package_2::reply_package_2() :
             f_message(),
             f_code(),
@@ -54,7 +54,7 @@ namespace dripline
             f_payload( std::move(a_orig.f_payload.move_clone()) )
     {
     }
-*/
+*//*
     reply_package_2::reply_package_2( reply_package_2&& a_orig ) :
             f_message( std::move(a_orig.f_message) ),
             f_code( std::move(a_orig.f_code) ),
@@ -73,7 +73,7 @@ namespace dripline
         f_payload = std::move(a_orig.f_payload.move_clone());
         return *this;
     }
-*/
+*//*
     reply_package_2& reply_package_2::operator=( reply_package_2&& a_orig )
     {
         f_message = std::move(a_orig.f_message);
@@ -81,5 +81,5 @@ namespace dripline
         f_payload = std::move(a_orig.f_payload);
         return *this;
     }
-
+*/
 } /* namespace dripline */

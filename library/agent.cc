@@ -30,6 +30,7 @@
 using scarab::param;
 using scarab::param_array;
 using scarab::param_node;
+using scarab::param_ptr_t;
 using scarab::param_value;
 
 namespace dripline
@@ -128,14 +129,14 @@ namespace dripline
             {
                 LINFO( dlog, "Response received" );
 
-                const param_node& t_payload = t_reply->payload();
+                const param& t_payload = t_reply->payload();
 
                 LINFO( dlog, "Response:\n" <<
                         "Return code: " << t_reply->get_return_code() << '\n' <<
                         "Return message: " << t_reply->return_msg() << '\n' <<
                         t_payload );
 
-                if( ! t_save_filename.empty() && ! t_payload.empty() )
+                if( ! t_save_filename.empty() && ! t_payload.is_null() )
                 {
                     scarab::param_translator t_translator;
                     if( ! t_translator.write_file( t_payload, t_save_filename ) )
@@ -159,23 +160,24 @@ namespace dripline
 
     request_ptr_t agent::sub_agent_run::create_request()
     {
-        param_node t_payload_node( f_agent->config() ); // copy of f_config, which should consist of only the request arguments
+        // copy of f_config, which should consist of only the request arguments
+        param_ptr_t t_payload_ptr( new param_node( f_agent->config() ) );
 
-        return msg_request::create( t_payload_node, op_t::run, f_agent->routing_key(), "", message::encoding::json );
+        return msg_request::create( *t_payload_ptr, op_t::run, f_agent->routing_key(), "", message::encoding::json );
     }
 
     request_ptr_t agent::sub_agent_get::create_request()
     {
-        param_node t_payload_node;
+        param_ptr_t t_payload_ptr( new param_node() );
 
         if( f_agent->config().has( "value" ) )
         {
             param_array t_values_array;
             t_values_array.push_back( f_agent->config().remove( "value" ) );
-            t_payload_node.add( "values", t_values_array );
+            t_payload_ptr->as_node().add( "values", t_values_array );
         }
 
-        return msg_request::create( t_payload_node, op_t::get, f_agent->routing_key(), "", message::encoding::json );
+        return msg_request::create( *t_payload_ptr, op_t::get, f_agent->routing_key(), "", message::encoding::json );
     }
 
     request_ptr_t agent::sub_agent_set::create_request()
@@ -189,15 +191,16 @@ namespace dripline
         param_array t_values_array;
         t_values_array.push_back( f_agent->config().remove( "value" ) );
 
-        param_node t_payload_node;
-        t_payload_node.add( "values", t_values_array );
+        param_ptr_t t_payload_ptr( new param_node() );
+        t_payload_ptr->as_node().add( "values", t_values_array );
 
-        return msg_request::create( t_payload_node, op_t::set, f_agent->routing_key(), "", message::encoding::json );
+        return msg_request::create( *t_payload_ptr, op_t::set, f_agent->routing_key(), "", message::encoding::json );
     }
 
     request_ptr_t agent::sub_agent_cmd::create_request()
     {
-        param_node t_payload_node;
+        param_ptr_t t_payload_ptr( new param_node() );
+        param_node& t_payload_node = t_payload_ptr->as_node();
 
         // for the load instruction, the instruction node should be replaced by the contents of the file specified
         if( f_agent->config().has( "load" ) )
@@ -224,7 +227,7 @@ namespace dripline
         // at this point, all that remains in f_config should be other options that we want to add to the payload node
         t_payload_node.merge( f_agent->config() ); // copy f_config
 
-        return msg_request::create( t_payload_node, op_t::cmd, f_agent->routing_key(), "", message::encoding::json );
+        return msg_request::create( *t_payload_ptr, op_t::cmd, f_agent->routing_key(), "", message::encoding::json );
     }
 
 } /* namespace dripline */

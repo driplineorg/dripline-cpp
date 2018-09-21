@@ -34,13 +34,13 @@ namespace dripline
             //**************************
 
             /// Directly submit a request message to this endpoint
-            reply_info submit_request_message( const request_ptr_t a_request );
+            void submit_request_message( const request_ptr_t a_request );
 
             /// Directly submit a reply message to this endpoint
-            bool submit_reply_message( const reply_ptr_t a_reply );
+            void submit_reply_message( const reply_ptr_t a_reply );
 
             /// Directly submit an alert message to this endpoint
-            bool submit_alert_message( const alert_ptr_t a_alert );
+            void submit_alert_message( const alert_ptr_t a_alert );
 
         protected:
             //*************************
@@ -103,24 +103,24 @@ namespace dripline
             void send_reply( reply_ptr_t a_reply ) const;
     };
 
-    inline reply_ptr_t endpoint::do_run_request( const request_ptr_t )
+    inline reply_ptr_t endpoint::do_run_request( const request_ptr_t a_request )
     {
-        return a_reply_pkg.send_reply( retcode_t::device_error, "Unhandled request type: OP_RUN" );;
+        return a_request->template reply< dl_device_error >( "Unhandled request type: OP_RUN" );
     }
 
-    inline reply_ptr_t endpoint::do_get_request( const request_ptr_t )
+    inline reply_ptr_t endpoint::do_get_request( const request_ptr_t a_request )
     {
-        return a_reply_pkg.send_reply( retcode_t::device_error, "Unhandled request type: OP_GET" );;
+        return a_request->template reply< dl_device_error >( "Unhandled request type: OP_GET" );
     }
 
-    inline reply_ptr_t endpoint::do_set_request( const request_ptr_t )
+    inline reply_ptr_t endpoint::do_set_request( const request_ptr_t a_request )
     {
-        return a_reply_pkg.send_reply( retcode_t::device_error, "Unhandled request type: OP_SET" );;
+        return a_request->template reply< dl_device_error >( "Unhandled request type: OP_SET" );
     }
 
-    inline reply_ptr_t endpoint::do_cmd_request( const request_ptr_t )
+    inline reply_ptr_t endpoint::do_cmd_request( const request_ptr_t a_request )
     {
-        return a_reply_pkg.send_reply( retcode_t::device_error, "Unhandled request type: OP_CMD" );;
+        return a_request->template reply< dl_device_error >( "Unhandled request type: OP_CMD" );
     }
 
 } /* namespace dripline */

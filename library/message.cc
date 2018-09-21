@@ -125,7 +125,7 @@ namespace dripline
             case msg_t::request:
             {
                 request_ptr_t t_request = msg_request::create(
-                        t_payload,
+                        *t_payload,
                         to_op_t( t_msg_node.get_value< uint32_t >( "msgop", to_uint( op_t::unknown ) ) ),
                         t_routing_key,
                         a_envelope->Message()->ReplyTo(),
@@ -143,7 +143,7 @@ namespace dripline
                 reply_ptr_t t_reply = msg_reply::create(
                         t_msg_node["retcode"]().as_uint(),
                         t_msg_node.get_value( "return_msg", "" ),
-                        t_payload,
+                        *t_payload,
                         t_routing_key,
                         t_encoding);
 
@@ -153,7 +153,7 @@ namespace dripline
             case msg_t::alert:
             {
                 alert_ptr_t t_alert = msg_alert::create(
-                        t_payload,
+                        *t_payload,
                         t_routing_key,
                         t_encoding);
 
@@ -175,11 +175,11 @@ namespace dripline
 
         if( t_msg_node.has( "payload" ) )
         {
-            t_message->payload_ptr() = t_msg_node["payload"].clone();
+            t_message->payload() = *t_msg_node["payload"].clone();
         }
         else
         {
-            t_message->payload_ptr().reset( new param() );
+            t_message->payload() = param();
         }
 
         return t_message;
@@ -209,7 +209,7 @@ namespace dripline
         t_body_node.add( "msgtype", to_uint( message_type() ) );
         t_body_node.add( "timestamp", scarab::get_formatted_now() );
         t_body_node.add( "sender_info", f_sender_info );
-        t_body_node.add( "payload", f_payload );
+        t_body_node.add( "payload", *f_payload );
 
         if( ! this->derived_modify_message_body( t_body_node ) )
         {
@@ -278,10 +278,10 @@ namespace dripline
 
     }
 
-    request_ptr_t msg_request::create( scarab::param_ptr_t a_payload, op_t a_msg_op, const std::string& a_routing_key, const std::string& a_reply_to, message::encoding a_encoding )
+    request_ptr_t msg_request::create( const param& a_payload, op_t a_msg_op, const std::string& a_routing_key, const std::string& a_reply_to, message::encoding a_encoding )
     {
         request_ptr_t t_request = make_shared< msg_request >();
-        t_request->payload_ptr() = a_payload;
+        t_request->payload() = a_payload;
         t_request->set_message_op( a_msg_op );
         t_request->routing_key() = a_routing_key;
         t_request->reply_to() = a_reply_to;
@@ -303,7 +303,7 @@ namespace dripline
 
     msg_reply::msg_reply() :
             message(),
-            f_return_code( retcode_t::success ),
+            f_return_code( dl_success::f_code ),
             f_return_msg(),
             f_return_buffer()
     {
@@ -314,25 +314,25 @@ namespace dripline
 
     }
 
-    reply_ptr_t msg_reply::create( unsigned a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const std::string& a_routing_key, message::encoding a_encoding )
+    reply_ptr_t msg_reply::create( unsigned a_retcode, const std::string& a_ret_msg, const param& a_payload, const std::string& a_routing_key, message::encoding a_encoding )
     {
         reply_ptr_t t_reply = make_shared< msg_reply >();
         t_reply->set_return_code( a_retcode );
         t_reply->return_msg() = a_ret_msg;
-        t_reply->payload_ptr() = a_payload;
+        t_reply->payload() = a_payload;
         t_reply->routing_key() = a_routing_key;
         t_reply->set_encoding( a_encoding );
         return t_reply;
     }
-
+/*
     reply_ptr_t msg_reply::create( const reply_package_2& a_reply_package, const std::string& a_routing_key, message::encoding a_encoding = encoding::json )
     {
         return msg_reply::create( a_reply_package.retcode(), a_reply_package.message(), a_reply_package.payload().clone(), a_routing_key, a_encoding );
     }
-
+*/
     reply_ptr_t msg_reply::create( const dripline_error& a_error, const std::string& a_routing_key, message::encoding a_encoding )
     {
-        return msg_reply::create( to_uint(a_error.retcode()), a_error.what(), param_ptr_t( new param() ), a_routing_key, a_encoding );
+        return msg_reply::create( to_uint(a_error.retcode()), a_error.what(), param(), a_routing_key, a_encoding );
     }
 
     msg_t msg_reply::s_message_type = msg_t::reply;
@@ -347,7 +347,7 @@ namespace dripline
     // Alert
     //*********
 
-    alert_ptr_t msg_alert::create( scarab::param_ptr_t a_payload, const std::string& a_routing_key, message::encoding a_encoding )
+    alert_ptr_t msg_alert::create( const param& a_payload, const std::string& a_routing_key, message::encoding a_encoding )
     {
         alert_ptr_t t_alert = make_shared< msg_alert >();
         t_alert->payload() = a_payload;
