@@ -21,32 +21,33 @@ namespace dripline
 
             void execute();
 
-            virtual reply_info do_run_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            virtual reply_info do_get_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            virtual reply_info do_set_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            virtual reply_info do_cmd_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            virtual reply_ptr_t do_run_request( const request_ptr_t a_request );
+            virtual reply_ptr_t do_get_request( const request_ptr_t a_request );
+            virtual reply_ptr_t do_set_request( const request_ptr_t a_request );
+            virtual reply_ptr_t do_cmd_request( const request_ptr_t a_request );
 
             mv_accessible( int, return );
     };
 
-    inline reply_info run_simple_service::do_run_request( const request_ptr_t, reply_package& a_reply_pkg )
+    inline reply_ptr_t run_simple_service::do_run_request( const request_ptr_t a_request )
     {
-        return a_reply_pkg.send_reply( retcode_t::success, "Congrats, you performed an OP_RUN" );;
+        return a_request->template reply< dl_success >( "Congrats, you performed an OP_RUN" );
     }
 
-    inline reply_info run_simple_service::do_get_request( const request_ptr_t, reply_package& a_reply_pkg )
+    inline reply_ptr_t run_simple_service::do_get_request( const request_ptr_t a_request )
     {
-        return a_reply_pkg.send_reply( retcode_t::success, "Congrats, you performed an OP_GET" );;
+        return a_request->template reply< dl_success >( "Congrats, you performed an OP_GET" );
+
     }
 
-    inline reply_info run_simple_service::do_set_request( const request_ptr_t, reply_package& a_reply_pkg )
+    inline reply_ptr_t run_simple_service::do_set_request( const request_ptr_t a_request )
     {
-        return a_reply_pkg.send_reply( retcode_t::success, "Congrats, you performed an OP_SET" );;
+        return a_request->template reply< dl_success >( "Congrats, you performed an OP_SET" );
     }
 
-    inline reply_info run_simple_service::do_cmd_request( const request_ptr_t, reply_package& a_reply_pkg )
+    inline reply_ptr_t run_simple_service::do_cmd_request( const request_ptr_t a_request )
     {
-        return a_reply_pkg.send_reply( retcode_t::success, "Congrats, you performed an OP_CMD" );;
+        return a_request->template reply< dl_success >( "Congrats, you performed an OP_CMD" );
     }
 
 
