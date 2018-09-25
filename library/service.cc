@@ -104,6 +104,7 @@ namespace dripline
         if( ! f_channel ) return false;
 
         if( ! setup_exchange( f_channel, f_requests_exchange ) ) return false;
+        if( ! setup_exchange( f_channel, f_alerts_exchange ) ) return false;
 
         if( ! setup_queue( f_channel, f_name ) ) return false;
 
