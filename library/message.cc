@@ -57,6 +57,7 @@ namespace dripline
             f_sender_username( "N/A" ),
             f_sender_info(),
             f_parsed_rks(),
+            f_specifier(),
             f_payload()
     {
         // make sure the sender_info node is filled out correctly
@@ -128,6 +129,7 @@ namespace dripline
                         *t_payload,
                         to_op_t( t_msg_node.get_value< uint32_t >( "msgop", to_uint( op_t::unknown ) ) ),
                         t_routing_key,
+                        t_msg_node.get_value( "specifier", "" ),
                         a_envelope->Message()->ReplyTo(),
                         t_encoding);
 
@@ -145,6 +147,7 @@ namespace dripline
                         t_msg_node.get_value( "return_msg", "" ),
                         *t_payload,
                         t_routing_key,
+                        t_msg_node.get_value( "specifier", "" ),
                         t_encoding);
 
                 t_message = t_reply;
@@ -155,6 +158,7 @@ namespace dripline
                 alert_ptr_t t_alert = msg_alert::create(
                         *t_payload,
                         t_routing_key,
+                        t_msg_node.get_value( "specifier", "" ),
                         t_encoding);
 
                 t_message = t_alert;
@@ -207,6 +211,7 @@ namespace dripline
     {
         param_node t_body_node;
         t_body_node.add( "msgtype", to_uint( message_type() ) );
+        t_body_node.add( "specifier", f_specifier );
         t_body_node.add( "timestamp", scarab::get_formatted_now() );
         t_body_node.add( "sender_info", f_sender_info );
         t_body_node.add( "payload", *f_payload );
@@ -278,12 +283,13 @@ namespace dripline
 
     }
 
-    request_ptr_t msg_request::create( const param& a_payload, op_t a_msg_op, const std::string& a_routing_key, const std::string& a_reply_to, message::encoding a_encoding )
+    request_ptr_t msg_request::create( const param& a_payload, op_t a_msg_op, const std::string& a_routing_key, const std::string& a_specifier, const std::string& a_reply_to, message::encoding a_encoding )
     {
         request_ptr_t t_request = make_shared< msg_request >();
         t_request->payload() = a_payload;
         t_request->set_message_op( a_msg_op );
         t_request->routing_key() = a_routing_key;
+        t_request->the_specifier() = a_specifier;
         t_request->reply_to() = a_reply_to;
         t_request->set_encoding( a_encoding );
         return t_request;
@@ -314,25 +320,26 @@ namespace dripline
 
     }
 
-    reply_ptr_t msg_reply::create( unsigned a_retcode, const std::string& a_ret_msg, const param& a_payload, const std::string& a_routing_key, message::encoding a_encoding )
+    reply_ptr_t msg_reply::create( unsigned a_retcode, const std::string& a_ret_msg, const param& a_payload, const std::string& a_routing_key, const std::string& a_specifier, message::encoding a_encoding )
     {
         reply_ptr_t t_reply = make_shared< msg_reply >();
         t_reply->set_return_code( a_retcode );
         t_reply->return_msg() = a_ret_msg;
         t_reply->payload() = a_payload;
         t_reply->routing_key() = a_routing_key;
+        t_reply->the_specifier() = a_specifier;
         t_reply->set_encoding( a_encoding );
         return t_reply;
     }
 /*
-    reply_ptr_t msg_reply::create( const reply_package_2& a_reply_package, const std::string& a_routing_key, message::encoding a_encoding = encoding::json )
+    reply_ptr_t msg_reply::create( const reply_package_2& a_reply_package, const std::string& a_routing_key, const std::string& a_specifier, message::encoding a_encoding = encoding::json )
     {
-        return msg_reply::create( a_reply_package.retcode(), a_reply_package.message(), a_reply_package.payload().clone(), a_routing_key, a_encoding );
+        return msg_reply::create( a_reply_package.retcode(), a_reply_package.message(), a_reply_package.payload().clone(), a_routing_key, a_specifier, a_encoding );
     }
 */
-    reply_ptr_t msg_reply::create( const dripline_error& a_error, const std::string& a_routing_key, message::encoding a_encoding )
+    reply_ptr_t msg_reply::create( const dripline_error& a_error, const std::string& a_routing_key, const std::string& a_specifier, message::encoding a_encoding )
     {
-        return msg_reply::create( to_uint(a_error.retcode()), a_error.what(), param(), a_routing_key, a_encoding );
+        return msg_reply::create( to_uint(a_error.retcode()), a_error.what(), param(), a_routing_key, a_specifier, a_encoding );
     }
 
     msg_t msg_reply::s_message_type = msg_t::reply;
@@ -347,11 +354,12 @@ namespace dripline
     // Alert
     //*********
 
-    alert_ptr_t msg_alert::create( const param& a_payload, const std::string& a_routing_key, message::encoding a_encoding )
+    alert_ptr_t msg_alert::create( const param& a_payload, const std::string& a_routing_key, const std::string& a_specifier, message::encoding a_encoding )
     {
         alert_ptr_t t_alert = make_shared< msg_alert >();
         t_alert->payload() = a_payload;
         t_alert->routing_key() = a_routing_key;
+        t_alert->the_specifier() = a_specifier;
         t_alert->set_encoding( a_encoding );
         return t_alert;
     }
