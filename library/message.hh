@@ -14,7 +14,7 @@
 #include "amqp.hh"
 #include "dripline_api.hh"
 #include "dripline_constants.hh"
-#include "routing_key_specifier.hh"
+#include "specifier.hh"
 #include "uuid.hh"
 
 #include <memory>
