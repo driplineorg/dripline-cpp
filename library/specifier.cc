@@ -56,19 +56,38 @@ namespace dripline
 
 
     specifier::specifier( const std::string& a_unparsed ) :
-            deque(),
+            container_type(),
             f_unparsed( a_unparsed )
     {
         add_next( a_unparsed );
     }
 
     specifier::specifier( const specifier& a_orig ) :
-            deque( a_orig ),
+            container_type( a_orig ),
             f_unparsed( a_orig.f_unparsed )
+    {}
+
+    specifier::specifier( specifier&& a_orig ) :
+            container_type( a_orig ),
+            f_unparsed( std::move( a_orig.f_unparsed ) )
     {}
 
     specifier::~specifier()
     {
+    }
+
+    const specifier& specifier::operator=( const specifier& a_orig )
+    {
+        container_type::operator=( a_orig );
+        f_unparsed = a_orig.f_unparsed;
+        return *this;
+    }
+
+    const specifier& specifier::operator=( specifier&& a_orig )
+    {
+        container_type::operator=( a_orig );
+        f_unparsed = std::move(a_orig.f_unparsed);
+        return *this;
     }
 
     void specifier::parse( const std::string& a_unparsed )
