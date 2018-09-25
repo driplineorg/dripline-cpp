@@ -9,7 +9,6 @@
 #define DRIPLINE_ENDPOINT_HH_
 
 #include "message.hh"
-#include "reply_package.hh"
 #include "return_codes.hh"
 
 namespace dripline
