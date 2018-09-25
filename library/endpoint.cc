@@ -44,9 +44,6 @@ namespace dripline
 
     void endpoint::on_request_message( const request_ptr_t a_request )
     {
-        reply_package t_reply_pkg( &f_service, a_request );
-        reply_info t_reply_info;
-
         // the lockout key must be valid
         if( ! a_request->get_lockout_key_valid() )
         {
