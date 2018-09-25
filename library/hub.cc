@@ -100,44 +100,44 @@ namespace dripline
         return;
     }
 
-    reply_info hub::do_run_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
+    reply_ptr_t hub::do_run_request( const request_ptr_t a_request )
     {
-        return f_run_handler( a_request, a_reply_pkg );
+        return f_run_handler( a_request );
     }
 
-    reply_info hub::do_get_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
+    reply_ptr_t hub::do_get_request( const request_ptr_t a_request )
     {
         std::string t_query_type = a_request->parsed_rks().front();
         a_request->parsed_rks().pop_front();
 
         try
         {
-            return f_get_handlers.at( t_query_type )( a_request, a_reply_pkg );
+            return f_get_handlers.at( t_query_type )( a_request );
         }
         catch( std::out_of_range& e )
         {
             LWARN( dlog, "GET query type <" << t_query_type << "> was not understood (" << e.what() << ")" );
-            return a_reply_pkg.send_reply( retcode_t::message_error_bad_payload, "Unrecognized query type or no query type provided: <" + t_query_type + ">" );;
+            return a_request->template reply< dl_message_error_bad_payload >( "Unrecognized query type or no query type provided: <" + t_query_type + ">" );;
         }
     }
 
-    reply_info hub::do_set_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
+    reply_ptr_t hub::do_set_request( const request_ptr_t a_request )
     {
         std::string t_set_type = a_request->parsed_rks().front();
         a_request->parsed_rks().pop_front();
 
         try
         {
-            return f_set_handlers.at( t_set_type )( a_request, a_reply_pkg );
+            return f_set_handlers.at( t_set_type )( a_request );
         }
         catch( std::out_of_range& e )
         {
             LWARN( dlog, "SET request <" << t_set_type << "> not understood (" << e.what() << ")" );
-            return a_reply_pkg.send_reply( retcode_t::message_error_bad_payload, "Unrecognized set request type or no set request type provided: <" + t_set_type + ">" );
+            return a_request->template reply< dl_message_error_bad_payload >( "Unrecognized set request type or no set request type provided: <" + t_set_type + ">" );
         }
     }
 
-    reply_info hub::do_cmd_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
+    reply_ptr_t hub::do_cmd_request( const request_ptr_t a_request )
     {
         // get the instruction before checking the lockout key authentication because we need to have the exception for
         // the unlock instruction that allows us to force the unlock.
@@ -146,12 +146,12 @@ namespace dripline
 
         try
         {
-            return f_cmd_handlers.at( t_instruction )( a_request, a_reply_pkg );
+            return f_cmd_handlers.at( t_instruction )( a_request );
         }
         catch( std::out_of_range& e )
         {
             LWARN( dlog, "CMD instruction <" << t_instruction << "> not understood (" << e.what() << ")" );
-            return a_reply_pkg.send_reply( retcode_t::message_error_bad_payload, "Instruction <" + t_instruction + "> not understood" );;
+            return a_request->template reply< dl_message_error_bad_payload >( "Instruction <" + t_instruction + "> not understood" );;
         }
     }
 

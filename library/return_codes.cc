@@ -40,46 +40,4 @@ namespace dripline
 
     IMPL_DL_RET_CODE( unhandled_exception, 999 );
 
-
-    reply_package_2::reply_package_2() :
-            f_message(),
-            f_code(),
-            f_payload( new scarab::param_node() )
-    {
-    }
-/*
-    reply_package_2::reply_package_2( const reply_package_2& a_orig ) :
-            f_message( a_orig.f_message ),
-            f_code( ??? ),
-            f_payload( std::move(a_orig.f_payload.move_clone()) )
-    {
-    }
-*/
-    reply_package_2::reply_package_2( reply_package_2&& a_orig ) :
-            f_message( std::move(a_orig.f_message) ),
-            f_code( std::move(a_orig.f_code) ),
-            f_payload( std::move(a_orig.f_payload) )
-    {
-    }
-
-    reply_package_2::~reply_package_2()
-    {
-    }
-/*
-    reply_package_2& reply_package_2::operator=( const reply_package_2& a_orig )
-    {
-        f_message = a_orig.f_message;
-        f_code = ???;
-        f_payload = std::move(a_orig.f_payload.move_clone());
-        return *this;
-    }
-*/
-    reply_package_2& reply_package_2::operator=( reply_package_2&& a_orig )
-    {
-        f_message = std::move(a_orig.f_message);
-        f_code = std::move(a_orig.f_code);
-        f_payload = std::move(a_orig.f_payload);
-        return *this;
-    }
-
 } /* namespace dripline */

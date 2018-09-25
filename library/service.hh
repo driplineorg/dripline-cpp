@@ -105,14 +105,14 @@ namespace dripline
             // Request handlers
             //*****************
 
-            reply_info handle_lock_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            reply_info handle_unlock_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            reply_info handle_is_locked_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            reply_info handle_set_condition_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            reply_ptr_t handle_lock_request( const request_ptr_t a_request );
+            reply_ptr_t handle_unlock_request( const request_ptr_t a_request );
+            reply_ptr_t handle_is_locked_request( const request_ptr_t a_request );
+            reply_ptr_t handle_set_condition_request( const request_ptr_t a_request );
 
         private:
             /// Default set-condition: no action taken; override for different behavior
-            virtual reply_info __do_handle_set_condition_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            virtual reply_ptr_t __do_handle_set_condition_request( const request_ptr_t a_request );
     };
 
     inline uuid_t service::enable_lockout( const scarab::param_node& a_tag )
@@ -120,9 +120,9 @@ namespace dripline
         return enable_lockout( a_tag, generate_random_uuid() );
     }
 
-    inline reply_info service::__do_handle_set_condition_request( const request_ptr_t, reply_package& a_reply_pkg )
+    inline reply_ptr_t service::__do_handle_set_condition_request( const request_ptr_t a_request )
     {
-        return a_reply_pkg.send_reply( retcode_t::success, "No action taken (default method)" );
+        return a_request->template reply< dl_success >( "No action taken (this is the default method)" );
     }
 
 } /* namespace dripline */

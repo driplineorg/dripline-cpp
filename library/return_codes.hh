@@ -8,13 +8,7 @@
 #ifndef DRIPLINE_RETURN_CODES_HH_
 #define DRIPLINE_RETURN_CODES_HH_
 
-#include <sstream>
-#include <string>
-
 #include "dripline_api.hh"
-
-#include "member_variables.hh"
-#include "param.hh"
 
 namespace dripline
 {
@@ -25,40 +19,6 @@ namespace dripline
         virtual unsigned retcode() const = 0;
     };
 
-    class DRIPLINE_API reply_package_2
-    {
-        public:
-            reply_package_2();
-            reply_package_2( const reply_package_2& a_orig ) = delete;
-            reply_package_2( reply_package_2&& a_orig );
-            virtual ~reply_package_2();
-
-            reply_package_2& operator=( const reply_package_2& a_orig ) = delete;
-            reply_package_2& operator=( reply_package_2&& a_orig );
-
-        public:
-            unsigned retcode() const;
-
-            template< typename XRetCode >
-            reply_package_2& set_retcode();
-
-            scarab::param& payload();
-            const scarab::param& payload() const;
-
-            reply_package_2& set_payload( scarab::param_ptr_t a_payload );
-
-            template< class x_streamable >
-            reply_package_2& operator<<( x_streamable a_fragment );
-            reply_package_2& operator<<( const std::string& a_fragment );
-            reply_package_2& operator<<( const char* a_fragment );
-
-            mv_referrable( std::string, message );
-
-        protected:
-            std::unique_ptr< return_code > f_code;
-
-            scarab::param_ptr_t f_payload;
-    };
 
 #define DEFINE_DL_RET_CODE( name ) \
     struct DRIPLINE_API dl_##name : public return_code \
@@ -101,56 +61,6 @@ namespace dripline
     DEFINE_DL_RET_CODE( daq_running );
 
     DEFINE_DL_RET_CODE( unhandled_exception );
-
-
-    template< class x_streamable >
-    reply_package_2& reply_package_2::operator<<( x_streamable a_fragment )
-    {
-        std::stringstream stream;
-        stream << a_fragment;
-        stream >> f_message;
-        return *this;
-    }
-
-    inline reply_package_2& reply_package_2::operator<<( const std::string& a_fragment )
-    {
-        f_message += a_fragment;
-        return *this;
-    }
-
-    inline reply_package_2& reply_package_2::operator<<( const char* a_fragment )
-    {
-        f_message += std::string( a_fragment );
-        return *this;
-    }
-
-    inline scarab::param& reply_package_2::payload()
-    {
-        return *f_payload;
-    }
-
-    inline const scarab::param& reply_package_2::payload() const
-    {
-        return *f_payload;
-    }
-
-    inline unsigned reply_package_2::retcode() const
-    {
-        return f_code->retcode();
-    }
-
-    template< typename x_retcode >
-    reply_package_2& reply_package_2::set_retcode()
-    {
-        f_code.reset( new x_retcode() );
-        return *this;
-    }
-
-    reply_package_2& reply_package_2::set_payload( scarab::param_ptr_t a_payload )
-    {
-        f_payload = std::move(a_payload);
-        return *this;
-    }
 
 } /* namespace dripline */
 

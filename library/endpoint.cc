@@ -27,82 +27,102 @@ namespace dripline
     {
     }
 
-    reply_info endpoint::submit_request_message( const request_ptr_t a_request_ptr)
+    void endpoint::submit_request_message( const request_ptr_t a_request_ptr)
     {
         return this->on_request_message( a_request_ptr );;
     }
 
-    bool endpoint::submit_alert_message( const alert_ptr_t a_alert_ptr)
+    void endpoint::submit_alert_message( const alert_ptr_t a_alert_ptr)
     {
         return this->on_alert_message( a_alert_ptr );
     }
 
-    bool endpoint::submit_reply_message( const reply_ptr_t a_reply_ptr)
+    void endpoint::submit_reply_message( const reply_ptr_t a_reply_ptr)
     {
         return this->on_reply_message( a_reply_ptr );
     }
 
-    reply_info endpoint::on_request_message( const request_ptr_t a_request )
+    void endpoint::on_request_message( const request_ptr_t a_request )
     {
-        reply_package t_reply_pkg( &f_service, a_request );
-        reply_info t_reply_info;
-
         // the lockout key must be valid
         if( ! a_request->get_lockout_key_valid() )
         {
             LWARN( dlog, "Message had an invalid lockout key" );
-            return t_reply_pkg.send_reply( retcode_t::message_error_invalid_key, "Lockout key could not be parsed" );;
+            send_reply( a_request->reply< dl_message_error_invalid_key >( "Lockout key could not be parsed" ) );
+        }
+
+        reply_ptr_t t_reply;
+        switch( a_request->get_message_op() )
+        {
+            case op_t::run:
+            {
+                t_reply =  __do_run_request( a_request );
+                break;
+            }
+            case op_t::get:
+            {
+                t_reply =  __do_get_request( a_request );
+                break;
+            } // end "get" operation
+            case op_t::set:
+            {
+                t_reply =  __do_set_request( a_request );
+                break;
+            } // end "set" operation
+            case op_t::cmd:
+            {
+                t_reply =  __do_cmd_request( a_request );
+                break;
+            }
+            default:
+                std::stringstream t_error_stream;
+                t_error_stream << "Unrecognized message operation: <" << a_request->get_message_type() << ">";
+                std::string t_error_msg( t_error_stream.str() );
+                LWARN( dlog, t_error_msg );
+                t_reply = a_request->template reply< dl_message_error_invalid_method >( t_error_msg );
+                break;
+        } // end switch on message type
+
+        if( a_request->reply_to().empty() )
+        {
+            LWARN( dlog, "Not sending reply (reply-to empty)\n" <<
+                         "    Return code: " << t_reply->get_return_code() << '\n' <<
+                         "    Return message: " << t_reply->return_msg() << '\n' <<
+                         "    Payload:\n" << t_reply->payload() );
         }
         else
         {
-            switch( a_request->get_message_op() )
-            {
-                case op_t::run:
-                {
-                    t_reply_info =  __do_run_request( a_request, t_reply_pkg );
-                    break;
-                }
-                case op_t::get:
-                {
-                    t_reply_info =  __do_get_request( a_request, t_reply_pkg );
-                    break;
-                } // end "get" operation
-                case op_t::set:
-                {
-                    t_reply_info =  __do_set_request( a_request, t_reply_pkg );
-                    break;
-                } // end "set" operation
-                case op_t::cmd:
-                {
-                    t_reply_info =  __do_cmd_request( a_request, t_reply_pkg );
-                    break;
-                }
-                default:
-                    std::stringstream t_error_stream;
-                    t_error_stream << "Unrecognized message operation: <" << a_request->get_message_type() << ">";
-                    std::string t_error_msg( t_error_stream.str() );
-                    LWARN( dlog, t_error_msg );
-                    t_reply_info = t_reply_pkg.send_reply( retcode_t::message_error_invalid_method, t_error_msg );
-                    break;
-            } // end switch on message type
-            t_reply_info.f_payload = t_reply_pkg.f_payload;
-            return t_reply_info;
+            send_reply( t_reply );
         }
-        // we shouldn't get here
-        return reply_info( false, retcode_t::message_error_invalid_method, "" );
+
+        return;
     }
 
-    bool endpoint::on_reply_message( const reply_ptr_t )
+    void endpoint::send_reply( reply_ptr_t a_reply ) const
+    {
+        LDEBUG( dlog, "Sending reply message to <" << a_reply->routing_key() << ">:\n" <<
+                 "    Return code: " << a_reply->get_return_code() << '\n' <<
+                 "    Return message: " << a_reply->return_msg() <<
+                 "    Payload:\n" << a_reply->payload() );
+
+        if( ! f_service.send( a_reply ) )
+        {
+            LWARN( dlog, "Something went wrong while sending the reply" );
+        }
+        return;
+    }
+
+    void endpoint::on_reply_message( const reply_ptr_t )
     {
         throw dripline_error() << retcode_t::message_error_invalid_method << "Base endpoint does not handle reply messages";
     }
 
-    bool endpoint::on_alert_message( const alert_ptr_t )
+    void endpoint::on_alert_message( const alert_ptr_t )
     {
         throw dripline_error() << retcode_t::message_error_invalid_method << "Base endpoint does not handle alert messages";
     }
 
-    reply_info endpoint::__do_run_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
+    reply_ptr_t endpoint::__do_run_request( const request_ptr_t a_request )
     {
         LDEBUG( dlog, "Run operation request received" );
 
@@ -112,13 +132,13 @@ namespace dripline
             t_conv << a_request->lockout_key();
             std::string t_message( "Request denied due to lockout (key used: " + t_conv.str() + ")" );
             LINFO( dlog, t_message );
-            return a_reply_pkg.send_reply( retcode_t::message_error_access_denied, t_message );;
+            return a_request->template reply< dl_message_error_access_denied >( t_message );
         }
 
-        return do_run_request( a_request, a_reply_pkg );
+        return do_run_request( a_request );
     }
 
-    reply_info endpoint::__do_get_request( request_ptr_t a_request, reply_package& a_reply_pkg )
+    reply_ptr_t endpoint::__do_get_request( request_ptr_t a_request )
     {
         LDEBUG( dlog, "Get operation request received" );
 
@@ -131,13 +151,13 @@ namespace dripline
         if( t_query_type == "is-locked" )
         {
             a_request->parsed_rks().pop_front();
-            return f_service.handle_is_locked_request( a_request, a_reply_pkg );
+            return f_service.handle_is_locked_request( a_request );
         }
 
-        return do_get_request( a_request, a_reply_pkg );
+        return do_get_request( a_request );
     }
 
-    reply_info endpoint::__do_set_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
+    reply_ptr_t endpoint::__do_set_request( const request_ptr_t a_request )
     {
         LDEBUG( dlog, "Set request received" );
 
@@ -147,13 +167,13 @@ namespace dripline
             t_conv << a_request->lockout_key();
             std::string t_message( "Request denied due to lockout (key used: " + t_conv.str() + ")" );
             LINFO( dlog, t_message );
-            return a_reply_pkg.send_reply( retcode_t::message_error_access_denied, t_message );;
+            return a_request->template reply< dl_message_error_access_denied >( t_message );
         }
 
-        return do_set_request( a_request, a_reply_pkg );
+        return do_set_request( a_request );
     }
 
-    reply_info endpoint::__do_cmd_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
+    reply_ptr_t endpoint::__do_cmd_request( const request_ptr_t a_request )
     {
         LDEBUG( dlog, "Cmd request received" );
 
@@ -172,31 +192,31 @@ namespace dripline
             t_conv << a_request->lockout_key();
             std::string t_message( "Request denied due to lockout (key used: " + t_conv.str() + ")" );
             LINFO( dlog, t_message );
-            return a_reply_pkg.send_reply( retcode_t::message_error_access_denied, t_message );;
+            return a_request->template reply< dl_message_error_access_denied >( t_message );
         }
 
         if( t_instruction == "lock" )
         {
             a_request->parsed_rks().pop_front();
-            return f_service.handle_lock_request( a_request, a_reply_pkg );
+            return f_service.handle_lock_request( a_request );
         }
         else if( t_instruction == "unlock" )
         {
             a_request->parsed_rks().pop_front();
-            return f_service.handle_unlock_request( a_request, a_reply_pkg );
+            return f_service.handle_unlock_request( a_request );
         }
         else if( t_instruction == "ping" )
         {
             a_request->parsed_rks().pop_front();
-            return handle_ping_request( a_request, a_reply_pkg );
+            return handle_ping_request( a_request );
         }
         else if( t_instruction == "set_condition" )
         {
             a_request->parsed_rks().pop_front();
-            return f_service.handle_set_condition_request( a_request, a_reply_pkg );
+            return f_service.handle_set_condition_request( a_request );
         }
 
-        return do_cmd_request( a_request, a_reply_pkg );
+        return do_cmd_request( a_request );
     }
 
     bool endpoint::is_locked() const
@@ -214,10 +234,9 @@ namespace dripline
         return f_service.f_lockout_key == a_key;
     }
 
-    reply_info endpoint::handle_ping_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
+    reply_ptr_t endpoint::handle_ping_request( const request_ptr_t a_request )
     {
-        std::string t_sender = a_request->sender_package();
-        return a_reply_pkg.send_reply( retcode_t::success, "Hello, " + t_sender );
+        return a_request->template reply< dl_success >( "Hello, " + a_request->sender_package() );
     }
 
 } /* namespace dripline */

@@ -9,7 +9,7 @@
 #define DRIPLINE_ENDPOINT_HH_
 
 #include "message.hh"
-#include "reply_package.hh"
+#include "return_codes.hh"
 
 namespace dripline
 {
@@ -33,13 +33,13 @@ namespace dripline
             //**************************
 
             /// Directly submit a request message to this endpoint
-            reply_info submit_request_message( const request_ptr_t a_request );
+            void submit_request_message( const request_ptr_t a_request );
 
             /// Directly submit a reply message to this endpoint
-            bool submit_reply_message( const reply_ptr_t a_reply );
+            void submit_reply_message( const reply_ptr_t a_reply );
 
             /// Directly submit an alert message to this endpoint
-            bool submit_alert_message( const alert_ptr_t a_alert );
+            void submit_alert_message( const alert_ptr_t a_alert );
 
         protected:
             //*************************
@@ -47,15 +47,15 @@ namespace dripline
             //*************************
 
             /// Default request handler; passes request to initial request functions
-            virtual reply_info on_request_message( const request_ptr_t a_request );
+            virtual void on_request_message( const request_ptr_t a_request );
 
             /// Default reply handler; throws a dripline_error.
             /// Override this to enable handling of replies.
-            virtual bool on_reply_message( const reply_ptr_t a_reply );
+            virtual void on_reply_message( const reply_ptr_t a_reply );
 
             /// Default alert handler; throws a dripline_error.
             /// Override this to enable handling of alerts.
-            virtual bool on_alert_message( const alert_ptr_t a_alert );
+            virtual void on_alert_message( const alert_ptr_t a_alert );
 
         protected:
             //*************************
@@ -64,10 +64,10 @@ namespace dripline
 
             // Override the relevant function to implement use of that type of message
 
-            virtual reply_info do_run_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            virtual reply_info do_get_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            virtual reply_info do_set_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            virtual reply_info do_cmd_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            virtual reply_ptr_t do_run_request( const request_ptr_t a_request );
+            virtual reply_ptr_t do_get_request( const request_ptr_t a_request );
+            virtual reply_ptr_t do_set_request( const request_ptr_t a_request );
+            virtual reply_ptr_t do_cmd_request( const request_ptr_t a_request );
 
         private:
             //**************************
@@ -77,10 +77,10 @@ namespace dripline
             // Do not override
             // Authentication is checked as necessary, and then request handlers are called
 
-            reply_info __do_run_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            reply_info __do_get_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            reply_info __do_set_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
-            reply_info __do_cmd_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            reply_ptr_t __do_run_request( const request_ptr_t a_request );
+            reply_ptr_t __do_get_request( const request_ptr_t a_request );
+            reply_ptr_t __do_set_request( const request_ptr_t a_request );
+            reply_ptr_t __do_cmd_request( const request_ptr_t a_request );
 
         public:
             //******************
@@ -96,28 +96,30 @@ namespace dripline
             // Request handlers
             //*****************
 
-            reply_info handle_ping_request( const request_ptr_t a_request, reply_package& a_reply_pkg );
+            reply_ptr_t handle_ping_request( const request_ptr_t a_request );
 
+        protected:
+            void send_reply( reply_ptr_t a_reply ) const;
     };
 
-    inline reply_info endpoint::do_run_request( const request_ptr_t, reply_package& a_reply_pkg )
+    inline reply_ptr_t endpoint::do_run_request( const request_ptr_t a_request )
     {
-        return a_reply_pkg.send_reply( retcode_t::device_error, "Unhandled request type: OP_RUN" );;
+        return a_request->template reply< dl_device_error >( "Unhandled request type: OP_RUN" );
     }
 
-    inline reply_info endpoint::do_get_request( const request_ptr_t, reply_package& a_reply_pkg )
+    inline reply_ptr_t endpoint::do_get_request( const request_ptr_t a_request )
     {
-        return a_reply_pkg.send_reply( retcode_t::device_error, "Unhandled request type: OP_GET" );;
+        return a_request->template reply< dl_device_error >( "Unhandled request type: OP_GET" );
     }
 
-    inline reply_info endpoint::do_set_request( const request_ptr_t, reply_package& a_reply_pkg )
+    inline reply_ptr_t endpoint::do_set_request( const request_ptr_t a_request )
     {
-        return a_reply_pkg.send_reply( retcode_t::device_error, "Unhandled request type: OP_SET" );;
+        return a_request->template reply< dl_device_error >( "Unhandled request type: OP_SET" );
     }
 
-    inline reply_info endpoint::do_cmd_request( const request_ptr_t, reply_package& a_reply_pkg )
+    inline reply_ptr_t endpoint::do_cmd_request( const request_ptr_t a_request )
     {
-        return a_reply_pkg.send_reply( retcode_t::device_error, "Unhandled request type: OP_CMD" );;
+        return a_request->template reply< dl_device_error >( "Unhandled request type: OP_CMD" );
     }
 
 } /* namespace dripline */

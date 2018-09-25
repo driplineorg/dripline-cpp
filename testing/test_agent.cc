@@ -31,9 +31,10 @@ TEST_CASE( "sub_agent_get", "[agent]" )
 
     REQUIRE( t_request->get_message_type() == dripline::msg_t::request );
     REQUIRE( t_request->get_message_op() == dripline::op_t::get );
-    REQUIRE( ! t_request->payload().empty() );
-    REQUIRE( t_request->payload().has( "values" ) );
-    REQUIRE( ! t_request->payload().has( "value" ) );
+    REQUIRE( t_request->payload().is_node() );
+    REQUIRE( ! t_request->payload().as_node().empty() );
+    REQUIRE( t_request->payload().as_node().has( "values" ) );
+    REQUIRE( ! t_request->payload().as_node().has( "value" ) );
     REQUIRE( t_request->payload()["values"][0]().as_uint() == 5 );
 }
 
@@ -57,9 +58,10 @@ TEST_CASE( "sub_agent_set", "[agent]" )
 
         REQUIRE( t_request->get_message_type() == dripline::msg_t::request );
         REQUIRE( t_request->get_message_op() == dripline::op_t::set );
-        REQUIRE( ! t_request->payload().empty() );
-        REQUIRE( t_request->payload().has( "values" ) );
-        REQUIRE( ! t_request->payload().has( "value" ) );
+        REQUIRE( t_request->payload().is_node() );
+        REQUIRE( ! t_request->payload().as_node().empty() );
+        REQUIRE( t_request->payload().as_node().has( "values" ) );
+        REQUIRE( ! t_request->payload().as_node().has( "value" ) );
         REQUIRE( t_request->payload()["values"][0]().as_uint() == 5 );
     }
 }
@@ -75,9 +77,10 @@ TEST_CASE( "sub_agent_cmd", "[agent]" )
 
     REQUIRE( t_request->get_message_type() == dripline::msg_t::request );
     REQUIRE( t_request->get_message_op() == dripline::op_t::cmd );
-    REQUIRE( ! t_request->payload().empty() );
-    REQUIRE( ! t_request->payload().has( "values" ) );
-    REQUIRE( t_request->payload().has( "value" ) );
+    REQUIRE( t_request->payload().is_node() );
+    REQUIRE( ! t_request->payload().as_node().empty() );
+    REQUIRE( ! t_request->payload().as_node().has( "values" ) );
+    REQUIRE( t_request->payload().as_node().has( "value" ) );
     REQUIRE( t_request->payload()["value"]().as_uint() == 5 );
 }
 

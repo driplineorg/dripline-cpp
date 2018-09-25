@@ -7,6 +7,8 @@
 
 #include "run_simple_service.hh"
 
+#include "dripline_error.hh"
+
 #include "logger.hh"
 #include "signal_handler.hh"
 

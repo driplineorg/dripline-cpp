@@ -148,20 +148,22 @@ namespace dripline
                 bool t_msg_handled = true;
                 if( t_message->is_request() )
                 {
+                    request_ptr_t t_request = static_pointer_cast< msg_request >( t_message );
                     if( ! set_routing_key_specifier( t_message ) )
                     {
-                        throw dripline_error() << retcode_t::message_error_decoding_fail << "Unable to determine the routing-key specifier; routing key: <" << t_message->routing_key() << ">";
+                        send( t_request->template reply< dl_message_error_decoding_fail >( "Unable to determine the routing-key specifier; routing key: <" + t_message->routing_key() + ">" ) );
+                        //throw dripline_error() << retcode_t::message_error_decoding_fail << "Unable to determine the routing-key specifier; routing key: <" << t_message->routing_key() << ">";
                     }
 
-                    t_msg_handled = on_request_message( static_pointer_cast< msg_request >( t_message ) );
+                    on_request_message( static_pointer_cast< msg_request >( t_message ) );
                 }
                 else if( t_message->is_alert() )
                 {
-                    t_msg_handled = on_alert_message( static_pointer_cast< msg_alert >( t_message ) );
+                    on_alert_message( static_pointer_cast< msg_alert >( t_message ) );
                 }
                 else if( t_message->is_reply() )
                 {
-                    t_msg_handled = on_reply_message( static_pointer_cast< msg_reply >( t_message ) );
+                    on_reply_message( static_pointer_cast< msg_reply >( t_message ) );
                 }
                 if( ! t_msg_handled )
                 {
@@ -170,23 +172,19 @@ namespace dripline
             }
             catch( dripline_error& e )
             {
-                reply_ptr_t t_reply = msg_reply::create( e, t_envelope->Message()->ReplyTo(), message::encoding::json );
-                try
-                {
-                    core::send( t_reply );
-                }
-                catch( amqp_exception& e )
-                {
-                    LERROR( dlog, "AMQP exception caught while sending reply: (" << e.reply_code() << ") " << e.reply_text() );
-                }
-                catch( amqp_lib_exception& e )
-                {
-                    LERROR( dlog, "AMQP Library Exception caught while sending reply: (" << e.ErrorCode() << ") " << e.what() );
-                }
-                catch( std::exception& e )
-                {
-                    LERROR( dlog, "Standard exception caught while sending reply: " << e.what() );
-                }
+                LERROR( dlog, "Dripline exception caught while handling message: " << e.what() );
+            }
+            catch( amqp_exception& e )
+            {
+                LERROR( dlog, "AMQP exception caught while sending reply: (" << e.reply_code() << ") " << e.reply_text() );
+            }
+            catch( amqp_lib_exception& e )
+            {
+                LERROR( dlog, "AMQP Library Exception caught while sending reply: (" << e.ErrorCode() << ") " << e.what() );
+            }
+            catch( std::exception& e )
+            {
+                LERROR( dlog, "Standard exception caught while sending reply: " << e.what() );
             }
 
             if( ! t_channel_valid )
@@ -396,45 +394,48 @@ namespace dripline
         return true;
     }
 
-    reply_info service::handle_lock_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
+    reply_ptr_t service::handle_lock_request( const request_ptr_t a_request )
     {
         uuid_t t_new_key = enable_lockout( a_request->sender_info(), a_request->lockout_key() );
         if( t_new_key.is_nil() )
         {
-            return a_reply_pkg.send_reply( retcode_t::device_error, "Unable to lock server" );;
+            return a_request->template reply< dl_device_error >( "Unable to lock server" );;
         }
 
-        a_reply_pkg.f_payload.add( "key", string_from_uuid( t_new_key ) );
-        return a_reply_pkg.send_reply( retcode_t::success, "Server is now locked" );
+        param_node t_payload_node;
+        t_payload_node.add( "key", string_from_uuid( t_new_key ) );
+        return a_request->template reply< dl_success >( "Server is now locked", t_payload_node );
     }
 
-    reply_info service::handle_unlock_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
+    reply_ptr_t service::handle_unlock_request( const request_ptr_t a_request )
     {
         if( ! is_locked() )
         {
-            return a_reply_pkg.send_reply( retcode_t::warning_no_action_taken, "Already unlocked" );
+            return a_request->template reply< dl_warning_no_action_taken >( "Already unlocked" );
         }
 
         bool t_force = a_request->payload().get_value( "force", false );
 
         if( disable_lockout( a_request->lockout_key(), t_force ) )
         {
-            return a_reply_pkg.send_reply( retcode_t::success, "Server unlocked" );
+            return a_request->template reply< dl_success >( "Server unlocked" );
         }
-        return a_reply_pkg.send_reply( retcode_t::device_error, "Failed to unlock server" );;
+        return a_request->template reply< dl_device_error >( "Failed to unlock server" );;
     }
 
-    reply_info service::handle_set_condition_request( const request_ptr_t a_request, reply_package& a_reply_pkg )
+    reply_ptr_t service::handle_set_condition_request( const request_ptr_t a_request )
     {
-        return this->__do_handle_set_condition_request( a_request, a_reply_pkg );
+        return this->__do_handle_set_condition_request( a_request );
     }
 
-    reply_info service::handle_is_locked_request( const request_ptr_t, reply_package& a_reply_pkg )
+    reply_ptr_t service::handle_is_locked_request( const request_ptr_t a_request )
     {
         bool t_is_locked = is_locked();
-        a_reply_pkg.f_payload.add( "is_locked", t_is_locked );
-        if( t_is_locked ) a_reply_pkg.f_payload.add( "tag", f_lockout_tag );
-        return a_reply_pkg.send_reply( retcode_t::success, "Checked lock status" );
+        scarab::param_ptr_t t_reply_payload( new param_node() );
+        scarab::param_node t_reply_node;
+        t_reply_node.add( "is_locked", t_is_locked );
+        if( t_is_locked ) t_reply_node.add( "tag", f_lockout_tag );
+        return a_request->template reply< dl_success >( "Checked lock status" );
     }
 
 } /* namespace dripline */
