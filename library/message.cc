@@ -44,7 +44,6 @@ namespace dripline
 
     message::message() :
             f_routing_key(),
-            f_rks(),
             f_correlation_id(),
             f_reply_to(),
             f_encoding( encoding::json ),
@@ -56,7 +55,6 @@ namespace dripline
             f_sender_hostname( "N/A" ),
             f_sender_username( "N/A" ),
             f_sender_info(),
-            f_parsed_rks(),
             f_specifier(),
             f_payload()
     {
@@ -211,7 +209,7 @@ namespace dripline
     {
         param_node t_body_node;
         t_body_node.add( "msgtype", to_uint( message_type() ) );
-        t_body_node.add( "specifier", f_specifier );
+        t_body_node.add( "specifier", f_specifier.to_string() );
         t_body_node.add( "timestamp", scarab::get_formatted_now() );
         t_body_node.add( "sender_info", f_sender_info );
         t_body_node.add( "payload", *f_payload );
@@ -256,13 +254,6 @@ namespace dripline
         }
     }
 
-    bool message::set_routing_key_specifier( const std::string& a_rks, const routing_key_specifier& a_parsed_rks )
-    {
-        f_rks = a_rks;
-        f_parsed_rks = a_parsed_rks;
-        return true;
-    }
-
 
 
     //***********
@@ -289,7 +280,7 @@ namespace dripline
         t_request->payload() = a_payload;
         t_request->set_message_op( a_msg_op );
         t_request->routing_key() = a_routing_key;
-        t_request->the_specifier() = a_specifier;
+        t_request->parsed_specifier() = a_specifier;
         t_request->reply_to() = a_reply_to;
         t_request->set_encoding( a_encoding );
         return t_request;
@@ -327,7 +318,7 @@ namespace dripline
         t_reply->return_msg() = a_ret_msg;
         t_reply->payload() = a_payload;
         t_reply->routing_key() = a_routing_key;
-        t_reply->the_specifier() = a_specifier;
+        t_reply->parsed_specifier() = a_specifier;
         t_reply->set_encoding( a_encoding );
         return t_reply;
     }
@@ -359,7 +350,7 @@ namespace dripline
         alert_ptr_t t_alert = make_shared< msg_alert >();
         t_alert->payload() = a_payload;
         t_alert->routing_key() = a_routing_key;
-        t_alert->the_specifier() = a_specifier;
+        t_alert->parsed_specifier() = a_specifier;
         t_alert->set_encoding( a_encoding );
         return t_alert;
     }

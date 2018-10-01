@@ -57,10 +57,6 @@ namespace dripline
             /// If no queue was created, this does nothing.
             bool stop();
 
-        protected:
-            // set the routing key specifier by removing the queue name or broadcast key from the beginning of the routing key
-            bool set_routing_key_specifier( message_ptr_t a_message ) const;
-
         private:
             bool bind_keys( const std::set< std::string >& a_keys );
 

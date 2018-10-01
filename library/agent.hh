@@ -94,6 +94,7 @@ namespace dripline
             mv_referrable( scarab::param_node, config );
 
             mv_referrable( std::string, routing_key );
+            mv_referrable( std::string, specifier );
             mv_referrable( uuid_t, lockout_key );
 
             mv_accessible( reply_ptr_t, reply );

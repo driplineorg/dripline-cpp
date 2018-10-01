@@ -72,8 +72,6 @@ namespace dripline
 
         public:
             mv_referrable( std::string, routing_key );
-            mv_referrable( std::string, rks );
-            //mv_referrable( routing_key_specifier, parsed_rks );
             mv_referrable( std::string, correlation_id );
             mv_referrable( std::string, reply_to );
             mv_accessible( encoding, encoding );
@@ -90,17 +88,11 @@ namespace dripline
             mv_referrable_const( scarab::param_node, sender_info );
 
         protected:
-            mutable routing_key_specifier f_parsed_rks;
             mutable specifier f_specifier;
 
         public:
-            routing_key_specifier& parsed_rks();
-            const routing_key_specifier& parsed_rks() const;
-
-            specifier& the_specifier();
-            const specifier& the_specifier() const;
-
-            bool set_routing_key_specifier( const std::string& a_rks, const routing_key_specifier& a_parsed_rks );
+            specifier& parsed_specifier();
+            const specifier& parsed_specifier() const;
 
             virtual msg_t message_type() const = 0;
 
@@ -298,22 +290,12 @@ namespace dripline
         return;
     }
 
-    inline routing_key_specifier& message::parsed_rks()
-    {
-        return f_parsed_rks;
-    }
-
-    const inline routing_key_specifier& message::parsed_rks() const
-    {
-        return f_parsed_rks;
-    }
-
-    inline specifier& message::the_specifier()
+    inline specifier& message::parsed_specifier()
     {
         return f_specifier;
     }
 
-    inline const specifier& message::the_specifier() const
+    inline const specifier& message::parsed_specifier() const
     {
         return f_specifier;
     }
@@ -378,7 +360,7 @@ namespace dripline
     template< typename x_retcode >
     reply_ptr_t msg_reply::create( const std::string& a_ret_msg, const scarab::param& a_payload, const msg_request& a_request )
     {
-        reply_ptr_t t_reply = msg_reply::create( x_retcode::f_code, a_ret_msg, a_payload, a_request.reply_to(), a_request.get_encoding() );
+        reply_ptr_t t_reply = msg_reply::create( x_retcode::f_code, a_ret_msg, a_payload, a_request.reply_to(), "", a_request.get_encoding() );
         t_reply->correlation_id() = a_request.correlation_id();
         return t_reply;
     }
