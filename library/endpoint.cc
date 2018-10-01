@@ -143,14 +143,14 @@ namespace dripline
         LDEBUG( dlog, "Get operation request received" );
 
         std::string t_query_type;
-        if( ! a_request->parsed_rks().empty() )
+        if( ! a_request->parsed_specifier().empty() )
         {
-            t_query_type = a_request->parsed_rks().front();
+            t_query_type = a_request->parsed_specifier().front();
         }
 
         if( t_query_type == "is-locked" )
         {
-            a_request->parsed_rks().pop_front();
+            a_request->parsed_specifier().pop_front();
             return f_service.handle_is_locked_request( a_request );
         }
 
@@ -178,9 +178,9 @@ namespace dripline
         LDEBUG( dlog, "Cmd request received" );
 
         std::string t_instruction;
-        if( ! a_request->parsed_rks().empty() )
+        if( ! a_request->parsed_specifier().empty() )
         {
-            t_instruction = a_request->parsed_rks().front();
+            t_instruction = a_request->parsed_specifier().front();
         }
 
         //LWARN( mtlog, "uuid string: " << a_request->get_payload().get_value( "key", "") << ", uuid: " << uuid_from_string( a_request->get_payload().get_value( "key", "") ) );
@@ -197,22 +197,22 @@ namespace dripline
 
         if( t_instruction == "lock" )
         {
-            a_request->parsed_rks().pop_front();
+            a_request->parsed_specifier().pop_front();
             return f_service.handle_lock_request( a_request );
         }
         else if( t_instruction == "unlock" )
         {
-            a_request->parsed_rks().pop_front();
+            a_request->parsed_specifier().pop_front();
             return f_service.handle_unlock_request( a_request );
         }
         else if( t_instruction == "ping" )
         {
-            a_request->parsed_rks().pop_front();
+            a_request->parsed_specifier().pop_front();
             return handle_ping_request( a_request );
         }
         else if( t_instruction == "set_condition" )
         {
-            a_request->parsed_rks().pop_front();
+            a_request->parsed_specifier().pop_front();
             return f_service.handle_set_condition_request( a_request );
         }
 

@@ -94,9 +94,8 @@ namespace dripline
         if( a_port != 0 ) f_port = a_port;
     }
 
-    //TODO having this constructor just because bools are 2-state and i can't tell default value from provided value == default
     core::core( const bool a_make_connection, const scarab::param_node& a_config ) :
-            core::core(a_config)
+            core::core( a_config )
     {
         // this constructor overrides the default value of make_connection
         f_make_connection = a_make_connection;

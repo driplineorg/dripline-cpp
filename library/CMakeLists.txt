@@ -18,8 +18,8 @@ set( dripline_HEADERS
     message.hh
     relayer.hh
     return_codes.hh
-    routing_key_specifier.hh
     service.hh
+    specifier.hh
     uuid.hh
 )
 
@@ -35,8 +35,8 @@ set( dripline_SOURCES
     message.cc
     relayer.cc
     return_codes.cc
-    routing_key_specifier.cc
     service.cc
+    specifier.cc
     uuid.cc
 )
 

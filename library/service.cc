@@ -148,13 +148,6 @@ namespace dripline
                 bool t_msg_handled = true;
                 if( t_message->is_request() )
                 {
-                    request_ptr_t t_request = static_pointer_cast< msg_request >( t_message );
-                    if( ! set_routing_key_specifier( t_message ) )
-                    {
-                        send( t_request->template reply< dl_message_error_decoding_fail >( "Unable to determine the routing-key specifier; routing key: <" + t_message->routing_key() + ">" ) );
-                        //throw dripline_error() << retcode_t::message_error_decoding_fail << "Unable to determine the routing-key specifier; routing key: <" << t_message->routing_key() << ">";
-                    }
-
                     on_request_message( static_pointer_cast< msg_request >( t_message ) );
                 }
                 else if( t_message->is_alert() )
@@ -210,38 +203,6 @@ namespace dripline
 
         if( ! remove_queue() ) return false;
 
-        return true;
-    }
-
-
-    bool service::set_routing_key_specifier( message_ptr_t a_message ) const
-    {
-        string t_rk( a_message->routing_key() );
-        string t_prefix;
-        if( t_rk.find( f_name ) == 0 ) t_prefix = f_name;
-        else if( t_rk.find( f_broadcast_key ) == 0 ) t_prefix = f_broadcast_key;
-        else
-        {
-            LWARN( dlog, "Routing key not formatted properly; it does not start with either the queue name (" << f_name << ") or the broadcast key (" << f_broadcast_key << "): <" << t_rk << ">" );
-            return false;
-        }
-
-        if( t_rk == t_prefix )
-        {
-            // rk consists of only the prefix
-            a_message->set_routing_key_specifier( "", routing_key_specifier() );
-            return true;
-        }
-
-        if( t_rk[ t_prefix.size() ] != '.' )
-        {
-            LWARN( dlog, "Routing key not formatted properly; a single '.' does not follow the prefix: <" << t_rk << ">" );
-            return false;
-        }
-
-        t_rk.erase( 0, t_prefix.size() + 1 ); // 1 added to remove the '.' that separates nodes
-        a_message->set_routing_key_specifier( t_rk, routing_key_specifier( t_rk ) );
-        LDEBUG( dlog, "Determined the RKS to be <" << a_message->parsed_rks().to_string() << ">; size = " << a_message->parsed_rks().size() );
         return true;
     }
 

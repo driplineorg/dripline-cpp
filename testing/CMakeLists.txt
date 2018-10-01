@@ -11,6 +11,7 @@ set( testing_SOURCES
     test_agent.cc
     test_lockout.cc
     test_return_codes.cc
+    test_specifier.cc
     use_catch.cc
 )
 
