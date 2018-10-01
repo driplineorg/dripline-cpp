@@ -10,6 +10,10 @@
 
 #include "service.hh"
 
+#include "logger.hh"
+
+LOGGER( rsslog, "run_simple_service" );
+
 namespace dripline
 {
 
@@ -47,7 +51,14 @@ namespace dripline
 
     inline reply_ptr_t run_simple_service::do_cmd_request( const request_ptr_t a_request )
     {
-        return a_request->template reply< dl_success >( "Congrats, you performed an OP_CMD" );
+        // Example of doing something based on the message specifier
+        unsigned t_spec_level = 0;
+        while( ! a_request->parsed_specifier().empty() )
+        {
+            ++t_spec_level;
+            LINFO( rsslog, "Specifier level " << t_spec_level << ": " << a_request->parsed_specifier().front() );
+        }
+        return a_request->template reply< dl_success >( "Congrats, you performed an OP_CMD that had " + std::to_string(t_spec_level) + " levels" );
     }
 
 
