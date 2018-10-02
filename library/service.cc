@@ -121,7 +121,7 @@ namespace dripline
     bool service::listen()
     {
         LINFO( dlog, "Listening for incoming messages on <" << f_name << ">" );
-        //TODO
+
         if ( ! f_make_connection )
         {
             return true;
@@ -162,7 +162,7 @@ namespace dripline
                 }
                 if( ! t_msg_handled )
                 {
-                    throw dripline_error() << retcode_t::message_error << "Message could not be handled";
+                    throw dripline_error() << "Message could not be handled";
                 }
             }
             catch( dripline_error& e )

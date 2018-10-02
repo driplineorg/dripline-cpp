@@ -87,7 +87,7 @@ namespace dripline
     {
         if( ! a_envelope )
         {
-            throw dripline_error() << retcode_t::amqp_error << "Empty envelope received";
+            throw dripline_error() << "Empty envelope received";
         }
         scarab::param_ptr_t t_msg;
         encoding t_encoding;
@@ -98,16 +98,16 @@ namespace dripline
             t_msg = t_input.read_string( a_envelope->Message()->Body() );
             if( ! t_msg )
             {
-                throw dripline_error() << retcode_t::message_error_decoding_fail << "Message body could not be parsed; skipping request";
+                throw dripline_error() << "Message body could not be parsed; skipping request";
             }
             if( ! t_msg->is_node() )
             {
-                throw dripline_error() << retcode_t::message_error_invalid_value << "Message did not parse into a node";
+                throw dripline_error() << "Message did not parse into a node";
             }
         }
         else
         {
-            throw dripline_error() << retcode_t::message_error_decoding_fail << "Unable to parse message with content type <" << a_envelope->Message()->ContentEncoding() << ">";
+            throw dripline_error() << "Unable to parse message with content type <" << a_envelope->Message()->ContentEncoding() << ">";
         }
 
         param_node& t_msg_node = t_msg->as_node();
@@ -165,7 +165,7 @@ namespace dripline
             }
             default:
             {
-                throw dripline_error() << retcode_t::message_error_invalid_method << "Message received with unhandled type: " << t_msg_node["msgtype"]().as_uint();
+                throw dripline_error() << "Message received with unhandled type: " << t_msg_node["msgtype"]().as_uint();
                 break;
             }
         }
@@ -322,16 +322,6 @@ namespace dripline
         t_reply->parsed_specifier() = a_specifier;
         t_reply->set_encoding( a_encoding );
         return t_reply;
-    }
-/*
-    reply_ptr_t msg_reply::create( const reply_package_2& a_reply_package, const std::string& a_routing_key, const std::string& a_specifier, message::encoding a_encoding = encoding::json )
-    {
-        return msg_reply::create( a_reply_package.retcode(), a_reply_package.message(), a_reply_package.payload().clone(), a_routing_key, a_specifier, a_encoding );
-    }
-*/
-    reply_ptr_t msg_reply::create( const dripline_error& a_error, const std::string& a_routing_key, const std::string& a_specifier, message::encoding a_encoding )
-    {
-        return msg_reply::create( to_uint(a_error.retcode()), a_error.what(), param_ptr_t( new param() ), a_routing_key, a_specifier, a_encoding );
     }
 
     msg_t msg_reply::s_message_type = msg_t::reply;

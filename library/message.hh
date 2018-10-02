@@ -170,8 +170,6 @@ namespace dripline
             template< typename x_retcode >
             static reply_ptr_t create( const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const msg_request& a_request );
             static reply_ptr_t create( unsigned a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier = "", message::encoding a_encoding = encoding::json );
-            //static reply_ptr_t create( const reply_package_2& a_reply_package, const std::string& a_routing_key, const std::string& a_specifier = "", message::encoding a_encoding = encoding::json );
-            static reply_ptr_t create( const dripline_error& a_error, const std::string& a_routing_key, const std::string& a_specifier = "", message::encoding a_encoding = encoding::json );
 
             bool is_request() const;
             bool is_reply() const;

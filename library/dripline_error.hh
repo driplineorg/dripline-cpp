@@ -4,8 +4,6 @@
 #include <sstream>
 #include <exception>
 
-#include "dripline_constants.hh"
-
 #include "dripline_api.hh"
 
 namespace dripline
@@ -25,11 +23,8 @@ namespace dripline
 
             virtual const char* what() const throw();
 
-            retcode_t retcode() const;
-
         private:
             std::string f_error;
-            retcode_t f_retcode;
     };
 
     template< class x_streamable >
@@ -51,11 +46,6 @@ namespace dripline
     {
         f_error += std::string( a_fragment );
         return *this;
-    }
-
-    inline retcode_t dripline_error::retcode() const
-    {
-        return f_retcode;
     }
 
 }

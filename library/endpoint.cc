@@ -114,12 +114,12 @@ namespace dripline
 
     void endpoint::on_reply_message( const reply_ptr_t )
     {
-        throw dripline_error() << retcode_t::message_error_invalid_method << "Base endpoint does not handle reply messages";
+        throw dripline_error() << "Base endpoint does not handle reply messages";
     }
 
     void endpoint::on_alert_message( const alert_ptr_t )
     {
-        throw dripline_error() << retcode_t::message_error_invalid_method << "Base endpoint does not handle alert messages";
+        throw dripline_error() << "Base endpoint does not handle alert messages";
     }
 
     reply_ptr_t endpoint::__do_run_request( const request_ptr_t a_request )

@@ -69,18 +69,4 @@ namespace dripline
         return a_os << to_uint( a_msg );
     }
 
-    // Conversion functions for use when a numeric value is needed
-    DRIPLINE_API uint32_t to_uint( retcode_t a_ret )
-    {
-        return static_cast< uint32_t >( a_ret );
-    }
-    DRIPLINE_API retcode_t to_retcode_t( uint32_t a_ret_uint )
-    {
-        return static_cast< retcode_t >( a_ret_uint );
-    }
-    DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, retcode_t a_ret )
-    {
-        return a_os << to_uint( a_ret );
-    }
-
 } /* namespace dripline */
