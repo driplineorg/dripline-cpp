@@ -167,7 +167,7 @@ namespace dripline
         // copy of f_config, which should consist of only the request arguments
         param_ptr_t t_payload_ptr( new param_node( f_agent->config() ) );
 
-        return msg_request::create( *t_payload_ptr, op_t::run, f_agent->routing_key(), f_agent->specifier(), "", message::encoding::json );
+        return msg_request::create( std::move(t_payload_ptr), op_t::run, f_agent->routing_key(), f_agent->specifier(), "", message::encoding::json );
     }
 
     request_ptr_t agent::sub_agent_get::create_request()
@@ -181,7 +181,7 @@ namespace dripline
             t_payload_ptr->as_node().add( "values", t_values_array );
         }
 
-        return msg_request::create( *t_payload_ptr, op_t::get, f_agent->routing_key(), f_agent->specifier(), "", message::encoding::json );
+        return msg_request::create( std::move(t_payload_ptr), op_t::get, f_agent->routing_key(), f_agent->specifier(), "", message::encoding::json );
     }
 
     request_ptr_t agent::sub_agent_set::create_request()
@@ -198,7 +198,7 @@ namespace dripline
         param_ptr_t t_payload_ptr( new param_node() );
         t_payload_ptr->as_node().add( "values", t_values_array );
 
-        return msg_request::create( *t_payload_ptr, op_t::set, f_agent->routing_key(), f_agent->specifier(), "", message::encoding::json );
+        return msg_request::create( std::move(t_payload_ptr), op_t::set, f_agent->routing_key(), f_agent->specifier(), "", message::encoding::json );
     }
 
     request_ptr_t agent::sub_agent_cmd::create_request()
@@ -231,7 +231,7 @@ namespace dripline
         // at this point, all that remains in f_config should be other options that we want to add to the payload node
         t_payload_node.merge( f_agent->config() ); // copy f_config
 
-        return msg_request::create( *t_payload_ptr, op_t::cmd, f_agent->routing_key(), f_agent->specifier(), "", message::encoding::json );
+        return msg_request::create( std::move(t_payload_ptr), op_t::cmd, f_agent->routing_key(), f_agent->specifier(), "", message::encoding::json );
     }
 
 } /* namespace dripline */

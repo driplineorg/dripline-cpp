@@ -17,6 +17,7 @@
 using scarab::authentication;
 using scarab::param_node;
 using scarab::param_value;
+using scarab::param_ptr_t;
 
 using std::static_pointer_cast;
 using std::string;
@@ -364,9 +365,10 @@ namespace dripline
             return a_request->template reply< dl_device_error >( "Unable to lock server" );;
         }
 
-        param_node t_payload_node;
+        param_ptr_t t_payload_ptr( new param_node() );
+        param_node& t_payload_node = t_payload_ptr->as_node();
         t_payload_node.add( "key", string_from_uuid( t_new_key ) );
-        return a_request->template reply< dl_success >( "Server is now locked", t_payload_node );
+        return a_request->template reply< dl_success >( "Server is now locked", std::move(t_payload_ptr) );
     }
 
     reply_ptr_t service::handle_unlock_request( const request_ptr_t a_request )
@@ -394,10 +396,10 @@ namespace dripline
     {
         bool t_is_locked = is_locked();
         scarab::param_ptr_t t_reply_payload( new param_node() );
-        scarab::param_node t_reply_node;
+        scarab::param_node& t_reply_node = t_reply_payload->as_node();
         t_reply_node.add( "is_locked", t_is_locked );
         if( t_is_locked ) t_reply_node.add( "tag", f_lockout_tag );
-        return a_request->template reply< dl_success >( "Checked lock status" );
+        return a_request->template reply< dl_success >( "Checked lock status", std::move(t_reply_payload) );
     }
 
 } /* namespace dripline */
