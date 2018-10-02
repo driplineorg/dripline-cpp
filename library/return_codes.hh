@@ -3,6 +3,17 @@
  *
  *  Created on: Aug 25, 2018
  *      Author: N.S. Oblath
+ *
+ *  How to create a new return code:
+ *
+ *  In your header file:
+ *
+ *      DEFINE_DL_RET_CODE( [name] );
+ *
+ *  In your implementation file:
+ *
+ *      IMPL_DL_RET_CODE( [name], [value] );
+ *
  */
 
 #ifndef DRIPLINE_RETURN_CODES_HH_
