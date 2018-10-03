@@ -9,6 +9,7 @@
 
 namespace dripline
 {
+    /*
     IMPL_DL_RET_CODE( success, 0 );
 
     IMPL_DL_RET_CODE( warning_no_action_taken, 1 );
@@ -39,5 +40,6 @@ namespace dripline
     IMPL_DL_RET_CODE( daq_running, 502 );
 
     IMPL_DL_RET_CODE( unhandled_exception, 999 );
+    */
 
 } /* namespace dripline */

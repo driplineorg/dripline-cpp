@@ -359,13 +359,13 @@ namespace dripline
     template< typename x_retcode >
     reply_ptr_t msg_reply::create( const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier, message::encoding a_encoding )
     {
-        return msg_reply::create( x_retcode::f_code, a_ret_msg, std::move(a_payload), a_routing_key, a_specifier, a_encoding );
+        return msg_reply::create( x_retcode::value, a_ret_msg, std::move(a_payload), a_routing_key, a_specifier, a_encoding );
     }
 
     template< typename x_retcode >
     reply_ptr_t msg_reply::create( const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const msg_request& a_request )
     {
-        reply_ptr_t t_reply = msg_reply::create( x_retcode::f_code, a_ret_msg, std::move(a_payload), a_request.reply_to(), "", a_request.get_encoding() );
+        reply_ptr_t t_reply = msg_reply::create( x_retcode::value, a_ret_msg, std::move(a_payload), a_request.reply_to(), "", a_request.get_encoding() );
         t_reply->correlation_id() = a_request.correlation_id();
         return t_reply;
     }

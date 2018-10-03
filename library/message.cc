@@ -301,7 +301,7 @@ namespace dripline
 
     msg_reply::msg_reply() :
             message(),
-            f_return_code( dl_success::f_code ),
+            f_return_code( dl_success::value ),
             f_return_msg(),
             f_return_buffer()
     {
