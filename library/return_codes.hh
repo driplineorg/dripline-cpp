@@ -21,8 +21,76 @@
 
 #include "dripline_api.hh"
 
+#include <type_traits>
+
 namespace dripline
 {
+    // unique type check
+    template< typename T, typename FirstType, typename... OtherTypes  > struct mp_is_unique_impl;
+
+    template< typename T, typename FirstType > struct mp_is_unique_impl< T, FirstType >
+    {
+        static const bool value = ! std::is_same< T, FirstType >::value;
+    };
+
+    template< typename T, typename FirstType, typename... OtherTypes  > struct mp_is_unique_impl
+    {
+        static const bool value = std::is_same< T, FirstType >::value ? false : mp_is_unique_impl< T, OtherTypes... >::value;
+    };
+
+    template< typename T, typename FirstType, typename... OtherTypes >
+    struct mp_is_unique : std::integral_constant< bool, mp_is_unique_impl< T, FirstType, OtherTypes... >::value >
+    {};
+
+    // type list
+    template< typename... Types > struct mp_list {};
+
+    // appending
+    template< typename T, typename... ListItems > struct mp_append_impl;
+
+    template< typename T >
+    struct mp_append_impl< T, mp_list<> >
+    {
+        using type = mp_list< T >;
+    };
+
+    template< typename T, typename... ListItems >
+    struct mp_append_impl< T, mp_list< ListItems... > >
+    {
+        static_assert(mp_is_unique< T, ListItems... >::value, "Non-unique return code found");
+        using type = mp_list< T, ListItems... >;
+    };
+
+    template< typename T, typename List >
+    using mp_append = typename mp_append_impl< T, List >::type;
+
+    // for debug printing
+    template< typename T > struct debug_t;
+
+
+    // test implementation
+
+    using rc_list_void = mp_list<>;
+#define RC_LIST rc_list_void
+
+    typedef std::integral_constant< unsigned, 0 > success_t;
+    using rc_list_success_t = mp_append< success_t, RC_LIST >;
+#undef RC_LIST
+#define RC_LIST rc_list_success_t
+
+    typedef std::integral_constant< unsigned, 1 > warning_t;
+    using rc_list_warning_t = mp_append< warning_t, RC_LIST >;
+#undef RC_LIST
+#define RC_LIST rc_list_warning_t
+
+/*    // this should fail
+    typedef std::integral_constant< unsigned, 1 > duplicate_t;
+    using rc_list_duplicate_t = mp_append< duplicate_t, RC_LIST >;
+#undef RC_LIST
+#define RC_LIST rc_list_duplicate_t
+    //debug_t< RC_LIST > d;
+*/
+
 
     struct DRIPLINE_API return_code
     {
