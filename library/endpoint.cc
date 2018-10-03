@@ -48,7 +48,7 @@ namespace dripline
         if( ! a_request->get_lockout_key_valid() )
         {
             LWARN( dlog, "Message had an invalid lockout key" );
-            send_reply( a_request->reply< dl_message_error_invalid_key >( "Lockout key could not be parsed" ) );
+            send_reply( a_request->reply( dl_message_error_invalid_key(), "Lockout key could not be parsed" ) );
         }
 
         reply_ptr_t t_reply;
@@ -79,7 +79,7 @@ namespace dripline
                 t_error_stream << "Unrecognized message operation: <" << a_request->get_message_type() << ">";
                 std::string t_error_msg( t_error_stream.str() );
                 LWARN( dlog, t_error_msg );
-                t_reply = a_request->template reply< dl_message_error_invalid_method >( t_error_msg );
+                t_reply = a_request->reply( dl_message_error_invalid_method(), t_error_msg );
                 break;
         } // end switch on message type
 
@@ -132,7 +132,7 @@ namespace dripline
             t_conv << a_request->lockout_key();
             std::string t_message( "Request denied due to lockout (key used: " + t_conv.str() + ")" );
             LINFO( dlog, t_message );
-            return a_request->template reply< dl_message_error_access_denied >( t_message );
+            return a_request->reply( dl_message_error_access_denied(), t_message );
         }
 
         return do_run_request( a_request );
@@ -167,7 +167,7 @@ namespace dripline
             t_conv << a_request->lockout_key();
             std::string t_message( "Request denied due to lockout (key used: " + t_conv.str() + ")" );
             LINFO( dlog, t_message );
-            return a_request->template reply< dl_message_error_access_denied >( t_message );
+            return a_request->reply( dl_message_error_access_denied(), t_message );
         }
 
         return do_set_request( a_request );
@@ -192,7 +192,7 @@ namespace dripline
             t_conv << a_request->lockout_key();
             std::string t_message( "Request denied due to lockout (key used: " + t_conv.str() + ")" );
             LINFO( dlog, t_message );
-            return a_request->template reply< dl_message_error_access_denied >( t_message );
+            return a_request->reply( dl_message_error_access_denied(), t_message );
         }
 
         if( t_instruction == "lock" )
@@ -236,7 +236,7 @@ namespace dripline
 
     reply_ptr_t endpoint::handle_ping_request( const request_ptr_t a_request )
     {
-        return a_request->template reply< dl_success >( "Hello, " + a_request->sender_package() );
+        return a_request->reply( dl_success(), "Hello, " + a_request->sender_package() );
     }
 
 } /* namespace dripline */

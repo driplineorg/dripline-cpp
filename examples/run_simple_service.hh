@@ -35,18 +35,18 @@ namespace dripline
 
     inline reply_ptr_t run_simple_service::do_run_request( const request_ptr_t a_request )
     {
-        return a_request->template reply< dl_success >( "Congrats, you performed an OP_RUN" );
+        return a_request->reply( dl_success(), "Congrats, you performed an OP_RUN" );
     }
 
     inline reply_ptr_t run_simple_service::do_get_request( const request_ptr_t a_request )
     {
-        return a_request->template reply< dl_success >( "Congrats, you performed an OP_GET" );
+        return a_request->reply( dl_success(), "Congrats, you performed an OP_GET" );
 
     }
 
     inline reply_ptr_t run_simple_service::do_set_request( const request_ptr_t a_request )
     {
-        return a_request->template reply< dl_success >( "Congrats, you performed an OP_SET" );
+        return a_request->reply( dl_success(), "Congrats, you performed an OP_SET" );
     }
 
     inline reply_ptr_t run_simple_service::do_cmd_request( const request_ptr_t a_request )
@@ -58,7 +58,7 @@ namespace dripline
             ++t_spec_level;
             LINFO( rsslog, "Specifier level " << t_spec_level << ": " << a_request->parsed_specifier().front() );
         }
-        return a_request->template reply< dl_success >( "Congrats, you performed an OP_CMD that had " + std::to_string(t_spec_level) + " levels" );
+        return a_request->reply( dl_success(), "Congrats, you performed an OP_CMD that had " + std::to_string(t_spec_level) + " levels" );
     }
 
 

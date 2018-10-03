@@ -12,6 +12,7 @@
 TEST_CASE( "return_codes", "[core]" )
 {
     dripline::dl_success t_rc;
-    REQUIRE( t_rc.retcode() == 0 );
+    REQUIRE( t_rc.rc_value() == 0 );
+    REQUIRE( t_rc.rc_value() == dripline::dl_success::value );
 }
 

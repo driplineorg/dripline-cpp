@@ -362,29 +362,29 @@ namespace dripline
         uuid_t t_new_key = enable_lockout( a_request->sender_info(), a_request->lockout_key() );
         if( t_new_key.is_nil() )
         {
-            return a_request->template reply< dl_device_error >( "Unable to lock server" );;
+            return a_request->reply( dl_device_error(), "Unable to lock server" );;
         }
 
         param_ptr_t t_payload_ptr( new param_node() );
         param_node& t_payload_node = t_payload_ptr->as_node();
         t_payload_node.add( "key", string_from_uuid( t_new_key ) );
-        return a_request->template reply< dl_success >( "Server is now locked", std::move(t_payload_ptr) );
+        return a_request->reply( dl_success(), "Server is now locked", std::move(t_payload_ptr) );
     }
 
     reply_ptr_t service::handle_unlock_request( const request_ptr_t a_request )
     {
         if( ! is_locked() )
         {
-            return a_request->template reply< dl_warning_no_action_taken >( "Already unlocked" );
+            return a_request->reply( dl_warning_no_action_taken(), "Already unlocked" );
         }
 
         bool t_force = a_request->payload().get_value( "force", false );
 
         if( disable_lockout( a_request->lockout_key(), t_force ) )
         {
-            return a_request->template reply< dl_success >( "Server unlocked" );
+            return a_request->reply( dl_success(), "Server unlocked" );
         }
-        return a_request->template reply< dl_device_error >( "Failed to unlock server" );;
+        return a_request->reply( dl_device_error(), "Failed to unlock server" );;
     }
 
     reply_ptr_t service::handle_set_condition_request( const request_ptr_t a_request )
@@ -399,7 +399,7 @@ namespace dripline
         scarab::param_node& t_reply_node = t_reply_payload->as_node();
         t_reply_node.add( "is_locked", t_is_locked );
         if( t_is_locked ) t_reply_node.add( "tag", f_lockout_tag );
-        return a_request->template reply< dl_success >( "Checked lock status", std::move(t_reply_payload) );
+        return a_request->reply( dl_success(), "Checked lock status", std::move(t_reply_payload) );
     }
 
 } /* namespace dripline */

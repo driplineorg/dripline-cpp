@@ -23,6 +23,7 @@
 namespace dripline
 {
     class dripline_error;
+    struct return_code;
 
     class message;
     class msg_request;
@@ -137,8 +138,7 @@ namespace dripline
             bool is_reply() const;
             bool is_alert() const;
 
-            template< typename x_retcode >
-            reply_ptr_t reply( const std::string& a_ret_msg, scarab::param_ptr_t a_payload = scarab::param_ptr_t( new scarab::param() ) ) const;
+            reply_ptr_t reply(  const return_code& a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload = scarab::param_ptr_t( new scarab::param() ) ) const;
 
         private:
             bool derived_modify_amqp_message( amqp_message_ptr t_amqp_msg ) const;
@@ -165,11 +165,9 @@ namespace dripline
             msg_reply();
             virtual ~msg_reply();
 
-            template< typename x_retcode >
-            static reply_ptr_t create( const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier = "", message::encoding a_encoding = encoding::json );
-            template< typename x_retcode >
-            static reply_ptr_t create( const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const msg_request& a_request );
-            static reply_ptr_t create( unsigned a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier = "", message::encoding a_encoding = encoding::json );
+            static reply_ptr_t create( const return_code& a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier = "", message::encoding a_encoding = encoding::json );
+            static reply_ptr_t create( const return_code& a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const msg_request& a_request );
+            static reply_ptr_t create( unsigned a_retcode_value, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier = "", message::encoding a_encoding = encoding::json );
 
             bool is_request() const;
             bool is_reply() const;
@@ -345,10 +343,9 @@ namespace dripline
         return true;
     }
 
-    template< typename x_retcode >
-    inline reply_ptr_t msg_request::reply( const std::string& a_ret_msg, scarab::param_ptr_t a_payload ) const
+    inline reply_ptr_t msg_request::reply( const return_code& a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload ) const
     {
-        return msg_reply::create< x_retcode >( a_ret_msg, std::move(a_payload), *this );
+        return msg_reply::create( a_retcode, a_ret_msg, std::move(a_payload), *this );
     }
 
 
@@ -356,16 +353,9 @@ namespace dripline
     // Reply
     //*********
 
-    template< typename x_retcode >
-    reply_ptr_t msg_reply::create( const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier, message::encoding a_encoding )
+    inline reply_ptr_t msg_reply::create( const return_code& a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const msg_request& a_request )
     {
-        return msg_reply::create( x_retcode::value, a_ret_msg, std::move(a_payload), a_routing_key, a_specifier, a_encoding );
-    }
-
-    template< typename x_retcode >
-    reply_ptr_t msg_reply::create( const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const msg_request& a_request )
-    {
-        reply_ptr_t t_reply = msg_reply::create( x_retcode::value, a_ret_msg, std::move(a_payload), a_request.reply_to(), "", a_request.get_encoding() );
+        reply_ptr_t t_reply = msg_reply::create( a_retcode, a_ret_msg, std::move(a_payload), a_request.reply_to(), "", a_request.get_encoding() );
         t_reply->correlation_id() = a_request.correlation_id();
         return t_reply;
     }

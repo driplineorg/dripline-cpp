@@ -118,7 +118,7 @@ namespace dripline
 
     inline reply_ptr_t service::__do_handle_set_condition_request( const request_ptr_t a_request )
     {
-        return a_request->template reply< dl_success >( "No action taken (this is the default method)" );
+        return a_request->reply( dl_success(), "No action taken (this is the default method)" );
     }
 
 } /* namespace dripline */

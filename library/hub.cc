@@ -117,7 +117,7 @@ namespace dripline
         catch( std::out_of_range& e )
         {
             LWARN( dlog, "GET query type <" << t_query_type << "> was not understood (" << e.what() << ")" );
-            return a_request->template reply< dl_message_error_bad_payload >( "Unrecognized query type or no query type provided: <" + t_query_type + ">" );;
+            return a_request->reply( dl_message_error_bad_payload(), "Unrecognized query type or no query type provided: <" + t_query_type + ">" );;
         }
     }
 
@@ -133,7 +133,7 @@ namespace dripline
         catch( std::out_of_range& e )
         {
             LWARN( dlog, "SET request <" << t_set_type << "> not understood (" << e.what() << ")" );
-            return a_request->template reply< dl_message_error_bad_payload >( "Unrecognized set request type or no set request type provided: <" + t_set_type + ">" );
+            return a_request->reply( dl_message_error_bad_payload(), "Unrecognized set request type or no set request type provided: <" + t_set_type + ">" );
         }
     }
 
@@ -151,7 +151,7 @@ namespace dripline
         catch( std::out_of_range& e )
         {
             LWARN( dlog, "CMD instruction <" << t_instruction << "> not understood (" << e.what() << ")" );
-            return a_request->template reply< dl_message_error_bad_payload >( "Instruction <" + t_instruction + "> not understood" );;
+            return a_request->reply( dl_message_error_bad_payload(), "Instruction <" + t_instruction + "> not understood" );;
         }
     }
 

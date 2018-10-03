@@ -37,7 +37,7 @@ namespace dripline
     struct DRIPLINE_API return_code
     {
         virtual ~return_code() {};
-        virtual unsigned retcode() const = 0;
+        virtual unsigned rc_value() const = 0;
     };
 
     // Macros for defining new return codes
@@ -47,7 +47,7 @@ namespace dripline
     struct DRIPLINE_API dl_##name : public return_code, public std::integral_constant< unsigned, the_value > \
     { \
         virtual ~dl_##name() {} \
-        virtual unsigned retcode() const { return dl_##name::value; } \
+        virtual unsigned rc_value() const { return dl_##name::value; } \
     }; \
     using NEW_RC_LIST(name) = scarab::unique_append< std::integral_constant< unsigned, the_value >, RC_LIST >;
 
