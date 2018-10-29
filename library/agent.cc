@@ -10,6 +10,7 @@
 
 #include "agent.hh"
 
+#include "agent_config.hh"
 #include "dripline_constants.hh"
 #include "dripline_version.hh"
 #include "core.hh"
@@ -38,26 +39,54 @@ namespace dripline
     LOGGER( dlog, "agent" );
 
     agent::agent() :
-            f_config(),
+            scarab::main_app(),
+            //f_config(),
             f_routing_key(),
             f_specifier(),
             f_lockout_key( generate_nil_uuid() ),
             f_reply(),
             f_return( 0 )
     {
+        require_subcommand(); // we use subcommands here
+        fallthrough(); // pass any options not handled by the subcommands to the main app (this)
+
+        // subcommands
+        scarab::app* t_agent_run = add_subcommand( "run", "Send an OP_RUN request" );
+        t_agent_run->callback(
+                [this]() { this->execute< agent::sub_agent_run >(); }
+        );
+
+        scarab::app* t_agent_get = add_subcommand( "get", "Send an OP_GET request" );
+        t_agent_get->callback(
+                [this]() { this->execute< agent::sub_agent_get >(); }
+        );
+
+        scarab::app* t_agent_set = add_subcommand( "set", "Send an OP_SET request" );
+        t_agent_set->callback(
+                [this]() { this->execute< agent::sub_agent_set >(); }
+        );
+
+        scarab::app* t_agent_cmd = add_subcommand( "cmd", "Send an OP_CMD request" );
+        t_agent_cmd->callback(
+                [this]() { this->execute< agent::sub_agent_cmd>(); }
+        );
+
+        f_default_config = agent_config(); // load the default config
+
+        add_option( "-b,--broker", [&](std::vector< std::string > args){ set_opt_broker( args[0] ); return true; }, "Set the dripline broker" );
     }
 
     agent::~agent()
     {
     }
 
-    void agent::sub_agent::execute( const param_node& a_node )
+    void agent::sub_agent::execute( const scarab::param_node& a_config )
     {
         LINFO( dlog, "Creating request" );
 
         // create a copy of the config that will be pared down by removing expected elements
-        param_node& t_config = f_agent->config();
-        t_config = a_node;
+        param_node t_config( a_config ); //f_agent->config();
+        //t_config = a_node;
 
         param_node t_amqp_node;
         unsigned t_timeout = 0;
@@ -94,7 +123,7 @@ namespace dripline
         t_config.erase( "save" );
 
         // create the request
-        request_ptr_t t_request = this->create_request();
+        request_ptr_t t_request = this->create_request( t_config );
 
         if( ! t_request )
         {
@@ -162,38 +191,38 @@ namespace dripline
         return;
     }
 
-    request_ptr_t agent::sub_agent_run::create_request()
+    request_ptr_t agent::sub_agent_run::create_request( scarab::param_node& a_config )
     {
-        // copy of f_config, which should consist of only the request arguments
-        param_ptr_t t_payload_ptr( new param_node( f_agent->config() ) );
+        // copy of a_config, which should consist of only the request arguments
+        param_ptr_t t_payload_ptr( new param_node( a_config ) );
 
         return msg_request::create( std::move(t_payload_ptr), op_t::run, f_agent->routing_key(), f_agent->specifier(), "", message::encoding::json );
     }
 
-    request_ptr_t agent::sub_agent_get::create_request()
+    request_ptr_t agent::sub_agent_get::create_request( scarab::param_node& a_config )
     {
         param_ptr_t t_payload_ptr( new param_node() );
 
-        if( f_agent->config().has( "value" ) )
+        if( a_config.has( "value" ) )
         {
             param_array t_values_array;
-            t_values_array.push_back( f_agent->config().remove( "value" ) );
+            t_values_array.push_back( a_config.remove( "value" ) );
             t_payload_ptr->as_node().add( "values", t_values_array );
         }
 
         return msg_request::create( std::move(t_payload_ptr), op_t::get, f_agent->routing_key(), f_agent->specifier(), "", message::encoding::json );
     }
 
-    request_ptr_t agent::sub_agent_set::create_request()
+    request_ptr_t agent::sub_agent_set::create_request( scarab::param_node& a_config )
     {
-        if( ! f_agent->config().has( "value" ) )
+        if( ! a_config.has( "value" ) )
         {
             LERROR( dlog, "No \"value\" option given" );
             return nullptr;
         }
 
         param_array t_values_array;
-        t_values_array.push_back( f_agent->config().remove( "value" ) );
+        t_values_array.push_back( a_config.remove( "value" ) );
 
         param_ptr_t t_payload_ptr( new param_node() );
         t_payload_ptr->as_node().add( "values", t_values_array );
@@ -201,21 +230,21 @@ namespace dripline
         return msg_request::create( std::move(t_payload_ptr), op_t::set, f_agent->routing_key(), f_agent->specifier(), "", message::encoding::json );
     }
 
-    request_ptr_t agent::sub_agent_cmd::create_request()
+    request_ptr_t agent::sub_agent_cmd::create_request( scarab::param_node& a_config )
     {
         param_ptr_t t_payload_ptr( new param_node() );
         param_node& t_payload_node = t_payload_ptr->as_node();
 
         // for the load instruction, the instruction node should be replaced by the contents of the file specified
-        if( f_agent->config().has( "load" ) )
+        if( a_config.has( "load" ) )
         {
-            if( ! f_agent->config()["load"].as_node().has( "json" ) )
+            if( ! a_config["load"].as_node().has( "json" ) )
             {
                 LERROR( dlog, "Load instruction did not contain a valid file type");
                 return nullptr;
             }
 
-            std::string t_load_filename( f_agent->config()["load"]().as_string() );
+            std::string t_load_filename( a_config["load"]().as_string() );
             scarab::param_translator t_translator;
             scarab::param_ptr_t t_node_from_file = t_translator.read_file( t_load_filename );
             if( t_node_from_file == nullptr || ! t_node_from_file->is_node() )
@@ -225,11 +254,11 @@ namespace dripline
             }
 
             t_payload_node.merge( t_node_from_file->as_node() );
-            f_agent->config().erase( "load" );
+            a_config.erase( "load" );
         }
 
-        // at this point, all that remains in f_config should be other options that we want to add to the payload node
-        t_payload_node.merge( f_agent->config() ); // copy f_config
+        // at this point, all that remains in a_config should be other options that we want to add to the payload node
+        t_payload_node.merge( a_config ); // copy a_config
 
         return msg_request::create( std::move(t_payload_ptr), op_t::cmd, f_agent->routing_key(), f_agent->specifier(), "", message::encoding::json );
     }
