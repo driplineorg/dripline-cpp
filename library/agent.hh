@@ -27,13 +27,12 @@
 
 #include "message.hh"
 
-#include "application.hh"
 #include "param.hh"
 
 
 namespace dripline
 {
-    class DRIPLINE_API agent : public scarab::main_app
+    class DRIPLINE_API agent
     {
         public:
             class sub_agent
@@ -92,7 +91,7 @@ namespace dripline
             virtual ~agent();
 
             template< typename sub_agent_type >
-            void execute();
+            void execute( const scarab::param_node& a_config );
 
             //mv_referrable( scarab::param_node, config );
 
@@ -104,16 +103,17 @@ namespace dripline
 
             mv_accessible( int, return );
 
+            // TODO: remove this
         public:
             void set_opt_broker( const std::string& a_broker );
 
     };
 
     template< typename sub_agent_type >
-    void agent::execute()
+    void agent::execute( const scarab::param_node& a_config )
     {
         sub_agent_type t_sub_agent( this );
-        t_sub_agent.execute( f_master_config );
+        t_sub_agent.execute( a_config );
         return;
     }
 

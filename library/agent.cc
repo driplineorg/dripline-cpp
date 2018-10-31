@@ -39,41 +39,12 @@ namespace dripline
     LOGGER( dlog, "agent" );
 
     agent::agent() :
-            scarab::main_app(),
-            //f_config(),
             f_routing_key(),
             f_specifier(),
             f_lockout_key( generate_nil_uuid() ),
             f_reply(),
             f_return( 0 )
     {
-        require_subcommand(); // we use subcommands here
-        fallthrough(); // pass any options not handled by the subcommands to the main app (this)
-
-        // subcommands
-        scarab::app* t_agent_run = add_subcommand( "run", "Send an OP_RUN request" );
-        t_agent_run->callback(
-                [this]() { this->execute< agent::sub_agent_run >(); }
-        );
-
-        scarab::app* t_agent_get = add_subcommand( "get", "Send an OP_GET request" );
-        t_agent_get->callback(
-                [this]() { this->execute< agent::sub_agent_get >(); }
-        );
-
-        scarab::app* t_agent_set = add_subcommand( "set", "Send an OP_SET request" );
-        t_agent_set->callback(
-                [this]() { this->execute< agent::sub_agent_set >(); }
-        );
-
-        scarab::app* t_agent_cmd = add_subcommand( "cmd", "Send an OP_CMD request" );
-        t_agent_cmd->callback(
-                [this]() { this->execute< agent::sub_agent_cmd>(); }
-        );
-
-        f_default_config = agent_config(); // load the default config
-
-        add_option( "-b,--broker", [&](std::vector< std::string > args){ set_opt_broker( args[0] ); return true; }, "Set the dripline broker" );
     }
 
     agent::~agent()
