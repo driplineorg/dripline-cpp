@@ -191,57 +191,72 @@ namespace dripline
 
     amqp_message_ptr message::create_amqp_message() const
     {
-        string t_body;
-        if( ! encode_message_body( t_body ) )
+        try
         {
-            LERROR( dlog, "Unable to encode message body" );
+            string t_body;
+            encode_message_body( t_body );
+            amqp_message_ptr t_message = AmqpClient::BasicMessage::Create( t_body );
+
+            t_message->ContentEncoding( interpret_encoding() );
+            t_message->CorrelationId( f_correlation_id );
+            t_message->ReplyTo( f_reply_to );
+
+            using AmqpClient::Table;
+            using AmqpClient::TableEntry;
+            using AmqpClient::TableValue;
+
+            Table t_sender_info;
+            t_sender_info.insert( TableEntry( "package", f_sender_info["package"]().to_string() ) );
+            t_sender_info.insert( TableEntry( "exe", f_sender_info["exe"]().to_string() ) );
+            t_sender_info.insert( TableEntry( "version", f_sender_info["version"]().to_string() ) );
+            t_sender_info.insert( TableEntry( "commit", f_sender_info["commit"]().to_string() ) );
+            t_sender_info.insert( TableEntry( "hostname", f_sender_info["hostname"]().to_string() ) );
+            t_sender_info.insert( TableEntry( "username", f_sender_info["username"]().to_string() ) );
+            t_sender_info.insert( TableEntry( "service_name", f_sender_info["service_name"]().to_string() ) );
+
+            Table t_properties;
+            t_properties.insert( TableEntry( "msgtype", TableValue(to_uint(message_type())) ) );
+            t_properties.insert( TableEntry( "specifier", TableValue(f_specifier.to_string()) ) );
+            t_properties.insert( TableEntry( "timestamp", TableValue(scarab::get_formatted_now()) ) );
+            t_properties.insert( TableEntry( "sender_info", t_sender_info ) );
+
+            this->derived_modify_amqp_message( t_message, t_properties );
+
+            t_message->HeaderTable( t_properties );
+
+            return t_message;
+        }
+        catch( dripline_error& e )
+        {
+            LERROR( dlog, e.what() );
             return amqp_message_ptr();
         }
-
-        amqp_message_ptr t_message = AmqpClient::BasicMessage::Create( t_body );
-        t_message->ContentEncoding( interpret_encoding() );
-        t_message->CorrelationId( f_correlation_id );
-        t_message->ReplyTo( f_reply_to );
-        this->derived_modify_amqp_message( t_message );
-
-        return t_message;
     }
 
-    bool message::encode_message_body( std::string& a_body ) const
+    void message::encode_message_body( std::string& a_body ) const
     {
-        param_node t_body_node;
-        t_body_node.add( "msgtype", to_uint( message_type() ) );
-        t_body_node.add( "specifier", f_specifier.to_string() );
-        t_body_node.add( "timestamp", scarab::get_formatted_now() );
-        t_body_node.add( "sender_info", f_sender_info );
-        t_body_node.add( "payload", *f_payload );
-
-        if( ! this->derived_modify_message_body( t_body_node ) )
-        {
-            LERROR( dlog, "Something went wrong in the derived-class modify_body_message function" );
-            return false;
-        }
+        ///t_body_node.add( "msgtype", to_uint( message_type() ) );
+        ///t_body_node.add( "specifier", f_specifier.to_string() );
+        //t_body_node.add( "timestamp", scarab::get_formatted_now() );
+        ///t_body_node.add( "sender_info", f_sender_info );
+        ///t_body_node.add( "payload", *f_payload );
 
         switch( f_encoding )
         {
             case encoding::json:
             {
                 param_output_json t_output;
-                if( ! t_output.write_string( t_body_node, a_body ) )
+                if( ! t_output.write_string( *f_payload, a_body ) )
                 {
-                    LERROR( dlog, "Could not convert message body to string" );
-                    return false;
+                    throw dripline_error() << "Could not convert message body to string";
                 }
-                return true;
                 break;
             }
             default:
-                LERROR( dlog, "Cannot encode using <" << interpret_encoding() << "> (" << f_encoding << ")" );
-                return false;
+                throw dripline_error() << "Cannot encode using <" << interpret_encoding() << "> (" << f_encoding << ")";
                 break;
         }
-        // should not get here
-        return false;
+        return;
     }
 
     string message::interpret_encoding() const

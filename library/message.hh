@@ -63,11 +63,10 @@ namespace dripline
             amqp_message_ptr create_amqp_message() const;
 
             /// from message object to string
-            bool encode_message_body( std::string& a_body ) const;
+            void encode_message_body( std::string& a_body ) const;
 
         protected:
-            virtual bool derived_modify_amqp_message( amqp_message_ptr t_amqp_msg ) const = 0;
-            virtual bool derived_modify_message_body( scarab::param_node& a_node ) const = 0;
+            virtual void derived_modify_amqp_message( amqp_message_ptr t_amqp_msg, AmqpClient::Table& t_properties ) const = 0;
 
             std::string interpret_encoding() const;
 
@@ -141,8 +140,7 @@ namespace dripline
             reply_ptr_t reply(  const return_code& a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload = scarab::param_ptr_t( new scarab::param() ) ) const;
 
         private:
-            bool derived_modify_amqp_message( amqp_message_ptr t_amqp_msg ) const;
-            bool derived_modify_message_body( scarab::param_node& a_node ) const;
+            void derived_modify_amqp_message( amqp_message_ptr t_amqp_msg, AmqpClient::Table& t_properties ) const;
 
         public:
             virtual msg_t message_type() const;
@@ -174,8 +172,7 @@ namespace dripline
             bool is_alert() const;
 
         private:
-            bool derived_modify_amqp_message( amqp_message_ptr t_amqp_msg ) const;
-            bool derived_modify_message_body( scarab::param_node& a_node ) const;
+            void derived_modify_amqp_message( amqp_message_ptr t_amqp_msg, AmqpClient::Table& t_properties ) const;
 
         public:
             virtual msg_t message_type() const;
@@ -206,8 +203,7 @@ namespace dripline
             bool is_alert() const;
 
         private:
-            bool derived_modify_amqp_message( amqp_message_ptr t_amqp_msg ) const;
-            bool derived_modify_message_body( scarab::param_node& a_node ) const;
+            void derived_modify_amqp_message( amqp_message_ptr t_amqp_msg, AmqpClient::Table& t_properties ) const;
 
         public:
             virtual msg_t message_type() const;
@@ -331,16 +327,11 @@ namespace dripline
         return false;
     }
 
-    inline bool msg_request::derived_modify_amqp_message( amqp_message_ptr /*a_amqp_msg*/ ) const
+    inline void msg_request::derived_modify_amqp_message( amqp_message_ptr /*a_amqp_msg*/, AmqpClient::Table& a_properties ) const
     {
-        return true;
-    }
-
-    inline bool msg_request::derived_modify_message_body( scarab::param_node& a_node ) const
-    {
-        a_node.add( "msgop", to_uint(f_message_op) );
-        a_node.add( "lockout_key", string_from_uuid( lockout_key() ) );
-        return true;
+        a_properties.insert( AmqpClient::TableEntry( "msgop", AmqpClient::TableValue(to_uint(f_message_op)) ) );
+        a_properties.insert( AmqpClient::TableEntry( "lockout_key", AmqpClient::TableValue(string_from_uuid(lockout_key())) ) );
+        return;
     }
 
     inline reply_ptr_t msg_request::reply( const return_code& a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload ) const
@@ -373,16 +364,11 @@ namespace dripline
         return false;
     }
 
-    inline bool msg_reply::derived_modify_amqp_message( amqp_message_ptr /*a_amqp_msg*/ ) const
+    inline void msg_reply::derived_modify_amqp_message( amqp_message_ptr /*a_amqp_msg*/, AmqpClient::Table& a_properties ) const
     {
-        return true;
-    }
-
-    inline bool msg_reply::derived_modify_message_body( scarab::param_node& a_node ) const
-    {
-        a_node.add( "retcode", f_return_code );
-        a_node.add( "return_msg", f_return_msg );
-        return true;
+        a_properties.insert( AmqpClient::TableEntry( "retcode", AmqpClient::TableValue(f_return_code) ) );
+        a_properties.insert( AmqpClient::TableEntry( "return_msg", AmqpClient::TableValue(f_return_msg) ) );
+        return;
     }
 
     //*********
@@ -402,14 +388,9 @@ namespace dripline
         return true;
     }
 
-    inline bool msg_alert::derived_modify_amqp_message( amqp_message_ptr /*a_amqp_msg*/ ) const
+    inline void msg_alert::derived_modify_amqp_message( amqp_message_ptr /*a_amqp_msg*/, AmqpClient::Table& /*a_properties*/ ) const
     {
-        return true;
-    }
-
-    inline bool msg_alert::derived_modify_message_body( scarab::param_node& /*a_node*/ ) const
-    {
-        return true;
+        return;
     }
 
 } /* namespace dripline */
