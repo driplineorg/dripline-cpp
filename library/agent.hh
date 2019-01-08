@@ -103,10 +103,6 @@ namespace dripline
 
             mv_accessible( int, return );
 
-            // TODO: remove this
-        public:
-            void set_opt_broker( const std::string& a_broker );
-
     };
 
     template< typename sub_agent_type >
