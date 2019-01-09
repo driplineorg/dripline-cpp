@@ -52,7 +52,8 @@ namespace dripline
     {
         reply = 2,
         request = 3,
-        alert = 4
+        alert = 4,
+        unknown = UINT32_MAX
     };
 
     // Conversion functions for use when a numeric value is needed
