@@ -51,6 +51,8 @@ namespace dripline
             message();
             virtual ~message();
 
+            bool operator==( const message& a_rhs ) const;
+
             virtual bool is_request() const = 0;
             virtual bool is_reply() const = 0;
             virtual bool is_alert() const = 0;
@@ -58,9 +60,10 @@ namespace dripline
         public:
             /// from AMQP to message object
             static message_ptr_t process_envelope( amqp_envelope_ptr a_envelope );
+            static message_ptr_t process_message( amqp_message_ptr a_message, const std::string& a_routing_key );
 
             /// from message object to AMQP
-            amqp_message_ptr create_amqp_message() const;
+            amqp_message_ptr create_amqp_message();
 
             /// from message object to string
             void encode_message_body( std::string& a_body ) const;
@@ -77,15 +80,13 @@ namespace dripline
             mv_accessible( encoding, encoding );
             mv_referrable( std::string, timestamp );
 
-            mv_referrable_const( std::string, sender_package );
-            mv_referrable_const( std::string, sender_exe );
-            mv_referrable_const( std::string, sender_version );
-            mv_referrable_const( std::string, sender_commit );
-            mv_referrable_const( std::string, sender_hostname );
-            mv_referrable_const( std::string, sender_username );
-            mv_referrable_const( std::string, sender_service_name );
-
-            mv_referrable_const( scarab::param_node, sender_info );
+            mv_referrable( std::string, sender_package );
+            mv_referrable( std::string, sender_exe );
+            mv_referrable( std::string, sender_version );
+            mv_referrable( std::string, sender_commit );
+            mv_referrable( std::string, sender_hostname );
+            mv_referrable( std::string, sender_username );
+            mv_referrable( std::string, sender_service_name );
 
         protected:
             mutable specifier f_specifier;
@@ -96,15 +97,16 @@ namespace dripline
 
             virtual msg_t message_type() const = 0;
 
-            void set_sender_package( const std::string& a_pkg );
-            void set_sender_exe( const std::string& a_exe );
-            void set_sender_version( const std::string& a_vsn );
-            void set_sender_commit( const std::string& a_cmt );
-            void set_sender_hostname( const std::string& a_host );
-            void set_sender_username( const std::string& a_user );
-            void set_sender_service_name( const std::string& a_service );
+            //void set_sender_package( const std::string& a_pkg );
+            //void set_sender_exe( const std::string& a_exe );
+            //void set_sender_version( const std::string& a_vsn );
+            //void set_sender_commit( const std::string& a_cmt );
+            //void set_sender_hostname( const std::string& a_host );
+            //void set_sender_username( const std::string& a_user );
+            //void set_sender_service_name( const std::string& a_service );
 
-            void set_sender_info( const scarab::param_node& a_payload );
+            scarab::param_node get_sender_info() const;
+            void set_sender_info( const scarab::param_node& a_sender_info );
 
         public:
             scarab::param& payload();
@@ -131,6 +133,8 @@ namespace dripline
             msg_request();
             virtual ~msg_request();
 
+            bool operator==( const msg_request& a_rhs ) const;
+
             static request_ptr_t create( scarab::param_ptr_t a_payload, op_t a_msg_op, const std::string& a_routing_key, const std::string& a_specifier = "", const std::string& a_reply_to = "", message::encoding a_encoding = encoding::json );
 
             bool is_request() const;
@@ -152,6 +156,8 @@ namespace dripline
 
     };
 
+    DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, const msg_request& a_message );
+
 
     //*********
     // Reply
@@ -162,6 +168,8 @@ namespace dripline
         public:
             msg_reply();
             virtual ~msg_reply();
+
+            bool operator==( const msg_reply& a_rhs ) const;
 
             static reply_ptr_t create( const return_code& a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier = "", message::encoding a_encoding = encoding::json );
             static reply_ptr_t create( const return_code& a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const msg_request& a_request );
@@ -186,6 +194,9 @@ namespace dripline
 
     };
 
+    DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, const msg_reply& a_message );
+
+
     //*********
     // Alert
     //*********
@@ -195,6 +206,8 @@ namespace dripline
         public:
             msg_alert();
             virtual ~msg_alert();
+
+            bool operator==( const msg_alert& a_rhs ) const;
 
             static alert_ptr_t create( scarab::param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier = "", message::encoding a_encoding = encoding::json );
 
@@ -211,79 +224,63 @@ namespace dripline
 
     };
 
+    DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, const msg_alert& a_message );
+
 
     //***********
     // Message
     //***********
 
-    inline void message::set_sender_info( const scarab::param_node& a_sender_info )
-    {
-        f_sender_info = a_sender_info;
-        f_sender_info.add( "package", "N/A" ); // sets default if not present
-        f_sender_package = f_sender_info["package"]().as_string();
-        f_sender_info.add( "exe", "N/A" ); // sets default if not present
-        f_sender_exe = f_sender_info["exe"]().as_string();
-        f_sender_info.add( "version", "N/A" ); // sets default if not present
-        f_sender_version = f_sender_info["version"]().as_string();
-        f_sender_info.add( "commit", "N/A" ); // sets default if not present
-        f_sender_commit = f_sender_info["commit"]().as_string();
-        f_sender_info.add( "hostname", "N/A" ); // sets default if not present
-        f_sender_hostname = f_sender_info["hostname"]().as_string();
-        f_sender_info.add( "username", "N/A" ); // sets default if not present
-        f_sender_username = f_sender_info["username"]().as_string();
-        f_sender_info.add( "service_name", "N/A" ); // sets default if not present
-        f_sender_service_name = f_sender_info["service_name"]().as_string();
-    }
-
+/*
     inline void message::set_sender_package( const std::string& a_pkg )
     {
-        f_sender_info["package"]().set( a_pkg );
+        //f_sender_info["package"]().set( a_pkg );
         f_sender_package = a_pkg;
         return;
     }
 
     inline void message::set_sender_exe( const std::string& a_exe )
     {
-        f_sender_info["exe"]().set( a_exe );
+        //f_sender_info["exe"]().set( a_exe );
         f_sender_exe = a_exe;
         return;
     }
 
     inline void message::set_sender_version( const std::string& a_vsn )
     {
-        f_sender_info["version"]().set( a_vsn );
+        //f_sender_info["version"]().set( a_vsn );
         f_sender_version = a_vsn;
         return;
     }
 
     inline void message::set_sender_commit( const std::string& a_cmt )
     {
-        f_sender_info["commit"]().set( a_cmt );
+        //f_sender_info["commit"]().set( a_cmt );
         f_sender_commit = a_cmt;
         return;
     }
 
     inline void message::set_sender_hostname( const std::string& a_host )
     {
-        f_sender_info["hostname"]().set( a_host );
+        //f_sender_info["hostname"]().set( a_host );
         f_sender_hostname = a_host;
         return;
     }
 
     inline void message::set_sender_username( const std::string& a_user )
     {
-        f_sender_info["username"]().set( a_user );
+        //f_sender_info["username"]().set( a_user );
         f_sender_username = a_user;
         return;
     }
 
     inline void message::set_sender_service_name( const std::string& a_service )
     {
-        f_sender_info["service_name"]().set( a_service );
+        //f_sender_info["service_name"]().set( a_service );
         f_sender_service_name = a_service;
         return;
     }
-
+*/
     inline specifier& message::parsed_specifier()
     {
         return f_specifier;

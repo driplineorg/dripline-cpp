@@ -15,6 +15,7 @@
 #include "return_codes.hh"
 
 #include "logger.hh"
+#include "map_at_default.hh"
 #include "param_json.hh"
 #include "return_codes.hh"
 #include "time.hh"
@@ -56,32 +57,40 @@ namespace dripline
             f_sender_commit( "N/A" ),
             f_sender_hostname( "N/A" ),
             f_sender_username( "N/A" ),
-            f_sender_info(),
             f_specifier(),
             f_payload( new param() )
     {
-        // make sure the sender_info node is filled out correctly
-        f_sender_info.add( "package", param_value( "N/A" ) );
-        f_sender_info.add( "exe", param_value( "N/A" ) );
-        f_sender_info.add( "version", param_value( "N/A" ) );
-        f_sender_info.add( "commit", param_value( "N/A" ) );
-        f_sender_info.add( "hostname", param_value( "N/A" ) );
-        f_sender_info.add( "username", param_value( "N/A" ) );
-        f_sender_info.add( "service_name", param_value( "N/A" ) );
-
         // set the sender_info correctly for the server software
         scarab::version_wrapper* t_version = scarab::version_wrapper::get_instance();
-        set_sender_commit( t_version->commit() );
-        set_sender_version( t_version->version_str() );
-        set_sender_package( t_version->package() );
-        set_sender_exe( t_version->exe_name() );
-        set_sender_hostname( t_version->hostname() );
-        set_sender_username( t_version->username() );
-        set_sender_service_name( "unknown" );
+        f_sender_commit = t_version->commit();
+        f_sender_version = t_version->version_str();
+        f_sender_package = t_version->package();
+        f_sender_exe = t_version->exe_name();
+        f_sender_hostname = t_version->hostname();
+        f_sender_username = t_version->username();
+        f_sender_service_name = "unknown";
     }
 
     message::~message()
     {
+    }
+
+    bool message::operator==( const message& a_rhs ) const
+    {
+        return  f_routing_key == a_rhs.f_routing_key &&
+                f_correlation_id == a_rhs.f_correlation_id &&
+                f_reply_to == a_rhs.f_reply_to &&
+                f_encoding == a_rhs.f_encoding &&
+                f_timestamp == a_rhs.f_timestamp &&
+                f_sender_commit == a_rhs.f_sender_commit &&
+                f_sender_version == a_rhs.f_sender_version &&
+                f_sender_package == a_rhs.f_sender_package &&
+                f_sender_exe == a_rhs.f_sender_exe &&
+                f_sender_hostname == a_rhs.f_sender_hostname &&
+                f_sender_username == a_rhs.f_sender_username &&
+                f_sender_service_name == a_rhs.f_sender_service_name &&
+                f_specifier == a_rhs.f_specifier &&
+                f_payload->to_string() == a_rhs.f_payload->to_string();
     }
 
     message_ptr_t message::process_envelope( amqp_envelope_ptr a_envelope )
@@ -90,51 +99,59 @@ namespace dripline
         {
             throw dripline_error() << "Empty envelope received";
         }
-        scarab::param_ptr_t t_msg;
+        return message::process_message( a_envelope->Message(), a_envelope->RoutingKey() );
+    }
+
+    message_ptr_t message::process_message( amqp_message_ptr a_message, const std::string& a_routing_key )
+    {
+        scarab::param_ptr_t t_payload;
         encoding t_encoding;
-        if( a_envelope->Message()->ContentEncoding() == "application/json" )
+        if( a_message->ContentEncoding() == "application/json" )
         {
             t_encoding = encoding::json;
             param_input_json t_input;
-            t_msg = t_input.read_string( a_envelope->Message()->Body() );
-            if( ! t_msg )
+            t_payload = t_input.read_string( a_message->Body() );
+            if( ! t_payload )
             {
                 throw dripline_error() << "Message body could not be parsed; skipping request";
             }
-            if( ! t_msg->is_node() )
+            if( ! t_payload->is_node() )
             {
-                throw dripline_error() << "Message did not parse into a node";
+                throw dripline_error() << "Payload did not parse into a node";
             }
         }
         else
         {
-            throw dripline_error() << "Unable to parse message with content type <" << a_envelope->Message()->ContentEncoding() << ">";
+            throw dripline_error() << "Unable to parse message with content type <" << a_message->ContentEncoding() << ">";
         }
 
-        param_node& t_msg_node = t_msg->as_node();
-        scarab::param_ptr_t t_payload( t_msg_node["payload"].clone() );
-
-        string t_routing_key = a_envelope->RoutingKey();
+        using AmqpClient::Table;
+        using AmqpClient::TableEntry;
+        using AmqpClient::TableValue;
+        Table t_properties = a_message->HeaderTable();
 
         LDEBUG( dlog, "Processing message:\n" <<
-                 "Routing key: " << t_routing_key <<
-                 t_msg_node );
+                 "Routing key: " << a_routing_key <<
+                 "Payload: " << t_payload->to_string() );
+
+        using scarab::at;
 
         message_ptr_t t_message;
-        switch( to_msg_t( t_msg_node["msgtype"]().as_uint() ) )
+        msg_t t_msg_type = to_msg_t( at( t_properties, std::string("msgtype"), TableValue(to_uint(msg_t::unknown)) ).GetUint32() );
+        switch( t_msg_type )
         {
             case msg_t::request:
             {
                 request_ptr_t t_request = msg_request::create(
                         std::move(t_payload),
-                        to_op_t( t_msg_node.get_value< uint32_t >( "msgop", to_uint( op_t::unknown ) ) ),
-                        t_routing_key,
-                        t_msg_node.get_value( "specifier", "" ),
-                        a_envelope->Message()->ReplyTo(),
+                        to_op_t( at( t_properties, std::string("msgop"), TableValue(to_uint(op_t::unknown)) ).GetUint32() ),
+                        a_routing_key,
+                        at( t_properties, std::string("specifier"), TableValue("") ).GetString(),
+                        a_message->ReplyTo(),
                         t_encoding);
 
                 bool t_lockout_key_valid = true;
-                t_request->lockout_key() = uuid_from_string( t_msg_node.get_value( "lockout_key", "" ), t_lockout_key_valid );
+                t_request->lockout_key() = uuid_from_string( at( t_properties, std::string("lockout_key"), TableValue("") ).GetString(), t_lockout_key_valid );
                 t_request->set_lockout_key_valid( t_lockout_key_valid );
 
                 t_message = t_request;
@@ -143,11 +160,11 @@ namespace dripline
             case msg_t::reply:
             {
                 reply_ptr_t t_reply = msg_reply::create(
-                        t_msg_node["retcode"]().as_uint(),
-                        t_msg_node.get_value( "return_msg", "" ),
+                        at( t_properties, std::string("retcode"), TableValue(999U) ).GetUint32(),
+                        at( t_properties, std::string("return_msg"), TableValue("") ).GetString(),
                         std::move(t_payload),
-                        t_routing_key,
-                        t_msg_node.get_value( "specifier", "" ),
+                        a_routing_key,
+                        at( t_properties, std::string("specifier"), TableValue("") ).GetString(),
                         t_encoding);
 
                 t_message = t_reply;
@@ -157,8 +174,8 @@ namespace dripline
             {
                 alert_ptr_t t_alert = msg_alert::create(
                         std::move(t_payload),
-                        t_routing_key,
-                        t_msg_node.get_value( "specifier", "" ),
+                        a_routing_key,
+                        at( t_properties, std::string("specifier"), TableValue("") ).GetString(),
                         t_encoding);
 
                 t_message = t_alert;
@@ -166,31 +183,35 @@ namespace dripline
             }
             default:
             {
-                throw dripline_error() << "Message received with unhandled type: " << t_msg_node["msgtype"]().as_uint();
+                throw dripline_error() << "Message received with unhandled type: " << t_msg_type;
                 break;
             }
         }
 
         // set message fields
-        t_message->correlation_id() = a_envelope->Message()->CorrelationId();
-        t_message->timestamp() = t_msg_node.get_value( "timestamp", "" );
+        t_message->correlation_id() = a_message->CorrelationId();
+        t_message->timestamp() = at( t_properties, std::string("timestamp"), TableValue("") ).GetString();
 
-        t_message->set_sender_info( t_msg_node["sender_info"].as_node() );
+        Table t_sender_info = at( t_properties, std::string("sender_info"), TableValue(Table()) ).GetTable();
+        scarab::param_node t_sender_info_node;
+        t_sender_info_node.add( "package", at( t_sender_info, std::string("package"), TableValue("N/A") ).GetString() );
+        t_sender_info_node.add( "exe", at( t_sender_info, std::string("exe"), TableValue("N/A") ).GetString() );
+        t_sender_info_node.add( "version", at( t_sender_info, std::string("version"), TableValue("N/A") ).GetString() );
+        t_sender_info_node.add( "commit", at( t_sender_info, std::string("commit"), TableValue("N/A") ).GetString() );
+        t_sender_info_node.add( "hostname", at( t_sender_info, std::string("hostname"), TableValue("N/A") ).GetString() );
+        t_sender_info_node.add( "username", at( t_sender_info, std::string("username"), TableValue("N/A") ).GetString() );
+        t_sender_info_node.add( "service_name", at( t_sender_info, std::string("service_name"), TableValue("N/A") ).GetString() );
+        t_message->set_sender_info( t_sender_info_node );
 
-        if( t_msg_node.has( "payload" ) )
-        {
-            t_message->payload() = *t_msg_node["payload"].clone();
-        }
-        else
-        {
-            t_message->payload() = param();
-        }
+        t_message->payload() = *t_payload;
 
         return t_message;
     }
 
-    amqp_message_ptr message::create_amqp_message() const
+    amqp_message_ptr message::create_amqp_message()
     {
+        f_timestamp = scarab::get_formatted_now();
+
         try
         {
             string t_body;
@@ -206,18 +227,18 @@ namespace dripline
             using AmqpClient::TableValue;
 
             Table t_sender_info;
-            t_sender_info.insert( TableEntry( "package", f_sender_info["package"]().to_string() ) );
-            t_sender_info.insert( TableEntry( "exe", f_sender_info["exe"]().to_string() ) );
-            t_sender_info.insert( TableEntry( "version", f_sender_info["version"]().to_string() ) );
-            t_sender_info.insert( TableEntry( "commit", f_sender_info["commit"]().to_string() ) );
-            t_sender_info.insert( TableEntry( "hostname", f_sender_info["hostname"]().to_string() ) );
-            t_sender_info.insert( TableEntry( "username", f_sender_info["username"]().to_string() ) );
-            t_sender_info.insert( TableEntry( "service_name", f_sender_info["service_name"]().to_string() ) );
+            t_sender_info.insert( TableEntry( "package", f_sender_package ) );
+            t_sender_info.insert( TableEntry( "exe", f_sender_exe ) );
+            t_sender_info.insert( TableEntry( "version", f_sender_version ) );
+            t_sender_info.insert( TableEntry( "commit", f_sender_commit ) );
+            t_sender_info.insert( TableEntry( "hostname", f_sender_hostname ) );
+            t_sender_info.insert( TableEntry( "username", f_sender_username ) );
+            t_sender_info.insert( TableEntry( "service_name", f_sender_service_name ) );
 
             Table t_properties;
-            t_properties.insert( TableEntry( "msgtype", TableValue(to_uint(message_type())) ) );
-            t_properties.insert( TableEntry( "specifier", TableValue(f_specifier.to_string()) ) );
-            t_properties.insert( TableEntry( "timestamp", TableValue(scarab::get_formatted_now()) ) );
+            t_properties.insert( TableEntry( "msgtype", to_uint(message_type()) ) );
+            t_properties.insert( TableEntry( "specifier", f_specifier.to_string() ) );
+            t_properties.insert( TableEntry( "timestamp", f_timestamp ) );
             t_properties.insert( TableEntry( "sender_info", t_sender_info ) );
 
             this->derived_modify_amqp_message( t_message, t_properties );
@@ -235,12 +256,6 @@ namespace dripline
 
     void message::encode_message_body( std::string& a_body ) const
     {
-        ///t_body_node.add( "msgtype", to_uint( message_type() ) );
-        ///t_body_node.add( "specifier", f_specifier.to_string() );
-        //t_body_node.add( "timestamp", scarab::get_formatted_now() );
-        ///t_body_node.add( "sender_info", f_sender_info );
-        ///t_body_node.add( "payload", *f_payload );
-
         switch( f_encoding )
         {
             case encoding::json:
@@ -271,6 +286,37 @@ namespace dripline
         }
     }
 
+    scarab::param_node message::get_sender_info() const
+    {
+        scarab::param_node t_sender_info;
+        t_sender_info.add( "package", f_sender_package );
+        t_sender_info.add( "exe", f_sender_exe );
+        t_sender_info.add( "version", f_sender_version );
+        t_sender_info.add( "commit", f_sender_commit );
+        t_sender_info.add( "hostname", f_sender_hostname );
+        t_sender_info.add( "username", f_sender_username );
+        t_sender_info.add( "service_name", f_sender_service_name );
+        return t_sender_info;
+    }
+
+    void message::set_sender_info( const scarab::param_node& a_sender_info )
+    {
+        //f_sender_info = a_sender_info;
+        //f_sender_info.add( "package", "N/A" ); // sets default if not present
+        f_sender_package = a_sender_info["package"]().as_string();
+        //f_sender_info.add( "exe", "N/A" ); // sets default if not present
+        f_sender_exe = a_sender_info["exe"]().as_string();
+        //f_sender_info.add( "version", "N/A" ); // sets default if not present
+        f_sender_version = a_sender_info["version"]().as_string();
+        //f_sender_info.add( "commit", "N/A" ); // sets default if not present
+        f_sender_commit = a_sender_info["commit"]().as_string();
+        //f_sender_info.add( "hostname", "N/A" ); // sets default if not present
+        f_sender_hostname = a_sender_info["hostname"]().as_string();
+        //f_sender_info.add( "username", "N/A" ); // sets default if not present
+        f_sender_username = a_sender_info["username"]().as_string();
+        //f_sender_info.add( "service_name", "N/A" ); // sets default if not present
+        f_sender_service_name = a_sender_info["service_name"]().as_string();
+    }
 
 
     //***********
@@ -289,6 +335,14 @@ namespace dripline
     msg_request::~msg_request()
     {
 
+    }
+
+    bool msg_request::operator==( const msg_request& a_rhs ) const
+    {
+        return message::operator==( a_rhs ) &&
+                f_lockout_key == a_rhs.f_lockout_key &&
+                f_lockout_key_valid == a_rhs.f_lockout_key_valid &&
+                f_message_op == a_rhs.f_message_op;
     }
 
     request_ptr_t msg_request::create( param_ptr_t a_payload, op_t a_msg_op, const std::string& a_routing_key, const std::string& a_specifier, const std::string& a_reply_to, message::encoding a_encoding )
@@ -326,6 +380,13 @@ namespace dripline
     msg_reply::~msg_reply()
     {
 
+    }
+
+    bool msg_reply::operator==( const msg_reply& a_rhs ) const
+    {
+        return message::operator==( a_rhs ) &&
+                f_return_code == a_rhs.f_return_code &&
+                f_return_msg == a_rhs.f_return_msg;
     }
 
     reply_ptr_t msg_reply::create( const return_code& a_retcode, const std::string& a_ret_msg, param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier, message::encoding a_encoding )
@@ -378,6 +439,11 @@ namespace dripline
 
     }
 
+    bool msg_alert::operator==( const msg_alert& a_rhs ) const
+    {
+        return message::operator==( a_rhs );
+    }
+
     msg_t msg_alert::s_message_type = msg_t::alert;
 
     msg_t msg_alert::message_type() const
@@ -395,10 +461,44 @@ namespace dripline
 
     DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, const message& a_message )
     {
-        std::string t_msg;
-        a_message.encode_message_body( t_msg );
-        return a_os << t_msg;
+        a_os << "Routing key: " << a_message.routing_key() << '\n';
+        a_os << "Correlation ID: " << a_message.correlation_id() << '\n';
+        a_os << "Reply To: " << a_message.reply_to() << '\n';
+        a_os << "Encoding: " << a_message.get_encoding() << '\n';
+        a_os << "Timestamp: " << a_message.timestamp() << '\n';
+        a_os << "Sender Info:\n";
+        a_os << "\tPackage: " << a_message.sender_package() << '\n';
+        a_os << "\tExecutable: " << a_message.sender_exe() << '\n';
+        a_os << "\tVersion: " << a_message.sender_version() << '\n';
+        a_os << "\tCommit: " << a_message.sender_commit() << '\n';
+        a_os << "\tHostname: " << a_message.sender_hostname() << '\n';
+        a_os << "\tUsername: " << a_message.sender_username() << '\n';
+        a_os << "\tService: " << a_message.sender_service_name() << '\n';
+        a_os << "Specifier: " << a_message.parsed_specifier().unparsed() << '\n';
+        return a_os;
     }
 
+    DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, const msg_request& a_message )
+    {
+        a_os << static_cast< const message& >( a_message );
+        a_os << "Lockout Key: " << a_message.lockout_key() << '\n';
+        a_os << "Lockout Key Valid: " << a_message.get_lockout_key_valid() << '\n';
+        a_os << "Message Op: " << a_message.get_message_op() << '\n';
+        return a_os;
+    }
+
+    DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, const msg_reply& a_message )
+    {
+        a_os << static_cast< const message& >( a_message );
+        a_os << "Return Code: " << a_message.get_return_code() << '\n';
+        a_os << "Return Message: " << a_message.return_msg() << '\n';
+        return a_os;
+    }
+
+    DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, const msg_alert& a_message )
+    {
+        a_os << static_cast< const message& >( a_message );
+        return a_os;
+    }
 
 } /* namespace dripline */

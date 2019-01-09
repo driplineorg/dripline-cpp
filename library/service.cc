@@ -70,19 +70,19 @@ namespace dripline
 
     rr_pkg_ptr service::send( request_ptr_t a_request ) const
     {
-        a_request->set_sender_service_name( f_name );
+        a_request->sender_service_name() = f_name;
         return core::send( a_request );
     }
 
     bool service::send( reply_ptr_t a_reply ) const
     {
-        a_reply->set_sender_service_name( f_name );
+        a_reply->sender_service_name() = f_name ;
         return core::send( a_reply );
     }
 
     bool service::send( alert_ptr_t a_alert ) const
     {
-        a_alert->set_sender_service_name( f_name );
+        a_alert->sender_service_name() = f_name;
         return core::send( a_alert );
     }
 
@@ -359,7 +359,7 @@ namespace dripline
 
     reply_ptr_t service::handle_lock_request( const request_ptr_t a_request )
     {
-        uuid_t t_new_key = enable_lockout( a_request->sender_info(), a_request->lockout_key() );
+        uuid_t t_new_key = enable_lockout( a_request->get_sender_info(), a_request->lockout_key() );
         if( t_new_key.is_nil() )
         {
             return a_request->reply( dl_device_error(), "Unable to lock server" );;
