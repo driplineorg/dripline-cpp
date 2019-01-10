@@ -51,8 +51,6 @@ namespace dripline
             message();
             virtual ~message();
 
-            bool operator==( const message& a_rhs ) const;
-
             virtual bool is_request() const = 0;
             virtual bool is_reply() const = 0;
             virtual bool is_alert() const = 0;
@@ -119,6 +117,8 @@ namespace dripline
 
     };
 
+    DRIPLINE_API bool operator==( const message& a_lhs, const message& a_rhs );
+
     DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, message::encoding a_enc );
 
     DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, const message& a_message );
@@ -132,8 +132,6 @@ namespace dripline
         public:
             msg_request();
             virtual ~msg_request();
-
-            bool operator==( const msg_request& a_rhs ) const;
 
             static request_ptr_t create( scarab::param_ptr_t a_payload, op_t a_msg_op, const std::string& a_routing_key, const std::string& a_specifier = "", const std::string& a_reply_to = "", message::encoding a_encoding = encoding::json );
 
@@ -156,6 +154,8 @@ namespace dripline
 
     };
 
+    DRIPLINE_API bool operator==( const msg_request& a_lhs, const msg_request& a_rhs );
+
     DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, const msg_request& a_message );
 
 
@@ -168,8 +168,6 @@ namespace dripline
         public:
             msg_reply();
             virtual ~msg_reply();
-
-            bool operator==( const msg_reply& a_rhs ) const;
 
             static reply_ptr_t create( const return_code& a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier = "", message::encoding a_encoding = encoding::json );
             static reply_ptr_t create( const return_code& a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const msg_request& a_request );
@@ -194,6 +192,8 @@ namespace dripline
 
     };
 
+    DRIPLINE_API bool operator==( const msg_reply& a_lhs, const msg_reply& a_rhs );
+
     DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, const msg_reply& a_message );
 
 
@@ -206,8 +206,6 @@ namespace dripline
         public:
             msg_alert();
             virtual ~msg_alert();
-
-            bool operator==( const msg_alert& a_rhs ) const;
 
             static alert_ptr_t create( scarab::param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier = "", message::encoding a_encoding = encoding::json );
 
@@ -223,6 +221,8 @@ namespace dripline
             mv_accessible_static_noset( msg_t, message_type );
 
     };
+
+    DRIPLINE_API bool operator==( const msg_alert& a_lhs, const msg_alert& a_rhs );
 
     DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, const msg_alert& a_message );
 

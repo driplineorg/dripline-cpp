@@ -75,24 +75,6 @@ namespace dripline
     {
     }
 
-    bool message::operator==( const message& a_rhs ) const
-    {
-        return  f_routing_key == a_rhs.f_routing_key &&
-                f_correlation_id == a_rhs.f_correlation_id &&
-                f_reply_to == a_rhs.f_reply_to &&
-                f_encoding == a_rhs.f_encoding &&
-                f_timestamp == a_rhs.f_timestamp &&
-                f_sender_commit == a_rhs.f_sender_commit &&
-                f_sender_version == a_rhs.f_sender_version &&
-                f_sender_package == a_rhs.f_sender_package &&
-                f_sender_exe == a_rhs.f_sender_exe &&
-                f_sender_hostname == a_rhs.f_sender_hostname &&
-                f_sender_username == a_rhs.f_sender_username &&
-                f_sender_service_name == a_rhs.f_sender_service_name &&
-                f_specifier == a_rhs.f_specifier &&
-                f_payload->to_string() == a_rhs.f_payload->to_string();
-    }
-
     message_ptr_t message::process_envelope( amqp_envelope_ptr a_envelope )
     {
         if( ! a_envelope )
@@ -337,14 +319,6 @@ namespace dripline
 
     }
 
-    bool msg_request::operator==( const msg_request& a_rhs ) const
-    {
-        return message::operator==( a_rhs ) &&
-                f_lockout_key == a_rhs.f_lockout_key &&
-                f_lockout_key_valid == a_rhs.f_lockout_key_valid &&
-                f_message_op == a_rhs.f_message_op;
-    }
-
     request_ptr_t msg_request::create( param_ptr_t a_payload, op_t a_msg_op, const std::string& a_routing_key, const std::string& a_specifier, const std::string& a_reply_to, message::encoding a_encoding )
     {
         request_ptr_t t_request = make_shared< msg_request >();
@@ -380,13 +354,6 @@ namespace dripline
     msg_reply::~msg_reply()
     {
 
-    }
-
-    bool msg_reply::operator==( const msg_reply& a_rhs ) const
-    {
-        return message::operator==( a_rhs ) &&
-                f_return_code == a_rhs.f_return_code &&
-                f_return_msg == a_rhs.f_return_msg;
     }
 
     reply_ptr_t msg_reply::create( const return_code& a_retcode, const std::string& a_ret_msg, param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier, message::encoding a_encoding )
@@ -439,11 +406,6 @@ namespace dripline
 
     }
 
-    bool msg_alert::operator==( const msg_alert& a_rhs ) const
-    {
-        return message::operator==( a_rhs );
-    }
-
     msg_t msg_alert::s_message_type = msg_t::alert;
 
     msg_t msg_alert::message_type() const
@@ -452,6 +414,44 @@ namespace dripline
     }
 
 
+
+    DRIPLINE_API bool operator==(  const message& a_lhs, const message& a_rhs )
+    {
+        return  a_lhs.routing_key() == a_rhs.routing_key() &&
+                a_lhs.correlation_id() == a_rhs.correlation_id() &&
+                a_lhs.reply_to() == a_rhs.reply_to() &&
+                a_lhs.get_encoding() == a_rhs.get_encoding() &&
+                a_lhs.timestamp() == a_rhs.timestamp() &&
+                a_lhs.sender_commit() == a_rhs.sender_commit() &&
+                a_lhs.sender_version() == a_rhs.sender_version() &&
+                a_lhs.sender_package() == a_rhs.sender_package() &&
+                a_lhs.sender_exe() == a_rhs.sender_exe() &&
+                a_lhs.sender_hostname() == a_rhs.sender_hostname() &&
+                a_lhs.sender_username() == a_rhs.sender_username() &&
+                a_lhs.sender_service_name() == a_rhs.sender_service_name() &&
+                a_lhs.parsed_specifier() == a_rhs.parsed_specifier() &&
+                a_lhs.payload().to_string() == a_rhs.payload().to_string();
+    }
+
+    DRIPLINE_API bool operator==( const msg_request& a_lhs, const msg_request& a_rhs )
+    {
+        return operator==( static_cast< const message& >(a_lhs), static_cast< const message& >(a_rhs) ) &&
+                a_lhs.lockout_key() == a_rhs.lockout_key() &&
+                a_lhs.get_lockout_key_valid() == a_rhs.get_lockout_key_valid() &&
+                a_lhs.get_message_op() == a_rhs.get_message_op();
+    }
+
+    DRIPLINE_API bool operator==( const msg_reply& a_lhs, const msg_reply& a_rhs )
+    {
+        return operator==( static_cast< const message& >(a_lhs), static_cast< const message& >(a_rhs) ) &&
+                a_lhs.get_return_code() == a_rhs.get_return_code() &&
+                a_lhs.return_msg() == a_rhs.return_msg();
+    }
+
+    DRIPLINE_API bool operator==( const msg_alert& a_lhs, const msg_alert& a_rhs )
+    {
+        return operator==( static_cast< const message& >(a_lhs), static_cast< const message& >(a_rhs) );
+    }
 
     DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, message::encoding a_enc )
     {
