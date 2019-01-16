@@ -81,7 +81,7 @@ namespace dripline
         {
             bool t_lk_valid = true;
             f_agent->lockout_key() = dripline::uuid_from_string( t_config["lockout-key"]().as_string(), t_lk_valid );
-            t_config.erase( "key" );
+            t_config.erase( "lockout-key" );
             if( ! t_lk_valid )
             {
                 LERROR( dlog, "Invalid lockout key provided: <" << t_config.get_value( "lockout-key", "" ) << ">" );
@@ -102,6 +102,9 @@ namespace dripline
             f_agent->set_return( RETURN_ERROR );
             return;
         }
+
+        LWARN( dlog, "Request:\n" << *t_request );
+        return;
 
         // now all that remains in f_config should be values to pass to the server as arguments to the request
 

@@ -25,9 +25,10 @@ TEST_CASE( "sub_agent_get", "[agent]" )
     std::unique_ptr< dripline::agent > t_agent( new dripline::agent() );
     dripline::agent::sub_agent_get t_sag( t_agent.get() );
 
-    t_agent->master_config().add( "value", 5 );
+    scarab::param_node t_config;
+    t_config.add( "value", 5 );
 
-    dripline::request_ptr_t t_request = t_sag.create_request( t_agent->master_config() );
+    dripline::request_ptr_t t_request = t_sag.create_request( t_config );
 
     REQUIRE( t_request->get_message_type() == dripline::msg_t::request );
     REQUIRE( t_request->get_message_op() == dripline::op_t::get );
@@ -52,9 +53,10 @@ TEST_CASE( "sub_agent_set", "[agent]" )
 
     SECTION( "Value set" )
     {
-        t_agent->master_config().add( "value", 5 );
+        scarab::param_node t_config;
+        t_config.add( "value", 5 );
 
-        dripline::request_ptr_t t_request = t_sas.create_request( t_agent->master_config() );
+        dripline::request_ptr_t t_request = t_sas.create_request( t_config );
 
         REQUIRE( t_request->get_message_type() == dripline::msg_t::request );
         REQUIRE( t_request->get_message_op() == dripline::op_t::set );
@@ -71,9 +73,10 @@ TEST_CASE( "sub_agent_cmd", "[agent]" )
     std::unique_ptr< dripline::agent > t_agent( new dripline::agent() );
     dripline::agent::sub_agent_cmd t_sac( t_agent.get() );
 
-    t_agent->master_config().add( "value", 5 );
+    scarab::param_node t_config;
+    t_config.add( "value", 5 );
 
-    dripline::request_ptr_t t_request = t_sac.create_request( t_agent->master_config() );
+    dripline::request_ptr_t t_request = t_sac.create_request( t_config );
 
     REQUIRE( t_request->get_message_type() == dripline::msg_t::request );
     REQUIRE( t_request->get_message_op() == dripline::op_t::cmd );

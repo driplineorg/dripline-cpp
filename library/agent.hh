@@ -119,12 +119,6 @@ namespace dripline
         return create_request( t_config );
     }
 
-    inline void agent::set_opt_broker( const std::string& a_broker )
-    {
-        f_app_options["amqp"]["broker"]() = a_broker;
-        return;
-    }
-
 } /* namespace dripline */
 
 #endif /* DRIPLINE_AGENT_HH_ */
