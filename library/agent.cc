@@ -173,38 +173,42 @@ namespace dripline
         // copy of a_config, which should consist of only the request arguments
         param_ptr_t t_payload_ptr( new param_node( a_config ) );
 
-        return msg_request::create( std::move(t_payload_ptr), op_t::run, f_agent->routing_key(), f_agent->specifier(), "", message::encoding::json );
+        return msg_request::create( std::move(t_payload_ptr),
+                                    op_t::run,
+                                    f_agent->routing_key(),
+                                    f_agent->specifier() );
     }
 
     request_ptr_t agent::sub_agent_get::create_request( scarab::param_node& a_config )
     {
         param_ptr_t t_payload_ptr( new param_node() );
 
-        if( a_config.has( "value" ) )
-        {
-            param_array t_values_array;
-            t_values_array.push_back( a_config.remove( "value" ) );
-            t_payload_ptr->as_node().add( "values", t_values_array );
-        }
+        // at this point, all that remains in a_config should be other options that we want to add to the payload node
+        t_payload_ptr->as_node().merge( a_config ); // copy a_config
 
-        return msg_request::create( std::move(t_payload_ptr), op_t::get, f_agent->routing_key(), f_agent->specifier(), "", message::encoding::json );
+        return msg_request::create( std::move(t_payload_ptr),
+                                    op_t::get,
+                                    f_agent->routing_key(),
+                                    f_agent->specifier() );
     }
 
     request_ptr_t agent::sub_agent_set::create_request( scarab::param_node& a_config )
     {
-        if( ! a_config.has( "value" ) )
+        if( ! a_config.has( "values" ) )
         {
-            LERROR( dlog, "No \"value\" option given" );
+            LERROR( dlog, "No \"values\" option given" );
             return nullptr;
         }
 
-        param_array t_values_array;
-        t_values_array.push_back( a_config.remove( "value" ) );
-
         param_ptr_t t_payload_ptr( new param_node() );
-        t_payload_ptr->as_node().add( "values", t_values_array );
 
-        return msg_request::create( std::move(t_payload_ptr), op_t::set, f_agent->routing_key(), f_agent->specifier(), "", message::encoding::json );
+        // at this point, all that remains in a_config should be other options that we want to add to the payload node
+        t_payload_ptr->as_node().merge( a_config ); // copy a_config
+
+        return msg_request::create( std::move(t_payload_ptr),
+                                    op_t::set,
+                                    f_agent->routing_key(),
+                                    f_agent->specifier() );
     }
 
     request_ptr_t agent::sub_agent_cmd::create_request( scarab::param_node& a_config )
@@ -237,7 +241,10 @@ namespace dripline
         // at this point, all that remains in a_config should be other options that we want to add to the payload node
         t_payload_node.merge( a_config ); // copy a_config
 
-        return msg_request::create( std::move(t_payload_ptr), op_t::cmd, f_agent->routing_key(), f_agent->specifier(), "", message::encoding::json );
+        return msg_request::create( std::move(t_payload_ptr),
+                                    op_t::cmd,
+                                    f_agent->routing_key(),
+                                    f_agent->specifier() );
     }
 
 } /* namespace dripline */
