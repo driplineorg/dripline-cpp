@@ -41,7 +41,7 @@ namespace dripline
                     sub_agent( agent* an_agent ) : f_agent( an_agent ) {};
                     virtual ~sub_agent() {};
 
-                    void execute( const scarab::param_node& a_config );
+                    void execute( const scarab::param_node& a_config, const scarab::param_array& a_ord_args );
 
                     virtual request_ptr_t create_request( scarab::param_node& a_config ) = 0;
                     virtual request_ptr_t create_request();
@@ -91,7 +91,7 @@ namespace dripline
             virtual ~agent();
 
             template< typename sub_agent_type >
-            void execute( const scarab::param_node& a_config );
+            void execute( const scarab::param_node& a_config, const scarab::param_array& a_ord_args );
 
             //mv_referrable( scarab::param_node, config );
 
@@ -106,10 +106,10 @@ namespace dripline
     };
 
     template< typename sub_agent_type >
-    void agent::execute( const scarab::param_node& a_config )
+    void agent::execute( const scarab::param_node& a_config, const scarab::param_array& a_ord_args )
     {
         sub_agent_type t_sub_agent( this );
-        t_sub_agent.execute( a_config );
+        t_sub_agent.execute( a_config, a_ord_args );
         return;
     }
 

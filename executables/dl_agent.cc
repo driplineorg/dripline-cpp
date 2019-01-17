@@ -41,22 +41,22 @@ int main( int argc, char** argv )
     // Application subcommands
     scarab::app* t_agent_run = the_main.add_subcommand( "run", "Send an OP_RUN request" );
     t_agent_run->callback(
-            [&]() { the_agent.execute< agent::sub_agent_run >( the_main.master_config() ); }
+            [&]() { the_agent.execute< agent::sub_agent_run >( the_main.master_config(), the_main.nonoption_ord_args() ); }
     );
 
     scarab::app* t_agent_get = the_main.add_subcommand( "get", "Send an OP_GET request" );
     t_agent_get->callback(
-            [&]() { the_agent.execute< agent::sub_agent_get >( the_main.master_config() ); }
+            [&]() { the_agent.execute< agent::sub_agent_get >( the_main.master_config(), the_main.nonoption_ord_args() ); }
     );
 
     scarab::app* t_agent_set = the_main.add_subcommand( "set", "Send an OP_SET request" );
     t_agent_set->callback(
-            [&]() { the_agent.execute< agent::sub_agent_set >( the_main.master_config() ); }
+            [&]() { the_agent.execute< agent::sub_agent_set >( the_main.master_config(), the_main.nonoption_ord_args() ); }
     );
 
     scarab::app* t_agent_cmd = the_main.add_subcommand( "cmd", "Send an OP_CMD request" );
     t_agent_cmd->callback(
-            [&]() { the_agent.execute< agent::sub_agent_cmd>( the_main.master_config() ); }
+            [&]() { the_agent.execute< agent::sub_agent_cmd>( the_main.master_config(), the_main.nonoption_ord_args() ); }
     );
 
     // Default configuration

@@ -51,7 +51,7 @@ namespace dripline
     {
     }
 
-    void agent::sub_agent::execute( const scarab::param_node& a_config )
+    void agent::sub_agent::execute( const scarab::param_node& a_config, const scarab::param_array& a_ord_args )
     {
         LINFO( dlog, "Creating request" );
 
@@ -74,8 +74,8 @@ namespace dripline
         f_agent->routing_key() = t_config.get_value( "rk", f_agent->routing_key() );
         t_config.erase( "rk" );
 
-        f_agent->specifier() = t_config.get_value( "sp", f_agent->specifier() );
-        t_config.erase( "sp" );
+        f_agent->specifier() = t_config.get_value( "specifier", f_agent->specifier() );
+        t_config.erase( "specifier" );
 
         if( t_config.has( "lockout-key" ) )
         {
@@ -92,6 +92,9 @@ namespace dripline
 
         std::string t_save_filename( t_config.get_value( "save", "" ) );
         t_config.erase( "save" );
+
+        // load the values array
+        t_config.add( "values", a_ord_args );
 
         // create the request
         request_ptr_t t_request = this->create_request( t_config );
