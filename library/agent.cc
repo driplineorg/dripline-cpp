@@ -108,6 +108,14 @@ namespace dripline
         }
         t_config.add( "values", t_values );
 
+        // check if this is meant to be a dry run message
+        bool t_is_dry_run = false;
+        if( t_config.has( "dry-run-msg" ) )
+        {
+            t_config.erase( "dry-run-msg" );
+            t_is_dry_run = true;
+        }
+
         // create the request
         request_ptr_t t_request = this->create_request( t_config );
 
@@ -115,6 +123,13 @@ namespace dripline
         {
             LERROR( dlog, "Unable to create request" );
             f_agent->set_return( RETURN_ERROR );
+            return;
+        }
+
+        // if this is a dry run, we print the message and stop here
+        if( t_is_dry_run )
+        {
+            LPROG( dlog, "Request:\n" << *t_request );
             return;
         }
 

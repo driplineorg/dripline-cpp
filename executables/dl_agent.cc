@@ -71,6 +71,7 @@ int main( int argc, char** argv )
     the_main.add_config_option< std::string >( "-k,--lockout-key", "lockout-key", "Set the lockout key to send with the message" );
     the_main.add_config_multi_option< std::string >( "--payload", "payload", "Add values to the payload" );
     the_main.add_config_multi_option< std::string >( "-v,--values", "option-values", "Add ordered values" ); // stored in the config as "option-values" so they can be merged in later in the proper order
+    the_main.add_config_flag< bool >( "--dry-run-msg", "dry-run-msg", "Print the message contents and exit" );
 
     // Package version
     the_main.set_version( new dripline::version() );
