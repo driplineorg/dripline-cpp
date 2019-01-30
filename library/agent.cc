@@ -93,8 +93,20 @@ namespace dripline
         std::string t_save_filename( t_config.get_value( "save", "" ) );
         t_config.erase( "save" );
 
-        // load the values array
-        t_config.add( "values", a_ord_args );
+        // load the values array, merged in the proper order
+        scarab::param_array t_values;
+        if( t_config.has( "values" ) )
+        {
+            t_values.merge( t_config["values"].as_array() );
+            t_config.erase( "values" );
+        }
+        t_values.merge( a_ord_args );
+        if( t_config.has( "option-values" ) )
+        {
+            t_values.merge( t_config["option-values"].as_array() );
+            t_config.erase( "option-values" );
+        }
+        t_config.add( "values", t_values );
 
         // create the request
         request_ptr_t t_request = this->create_request( t_config );
@@ -105,9 +117,6 @@ namespace dripline
             f_agent->set_return( RETURN_ERROR );
             return;
         }
-
-        LWARN( dlog, "Request:\n" << *t_request );
-        return;
 
         // now all that remains in f_config should be values to pass to the server as arguments to the request
 
