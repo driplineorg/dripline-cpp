@@ -10,6 +10,7 @@
 
 #include "agent.hh"
 
+#include "agent_config.hh"
 #include "dripline_constants.hh"
 #include "dripline_version.hh"
 #include "core.hh"
@@ -38,7 +39,6 @@ namespace dripline
     LOGGER( dlog, "agent" );
 
     agent::agent() :
-            f_config(),
             f_routing_key(),
             f_specifier(),
             f_lockout_key( generate_nil_uuid() ),
@@ -51,13 +51,13 @@ namespace dripline
     {
     }
 
-    void agent::sub_agent::execute( const param_node& a_node )
+    void agent::sub_agent::execute( const scarab::param_node& a_config, const scarab::param_array& a_ord_args )
     {
         LINFO( dlog, "Creating request" );
 
         // create a copy of the config that will be pared down by removing expected elements
-        param_node& t_config = f_agent->config();
-        t_config = a_node;
+        param_node t_config( a_config ); //f_agent->config();
+        //t_config = a_node;
 
         param_node t_amqp_node;
         unsigned t_timeout = 0;
@@ -74,14 +74,14 @@ namespace dripline
         f_agent->routing_key() = t_config.get_value( "rk", f_agent->routing_key() );
         t_config.erase( "rk" );
 
-        f_agent->specifier() = t_config.get_value( "sp", f_agent->specifier() );
-        t_config.erase( "sp" );
+        f_agent->specifier() = t_config.get_value( "specifier", f_agent->specifier() );
+        t_config.erase( "specifier" );
 
         if( t_config.has( "lockout-key" ) )
         {
             bool t_lk_valid = true;
             f_agent->lockout_key() = dripline::uuid_from_string( t_config["lockout-key"]().as_string(), t_lk_valid );
-            t_config.erase( "key" );
+            t_config.erase( "lockout-key" );
             if( ! t_lk_valid )
             {
                 LERROR( dlog, "Invalid lockout key provided: <" << t_config.get_value( "lockout-key", "" ) << ">" );
@@ -93,13 +93,43 @@ namespace dripline
         std::string t_save_filename( t_config.get_value( "save", "" ) );
         t_config.erase( "save" );
 
+        // load the values array, merged in the proper order
+        scarab::param_array t_values;
+        if( t_config.has( "values" ) )
+        {
+            t_values.merge( t_config["values"].as_array() );
+            t_config.erase( "values" );
+        }
+        t_values.merge( a_ord_args );
+        if( t_config.has( "option-values" ) )
+        {
+            t_values.merge( t_config["option-values"].as_array() );
+            t_config.erase( "option-values" );
+        }
+        t_config.add( "values", t_values );
+
+        // check if this is meant to be a dry run message
+        bool t_is_dry_run = false;
+        if( t_config.has( "dry-run-msg" ) )
+        {
+            t_config.erase( "dry-run-msg" );
+            t_is_dry_run = true;
+        }
+
         // create the request
-        request_ptr_t t_request = this->create_request();
+        request_ptr_t t_request = this->create_request( t_config );
 
         if( ! t_request )
         {
             LERROR( dlog, "Unable to create request" );
             f_agent->set_return( RETURN_ERROR );
+            return;
+        }
+
+        // if this is a dry run, we print the message and stop here
+        if( t_is_dry_run )
+        {
+            LPROG( dlog, "Request:\n" << *t_request );
             return;
         }
 
@@ -162,60 +192,64 @@ namespace dripline
         return;
     }
 
-    request_ptr_t agent::sub_agent_run::create_request()
+    request_ptr_t agent::sub_agent_run::create_request( scarab::param_node& a_config )
     {
-        // copy of f_config, which should consist of only the request arguments
-        param_ptr_t t_payload_ptr( new param_node( f_agent->config() ) );
+        // copy of a_config, which should consist of only the request arguments
+        param_ptr_t t_payload_ptr( new param_node( a_config ) );
 
-        return msg_request::create( std::move(t_payload_ptr), op_t::run, f_agent->routing_key(), f_agent->specifier(), "", message::encoding::json );
+        return msg_request::create( std::move(t_payload_ptr),
+                                    op_t::run,
+                                    f_agent->routing_key(),
+                                    f_agent->specifier() );
     }
 
-    request_ptr_t agent::sub_agent_get::create_request()
+    request_ptr_t agent::sub_agent_get::create_request( scarab::param_node& a_config )
     {
         param_ptr_t t_payload_ptr( new param_node() );
 
-        if( f_agent->config().has( "value" ) )
-        {
-            param_array t_values_array;
-            t_values_array.push_back( f_agent->config().remove( "value" ) );
-            t_payload_ptr->as_node().add( "values", t_values_array );
-        }
+        // at this point, all that remains in a_config should be other options that we want to add to the payload node
+        t_payload_ptr->as_node().merge( a_config ); // copy a_config
 
-        return msg_request::create( std::move(t_payload_ptr), op_t::get, f_agent->routing_key(), f_agent->specifier(), "", message::encoding::json );
+        return msg_request::create( std::move(t_payload_ptr),
+                                    op_t::get,
+                                    f_agent->routing_key(),
+                                    f_agent->specifier() );
     }
 
-    request_ptr_t agent::sub_agent_set::create_request()
+    request_ptr_t agent::sub_agent_set::create_request( scarab::param_node& a_config )
     {
-        if( ! f_agent->config().has( "value" ) )
+        if( ! a_config.has( "values" ) )
         {
-            LERROR( dlog, "No \"value\" option given" );
+            LERROR( dlog, "No \"values\" option given" );
             return nullptr;
         }
 
-        param_array t_values_array;
-        t_values_array.push_back( f_agent->config().remove( "value" ) );
-
         param_ptr_t t_payload_ptr( new param_node() );
-        t_payload_ptr->as_node().add( "values", t_values_array );
 
-        return msg_request::create( std::move(t_payload_ptr), op_t::set, f_agent->routing_key(), f_agent->specifier(), "", message::encoding::json );
+        // at this point, all that remains in a_config should be other options that we want to add to the payload node
+        t_payload_ptr->as_node().merge( a_config ); // copy a_config
+
+        return msg_request::create( std::move(t_payload_ptr),
+                                    op_t::set,
+                                    f_agent->routing_key(),
+                                    f_agent->specifier() );
     }
 
-    request_ptr_t agent::sub_agent_cmd::create_request()
+    request_ptr_t agent::sub_agent_cmd::create_request( scarab::param_node& a_config )
     {
         param_ptr_t t_payload_ptr( new param_node() );
         param_node& t_payload_node = t_payload_ptr->as_node();
 
         // for the load instruction, the instruction node should be replaced by the contents of the file specified
-        if( f_agent->config().has( "load" ) )
+        if( a_config.has( "load" ) )
         {
-            if( ! f_agent->config()["load"].as_node().has( "json" ) )
+            if( ! a_config["load"].as_node().has( "json" ) )
             {
                 LERROR( dlog, "Load instruction did not contain a valid file type");
                 return nullptr;
             }
 
-            std::string t_load_filename( f_agent->config()["load"]().as_string() );
+            std::string t_load_filename( a_config["load"]().as_string() );
             scarab::param_translator t_translator;
             scarab::param_ptr_t t_node_from_file = t_translator.read_file( t_load_filename );
             if( t_node_from_file == nullptr || ! t_node_from_file->is_node() )
@@ -225,13 +259,16 @@ namespace dripline
             }
 
             t_payload_node.merge( t_node_from_file->as_node() );
-            f_agent->config().erase( "load" );
+            a_config.erase( "load" );
         }
 
-        // at this point, all that remains in f_config should be other options that we want to add to the payload node
-        t_payload_node.merge( f_agent->config() ); // copy f_config
+        // at this point, all that remains in a_config should be other options that we want to add to the payload node
+        t_payload_node.merge( a_config ); // copy a_config
 
-        return msg_request::create( std::move(t_payload_ptr), op_t::cmd, f_agent->routing_key(), f_agent->specifier(), "", message::encoding::json );
+        return msg_request::create( std::move(t_payload_ptr),
+                                    op_t::cmd,
+                                    f_agent->routing_key(),
+                                    f_agent->specifier() );
     }
 
 } /* namespace dripline */
