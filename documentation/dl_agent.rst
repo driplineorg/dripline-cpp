@@ -7,26 +7,65 @@ Dripline includes an executable for sending dripline commands: ``dl_agent``.
 Use
 ===
 
-  ``> dl_agent [command] [options]``
+  ``> dl_agent [options] routing_key [specifier] subcommand [values] [keyword arguments]``
 
-Commands
---------
+Routing Key
+-----------
 
-The four dripline commands are available as: ``run``, ``get``, ``set``, and ``cmd``.
+Provide the AMQP routing key to which you're sending your message (required).
+
+Specifier
+---------
+
+Provide the dripline specifier to further direct your message (optional).
+
+Subcommands
+-----------
+
+The four dripline subcommands are available as:
+
+* ``run``    Send an OP_RUN request
+* ``get``    Send an OP_GET request
+* ``set``    Send an OP_SET request
+* ``cmd``    Send an OP_CMD request
+
+Values and Keyword Arguments
+----------------------------
+
+Any non-option arguments other than the routing key and specifier will be counted either as values or keyword arguments.
+
+Values are arguments that are not in the form ``keyword=value``.  They are added to the ``values`` array in the payload in the order received.
+
+Keyword arguments are arguments in the form ``keyword=value``.  They are added to the payload.  
+The keyword is the address within the payload.  For example, ``my.value.0=10`` would add this to the payload::
+
+    my:
+      value:
+        - 10
+
+
+Keyword Arguments
+-----------------
 
 Options
 -------
 
-* Routing key: ``rk=[routing key]`` (required)
-* Value for ``set``: ``value=[a_value]`` (required for ``set``)
-* Broker address: ``amqp.broker=[address]`` (default is ``localhost``)
-* Broker port: ``amqp.broker-port=[port]`` (default is 5672)
-* Exchange: ``amqp.exchange=[exchange]`` (default is ``requests``)
-* Reply timeout: ``amqp.reply-timeout-ms=[ms]`` (default is ``10000``)
-* Authentications file: ``amqp.auth-file=[filename]`` (default is none)
-* Lockout key: ``lockout-key=[uuid]``
-* Filename to save reply: ``save=[filename]`` (optional)
-* Filename for payload: ``load=[filename]`` (optional)
+::
+
+-h,--help                   Print this help message and exit
+-c,--config FILE            Config file filename
+--verbosity UINT            Global logger verosity
+-V,--version                Print the version message and exit
+-b,--broker TEXT            Set the dripline broker address
+-p,--port UINT              Set the port for communication with the dripline broker
+-e,--exchange TEXT          Set the exchange to send message on
+-a,--auth-file TEXT         
+-t,--timeout UINT           Set the timeout for waiting for a reply (seconds)
+-k,--lockout-key TEXT       Set the lockout key to send with the message
+--payload TEXT ...          Add values to the payload
+-v,--values TEXT ...        Add ordered values
+--dry-run-msg               Print the message contents and do not send
+
 
 Build Options
 =============
