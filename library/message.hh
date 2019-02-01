@@ -61,10 +61,10 @@ namespace dripline
             static message_ptr_t process_message( amqp_message_ptr a_message, const std::string& a_routing_key );
 
             /// from message object to AMQP
-            amqp_message_ptr create_amqp_message();
+            std::vector< amqp_message_ptr > create_amqp_messages( unsigned a_max_size = 1000 );
 
             /// from message object to string
-            void encode_message_body( std::string& a_body ) const;
+            void encode_message_body( std::vector< std::string >& a_body_vec, unsigned a_max_size ) const;
 
         protected:
             virtual void derived_modify_amqp_message( amqp_message_ptr t_amqp_msg, AmqpClient::Table& t_properties ) const = 0;

@@ -190,62 +190,80 @@ namespace dripline
         return t_message;
     }
 
-    amqp_message_ptr message::create_amqp_message()
+    std::vector< amqp_message_ptr > message::create_amqp_messages( unsigned a_max_size )
     {
         f_timestamp = scarab::get_formatted_now();
 
         try
         {
-            string t_body;
-            encode_message_body( t_body );
-            amqp_message_ptr t_message = AmqpClient::BasicMessage::Create( t_body );
+            std::vector< string > t_body_parts;
+            encode_message_body( t_body_parts, a_max_size );
 
-            t_message->ContentEncoding( interpret_encoding() );
-            t_message->CorrelationId( f_correlation_id );
-            t_message->ReplyTo( f_reply_to );
+            std::vector< amqp_message_ptr > t_message_parts;
 
-            using AmqpClient::Table;
-            using AmqpClient::TableEntry;
-            using AmqpClient::TableValue;
+            auto t_create_message_parts = [&t_message_parts]( std::string& a_body_part ){
+                amqp_message_ptr t_message = AmqpClient::BasicMessage::Create( a_body_part );
 
-            Table t_sender_info;
-            t_sender_info.insert( TableEntry( "package", f_sender_package ) );
-            t_sender_info.insert( TableEntry( "exe", f_sender_exe ) );
-            t_sender_info.insert( TableEntry( "version", f_sender_version ) );
-            t_sender_info.insert( TableEntry( "commit", f_sender_commit ) );
-            t_sender_info.insert( TableEntry( "hostname", f_sender_hostname ) );
-            t_sender_info.insert( TableEntry( "username", f_sender_username ) );
-            t_sender_info.insert( TableEntry( "service_name", f_sender_service_name ) );
+                t_message->ContentEncoding( interpret_encoding() );
+                t_message->CorrelationId( f_correlation_id );
+                t_message->ReplyTo( f_reply_to );
 
-            Table t_properties;
-            t_properties.insert( TableEntry( "msgtype", to_uint(message_type()) ) );
-            t_properties.insert( TableEntry( "specifier", f_specifier.to_string() ) );
-            t_properties.insert( TableEntry( "timestamp", f_timestamp ) );
-            t_properties.insert( TableEntry( "sender_info", t_sender_info ) );
+                using AmqpClient::Table;
+                using AmqpClient::TableEntry;
+                using AmqpClient::TableValue;
 
-            this->derived_modify_amqp_message( t_message, t_properties );
+                Table t_sender_info;
+                t_sender_info.insert( TableEntry( "package", f_sender_package ) );
+                t_sender_info.insert( TableEntry( "exe", f_sender_exe ) );
+                t_sender_info.insert( TableEntry( "version", f_sender_version ) );
+                t_sender_info.insert( TableEntry( "commit", f_sender_commit ) );
+                t_sender_info.insert( TableEntry( "hostname", f_sender_hostname ) );
+                t_sender_info.insert( TableEntry( "username", f_sender_username ) );
+                t_sender_info.insert( TableEntry( "service_name", f_sender_service_name ) );
 
-            t_message->HeaderTable( t_properties );
+                Table t_properties;
+                t_properties.insert( TableEntry( "msgtype", to_uint(message_type()) ) );
+                t_properties.insert( TableEntry( "specifier", f_specifier.to_string() ) );
+                t_properties.insert( TableEntry( "timestamp", f_timestamp ) );
+                t_properties.insert( TableEntry( "sender_info", t_sender_info ) );
 
-            return t_message;
+                this->derived_modify_amqp_message( t_message, t_properties );
+
+                t_message->HeaderTable( t_properties );
+
+                t_message_parts.push_back( t_message );
+            };
+
+            std::for_each( t_body_parts.begin(), t_body_parts.end(), t_create_message_parts );
+
+            return t_message_parts;
         }
         catch( dripline_error& e )
         {
             LERROR( dlog, e.what() );
-            return amqp_message_ptr();
+            return std::vector< amqp_message_ptr >();
         }
     }
 
-    void message::encode_message_body( std::string& a_body ) const
+    void message::encode_message_body( std::vector< string >& a_body_vec, unsigned a_max_size ) const
     {
         switch( f_encoding )
         {
             case encoding::json:
             {
+                string t_body;
                 param_output_json t_output;
-                if( ! t_output.write_string( *f_payload, a_body ) )
+                if( ! t_output.write_string( *f_payload, t_body ) )
                 {
                     throw dripline_error() << "Could not convert message body to string";
+                }
+
+                unsigned t_chars_per_chunk = a_max_size / sizeof(string::value_type);
+                unsigned t_n_chunks = std::ceil( double(t_body.size()) / double(t_chars_per_chunk) );
+                a_body_vec.resize( t_n_chunks );
+                for( unsigned i_chunk = 0, pos = 0; pos < t_body.size(); pos += t_chars_per_chunk, ++i_chunk )
+                {
+                    a_body_vec[i_chunk] = t_body.substr(pos, t_chars_per_chunk );
                 }
                 break;
             }
