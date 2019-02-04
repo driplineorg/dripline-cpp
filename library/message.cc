@@ -46,6 +46,7 @@ namespace dripline
     //***********
 
     message::message() :
+            f_is_valid( true ),
             f_routing_key(),
             f_correlation_id(),
             f_reply_to(),
@@ -74,7 +75,7 @@ namespace dripline
     message::~message()
     {
     }
-
+/*
     message_ptr_t message::process_envelope( amqp_envelope_ptr a_envelope )
     {
         if( ! a_envelope )
@@ -83,40 +84,101 @@ namespace dripline
         }
         return message::process_message( a_envelope->Message(), a_envelope->RoutingKey() );
     }
-
-    message_ptr_t message::process_message( amqp_message_ptr a_message, const std::string& a_routing_key )
+*/
+    message_ptr_t message::process_message( amqp_split_message_ptrs a_message_ptrs, const std::string& a_routing_key )
     {
-        scarab::param_ptr_t t_payload;
+        // find first non-empty message pointer
+        // get length of payload (to use for empty ones)
+        // get header content
+        // set bool for complete to true
+        // loop through messages to build full payload string, if one is incomplete, fill  with hashes and set bool for complete to false
+        // if payload complete, parse payload
+
+        if( a_message_ptrs.empty() )
+        {
+            throw dripline_error() << "No messages were provided for processing";
+        }
+
+        // Find the first valid message, from which we'll get the payload chunk length
+        // Below we'll also use this for the header content
+        amqp_message_ptr t_first_valid_message;
+        for( unsigned i_message = 0; ! t_first_valid_message && i_message < a_message_ptrs.size(); ++i_message )
+        {
+            t_first_valid_message = a_message_ptrs[i_message];
+        }
+
+        if( ! t_first_valid_message )
+        {
+            throw dripline_error() << "All messages provided for processing were invalid";
+        }
+
+        unsigned t_payload_chunk_length = t_first_valid_message->Body().size();
+
         encoding t_encoding;
-        if( a_message->ContentEncoding() == "application/json" )
+        if( t_first_valid_message->ContentEncoding() == "application/json" )
         {
             t_encoding = encoding::json;
+        }
+        else
+        {
+            throw dripline_error() << "Unable to parse message with content type <" << t_first_valid_message->ContentEncoding() << ">";
+        }
+
+        // Build up the body
+        string t_payload_str;
+        bool t_payload_is_complete = true;
+        for( amqp_message_ptr& t_message : a_message_ptrs )
+        {
+            if( ! t_message )
+            {
+                // If a chunk of the message is missing, it's filled with hashes
+                t_payload_is_complete = false;
+                t_payload_str += string( t_payload_chunk_length, '#' );
+                continue;
+            }
+
+            t_payload_str += t_message->Body();
+        }
+
+        scarab::param_ptr_t t_payload;
+        string t_payload_error_msg;
+        if( t_payload_is_complete )
+        {
+            // Parse the body
             param_input_json t_input;
-            t_payload = t_input.read_string( a_message->Body() );
+            t_payload = t_input.read_string( t_payload_str );
             if( ! t_payload )
             {
-                throw dripline_error() << "Message body could not be parsed; skipping request";
+                t_payload_error_msg = "Message body could not be parsed; skipping request";
             }
             if( ! t_payload->is_node() )
             {
-                throw dripline_error() << "Payload did not parse into a node";
+                t_payload_error_msg = "Payload did not parse into a node";
             }
         }
         else
         {
-            throw dripline_error() << "Unable to parse message with content type <" << a_message->ContentEncoding() << ">";
+            t_payload_error_msg = "Entire message was not available";
         }
+
+        if( ! t_payload_error_msg.empty() )
+        {
+            // Store the invalid payload string in the payload
+            t_payload = std::unique_ptr< scarab::param_node >( new param_node() );
+            t_payload->as_node().add( "invalid", t_payload_str );
+            t_payload->as_node().add( "error", t_payload_error_msg );
+        }
+
+        LDEBUG( dlog, "Processing message:\n" <<
+                 "Routing key: " << a_routing_key <<
+                 "Payload: " << t_payload_str );
+
+        using scarab::at;
 
         using AmqpClient::Table;
         using AmqpClient::TableEntry;
         using AmqpClient::TableValue;
-        Table t_properties = a_message->HeaderTable();
-
-        LDEBUG( dlog, "Processing message:\n" <<
-                 "Routing key: " << a_routing_key <<
-                 "Payload: " << t_payload->to_string() );
-
-        using scarab::at;
+        Table t_properties = t_first_valid_message->HeaderTable();
 
         message_ptr_t t_message;
         msg_t t_msg_type = to_msg_t( at( t_properties, std::string("msgtype"), TableValue(to_uint(msg_t::unknown)) ).GetUint32() );
@@ -129,7 +191,7 @@ namespace dripline
                         to_op_t( at( t_properties, std::string("msgop"), TableValue(to_uint(op_t::unknown)) ).GetUint32() ),
                         a_routing_key,
                         at( t_properties, std::string("specifier"), TableValue("") ).GetString(),
-                        a_message->ReplyTo(),
+                        t_first_valid_message->ReplyTo(),
                         t_encoding);
 
                 bool t_lockout_key_valid = true;
@@ -170,8 +232,13 @@ namespace dripline
             }
         }
 
-        // set message fields
-        t_message->correlation_id() = a_message->CorrelationId();
+        // set message header fields
+        if( ! t_payload_error_msg.empty() )
+        {
+            t_message->set_is_valid( false );
+        }
+
+        t_message->correlation_id() = t_first_valid_message->CorrelationId();
         t_message->timestamp() = at( t_properties, std::string("timestamp"), TableValue("") ).GetString();
 
         Table t_sender_info = at( t_properties, std::string("sender_info"), TableValue(Table()) ).GetTable();
@@ -190,7 +257,7 @@ namespace dripline
         return t_message;
     }
 
-    std::vector< amqp_message_ptr > message::create_amqp_messages( unsigned a_max_size )
+    amqp_split_message_ptrs message::create_amqp_messages( unsigned a_max_size )
     {
         f_timestamp = scarab::get_formatted_now();
 
@@ -201,8 +268,9 @@ namespace dripline
 
             std::vector< amqp_message_ptr > t_message_parts;
 
-            auto t_create_message_parts = [&t_message_parts]( std::string& a_body_part ){
-                amqp_message_ptr t_message = AmqpClient::BasicMessage::Create( a_body_part );
+            for( string& t_body_part : t_body_parts )
+            {
+                amqp_message_ptr t_message = AmqpClient::BasicMessage::Create( t_body_part );
 
                 t_message->ContentEncoding( interpret_encoding() );
                 t_message->CorrelationId( f_correlation_id );
@@ -232,9 +300,7 @@ namespace dripline
                 t_message->HeaderTable( t_properties );
 
                 t_message_parts.push_back( t_message );
-            };
-
-            std::for_each( t_body_parts.begin(), t_body_parts.end(), t_create_message_parts );
+            }
 
             return t_message_parts;
         }

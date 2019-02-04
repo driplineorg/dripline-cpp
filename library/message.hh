@@ -57,11 +57,11 @@ namespace dripline
 
         public:
             /// from AMQP to message object
-            static message_ptr_t process_envelope( amqp_envelope_ptr a_envelope );
-            static message_ptr_t process_message( amqp_message_ptr a_message, const std::string& a_routing_key );
+            //static message_ptr_t process_envelope( amqp_envelope_ptr a_envelope );
+            static message_ptr_t process_message( amqp_split_message_ptrs a_message_ptrs, const std::string& a_routing_key );
 
             /// from message object to AMQP
-            std::vector< amqp_message_ptr > create_amqp_messages( unsigned a_max_size = 1000 );
+            amqp_split_message_ptrs create_amqp_messages( unsigned a_max_size = 1000 );
 
             /// from message object to string
             void encode_message_body( std::vector< std::string >& a_body_vec, unsigned a_max_size ) const;
@@ -72,6 +72,8 @@ namespace dripline
             std::string interpret_encoding() const;
 
         public:
+            mv_accessible( bool, is_valid );
+
             mv_referrable( std::string, routing_key );
             mv_referrable( std::string, correlation_id );
             mv_referrable( std::string, reply_to );
