@@ -49,6 +49,7 @@ namespace dripline
             f_is_valid( true ),
             f_routing_key(),
             f_correlation_id(),
+            f_message_id(),
             f_reply_to(),
             f_encoding( encoding::json ),
             f_timestamp(),
@@ -140,6 +141,7 @@ namespace dripline
             t_payload_str += t_message->Body();
         }
 
+        // Attempt to parse
         scarab::param_ptr_t t_payload;
         string t_payload_error_msg;
         if( t_payload_is_complete )
@@ -161,6 +163,8 @@ namespace dripline
             t_payload_error_msg = "Entire message was not available";
         }
 
+        // Payload is unavailable if the error message is non-empty
+        // In that case, store whatever we have for the payload string in the payload, plus the error message
         if( ! t_payload_error_msg.empty() )
         {
             // Store the invalid payload string in the payload
@@ -180,6 +184,7 @@ namespace dripline
         using AmqpClient::TableValue;
         Table t_properties = t_first_valid_message->HeaderTable();
 
+        // Create the message, of whichever type
         message_ptr_t t_message;
         msg_t t_msg_type = to_msg_t( at( t_properties, std::string("msgtype"), TableValue(to_uint(msg_t::unknown)) ).GetUint32() );
         switch( t_msg_type )
@@ -232,13 +237,16 @@ namespace dripline
             }
         }
 
-        // set message header fields
+        // Set message header fields
         if( ! t_payload_error_msg.empty() )
         {
             t_message->set_is_valid( false );
         }
 
         t_message->correlation_id() = t_first_valid_message->CorrelationId();
+        t_message->message_id() = t_first_valid_message->MessageId();
+        // remove the message chunk information from the message id
+        t_message->message_id() = t_message->message_id().substr( 0, t_message->message_id().find_first_of(s_message_id_separator) );
         t_message->timestamp() = at( t_properties, std::string("timestamp"), TableValue("") ).GetString();
 
         Table t_sender_info = at( t_properties, std::string("sender_info"), TableValue(Table()) ).GetTable();
@@ -266,14 +274,24 @@ namespace dripline
             std::vector< string > t_body_parts;
             encode_message_body( t_body_parts, a_max_size );
 
-            std::vector< amqp_message_ptr > t_message_parts;
+            unsigned t_n_chunks = t_body_parts.size();
+            std::vector< amqp_message_ptr > t_message_parts( t_n_chunks );
 
+            if( f_message_id.empty() )
+            {
+                f_message_id = string_from_uuid( generate_random_uuid() );
+            }
+            string t_base_message_id = f_message_id + s_message_id_separator;
+            string t_total_chunks_str = s_message_id_separator + std::to_string(t_n_chunks);
+
+            unsigned i_chunk = 0;
             for( string& t_body_part : t_body_parts )
             {
                 amqp_message_ptr t_message = AmqpClient::BasicMessage::Create( t_body_part );
 
                 t_message->ContentEncoding( interpret_encoding() );
                 t_message->CorrelationId( f_correlation_id );
+                t_message->MessageId( t_base_message_id + std::to_string(i_chunk) + t_total_chunks_str );
                 t_message->ReplyTo( f_reply_to );
 
                 using AmqpClient::Table;
@@ -299,7 +317,9 @@ namespace dripline
 
                 t_message->HeaderTable( t_properties );
 
-                t_message_parts.push_back( t_message );
+                t_message_parts[i_chunk] = t_message;
+
+                ++i_chunk;
             }
 
             return t_message_parts;

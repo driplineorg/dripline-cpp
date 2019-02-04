@@ -76,6 +76,7 @@ namespace dripline
 
             mv_referrable( std::string, routing_key );
             mv_referrable( std::string, correlation_id );
+            mv_referrable( std::string, message_id );
             mv_referrable( std::string, reply_to );
             mv_accessible( encoding, encoding );
             mv_referrable( std::string, timestamp );
@@ -116,6 +117,9 @@ namespace dripline
 
         private:
             scarab::param_ptr_t f_payload;
+
+        public:
+            static const char s_message_id_separator = '/';
 
     };
 
