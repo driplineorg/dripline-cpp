@@ -257,13 +257,16 @@ namespace dripline
         LDEBUG( dlog, "Consumer tag for reply: " << a_reply_consumer_tag );
 
         // convert the dripline::message object to an AMQP message
-        amqp_message_ptr t_amqp_message = a_message->create_amqp_message();
+        amqp_split_message_ptrs t_amqp_messages = a_message->create_amqp_messages();
 
         try
         {
             LDEBUG( dlog, "Sending message to <" << a_message->routing_key() << ">" );
-            t_channel->BasicPublish( a_exchange, a_message->routing_key(), t_amqp_message, true, false );
-            LDEBUG( dlog, "Message sent" );
+            for( amqp_message_ptr& t_amqp_message : t_amqp_messages )
+            {
+                t_channel->BasicPublish( a_exchange, a_message->routing_key(), t_amqp_message, true, false );
+            }
+            LDEBUG( dlog, "Message sent in " << t_amqp_messages.size() << " chunks" );
             return t_channel;
         }
         catch( AmqpClient::MessageReturnedException& e )
@@ -300,12 +303,16 @@ namespace dripline
             return false;
         }
 
-        amqp_message_ptr t_amqp_message = a_message->create_amqp_message();
+        amqp_split_message_ptrs t_amqp_messages = a_message->create_amqp_messages();
 
         try
         {
-            t_channel->BasicPublish( a_exchange, a_message->routing_key(), t_amqp_message, true, false );
-            LDEBUG( dlog, "Message sent" );
+            LDEBUG( dlog, "Sending message to <" << a_message->routing_key() << ">" );
+            for( amqp_message_ptr& t_amqp_message : t_amqp_messages )
+            {
+                t_channel->BasicPublish( a_exchange, a_message->routing_key(), t_amqp_message, true, false );
+            }
+            LDEBUG( dlog, "Message sent in " << t_amqp_messages.size() << " chunks" );
         }
         catch( AmqpClient::MessageReturnedException& e )
         {
