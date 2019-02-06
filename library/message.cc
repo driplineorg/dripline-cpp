@@ -86,6 +86,20 @@ namespace dripline
         return message::process_message( a_envelope->Message(), a_envelope->RoutingKey() );
     }
 */
+    std::tuple< std::string, unsigned, unsigned > message::parse_message_id( const string& a_message_id )
+    {
+        unsigned t_first_separator = a_message_id.find_first_of( s_message_id_separator );
+        unsigned t_last_separator = a_message_id.find_last_of( s_message_id_separator );
+        if( t_first_separator == a_message_id.npos || t_last_separator == a_message_id.npos )
+        {
+            throw dripline_error() << "Message ID is not formatted correctly\nShould be [UUID]/[chunk]/[total chunks]\nReceived: " << a_message_id;
+        }
+
+        return std::make_tuple( a_message_id.substr(0, t_first_separator),
+                                std::stoul(a_message_id.substr(t_first_separator + 1, t_last_separator - t_first_separator - 1)),
+                                std::stoul(a_message_id.substr(t_last_separator + 1)) );
+    }
+
     message_ptr_t message::process_message( amqp_split_message_ptrs a_message_ptrs, const std::string& a_routing_key )
     {
         // find first non-empty message pointer

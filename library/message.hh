@@ -18,6 +18,7 @@
 #include "uuid.hh"
 
 #include <memory>
+#include <tuple>
 #include <string>
 
 namespace dripline
@@ -56,6 +57,9 @@ namespace dripline
             virtual bool is_alert() const = 0;
 
         public:
+            /// Parses the message ID, which should be of the form [UUID]/[chunk]/[total chunks]
+            static std::tuple< std::string, unsigned, unsigned > parse_message_id( const std::string& a_message_id );
+
             /// from AMQP to message object
             //static message_ptr_t process_envelope( amqp_envelope_ptr a_envelope );
             static message_ptr_t process_message( amqp_split_message_ptrs a_message_ptrs, const std::string& a_routing_key );
