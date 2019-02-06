@@ -58,6 +58,7 @@ namespace dripline
             f_consumer_tag(),
             f_keys(),
             f_broadcast_key(),
+            f_incoming_messages(),
             f_listen_timeout_ms( 500 ),
             f_lockout_tag(),
             f_lockout_key( generate_nil_uuid() )
@@ -143,44 +144,53 @@ namespace dripline
                 continue;
             }
 
-            try
-            {
-                message_ptr_t t_message = message::process_envelope( t_envelope );
+            amqp_message_ptr t_message = t_envelope->Message();
 
-                bool t_msg_handled = true;
-                if( t_message->is_request() )
-                {
-                    on_request_message( static_pointer_cast< msg_request >( t_message ) );
-                }
-                else if( t_message->is_alert() )
-                {
-                    on_alert_message( static_pointer_cast< msg_alert >( t_message ) );
-                }
-                else if( t_message->is_reply() )
-                {
-                    on_reply_message( static_pointer_cast< msg_reply >( t_message ) );
-                }
-                if( ! t_msg_handled )
-                {
-                    throw dripline_error() << "Message could not be handled";
-                }
-            }
-            catch( dripline_error& e )
+            auto t_parsed_message_id = message::parse_message_id( t_message->MessageId() );
+            if( f_incoming_messages.count( std::get<0>(t_parsed_message_id) ) == 0 )
             {
-                LERROR( dlog, "Dripline exception caught while handling message: " << e.what() );
+                // this path: first chunk for this message
+                // create the new message_pack object
+                message_pack& t_pack = f_incoming_messages[std::get<0>(t_parsed_message_id)];
+                // set the f_messages vector to the expected size
+                t_pack.f_messages.resize( std::get<2>(t_parsed_message_id) );
+                // put in place the first message chunk received
+                t_pack.f_messages[std::get<1>(t_parsed_message_id)] = t_message;
+                t_pack.f_routing_key = t_envelope->RoutingKey();
+
+                // start the thread to wait for message chunks
+                t_pack.f_thread = std::thread([this, &t_pack](){ wait_for_message(t_pack); });
+                t_pack.f_thread.detach();
             }
-            catch( amqp_exception& e )
+            else
             {
-                LERROR( dlog, "AMQP exception caught while sending reply: (" << e.reply_code() << ") " << e.reply_text() );
+                // this path: have already received chunks from this message
+                message_pack& t_pack = f_incoming_messages[std::get<0>(t_parsed_message_id)];
+                if( t_pack.f_processing.load() )
+                {
+                    LWARN( dlog, "Message <" << std::get<0>(t_parsed_message_id) << "> is already being processed\n" <<
+                            "Just received chunk " << std::get<1>(t_parsed_message_id) << " of " << std::get<2>(t_parsed_message_id) );
+                }
+                else
+                {
+                    // lock mutex to access f_messages
+                    std::unique_lock< std::mutex > t_lock( t_pack.f_mutex );
+                    if( t_pack.f_messages[std::get<1>(t_parsed_message_id)] )
+                    {
+                        LWARN( dlog, "Received duplicate message chunk for message <" << std::get<0>(t_parsed_message_id) << ">; chunk " << std::get<1>(t_parsed_message_id) );
+                    }
+                    else
+                    {
+                        // add chunk to set of chunks
+                        t_pack.f_messages[std::get<1>(t_parsed_message_id)] = t_message;
+                        ++t_pack.f_chunks_received;
+                        t_lock.unlock();
+                        // inform the message-processing thread it should check whether it has the complete message
+                        t_pack.f_conv.notify_one();
+                    }
+                }
             }
-            catch( amqp_lib_exception& e )
-            {
-                LERROR( dlog, "AMQP Library Exception caught while sending reply: (" << e.ErrorCode() << ") " << e.what() );
-            }
-            catch( std::exception& e )
-            {
-                LERROR( dlog, "Standard exception caught while sending reply: " << e.what() );
-            }
+
 
             if( ! t_channel_valid )
             {
@@ -330,6 +340,77 @@ namespace dripline
         }
 
         return true;
+    }
+
+    void service::wait_for_message( message_pack& a_pack )
+    {
+        std::unique_lock< std::mutex > t_lock( a_pack.f_mutex );
+
+        if( a_pack.f_chunks_received == a_pack.f_messages.size() )
+        {
+            process_message( a_pack );
+            return;
+        }
+
+        auto t_now = std::chrono::system_clock::now();
+
+        // TODO: replace hard-coded time interval
+        while( a_pack.f_conv.wait_until( t_lock, t_now + std::chrono::seconds(1) ) == std::cv_status::no_timeout )
+        {
+            if( a_pack.f_chunks_received == a_pack.f_messages.size() )
+            {
+                process_message( a_pack );
+                return;
+            }
+        }
+
+        process_message( a_pack );
+
+        return;
+    }
+
+    void service::process_message( message_pack& a_pack )
+    {
+        try
+        {
+            message_ptr_t t_message = message::process_message( a_pack.f_messages, a_pack.f_routing_key );
+
+            bool t_msg_handled = true;
+            if( t_message->is_request() )
+            {
+                on_request_message( static_pointer_cast< msg_request >( t_message ) );
+            }
+            else if( t_message->is_alert() )
+            {
+                on_alert_message( static_pointer_cast< msg_alert >( t_message ) );
+            }
+            else if( t_message->is_reply() )
+            {
+                on_reply_message( static_pointer_cast< msg_reply >( t_message ) );
+            }
+            if( ! t_msg_handled )
+            {
+                throw dripline_error() << "Message could not be handled";
+            }
+        }
+        catch( dripline_error& e )
+        {
+            LERROR( dlog, "Dripline exception caught while handling message: " << e.what() );
+        }
+        catch( amqp_exception& e )
+        {
+            LERROR( dlog, "AMQP exception caught while sending reply: (" << e.reply_code() << ") " << e.reply_text() );
+        }
+        catch( amqp_lib_exception& e )
+        {
+            LERROR( dlog, "AMQP Library Exception caught while sending reply: (" << e.ErrorCode() << ") " << e.what() );
+        }
+        catch( std::exception& e )
+        {
+            LERROR( dlog, "Standard exception caught while sending reply: " << e.what() );
+        }
+
+        return;
     }
 
     uuid_t service::enable_lockout( const scarab::param_node& a_tag, uuid_t a_key )
