@@ -20,7 +20,7 @@ namespace dripline
 
     LOGGER( dlog, "amqp" );
 
-    receive_reply_pkg::~receive_reply_pkg()
+    sent_msg_pkg::~sent_msg_pkg()
     {
         if( f_channel )
         {
@@ -37,7 +37,6 @@ namespace dripline
             {
                 LERROR( dlog, "AMQP library exception caught while canceling the channel: (" << e.ErrorCode() << ") " << e.what() );
             }
-            f_channel.reset();
         }
     }
 
@@ -151,55 +150,38 @@ namespace dripline
         return *this;
     }
 
-    rr_pkg_ptr core::send( request_ptr_t a_request ) const
+    sent_msg_pkg_ptr core::send( request_ptr_t a_request ) const
     {
-        if ( ! f_make_connection )
-        {
-            LWARN( dlog, "send called but make_connection is false, returning nullptr" );
-            return nullptr;
-        }
         LDEBUG( dlog, "Sending request with routing key <" << a_request->routing_key() << ">" );
-        rr_pkg_ptr t_receive_reply = std::make_shared< receive_reply_pkg >();
-        t_receive_reply->f_channel = send_withreply( std::static_pointer_cast< message >( a_request ), t_receive_reply->f_consumer_tag, f_requests_exchange );
-        t_receive_reply->f_successful_send = t_receive_reply->f_channel.get() != nullptr;
-        return t_receive_reply;
+        return do_send( std::static_pointer_cast< message >( a_request ), f_requests_exchange, true );
     }
 
-    bool core::send( reply_ptr_t a_reply ) const
+    sent_msg_pkg_ptr core::send( reply_ptr_t a_reply ) const
     {
-        if ( ! f_make_connection )
-        {
-            LWARN( dlog, "send called but make_connection is false, returning nullptr" );
-            return false;
-        }
         LDEBUG( dlog, "Sending reply with routing key <" << a_reply->routing_key() << ">" );
-        return send_noreply( std::static_pointer_cast< message >( a_reply ), f_requests_exchange );
+        return do_send( std::static_pointer_cast< message >( a_reply ), f_requests_exchange, false );
     }
 
-    bool core::send( alert_ptr_t a_alert ) const
+    sent_msg_pkg_ptr core::send( alert_ptr_t a_alert ) const
     {
-        if ( ! f_make_connection )
-        {
-            LWARN( dlog, "send called but make_connection is false, returning nullptr" );
-            return false;
-        }
         LDEBUG( dlog, "Sending alert with routing key <" << a_alert->routing_key() << ">" );
-        return send_noreply( std::static_pointer_cast< message >( a_alert ), f_alerts_exchange );
+        return do_send( std::static_pointer_cast< message >( a_alert ), f_alerts_exchange, false );
     }
 
-    reply_ptr_t core::wait_for_reply( const rr_pkg_ptr a_receive_reply, int a_timeout_ms )
+    reply_ptr_t core::wait_for_reply( const sent_msg_pkg_ptr a_receive_reply, int a_timeout_ms )
     {
         bool t_temp;
         return wait_for_reply( a_receive_reply, t_temp, a_timeout_ms );
     }
 
-    reply_ptr_t core::wait_for_reply( const rr_pkg_ptr a_receive_reply, bool& a_chan_valid, int a_timeout_ms )
+    reply_ptr_t core::wait_for_reply( const sent_msg_pkg_ptr a_receive_reply, bool& a_chan_valid, int a_timeout_ms )
     {
         if ( ! a_receive_reply->f_channel )
         {
             //throw dripline_error() << "cannot wait for reply with make_connection is false";
             return reply_ptr_t();
         }
+
         LDEBUG( dlog, "Waiting for a reply" );
 
         amqp_envelope_ptr t_envelope;
@@ -208,7 +190,7 @@ namespace dripline
 
         try
         {
-            message_ptr_t t_message = message::process_envelope( t_envelope );
+            message_ptr_t t_message;//TODO = message::process_envelope( t_envelope );
 
             if( t_message->is_reply() )
             {
@@ -227,37 +209,55 @@ namespace dripline
         }
     }
 
-    amqp_channel_ptr core::send_withreply( message_ptr_t a_message, std::string& a_reply_consumer_tag, const std::string& a_exchange ) const
+    sent_msg_pkg_ptr core::do_send( message_ptr_t a_message, const std::string& a_exchange, bool a_expect_reply ) const
     {
+        // throws dripline_error if it could not start sending the message
+        // returns the receive_reply package if the message was completely or partially sent
+        // the f_successful_send flag will be set accordingly: true if completely sent; false if partially sent
+        // if there was an error, that will be returned in f_send_error_message, which will be empty otherwise
+
         if ( ! f_make_connection )
         {
-            throw dripline_error() << "cannot send reply with make_connection is false";
+            throw dripline_error() << "cannot send reply when make_connection is false";
         }
+
         amqp_channel_ptr t_channel = open_channel();
         if( ! t_channel )
         {
-            LERROR( dlog, "Unable to open channel to send a message to <" << a_message->routing_key() << "> using broker <" << f_address << ":" << f_port << ">" );
-            return amqp_channel_ptr();
+            throw dripline_error() << "Unable to open channel to send a message to <" << a_message->routing_key() << "> using broker <" << f_address << ":" << f_port << ">";
         }
 
         if( ! setup_exchange( t_channel, a_exchange ) )
         {
-            LERROR( dlog, "Unable to setup the exchange <" << a_exchange << ">" );
-            return amqp_channel_ptr();
+            throw dripline_error() << "Unable to setup the exchange <" << a_exchange << ">";
         }
-
-        // create the reply-to queue, and bind the queue to the routing key over the given exchange
-        std::string t_reply_to = t_channel->DeclareQueue( "" );
-        t_channel->BindQueue( t_reply_to, a_exchange, t_reply_to );
-        a_message->reply_to() = t_reply_to;
-
-        // begin consuming on the reply-to queue
-        a_reply_consumer_tag = t_channel->BasicConsume( t_reply_to );
-        LDEBUG( dlog, "Reply-to for request: " << t_reply_to );
-        LDEBUG( dlog, "Consumer tag for reply: " << a_reply_consumer_tag );
 
         // convert the dripline::message object to an AMQP message
         amqp_split_message_ptrs t_amqp_messages = a_message->create_amqp_messages();
+        if( t_amqp_messages.empty() )
+        {
+            throw dripline_error() << "Unable to convert the dripline::message object to AMQP messages";
+        }
+
+        // create empty receive-reply object
+        sent_msg_pkg_ptr t_receive_reply = std::make_shared< sent_msg_pkg >();
+        std::unique_lock< std::mutex > t_rr_lock( t_receive_reply->f_mutex );
+
+        if( a_expect_reply )
+        {
+            t_receive_reply->f_channel = t_channel;
+
+            // create the reply-to queue, and bind the queue to the routing key over the given exchange
+            std::string t_reply_to = t_channel->DeclareQueue( "" );
+            t_channel->BindQueue( t_reply_to, a_exchange, t_reply_to );
+            // set the reply-to in the message because now we have the queue to which to reply
+            a_message->reply_to() = t_reply_to;
+
+            // begin consuming on the reply-to queue
+            t_receive_reply->f_consumer_tag = t_channel->BasicConsume( t_reply_to );
+            LDEBUG( dlog, "Reply-to for request: " << t_reply_to );
+            LDEBUG( dlog, "Consumer tag for reply: " << t_receive_reply->f_consumer_tag );
+        }
 
         try
         {
@@ -267,64 +267,21 @@ namespace dripline
                 t_channel->BasicPublish( a_exchange, a_message->routing_key(), t_amqp_message, true, false );
             }
             LDEBUG( dlog, "Message sent in " << t_amqp_messages.size() << " chunks" );
-            return t_channel;
+            t_receive_reply->f_successful_send = true;
+            t_receive_reply->f_send_error_message.clear();
         }
         catch( AmqpClient::MessageReturnedException& e )
         {
             LERROR( dlog, "Message could not be sent: " << e.what() );
-            return amqp_channel_ptr();
+            t_receive_reply->f_successful_send = false;
+            t_receive_reply->f_send_error_message = std::string("AMQP error while sending message: ") + std::string(e.what());
         }
         catch( std::exception& e )
         {
-            LERROR( dlog, "Error publishing request to queue: " << e.what() );
-            return amqp_channel_ptr();
+            t_receive_reply->f_successful_send = false;
+            t_receive_reply->f_send_error_message = std::string("Error publishing request to queue: ") + std::string(e.what());
         }
-    }
-
-    bool core::send_noreply( message_ptr_t a_message, const std::string& a_exchange ) const
-    {
-        if( ! f_make_connection )
-        {
-            LDEBUG( dlog, "does not make amqp connection, not sending payload:" );
-            LDEBUG( dlog, a_message->payload() );
-            throw dripline_error() << "cannot send message with make_connection is false";
-            return true;
-        }
-        amqp_channel_ptr t_channel = open_channel();
-        if( ! t_channel )
-        {
-            LERROR( dlog, "Unable to open channel to send a message to <" << a_message->routing_key() << "> using broker <" << f_address << ":" << f_port << ">" );
-            return false;
-        }
-
-        if( ! setup_exchange( t_channel, a_exchange ) )
-        {
-            LERROR( dlog, "Unable to setup the exchange <" << a_exchange << ">" );
-            return false;
-        }
-
-        amqp_split_message_ptrs t_amqp_messages = a_message->create_amqp_messages();
-
-        try
-        {
-            LDEBUG( dlog, "Sending message to <" << a_message->routing_key() << ">" );
-            for( amqp_message_ptr& t_amqp_message : t_amqp_messages )
-            {
-                t_channel->BasicPublish( a_exchange, a_message->routing_key(), t_amqp_message, true, false );
-            }
-            LDEBUG( dlog, "Message sent in " << t_amqp_messages.size() << " chunks" );
-        }
-        catch( AmqpClient::MessageReturnedException& e )
-        {
-            LERROR( dlog, "Message could not be sent: " << e.what() );
-            return false;
-        }
-        catch( std::exception& e )
-        {
-            LERROR( dlog, "Error publishing request to queue: " << e.what() );
-            return false;
-        }
-        return true;
+        return t_receive_reply;
     }
 
     amqp_channel_ptr core::open_channel() const

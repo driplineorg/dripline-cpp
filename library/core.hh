@@ -18,14 +18,16 @@ namespace scarab
 
 namespace dripline
 {
-    struct receive_reply_pkg
+    struct DRIPLINE_API sent_msg_pkg
     {
+        std::mutex f_mutex;
         amqp_channel_ptr f_channel;
         std::string f_consumer_tag;
         bool f_successful_send;
-        ~receive_reply_pkg();
+        std::string f_send_error_message;
+        ~sent_msg_pkg();
     };
-    typedef std::shared_ptr< receive_reply_pkg > rr_pkg_ptr;
+    typedef std::shared_ptr< sent_msg_pkg > sent_msg_pkg_ptr;
 
     class DRIPLINE_API core
     {
@@ -46,22 +48,22 @@ namespace dripline
         public:
             /// Sends a request message and returns a channel on which to listen for a reply.
             /// Default exchange is "requests"
-            virtual rr_pkg_ptr send( request_ptr_t a_request ) const;
+            virtual sent_msg_pkg_ptr send( request_ptr_t a_request ) const;
 
             /// Sends a reply message
             /// Default exchange is "requests"
-            virtual bool send( reply_ptr_t a_reply ) const;
+            virtual sent_msg_pkg_ptr send( reply_ptr_t a_reply ) const;
 
             /// Sends an alert message
             /// Default exchange is "alerts"
-            virtual bool send( alert_ptr_t a_alert ) const;
+            virtual sent_msg_pkg_ptr send( alert_ptr_t a_alert ) const;
 
             /// Wait for a reply message
             /// If the timeout is <= 0 ms, there will be no timeout
             /// This function can be called multiple times to receive multiple replies
             /// The optional bool argument a_chan_valid will return whether or not the channel is still valid for use
-            static reply_ptr_t wait_for_reply( const rr_pkg_ptr a_receive_reply, int a_timeout_ms = 0 );
-            static reply_ptr_t wait_for_reply( const rr_pkg_ptr a_receive_reply, bool& a_chan_valid, int a_timeout_ms = 0 );
+            static reply_ptr_t wait_for_reply( const sent_msg_pkg_ptr a_receive_reply, int a_timeout_ms = 0 );
+            static reply_ptr_t wait_for_reply( const sent_msg_pkg_ptr a_receive_reply, bool& a_chan_valid, int a_timeout_ms = 0 );
 
             mv_referrable( std::string, address );
             mv_accessible( unsigned, port );
@@ -74,6 +76,8 @@ namespace dripline
             mv_accessible( bool, make_connection );
 
         protected:
+            sent_msg_pkg_ptr do_send( message_ptr_t a_message, const std::string& a_exchange, bool a_expect_reply ) const;
+
             amqp_channel_ptr send_withreply( message_ptr_t a_message, std::string& a_reply_consumer_tag, const std::string& a_exchange ) const;
 
             bool send_noreply( message_ptr_t a_message, const std::string& a_exchange ) const;

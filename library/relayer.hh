@@ -7,8 +7,6 @@
 #include "cancelable.hh"
 #include "concurrent_queue.hh"
 
-//#include <boost/date_time/posix_time/posix_time.hpp>
-
 #include <condition_variable>
 #include <mutex>
 
@@ -39,30 +37,23 @@ namespace dripline
             // asynchronous message submission
             //********************************
 
-            struct cc_receive_reply_pkg : receive_reply_pkg
+            struct wait_for_send_pkg
             {
                 mutable std::mutex f_mutex;
                 mutable std::condition_variable f_condition_var;
-                cc_receive_reply_pkg& operator=( const receive_reply_pkg& a_orig )
-                {
-                    // not thread safe
-                    f_channel = a_orig.f_channel;
-                    f_consumer_tag = a_orig.f_consumer_tag;
-                    f_successful_send = a_orig.f_successful_send;
-                    return *this;
-                }
+                sent_msg_pkg_ptr f_sent_msg_pkg_ptr;
             };
-            typedef std::shared_ptr< cc_receive_reply_pkg > cc_rr_pkg_ptr;
+            typedef std::shared_ptr< wait_for_send_pkg > wait_for_send_pkg_ptr;
 
-            cc_rr_pkg_ptr send_async( request_ptr_t a_request ) const;
-            bool send_async( alert_ptr_t a_alert ) const;
+            wait_for_send_pkg_ptr send_async( request_ptr_t a_request ) const;
+            wait_for_send_pkg_ptr send_async( alert_ptr_t a_alert ) const;
 
             /// Wait for a reply message
             /// If the timeout is <= 0 ms, there will be no timeout
             /// This function can be called multiple times to receive multiple replies
             /// The optional bool argument a_chan_valid will return whether or not the channel is still valid for use
-            static reply_ptr_t wait_for_reply( const cc_rr_pkg_ptr a_receive_reply, int a_timeout_ms = 0 );
-            static reply_ptr_t wait_for_reply( const cc_rr_pkg_ptr a_receive_reply, bool& a_chan_valid, int a_timeout_ms = 0 );
+            static reply_ptr_t wait_for_reply( const wait_for_send_pkg_ptr a_receive_reply, int a_timeout_ms = 0 );
+            static reply_ptr_t wait_for_reply( const wait_for_send_pkg_ptr a_receive_reply, bool& a_chan_valid, int a_timeout_ms = 0 );
 
         private:
             void do_cancellation();
@@ -70,7 +61,7 @@ namespace dripline
             struct message_and_reply
             {
                 message_ptr_t f_message;
-                cc_rr_pkg_ptr f_receive_reply;
+                wait_for_send_pkg_ptr f_wait_for_send_pkg;
             };
             typedef std::shared_ptr< message_and_reply > mar_ptr;
 

@@ -69,19 +69,19 @@ namespace dripline
     {
     }
 
-    rr_pkg_ptr service::send( request_ptr_t a_request ) const
+    sent_msg_pkg_ptr service::send( request_ptr_t a_request ) const
     {
         a_request->sender_service_name() = f_name;
         return core::send( a_request );
     }
 
-    bool service::send( reply_ptr_t a_reply ) const
+    sent_msg_pkg_ptr service::send( reply_ptr_t a_reply ) const
     {
         a_reply->sender_service_name() = f_name ;
         return core::send( a_reply );
     }
 
-    bool service::send( alert_ptr_t a_alert ) const
+    sent_msg_pkg_ptr service::send( alert_ptr_t a_alert ) const
     {
         a_alert->sender_service_name() = f_name;
         return core::send( a_alert );

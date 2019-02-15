@@ -52,13 +52,13 @@ namespace dripline
 
         public:
             /// Sends a request message and returns a channel on which to listen for a reply.
-            virtual rr_pkg_ptr send( request_ptr_t a_request ) const;
+            virtual sent_msg_pkg_ptr send( request_ptr_t a_request ) const;
 
             /// Sends a reply message
-            virtual bool send( reply_ptr_t a_reply ) const;
+            virtual sent_msg_pkg_ptr send( reply_ptr_t a_reply ) const;
 
             /// Sends an alert message
-            virtual bool send( alert_ptr_t a_alert ) const;
+            virtual sent_msg_pkg_ptr send( alert_ptr_t a_alert ) const;
 
         public:
             /// Creates a channel to the broker and establishes the queue for receiving messages.

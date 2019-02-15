@@ -12,6 +12,7 @@
 
 #include "agent_config.hh"
 #include "dripline_constants.hh"
+#include "dripline_error.hh"
 #include "dripline_version.hh"
 #include "core.hh"
 #include "uuid.hh"
@@ -143,11 +144,20 @@ namespace dripline
 
         LDEBUG( dlog, "Sending message w/ msgop = " << t_request->get_message_op() << " to " << t_request->routing_key() );
 
-        rr_pkg_ptr t_receive_reply = t_core.send( t_request );
+        sent_msg_pkg_ptr t_receive_reply;
+        try
+        {
+            t_receive_reply = t_core.send( t_request );
+        }
+        catch( dripline_error& e )
+        {
+            LERROR( dlog, "Unable to send request:\n" << e.what() );
+            return;
+        }
 
         if( ! t_receive_reply->f_successful_send )
         {
-            LERROR( dlog, "Unable to send request" );
+            LERROR( dlog, "Message sending failed:\n" + t_receive_reply->f_send_error_message );
             f_agent->set_return( RETURN_ERROR );
             return;
         }
