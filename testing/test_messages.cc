@@ -25,11 +25,12 @@ TEST_CASE( "conversion", "[message]" )
 
         REQUIRE( t_req_ptr );
 
-        dripline::amqp_message_ptr t_amqp_msg_ptr = t_req_ptr->create_amqp_message();
+        dripline::amqp_split_message_ptrs t_amqp_msg_ptrs = t_req_ptr->create_amqp_messages();
 
-        REQUIRE( t_amqp_msg_ptr );
+        REQUIRE( t_amqp_msg_ptrs[0] );
+        REQUIRE( t_amqp_msg_ptrs.size() == 1 );
 
-        dripline::message_ptr_t t_conv_msg_ptr = dripline::message::process_message( t_amqp_msg_ptr, "test.rk" );
+        dripline::message_ptr_t t_conv_msg_ptr = dripline::message::process_message( t_amqp_msg_ptrs, "test.rk" );
 
         REQUIRE( t_conv_msg_ptr->is_request() );
 
@@ -50,11 +51,12 @@ TEST_CASE( "conversion", "[message]" )
 
         REQUIRE( t_rep_ptr );
 
-        dripline::amqp_message_ptr t_amqp_msg_ptr = t_rep_ptr->create_amqp_message();
+        dripline::amqp_split_message_ptrs t_amqp_msg_ptrs = t_rep_ptr->create_amqp_messages();
 
-        REQUIRE( t_amqp_msg_ptr );
+        REQUIRE( t_amqp_msg_ptrs[0] );
+        REQUIRE( t_amqp_msg_ptrs.size() == 1 );
 
-        dripline::message_ptr_t t_conv_msg_ptr = dripline::message::process_message( t_amqp_msg_ptr, "test.rk" );
+        dripline::message_ptr_t t_conv_msg_ptr = dripline::message::process_message( t_amqp_msg_ptrs, "test.rk" );
 
         REQUIRE( t_conv_msg_ptr->is_reply() );
 
@@ -73,11 +75,12 @@ TEST_CASE( "conversion", "[message]" )
 
         REQUIRE( t_alert_ptr );
 
-        dripline::amqp_message_ptr t_amqp_msg_ptr = t_alert_ptr->create_amqp_message();
+        dripline::amqp_split_message_ptrs t_amqp_msg_ptrs = t_alert_ptr->create_amqp_messages();
 
-        REQUIRE( t_amqp_msg_ptr );
+        REQUIRE( t_amqp_msg_ptrs[0] );
+        REQUIRE( t_amqp_msg_ptrs.size() == 1 );
 
-        dripline::message_ptr_t t_conv_msg_ptr = dripline::message::process_message( t_amqp_msg_ptr, "test.rk" );
+        dripline::message_ptr_t t_conv_msg_ptr = dripline::message::process_message( t_amqp_msg_ptrs, "test.rk" );
 
         REQUIRE( t_conv_msg_ptr->is_alert() );
 
