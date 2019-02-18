@@ -206,7 +206,6 @@ namespace dripline
 
     request_ptr_t agent::sub_agent_run::create_request( scarab::param_node& a_config )
     {
-        // copy of a_config, which should consist of only the request arguments
         param_ptr_t t_payload_ptr( new param_node( a_config ) );
 
         return msg_request::create( std::move(t_payload_ptr),
@@ -217,10 +216,7 @@ namespace dripline
 
     request_ptr_t agent::sub_agent_get::create_request( scarab::param_node& a_config )
     {
-        param_ptr_t t_payload_ptr( new param_node() );
-
-        // at this point, all that remains in a_config should be other options that we want to add to the payload node
-        t_payload_ptr->as_node().merge( a_config ); // copy a_config
+        param_ptr_t t_payload_ptr( new param_node( a_config ) );
 
         return msg_request::create( std::move(t_payload_ptr),
                                     op_t::get,
@@ -230,16 +226,14 @@ namespace dripline
 
     request_ptr_t agent::sub_agent_set::create_request( scarab::param_node& a_config )
     {
+        // require the values array
         if( ! a_config.has( "values" ) )
         {
             LERROR( dlog, "No \"values\" option given" );
             return nullptr;
         }
 
-        param_ptr_t t_payload_ptr( new param_node() );
-
-        // at this point, all that remains in a_config should be other options that we want to add to the payload node
-        t_payload_ptr->as_node().merge( a_config ); // copy a_config
+        param_ptr_t t_payload_ptr( new param_node( a_config ) );
 
         return msg_request::create( std::move(t_payload_ptr),
                                     op_t::set,
@@ -247,7 +241,7 @@ namespace dripline
                                     f_agent->specifier() );
     }
 
-    request_ptr_t agent::sub_agent_cmd::create_request( scarab::param_node& a_config )
+    request_ptr_t agent::sub_agent_cmd::create_request( param_node& a_config )
     {
         param_ptr_t t_payload_ptr( new param_node() );
         param_node& t_payload_node = t_payload_ptr->as_node();
@@ -275,7 +269,7 @@ namespace dripline
         }
 
         // at this point, all that remains in a_config should be other options that we want to add to the payload node
-        t_payload_node.merge( a_config ); // copy a_config
+        a_config.merge( a_config ); // copy a_config
 
         return msg_request::create( std::move(t_payload_ptr),
                                     op_t::cmd,
