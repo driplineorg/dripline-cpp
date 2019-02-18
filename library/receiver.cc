@@ -36,79 +36,83 @@ namespace dripline
     {
         if ( ! a_receive_reply->f_channel )
         {
-            //throw dripline_error() << "cannot wait for reply with make_connection is false";
             return reply_ptr_t();
         }
 
         LDEBUG( dlog, "Waiting for a reply" );
 
-        // TODO: need to change the flow here
-        //         return to listening until there's a timeout or a message is complete
-        //         if message is complete, return processed message
-        //         if no message, and timeout instead, return null pointer
-
-        // TODO: Also, consider whether these wait-for-reply functions and the capability to
-        //       receive broken-up messages should go in a separate class, message_receiver or something
-
-        amqp_envelope_ptr t_envelope;
-        a_chan_valid = core::listen_for_message( t_envelope, a_receive_reply->f_channel, a_receive_reply->f_consumer_tag, a_timeout_ms );
-        a_receive_reply->f_channel.reset();
-
-        try
+        // wait for messages until either:
+        //   1. the channel is no longer valid (return empty reply pointer; a_chan_valid will be false)
+        //   2. listening times out (return empty reply pointer; a_chan_valid will be true)
+        //   3. a full dripline message is received (return message)
+        //   4. error processing a recieved amqp message (return empty reply pointer)
+        while( true )
         {
-            amqp_message_ptr t_message = t_envelope->Message();
+            amqp_envelope_ptr t_envelope;
+            a_chan_valid = core::listen_for_message( t_envelope, a_receive_reply->f_channel, a_receive_reply->f_consumer_tag, a_timeout_ms );
 
-            auto t_parsed_message_id = message::parse_message_id( t_message->MessageId() );
-            if( f_incoming_messages.count( std::get<0>(t_parsed_message_id) ) == 0 )
-            {
-                // this path: first chunk for this message
-                // create the new message_pack object
-                incoming_message_pack& t_pack = f_incoming_messages[std::get<0>(t_parsed_message_id)];
-                // set the f_messages vector to the expected size
-                t_pack.f_messages.resize( std::get<2>(t_parsed_message_id) );
-                // put in place the first message chunk received
-                t_pack.f_messages[std::get<1>(t_parsed_message_id)] = t_message;
-                t_pack.f_routing_key = t_envelope->RoutingKey();
+            // there was an error listening on the channel; no message received
+            if( ! a_chan_valid ) return reply_ptr_t();
 
-                if( t_pack.f_chunks_received == t_pack.f_messages.size() )
-                {
-                    return process_received_reply( t_pack, std::get<0>(t_parsed_message_id) );
-                }
-            }
-            else
+            // listening timed out
+            if( ! t_envelope ) return reply_ptr_t();
+
+            try
             {
-                // this path: have already received chunks from this message
-                incoming_message_pack& t_pack = f_incoming_messages[std::get<0>(t_parsed_message_id)];
-                if( t_pack.f_processing.load() )
+                amqp_message_ptr t_message = t_envelope->Message();
+
+                auto t_parsed_message_id = message::parse_message_id( t_message->MessageId() );
+                if( f_incoming_messages.count( std::get<0>(t_parsed_message_id) ) == 0 )
                 {
-                    LWARN( dlog, "Message <" << std::get<0>(t_parsed_message_id) << "> is already being processed\n" <<
-                            "Just received chunk " << std::get<1>(t_parsed_message_id) << " of " << std::get<2>(t_parsed_message_id) );
+                    // this path: first chunk for this message
+                    // create the new message_pack object
+                    incoming_message_pack& t_pack = f_incoming_messages[std::get<0>(t_parsed_message_id)];
+                    // set the f_messages vector to the expected size
+                    t_pack.f_messages.resize( std::get<2>(t_parsed_message_id) );
+                    // put in place the first message chunk received
+                    t_pack.f_messages[std::get<1>(t_parsed_message_id)] = t_message;
+                    t_pack.f_routing_key = t_envelope->RoutingKey();
+
+                    if( t_pack.f_chunks_received == t_pack.f_messages.size() )
+                    {
+                        return process_received_reply( t_pack, std::get<0>(t_parsed_message_id) );
+                    }
                 }
                 else
                 {
-                    if( t_pack.f_messages[std::get<1>(t_parsed_message_id)] )
+                    // this path: have already received chunks from this message
+                    incoming_message_pack& t_pack = f_incoming_messages[std::get<0>(t_parsed_message_id)];
+                    if( t_pack.f_processing.load() )
                     {
-                        LWARN( dlog, "Received duplicate message chunk for message <" << std::get<0>(t_parsed_message_id) << ">; chunk " << std::get<1>(t_parsed_message_id) );
+                        LWARN( dlog, "Message <" << std::get<0>(t_parsed_message_id) << "> is already being processed\n" <<
+                                "Just received chunk " << std::get<1>(t_parsed_message_id) << " of " << std::get<2>(t_parsed_message_id) );
                     }
                     else
                     {
-                        // add chunk to set of chunks
-                        t_pack.f_messages[std::get<1>(t_parsed_message_id)] = t_message;
-                        ++t_pack.f_chunks_received;
-                        if( t_pack.f_chunks_received == t_pack.f_messages.size() )
+                        if( t_pack.f_messages[std::get<1>(t_parsed_message_id)] )
                         {
-                            return process_received_reply( t_pack, std::get<0>(t_parsed_message_id) );
+                            LWARN( dlog, "Received duplicate message chunk for message <" << std::get<0>(t_parsed_message_id) << ">; chunk " << std::get<1>(t_parsed_message_id) );
+                        }
+                        else
+                        {
+                            // add chunk to set of chunks
+                            t_pack.f_messages[std::get<1>(t_parsed_message_id)] = t_message;
+                            ++t_pack.f_chunks_received;
+                            if( t_pack.f_chunks_received == t_pack.f_messages.size() )
+                            {
+                                return process_received_reply( t_pack, std::get<0>(t_parsed_message_id) );
+                            }
                         }
                     }
                 }
-            }
 
-        }
-        catch( dripline_error& e )
-        {
-            LERROR( dlog, "There was a problem processing the message: " << e.what() );
-            return reply_ptr_t();
-        }
+            }
+            catch( dripline_error& e )
+            {
+                LERROR( dlog, "There was a problem processing the message: " << e.what() );
+                return reply_ptr_t();
+            }
+        } // end while( true )
     }
 
     reply_ptr_t receiver::process_received_reply( incoming_message_pack& a_pack, const std::string& a_message_id )
