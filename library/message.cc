@@ -475,6 +475,10 @@ namespace dripline
         a_os << "\tUsername: " << a_message.sender_username() << '\n';
         a_os << "\tService: " << a_message.sender_service_name() << '\n';
         a_os << "Specifier: " << a_message.parsed_specifier().unparsed() << '\n';
+        if( a_message.payload().is_node() ) a_os << "Payload: " << a_message.payload().as_node() << '\n';
+        else if( a_message.payload().is_array() ) a_os << "Payload: " << a_message.payload().as_array() << '\n';
+        else if( a_message.payload().is_value() ) a_os << "Payload: " << a_message.payload().as_value() << '\n';
+        else a_os << "Payload: null\n";
         return a_os;
     }
 
