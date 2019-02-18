@@ -2,7 +2,7 @@
  * core.cc
  *
  *  Created on: Jun 27, 2017
- *      Author: obla999
+ *      Author: N.S. Oblath
  */
 
 
@@ -166,47 +166,6 @@ namespace dripline
     {
         LDEBUG( dlog, "Sending alert with routing key <" << a_alert->routing_key() << ">" );
         return do_send( std::static_pointer_cast< message >( a_alert ), f_alerts_exchange, false );
-    }
-
-    reply_ptr_t core::wait_for_reply( const sent_msg_pkg_ptr a_receive_reply, int a_timeout_ms )
-    {
-        bool t_temp;
-        return wait_for_reply( a_receive_reply, t_temp, a_timeout_ms );
-    }
-
-    reply_ptr_t core::wait_for_reply( const sent_msg_pkg_ptr a_receive_reply, bool& a_chan_valid, int a_timeout_ms )
-    {
-        if ( ! a_receive_reply->f_channel )
-        {
-            //throw dripline_error() << "cannot wait for reply with make_connection is false";
-            return reply_ptr_t();
-        }
-
-        LDEBUG( dlog, "Waiting for a reply" );
-
-        amqp_envelope_ptr t_envelope;
-        a_chan_valid = listen_for_message( t_envelope, a_receive_reply->f_channel, a_receive_reply->f_consumer_tag, a_timeout_ms );
-        a_receive_reply->f_channel.reset();
-
-        try
-        {
-            message_ptr_t t_message;//TODO = message::process_envelope( t_envelope );
-
-            if( t_message->is_reply() )
-            {
-                return std::static_pointer_cast< msg_reply >( t_message );
-            }
-            else
-            {
-                LERROR( dlog, "Non-reply message received");
-                return reply_ptr_t();
-            }
-        }
-        catch( dripline_error& e )
-        {
-            LERROR( dlog, "There was a problem processing the message: " << e.what() );
-            return reply_ptr_t();
-        }
     }
 
     sent_msg_pkg_ptr core::do_send( message_ptr_t a_message, const std::string& a_exchange, bool a_expect_reply ) const
@@ -403,8 +362,6 @@ namespace dripline
             }
         }
     }
-
-
 
 } /* namespace dripline */
 

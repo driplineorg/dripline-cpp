@@ -11,35 +11,21 @@
 #include "amqp.hh"
 #include "core.hh"
 #include "endpoint.hh"
+#include "receiver.hh"
 
 #include "cancelable.hh"
 #include "member_variables.hh"
 
 #include <atomic>
-#include <map>
 #include <memory>
 #include <string>
 #include <set>
-#include <thread>
 
 namespace dripline
 {
 
     class DRIPLINE_API service : public core, public endpoint, public scarab::cancelable
     {
-        public:
-            struct message_pack
-            {
-                amqp_split_message_ptrs f_messages;
-                unsigned f_chunks_received;
-                std::string f_routing_key;
-                std::thread f_thread;
-                std::mutex f_mutex;
-                std::condition_variable f_conv;
-                std::atomic< bool > f_processing;
-            };
-            typedef std::map< std::string, message_pack > message_map;
-
         public:
             service( const scarab::param_node& a_config = scarab::param_node(), const std::string& a_queue_name = "",  const std::string& a_broker_address = "", unsigned a_port = 0, const std::string& a_auth_file = "", const bool a_make_connection = true );
             service( const bool a_make_connection, const scarab::param_node& a_config = scarab::param_node() );
@@ -82,8 +68,8 @@ namespace dripline
 
             bool remove_queue();
 
-            void wait_for_message( message_pack& a_pack );
-            void process_message( message_pack& a_pack );
+            void wait_for_message( incoming_message_pack& a_pack, const std::string& a_message_id );
+            void process_message( incoming_message_pack& a_pack, const std::string& a_message_id );
 
         public:
             mv_referrable_const( amqp_channel_ptr, channel );
@@ -93,8 +79,10 @@ namespace dripline
             mv_referrable( std::set< std::string >, keys );
             mv_referrable( std::string, broadcast_key );
 
-            mv_referrable_const( message_map, incoming_messages );
             mv_accessible( unsigned, listen_timeout_ms );
+            mv_accessible( unsigned, single_message_wait_ms );
+
+            mv_referrable( receiver, msg_receiver );
 
         public:
             //******************

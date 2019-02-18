@@ -40,6 +40,8 @@ namespace dripline
             f_keys(),
             f_broadcast_key( "broadcast" ),
             f_listen_timeout_ms( 500 ),
+            f_single_message_wait_ms( 1000 ),
+            f_msg_receiver(),
             f_lockout_tag(),
             f_lockout_key( generate_nil_uuid() )
     {
@@ -58,8 +60,9 @@ namespace dripline
             f_consumer_tag(),
             f_keys(),
             f_broadcast_key(),
-            f_incoming_messages(),
             f_listen_timeout_ms( 500 ),
+            f_single_message_wait_ms( 1000 ),
+            f_msg_receiver(),
             f_lockout_tag(),
             f_lockout_key( generate_nil_uuid() )
     {
@@ -147,11 +150,11 @@ namespace dripline
             amqp_message_ptr t_message = t_envelope->Message();
 
             auto t_parsed_message_id = message::parse_message_id( t_message->MessageId() );
-            if( f_incoming_messages.count( std::get<0>(t_parsed_message_id) ) == 0 )
+            if( f_msg_receiver.incoming_messages().count( std::get<0>(t_parsed_message_id) ) == 0 )
             {
                 // this path: first chunk for this message
                 // create the new message_pack object
-                message_pack& t_pack = f_incoming_messages[std::get<0>(t_parsed_message_id)];
+                incoming_message_pack& t_pack = f_msg_receiver.incoming_messages()[std::get<0>(t_parsed_message_id)];
                 // set the f_messages vector to the expected size
                 t_pack.f_messages.resize( std::get<2>(t_parsed_message_id) );
                 // put in place the first message chunk received
@@ -159,13 +162,13 @@ namespace dripline
                 t_pack.f_routing_key = t_envelope->RoutingKey();
 
                 // start the thread to wait for message chunks
-                t_pack.f_thread = std::thread([this, &t_pack](){ wait_for_message(t_pack); });
+                t_pack.f_thread = std::thread([this, &t_pack, &t_parsed_message_id](){ wait_for_message(t_pack, std::get<0>(t_parsed_message_id)); });
                 t_pack.f_thread.detach();
             }
             else
             {
                 // this path: have already received chunks from this message
-                message_pack& t_pack = f_incoming_messages[std::get<0>(t_parsed_message_id)];
+                incoming_message_pack& t_pack = f_msg_receiver.incoming_messages()[std::get<0>(t_parsed_message_id)];
                 if( t_pack.f_processing.load() )
                 {
                     LWARN( dlog, "Message <" << std::get<0>(t_parsed_message_id) << "> is already being processed\n" <<
@@ -342,38 +345,44 @@ namespace dripline
         return true;
     }
 
-    void service::wait_for_message( message_pack& a_pack )
+    void service::wait_for_message( incoming_message_pack& a_pack, const std::string& a_message_id )
     {
         std::unique_lock< std::mutex > t_lock( a_pack.f_mutex );
 
         if( a_pack.f_chunks_received == a_pack.f_messages.size() )
         {
-            process_message( a_pack );
+            t_lock.release(); // process_message() will unlock the mutex before erasing the message pack
+            process_message( a_pack, a_message_id );
             return;
         }
 
         auto t_now = std::chrono::system_clock::now();
 
-        // TODO: replace hard-coded time interval
-        while( a_pack.f_conv.wait_until( t_lock, t_now + std::chrono::seconds(1) ) == std::cv_status::no_timeout )
+        while( a_pack.f_conv.wait_until( t_lock, t_now + std::chrono::milliseconds(f_single_message_wait_ms) ) == std::cv_status::no_timeout )
         {
             if( a_pack.f_chunks_received == a_pack.f_messages.size() )
             {
-                process_message( a_pack );
+                t_lock.release(); // process_message() will unlock the mutex before erasing the message pack
+                process_message( a_pack, a_message_id );
                 return;
             }
         }
 
-        process_message( a_pack );
+        t_lock.release(); // process_message() will unlock the mutex before erasing the message pack
+        process_message( a_pack, a_message_id );
 
         return;
     }
 
-    void service::process_message( message_pack& a_pack )
+    void service::process_message( incoming_message_pack& a_pack, const std::string& a_message_id )
     {
+        a_pack.f_processing.store( true );
         try
         {
             message_ptr_t t_message = message::process_message( a_pack.f_messages, a_pack.f_routing_key );
+
+            a_pack.f_mutex.unlock();
+            f_msg_receiver.incoming_messages().erase( a_message_id );
 
             bool t_msg_handled = true;
             if( t_message->is_request() )

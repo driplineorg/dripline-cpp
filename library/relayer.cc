@@ -16,7 +16,8 @@ namespace dripline
     relayer::relayer( const scarab::param_node& a_config, const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file ) :
             core( a_config, a_broker_address, a_port, a_auth_file ),
             scarab::cancelable(),
-            f_queue()
+            f_queue(),
+            f_msg_receiver()
     {
     }
 
@@ -132,7 +133,7 @@ namespace dripline
                 return reply_ptr_t();
             }
         }
-        return core::wait_for_reply( a_receive_reply->f_sent_msg_pkg_ptr, a_chan_valid, a_timeout_ms );
+        return f_msg_receiver.wait_for_reply( a_receive_reply->f_sent_msg_pkg_ptr, a_chan_valid, a_timeout_ms );
     }
 
 }

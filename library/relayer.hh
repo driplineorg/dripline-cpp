@@ -3,6 +3,7 @@
 
 
 #include "core.hh"
+#include "receiver.hh"
 
 #include "cancelable.hh"
 #include "concurrent_queue.hh"
@@ -52,8 +53,8 @@ namespace dripline
             /// If the timeout is <= 0 ms, there will be no timeout
             /// This function can be called multiple times to receive multiple replies
             /// The optional bool argument a_chan_valid will return whether or not the channel is still valid for use
-            static reply_ptr_t wait_for_reply( const wait_for_send_pkg_ptr a_receive_reply, int a_timeout_ms = 0 );
-            static reply_ptr_t wait_for_reply( const wait_for_send_pkg_ptr a_receive_reply, bool& a_chan_valid, int a_timeout_ms = 0 );
+            reply_ptr_t wait_for_reply( const wait_for_send_pkg_ptr a_receive_reply, int a_timeout_ms = 0 );
+            reply_ptr_t wait_for_reply( const wait_for_send_pkg_ptr a_receive_reply, bool& a_chan_valid, int a_timeout_ms = 0 );
 
         private:
             void do_cancellation();
@@ -66,6 +67,8 @@ namespace dripline
             typedef std::shared_ptr< message_and_reply > mar_ptr;
 
             mutable scarab::concurrent_queue< mar_ptr > f_queue;
+
+            mv_referrable( receiver, msg_receiver );
 
     };
 

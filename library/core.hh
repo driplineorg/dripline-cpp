@@ -2,7 +2,7 @@
  * core.hh
  *
  *  Created on: Jul 13, 2015
- *      Author: nsoblath
+ *      Author: N.S. Oblath
  */
 
 #ifndef DRIPLINE_CORE_HH_
@@ -10,6 +10,8 @@
 
 #include "message.hh"
 
+#include <map>
+#include <thread>
 
 namespace scarab
 {
@@ -58,13 +60,6 @@ namespace dripline
             /// Default exchange is "alerts"
             virtual sent_msg_pkg_ptr send( alert_ptr_t a_alert ) const;
 
-            /// Wait for a reply message
-            /// If the timeout is <= 0 ms, there will be no timeout
-            /// This function can be called multiple times to receive multiple replies
-            /// The optional bool argument a_chan_valid will return whether or not the channel is still valid for use
-            static reply_ptr_t wait_for_reply( const sent_msg_pkg_ptr a_receive_reply, int a_timeout_ms = 0 );
-            static reply_ptr_t wait_for_reply( const sent_msg_pkg_ptr a_receive_reply, bool& a_chan_valid, int a_timeout_ms = 0 );
-
             mv_referrable( std::string, address );
             mv_accessible( unsigned, port );
             mv_referrable( std::string, username );
@@ -76,6 +71,8 @@ namespace dripline
             mv_accessible( bool, make_connection );
 
         protected:
+            friend class receiver;
+
             sent_msg_pkg_ptr do_send( message_ptr_t a_message, const std::string& a_exchange, bool a_expect_reply ) const;
 
             amqp_channel_ptr send_withreply( message_ptr_t a_message, std::string& a_reply_consumer_tag, const std::string& a_exchange ) const;
@@ -90,7 +87,6 @@ namespace dripline
 
             /// return: if false, channel is no longer useable; if true, may be reused
             static bool listen_for_message( amqp_envelope_ptr& a_envelope, amqp_channel_ptr a_channel, const std::string& a_consumer_tag, int a_timeout_ms = 0 );
-
     };
 
 } /* namespace dripline */

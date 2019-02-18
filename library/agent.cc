@@ -11,10 +11,11 @@
 #include "agent.hh"
 
 #include "agent_config.hh"
+#include "core.hh"
 #include "dripline_constants.hh"
 #include "dripline_error.hh"
 #include "dripline_version.hh"
-#include "core.hh"
+#include "receiver.hh"
 #include "uuid.hh"
 
 #include "logger.hh"
@@ -167,7 +168,8 @@ namespace dripline
             LINFO( dlog, "Waiting for a reply from the server; use ctrl-c to cancel" );
 
             // timed blocking call to wait for incoming message
-            dripline::reply_ptr_t t_reply = t_core.wait_for_reply( t_receive_reply, t_timeout );
+            receiver t_msg_receiver;
+            dripline::reply_ptr_t t_reply = t_msg_receiver.wait_for_reply( t_receive_reply, t_timeout );
 
             if( t_reply )
             {

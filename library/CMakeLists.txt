@@ -16,6 +16,7 @@ set( dripline_HEADERS
     endpoint.hh
     hub.hh
     message.hh
+    receiver.hh
     relayer.hh
     return_codes.hh
     service.hh
@@ -33,6 +34,7 @@ set( dripline_SOURCES
     endpoint.cc
     hub.cc
     message.cc
+    receiver.cc
     relayer.cc
     return_codes.cc
     service.cc
