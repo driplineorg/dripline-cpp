@@ -35,7 +35,7 @@ Standalone Installation
 
 1. Clone the repository::
 
-    git clone https://github.com/project8/dripline-cpp --recurse-submodules
+    git clone https://github.com/driplineorg/dripline-cpp --recurse-submodules
 
 2. Create a build directory::
 
@@ -46,7 +46,7 @@ Standalone Installation
 3. Run CMake::
 
     cmake ..
-  
+
 4. Build and install::
 
     make install
@@ -60,4 +60,4 @@ Submodule Installation
 
 1. Add the submodule::
 
-    git submodule add https://github.com/project8/dripline-cpp [desired path]
+    git submodule add https://github.com/driplineorg/dripline-cpp [desired path]
