@@ -51,6 +51,12 @@ namespace dripline
     {
     }
 
+    void agent::sub_agent::execute( const scarab::param_node& a_config )
+    {
+        const scarab::param_array a_ord_args;
+        execute( a_config, a_ord_args );
+    }
+
     void agent::sub_agent::execute( const scarab::param_node& a_config, const scarab::param_array& a_ord_args )
     {
         LINFO( dlog, "Creating request" );
