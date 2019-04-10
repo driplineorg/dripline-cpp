@@ -136,6 +136,7 @@ namespace dripline
         if( t_is_dry_run )
         {
             LPROG( dlog, "Request:\n" << *t_request );
+            f_agent->set_return( RETURN_SUCCESS );
             return;
         }
 
