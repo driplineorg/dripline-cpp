@@ -116,6 +116,17 @@ namespace dripline
 
         string t_routing_key = a_envelope->RoutingKey();
 
+        // This block is for dripline v2 compatibility
+        unsigned t_sep_pos = t_routing_key.find( '.' );
+        string t_specifier;
+        if( t_sep_pos != t_routing_key.npos )
+        {
+            t_specifier = t_routing_key.substr( t_sep_pos + 1 );
+            t_routing_key = t_routing_key.substr( 0, t_sep_pos );
+        }
+        LDEBUG( dlog, "Dripline v2 compatibility: splitting the AMQP routing key into the \"routing key\" = <" << t_routing_key << "> and \"specifier\" = <" << t_specifier << ">");
+        t_msg_node.add( "specifier", t_specifier );
+
         LDEBUG( dlog, "Processing message:\n" <<
                  "Routing key: " << t_routing_key <<
                  t_msg_node );
@@ -211,7 +222,13 @@ namespace dripline
     {
         param_node t_body_node;
         t_body_node.add( "msgtype", to_uint( message_type() ) );
-        t_body_node.add( "specifier", f_specifier.to_string() );
+        // Dripline v2 compatibility: the specifier is not used
+        // For sending messages it should be inlcluded directly in the routing key
+        //t_body_node.add( "specifier", f_specifier.to_string() );
+        if( ! f_specifier.empty() )
+        {
+            throw dripline_error() << "For dripline v2 compatibility the specifier is not used.  Please include the specifier information directly in the routing key";
+        }
         t_body_node.add( "timestamp", scarab::get_formatted_now() );
         t_body_node.add( "sender_info", f_sender_info );
         t_body_node.add( "payload", *f_payload );
