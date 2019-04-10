@@ -163,6 +163,12 @@ namespace dripline
             LWARN( dlog, "send called but make_connection is false, returning nullptr" );
             return nullptr;
         }
+        // Dripline v2 compatibility: add the specifier information to the routing key
+        if( ! a_request->parsed_specifier().empty() )
+        {
+            a_request->routing_key() = a_request->routing_key() + "." + a_request->parsed_specifier().to_string();
+            a_request->parsed_specifier().clear();
+        }
         LDEBUG( dlog, "Sending request with routing key <" << a_request->routing_key() << ">" );
         rr_pkg_ptr t_receive_reply = std::make_shared< receive_reply_pkg >();
         t_receive_reply->f_channel = send_withreply( std::static_pointer_cast< message >( a_request ), t_receive_reply->f_consumer_tag, f_requests_exchange );
@@ -177,6 +183,12 @@ namespace dripline
             LWARN( dlog, "send called but make_connection is false, returning nullptr" );
             return false;
         }
+        // Dripline v2 compatibility: add the specifier information to the routing key
+        if( ! a_reply->parsed_specifier().empty() )
+        {
+            a_reply->routing_key() = a_reply->routing_key() + "." + a_reply->parsed_specifier().to_string();
+            a_reply->parsed_specifier().clear();
+        }
         LDEBUG( dlog, "Sending reply with routing key <" << a_reply->routing_key() << ">" );
         return send_noreply( std::static_pointer_cast< message >( a_reply ), f_requests_exchange );
     }
@@ -187,6 +199,12 @@ namespace dripline
         {
             LWARN( dlog, "send called but make_connection is false, returning nullptr" );
             return false;
+        }
+        // Dripline v2 compatibility: add the specifier information to the routing key
+        if( ! a_alert->parsed_specifier().empty() )
+        {
+            a_alert->routing_key() = a_alert->routing_key() + "." + a_alert->parsed_specifier().to_string();
+            a_alert->parsed_specifier().clear();
         }
         LDEBUG( dlog, "Sending alert with routing key <" << a_alert->routing_key() << ">" );
         return send_noreply( std::static_pointer_cast< message >( a_alert ), f_alerts_exchange );
