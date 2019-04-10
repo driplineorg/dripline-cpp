@@ -14,6 +14,8 @@
 #include "authentication.hh"
 #include "logger.hh"
 
+#include <thread>
+
 using scarab::authentication;
 using scarab::param_node;
 using scarab::param_value;
@@ -27,6 +29,42 @@ namespace dripline
 {
     LOGGER( dlog, "service" );
 
+    heartbeat::heartbeat( service* a_service ) :
+            cancelable(),
+            f_service( a_service )
+    {}
+
+    heartbeat::~heartbeat()
+    {}
+
+    void heartbeat::execute( const std::string& a_name, uuid_t a_id, unsigned an_interval, const std::string& a_routing_key )
+    {
+        scarab::param_node t_payload;
+        t_payload.add( "name", a_name );
+        t_payload.add( "id", string_from_uuid(a_id) );
+
+        while( ! this->is_canceled() )
+        {
+            // wait the interval
+            std::this_thread::sleep_for( std::chrono::seconds( an_interval ) );
+
+            // send the message
+            scarab::param_ptr_t t_payload_copy = t_payload.clone();
+            alert_ptr_t t_alert_ptr = msg_alert::create( t_payload_copy, a_routing_key );
+
+            if( ! f_service->is_canceled() )
+            {
+                f_service->send( t_alert_ptr );
+            }
+            else
+            {
+                cancel();
+            }
+        }
+
+        return;
+    }
+
     service::service( const scarab::param_node& a_config, const string& a_queue_name,  const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file, const bool a_make_connection ) :
             core( a_config, a_broker_address, a_port, a_auth_file, a_make_connection ),
             // logic for setting the name:
@@ -39,12 +77,15 @@ namespace dripline
             f_consumer_tag(),
             f_keys(),
             f_broadcast_key( "broadcast" ),
+            f_id( generate_random_uuid() ),
             f_listen_timeout_ms( 500 ),
+            f_heartbeat_interval_s( 60 ),
             f_lockout_tag(),
             f_lockout_key( generate_nil_uuid() )
     {
         // get values from the config
         f_listen_timeout_ms = a_config.get_value( "listen-timeout-ms", f_listen_timeout_ms );
+        f_heartbeat_interval_s = a_config.get_value( "heartbeat-interval-s", f_heartbeat_interval_s );
 
         // override if specified as a separate argument
         if( ! a_queue_name.empty() ) f_name = a_queue_name;
@@ -58,7 +99,9 @@ namespace dripline
             f_consumer_tag(),
             f_keys(),
             f_broadcast_key(),
+            f_id(),
             f_listen_timeout_ms( 500 ),
+            f_heartbeat_interval_s( 60 ),
             f_lockout_tag(),
             f_lockout_key( generate_nil_uuid() )
     {

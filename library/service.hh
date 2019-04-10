@@ -21,6 +21,20 @@
 
 namespace dripline
 {
+    class service;
+
+    class DRIPLINE_API heartbeat : public scarab::cancelable
+    {
+        public:
+            heartbeat( service* a_service );
+            heartbeat( const heartbeat& ) = delete;
+            heartbeat( heartbeat&& ) = delete;
+            virtual ~heartbeat();
+
+            void execute( const std::string& a_name, uuid_t a_id, unsigned an_interval, const std::string& a_routing_key );
+
+            mv_assignable( service, service );
+    };
 
     class DRIPLINE_API service : public core, public endpoint, public scarab::cancelable
     {
@@ -74,7 +88,10 @@ namespace dripline
             mv_referrable( std::set< std::string >, keys );
             mv_referrable( std::string, broadcast_key );
 
+            mv_accessible( uuid_t, id );
+
             mv_accessible( unsigned, listen_timeout_ms );
+            mv_accessible( unsigned, heartbeat_interval_s );
 
         public:
             //******************
