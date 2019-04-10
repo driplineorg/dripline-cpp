@@ -52,7 +52,7 @@ namespace dripline
     {
         // auth file passed as a parameter overrides a file passed in the config
         std::string t_auth_file( a_auth_file );
-        if( ! t_auth_file.empty() ) t_auth_file = a_config.get_value( "auth-file", "" );
+        if( t_auth_file.empty() ) t_auth_file = a_config.get_value( "auth-file", "" );
 
         // get auth file contents and override defaults
         if( ! t_auth_file.empty() )
