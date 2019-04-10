@@ -83,13 +83,6 @@ namespace dripline
         f_agent->specifier() = t_config.get_value( "specifier", f_agent->specifier() );
         t_config.erase( "specifier" );
 
-        // Dripline v2 compatibility: add the specifier information directly to the routing key
-        if( ! f_agent->specifier().empty() )
-        {
-            f_agent->routing_key() = f_agent->routing_key() + "." + f_agent->specifier();
-            f_agent->specifier().clear();
-        }
-
         if( t_config.has( "lockout-key" ) )
         {
             bool t_lk_valid = true;
