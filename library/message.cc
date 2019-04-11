@@ -117,7 +117,7 @@ namespace dripline
         string t_routing_key = a_envelope->RoutingKey();
 
         // This block is for dripline v2 compatibility
-        unsigned t_sep_pos = t_routing_key.find( '.' );
+        size_t t_sep_pos = t_routing_key.find( '.' );
         string t_specifier;
         if( t_sep_pos != t_routing_key.npos )
         {
