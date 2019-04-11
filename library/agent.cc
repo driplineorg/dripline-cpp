@@ -124,6 +124,7 @@ namespace dripline
 
         // create the request
         request_ptr_t t_request = this->create_request( t_config );
+        LDEBUG( dlog, "message payload to send is: " << t_request->payload() );
 
         if( ! t_request )
         {
@@ -264,7 +265,7 @@ namespace dripline
         }
 
         // at this point, all that remains in a_config should be other options that we want to add to the payload node
-        a_config.merge( a_config ); // copy a_config
+        t_payload_node.merge( a_config );
 
         return msg_request::create( std::move(t_payload_ptr),
                                     op_t::cmd,
