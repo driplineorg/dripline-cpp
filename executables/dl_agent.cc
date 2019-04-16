@@ -74,7 +74,7 @@ int main( int argc, char** argv )
     the_main.add_config_option< std::string >( "-b,--broker", "amqp.broker", "Set the dripline broker address" );
     the_main.add_config_option< unsigned >( "-p,--port", "amqp.broker-port", "Set the port for communication with the dripline broker" );
     the_main.add_config_option< std::string >( "-e,--exchange", "amqp.exchange", "Set the exchange to send message on" );
-    the_main.add_config_option< std::string >( "-a,--auth-file", "amqp.auth-file" "Set the authentication file path" );
+    the_main.add_config_option< std::string >( "-a,--auth-file", "amqp.auth-file", "Set the authentication file path" );
     the_main.add_config_option< unsigned >( "-t,--timeout", "amqp.timeout", "Set the timeout for waiting for a reply (seconds)" );
     the_main.add_config_option< std::string >( "-k,--lockout-key", "lockout-key", "Set the lockout key to send with the message" );
     the_main.add_config_multi_option< std::string >( "--payload", "payload", "Add values to the payload" );
@@ -87,6 +87,6 @@ int main( int argc, char** argv )
     // Parse CL options and run the application
     CLI11_PARSE( the_main, argc, argv );
 
-    return RETURN_SUCCESS;
+    return the_agent.get_return();
 }
 
