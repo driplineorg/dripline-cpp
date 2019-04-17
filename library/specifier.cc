@@ -9,6 +9,10 @@
 
 #include "specifier.hh"
 
+#include "logger.hh"
+
+LOGGER( dlog, "specifier" );
+
 namespace dripline
 {
 
@@ -59,7 +63,8 @@ namespace dripline
             container_type(),
             f_unparsed( a_unparsed )
     {
-        add_next( a_unparsed );
+        LTRACE( dlog, "Creating specifier <" << a_unparsed << ">" );
+        if( ! a_unparsed.empty() ) add_next( a_unparsed );
     }
 
     specifier::specifier( const specifier& a_orig ) :
@@ -92,9 +97,13 @@ namespace dripline
 
     void specifier::parse( const std::string& a_unparsed )
     {
+        LTRACE( dlog, "Parsing <" << a_unparsed << ">" );
+
         while( ! empty() ) pop_front();
 
         f_unparsed = a_unparsed;
+
+        if( a_unparsed.empty() ) return;
 
         add_next( a_unparsed );
         return;
