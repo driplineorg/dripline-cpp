@@ -18,9 +18,11 @@
 #include <memory>
 #include <string>
 #include <set>
+#include <thread>
 
 namespace dripline
 {
+    class heartbeat;
 
     class DRIPLINE_API service : public core, public endpoint, public scarab::cancelable
     {
@@ -60,11 +62,18 @@ namespace dripline
         private:
             bool bind_keys( const std::set< std::string >& a_keys );
 
+            bool start_heartbeat();
+
             bool start_consuming();
 
             bool stop_consuming();
 
+            bool stop_heartbeat();
+
             bool remove_queue();
+
+            std::thread f_heartbeat_thread;
+            std::unique_ptr< heartbeat > f_heartbeat_ptr;
 
         public:
             mv_referrable_const( amqp_channel_ptr, channel );

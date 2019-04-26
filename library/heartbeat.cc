@@ -14,7 +14,8 @@ namespace dripline
 
     heartbeat::heartbeat( service* a_service ) :
             cancelable(),
-            f_service( a_service )
+            f_service( a_service ),
+            f_stop( false )
     {}
 
     heartbeat::~heartbeat()
@@ -26,7 +27,7 @@ namespace dripline
         t_payload.add( "name", a_name );
         t_payload.add( "id", string_from_uuid(a_id) );
 
-        while( ! this->is_canceled() )
+        while( ! this->is_canceled() && ! f_stop.load() )
         {
             // wait the interval
             std::this_thread::sleep_for( std::chrono::seconds( an_interval ) );

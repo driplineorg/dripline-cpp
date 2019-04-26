@@ -24,6 +24,7 @@ namespace dripline
             void execute( const std::string& a_name, uuid_t a_id, unsigned an_interval, const std::string& a_routing_key );
 
             mv_assignable( service, service );
+            mv_atomic( bool, stop );
     };
 
 } /* namespace dripline */

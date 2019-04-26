@@ -35,6 +35,8 @@ namespace dripline
             //   otherwise "dlcpp_service"
             endpoint( a_queue_name.empty() ? a_config.get_value( "queue", "dlcpp_service" ) : a_queue_name, *this ),
             cancelable(),
+            f_heartbeat_thread(),
+            f_heartbeat_ptr(),
             f_channel(),
             f_consumer_tag(),
             f_keys(),
@@ -57,6 +59,8 @@ namespace dripline
             core( a_make_connection, a_config ),
             endpoint( "", *this ),
             cancelable(),
+            f_heartbeat_thread(),
+            f_heartbeat_ptr(),
             f_channel(),
             f_consumer_tag(),
             f_keys(),
@@ -238,6 +242,20 @@ namespace dripline
         }
     }
 
+    bool service::start_heartbeat()
+    {
+        try
+        {
+            f_heartbeat_ptr.reset( new heartbeat(this) );
+            f_heartbeat_thread = std::thread( &heartbeat::execute, *f_heartbeat_ptr, f_name, f_id, f_heartbeat_interval_s, #routing key for heartbeat# );
+        }
+        catch( std::system_error& e )
+        {
+            LERROR( dlog, "Could not start the heartbeat thread: " << e.what() );
+            return false;
+        }
+    }
+
     bool service::start_consuming()
     {
         try
@@ -298,6 +316,11 @@ namespace dripline
             LERROR( dlog, "Unknown exception caught" );
             return false;
         }
+    }
+
+    bool service::stop_heartbeat()
+    {
+
     }
 
     bool service::remove_queue()
