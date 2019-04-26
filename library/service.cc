@@ -14,8 +14,6 @@
 #include "authentication.hh"
 #include "logger.hh"
 
-#include <thread>
-
 using scarab::authentication;
 using scarab::param_node;
 using scarab::param_value;
@@ -28,42 +26,6 @@ using std::set;
 namespace dripline
 {
     LOGGER( dlog, "service" );
-
-    heartbeat::heartbeat( service* a_service ) :
-            cancelable(),
-            f_service( a_service )
-    {}
-
-    heartbeat::~heartbeat()
-    {}
-
-    void heartbeat::execute( const std::string& a_name, uuid_t a_id, unsigned an_interval, const std::string& a_routing_key )
-    {
-        scarab::param_node t_payload;
-        t_payload.add( "name", a_name );
-        t_payload.add( "id", string_from_uuid(a_id) );
-
-        while( ! this->is_canceled() )
-        {
-            // wait the interval
-            std::this_thread::sleep_for( std::chrono::seconds( an_interval ) );
-
-            // send the message
-            scarab::param_ptr_t t_payload_copy = t_payload.clone();
-            alert_ptr_t t_alert_ptr = msg_alert::create( t_payload_copy, a_routing_key );
-
-            if( ! f_service->is_canceled() )
-            {
-                f_service->send( t_alert_ptr );
-            }
-            else
-            {
-                cancel();
-            }
-        }
-
-        return;
-    }
 
     service::service( const scarab::param_node& a_config, const string& a_queue_name,  const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file, const bool a_make_connection ) :
             core( a_config, a_broker_address, a_port, a_auth_file, a_make_connection ),
