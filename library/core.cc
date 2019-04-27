@@ -229,6 +229,7 @@ namespace dripline
 
     amqp_channel_ptr core::send_withreply( message_ptr_t a_message, std::string& a_reply_consumer_tag, const std::string& a_exchange ) const
     {
+#ifndef DL_OFFLINE
         if ( ! f_make_connection )
         {
             throw dripline_error() << "cannot send reply with make_connection is false";
@@ -276,10 +277,14 @@ namespace dripline
             LERROR( dlog, "Error publishing request to queue: " << e.what() );
             return amqp_channel_ptr();
         }
+#else
+        throw a_message;
+#endif
     }
 
     bool core::send_noreply( message_ptr_t a_message, const std::string& a_exchange ) const
     {
+#ifndef DL_OFFLINE
         if( ! f_make_connection )
         {
             LDEBUG( dlog, "does not make amqp connection, not sending payload:" );
@@ -318,6 +323,9 @@ namespace dripline
             return false;
         }
         return true;
+#else
+        throw a_message;
+#endif
     }
 
     amqp_channel_ptr core::open_channel() const
