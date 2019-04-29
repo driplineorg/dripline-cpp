@@ -211,6 +211,10 @@ namespace dripline
 
     bool service::bind_keys( const set< string >& a_keys )
     {
+#ifdef DL_OFFLINE
+        return false;
+#endif
+
         try
         {
             for( set< string >::const_iterator t_key_it = a_keys.begin(); t_key_it != a_keys.end(); ++t_key_it )
@@ -235,6 +239,10 @@ namespace dripline
 
     bool service::start_consuming()
     {
+#ifdef DL_OFFLINE
+        return false;
+#endif
+
         try
         {
             LDEBUG( dlog, "Starting to consume messages" );
@@ -256,6 +264,10 @@ namespace dripline
 
     bool service::stop_consuming()
     {
+#ifdef DL_OFFLINE
+        return false;
+#endif
+
         if ( ! f_make_connection )
         {
             LDEBUG( dlog, "no consuming to start because connections disabled" );
@@ -297,6 +309,9 @@ namespace dripline
 
     bool service::remove_queue()
     {
+#ifdef DL_OFFLINE
+        return false;
+#endif
         if ( ! f_make_connection )
         {
             LDEBUG( dlog, "no queue to remove because make_connection is false" );
