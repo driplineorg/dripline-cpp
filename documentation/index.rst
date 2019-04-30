@@ -1,3 +1,4 @@
+======================================
 Dripline-Cpp Use and API Documentation
 ======================================
 
@@ -12,6 +13,7 @@ Contents:
    Getting Started <getting_started>
    Application: ``dl_agent`` <dl_agent>
    Library <library>
+   Offline & No-Connection <offline>
 
 .. end of toc
 .. (you must not remove or modify the above comment line, it is required by the API Doc generation)
