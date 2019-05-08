@@ -5,6 +5,8 @@
  *      Author: N.S. Oblath
  */
 
+#define DRIPLINE_API_EXPORTS
+
 #include "endpoint.hh"
 
 #include "dripline_error.hh"
