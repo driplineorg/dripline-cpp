@@ -5,6 +5,7 @@
  *      Author: obla999
  */
 
+#define DRIPLINE_API_EXPORTS
 
 #include "core.hh"
 

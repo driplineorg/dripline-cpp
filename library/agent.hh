@@ -35,7 +35,7 @@ namespace dripline
     class DRIPLINE_API agent
     {
         public:
-            class sub_agent
+            class DRIPLINE_API sub_agent
             {
                 public:
                     sub_agent( agent* an_agent ) : f_agent( an_agent ) {};
@@ -51,7 +51,7 @@ namespace dripline
                     agent* f_agent;
             };
 
-            class sub_agent_run : public sub_agent
+            class DRIPLINE_API sub_agent_run : public sub_agent
             {
                 public:
                     sub_agent_run( agent* an_agent ) : sub_agent( an_agent ) {}
@@ -60,7 +60,7 @@ namespace dripline
                     virtual request_ptr_t create_request( scarab::param_node& a_config );
             };
 
-            class sub_agent_get : public sub_agent
+            class DRIPLINE_API sub_agent_get : public sub_agent
             {
                 public:
                     sub_agent_get( agent* an_agent ) : sub_agent( an_agent ) {}
@@ -69,7 +69,7 @@ namespace dripline
                     virtual request_ptr_t create_request( scarab::param_node& a_config );
             };
 
-            class sub_agent_set : public sub_agent
+            class DRIPLINE_API sub_agent_set : public sub_agent
             {
                 public:
                     sub_agent_set( agent* an_agent ) : sub_agent( an_agent ) {}
@@ -78,7 +78,7 @@ namespace dripline
                     virtual request_ptr_t create_request( scarab::param_node& a_config );
             };
 
-            class sub_agent_cmd : public sub_agent
+            class DRIPLINE_API sub_agent_cmd : public sub_agent
             {
                 public:
                     sub_agent_cmd( agent* an_agent ) : sub_agent( an_agent ) {}

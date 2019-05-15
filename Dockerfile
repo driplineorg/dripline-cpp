@@ -18,14 +18,17 @@ RUN apt-get update && \
 COPY SimpleAmqpClient /usr/local/src/SimpleAmqpClient
 COPY documentation /usr/local/src/documentation
 COPY scarab /usr/local/src/scarab
-COPY source /usr/local/src/source
+COPY library /usr/local/src/library
+COPY executables /usr/local/src/executables
+COPY testing /usr/local/src/testing
+COPY examples /usr/local/src/examples
 COPY CMakeLists.txt /usr/local/src/CMakeLists.txt
 
 RUN mkdir -p /usr/local/src/build && \
     cd /usr/local/src/build && \
     cmake .. && \
     # unclear why I have to run cmake twice
-    cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr/local . && \
+    cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr/local -DDripline_BUILD_EXAMPLES:BOOL=TRUE . && \
     make install
 
 #RUN cp /usr/local/src/examples/str_1ch_fpa.yaml /etc/psyllid_config.yaml

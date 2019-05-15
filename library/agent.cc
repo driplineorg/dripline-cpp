@@ -6,7 +6,6 @@
  */
 
 #define DRIPLINE_API_EXPORTS
-#define SCARAB_API_EXPORTS
 
 #include "agent.hh"
 

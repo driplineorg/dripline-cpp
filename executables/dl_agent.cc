@@ -10,9 +10,6 @@
  *
  */
 
-#define DRIPLINE_API_EXPORTS
-#define SCARAB_API_EXPORTS
-
 #include "agent.hh"
 #include "agent_config.hh"
 #include "dripline_constants.hh"
