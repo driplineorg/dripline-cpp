@@ -7,6 +7,8 @@
 
 #include "oscillator.hh"
 
+#include <cmath>
+
 namespace dripline
 {
 
@@ -21,19 +23,19 @@ namespace dripline
     {
     }
 
-    double oscillator::in_phase( time_point_t a_time )
+    std::pair< oscillator::time_point_t, double > oscillator::in_phase( time_point_t a_time )
     {
-        return f_amplitude * sin( f_frequency * duration_t( a_time - f_start_time ).count() );
+        return std::make_pair( a_time, f_amplitude * cos( f_frequency * duration_t( a_time - f_start_time ).count() ) );
     }
 
-    double oscillator::quadrature( time_point_t a_time )
+    std::pair< oscillator::time_point_t, double > oscillator::quadrature( time_point_t a_time )
     {
-        return f_amplitude * cos( f_frequency * duration_t( a_time - f_start_time ).count() );
+        return std::make_pair( a_time, f_amplitude * sin( f_frequency * duration_t( a_time - f_start_time ).count() ) );
     }
 
-    oscillator::iq_t oscillator::iq( time_point_t a_time )
+    std::pair< oscillator::time_point_t, oscillator::iq_t > oscillator::iq( time_point_t a_time )
     {
-        return iq_t( in_phase( a_time), quadrature( a_time ) );
+        return std::make_pair( a_time, iq_t( in_phase( a_time).second, quadrature( a_time ).second ) );
     }
 
 } /* namespace dripline */

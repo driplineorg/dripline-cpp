@@ -14,6 +14,7 @@
 
 #include <chrono>
 #include <complex>
+#include <utility>
 
 namespace dripline
 {
@@ -22,8 +23,8 @@ namespace dripline
     {
         public:
             using clock_t = std::chrono::steady_clock;
-            using time_point_t = std::chrono::time_point< std::chrono::steady_clock >;
             using duration_t = std::chrono::duration< double >;
+            using time_point_t = std::chrono::time_point< std::chrono::steady_clock, duration_t >;
 
             using iq_t = std::complex< double >;
 
@@ -41,9 +42,9 @@ namespace dripline
             mv_accessible( time_point_t, start_time );
 
         public:
-            double in_phase( time_point_t a_time = clock_t::now() );
-            double quadrature( time_point_t a_time = clock_t::now() );
-            iq_t iq( time_point_t a_time = clock_t::now() );
+            std::pair< time_point_t, double > in_phase( time_point_t a_time = clock_t::now() );
+            std::pair< time_point_t, double > quadrature( time_point_t a_time = clock_t::now() );
+            std::pair< time_point_t, iq_t > iq( time_point_t a_time = clock_t::now() );
 
     };
 
