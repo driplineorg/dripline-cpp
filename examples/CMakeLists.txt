@@ -5,10 +5,12 @@
 ##########
 
 set( dripline_examples_HEADERS
+    oscillator.hh
     run_simple_service.hh
 )
 
 set( dripline_examples_SOURCES
+    oscillator.cc
     run_simple_service.cc
 )
 
