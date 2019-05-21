@@ -17,7 +17,7 @@ LOGGER( rsslog, "run_simple_service" );
 namespace dripline
 {
 
-    class run_simple_service : public service
+    class DRIPLINE_EXAMPLES_API run_simple_service : public service
     {
         public:
             run_simple_service( const scarab::param_node& a_config = scarab::param_node() );

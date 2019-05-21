@@ -10,9 +10,6 @@
  *
  */
 
-#define DRIPLINE_API_EXPORTS
-#define SCARAB_API_EXPORTS
-
 #include "agent.hh"
 #include "agent_config.hh"
 #include "dripline_constants.hh"
@@ -87,6 +84,6 @@ int main( int argc, char** argv )
     // Parse CL options and run the application
     CLI11_PARSE( the_main, argc, argv );
 
-    return RETURN_SUCCESS;
+    return the_agent.get_return();
 }
 

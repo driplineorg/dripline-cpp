@@ -24,9 +24,17 @@ namespace dripline
 #    define DRIPLINE_API __declspec(dllimport)
 #    define DRIPLINE_EXPIMP_TEMPLATE extern
 #  endif
+
+#  ifdef DRIPLINE_EXAMPLES_API_EXPORTS
+#    define DRIPLINE_EXAMPLES_API __declspec(dllexport)
+#  else
+#    define DRIPLINE_EXAMPLES_API __declspec(dllimport)
+#  endif
 #else
 #  define DRIPLINE_API
+#  define DRIPLINE_EXAMPLES_API
 #endif
+
 }
 
 #endif /* DRIPLINE_API_HH_ */
