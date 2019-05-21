@@ -15,6 +15,7 @@
 #include "member_variables.hh"
 
 #include <atomic>
+#include <map>
 #include <memory>
 #include <string>
 #include <set>
@@ -58,7 +59,7 @@ namespace dripline
             bool stop();
 
         private:
-            bool bind_keys( const std::set< std::string >& a_keys );
+            bool bind_keys();
 
             bool start_consuming();
 
@@ -71,7 +72,9 @@ namespace dripline
 
             mv_referrable_const( std::string, consumer_tag );
 
-            mv_referrable( std::set< std::string >, keys );
+            typedef std::map< std::string, endpoint_ptr_t > child_map_t;
+            mv_referrable( child_map_t, children );
+
             mv_referrable( std::string, broadcast_key );
 
             mv_accessible( unsigned, listen_timeout_ms );

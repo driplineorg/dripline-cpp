@@ -37,7 +37,7 @@ namespace dripline
             cancelable(),
             f_channel(),
             f_consumer_tag(),
-            f_keys(),
+            f_children(),
             f_broadcast_key( "broadcast" ),
             f_listen_timeout_ms( 500 ),
             f_lockout_tag(),
@@ -56,7 +56,7 @@ namespace dripline
             cancelable(),
             f_channel(),
             f_consumer_tag(),
-            f_keys(),
+            f_children(),
             f_broadcast_key(),
             f_listen_timeout_ms( 500 ),
             f_lockout_tag(),
@@ -109,7 +109,7 @@ namespace dripline
 
         if( ! setup_queue( f_channel, f_name ) ) return false;
 
-        if( ! bind_keys( f_keys ) ) return false;
+        if( ! bind_keys() ) return false;
 
         if( ! start_consuming() ) return false;
 
@@ -209,13 +209,15 @@ namespace dripline
     }
 
 
-    bool service::bind_keys( const set< string >& a_keys )
+    bool service::bind_keys()
     {
         try
         {
-            for( set< string >::const_iterator t_key_it = a_keys.begin(); t_key_it != a_keys.end(); ++t_key_it )
+            for( child_map_t::const_iterator t_child_it = f_children.begin();
+                    t_child_it != f_children.begin();
+                    ++t_child_it )
             {
-                f_channel->BindQueue( f_name, f_requests_exchange, *t_key_it );
+                f_channel->BindQueue( f_name, f_requests_exchange, t_child_it->first + ".#" );
             }
             f_channel->BindQueue( f_name, f_requests_exchange, f_name + ".#" );
             f_channel->BindQueue( f_name, f_requests_exchange, f_broadcast_key + ".#" );

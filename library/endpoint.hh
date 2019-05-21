@@ -13,6 +13,9 @@
 
 namespace dripline
 {
+    class endpoint;
+    typedef std::shared_ptr< endpoint > endpoint_ptr_t;
+
     class service;
 
     class DRIPLINE_API endpoint
