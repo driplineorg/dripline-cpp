@@ -5,6 +5,7 @@
  *      Author: obla999
  */
 
+#define DRIPLINE_API_EXPORTS
 
 #include "core.hh"
 
@@ -50,7 +51,9 @@ namespace dripline
             f_alerts_exchange( "alerts" ),
             f_make_connection( a_make_connection )
     {
-        std::string t_auth_file = a_config.get_value( "auth-file", a_auth_file );
+        // auth file passed as a parameter overrides a file passed in the config
+        std::string t_auth_file( a_auth_file );
+        if( t_auth_file.empty() ) t_auth_file = a_config.get_value( "auth-file", "" );
 
         // get auth file contents and override defaults
         if( ! t_auth_file.empty() )
@@ -63,8 +66,11 @@ namespace dripline
                 throw dripline_error() << "Authentication file <" << a_auth_file << "> could not be loaded";
             }
 
-            //TODO what is the desired behavior here, the prior check as if t_amqp_auth was NULL, that case
-            //     now causes scarab::error in the next line. Do we need to catch that and throw as dripline_error?
+            if( ! t_auth.has( "amqp" ) )
+            {
+                throw dripline_error() << "No \"amqp\" authentication information present in <" << a_auth_file << ">";
+            }
+
             const scarab::param_node& t_amqp_auth = t_auth["amqp"].as_node();
             if( ! t_amqp_auth.has( "username" ) || ! t_amqp_auth.has( "password" ) )
             {
@@ -158,6 +164,12 @@ namespace dripline
             LWARN( dlog, "send called but make_connection is false, returning nullptr" );
             return nullptr;
         }
+        // Dripline v2 compatibility: add the specifier information to the routing key
+        if( ! a_request->parsed_specifier().empty() )
+        {
+            a_request->routing_key() = a_request->routing_key() + "." + a_request->parsed_specifier().to_string();
+            a_request->parsed_specifier().clear();
+        }
         LDEBUG( dlog, "Sending request with routing key <" << a_request->routing_key() << ">" );
         rr_pkg_ptr t_receive_reply = std::make_shared< receive_reply_pkg >();
         t_receive_reply->f_channel = send_withreply( std::static_pointer_cast< message >( a_request ), t_receive_reply->f_consumer_tag, f_requests_exchange );
@@ -172,6 +184,12 @@ namespace dripline
             LWARN( dlog, "send called but make_connection is false, returning nullptr" );
             return false;
         }
+        // Dripline v2 compatibility: add the specifier information to the routing key
+        if( ! a_reply->parsed_specifier().empty() )
+        {
+            a_reply->routing_key() = a_reply->routing_key() + "." + a_reply->parsed_specifier().to_string();
+            a_reply->parsed_specifier().clear();
+        }
         LDEBUG( dlog, "Sending reply with routing key <" << a_reply->routing_key() << ">" );
         return send_noreply( std::static_pointer_cast< message >( a_reply ), f_requests_exchange );
     }
@@ -182,6 +200,12 @@ namespace dripline
         {
             LWARN( dlog, "send called but make_connection is false, returning nullptr" );
             return false;
+        }
+        // Dripline v2 compatibility: add the specifier information to the routing key
+        if( ! a_alert->parsed_specifier().empty() )
+        {
+            a_alert->routing_key() = a_alert->routing_key() + "." + a_alert->parsed_specifier().to_string();
+            a_alert->parsed_specifier().clear();
         }
         LDEBUG( dlog, "Sending alert with routing key <" << a_alert->routing_key() << ">" );
         return send_noreply( std::static_pointer_cast< message >( a_alert ), f_alerts_exchange );
