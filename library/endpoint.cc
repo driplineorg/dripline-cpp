@@ -29,7 +29,7 @@ namespace dripline
     {
     }
 
-    void endpoint::submit_request_message( const request_ptr_t a_request_ptr)
+    reply_ptr_t endpoint::submit_request_message( const request_ptr_t a_request_ptr)
     {
         return this->on_request_message( a_request_ptr );;
     }
@@ -44,13 +44,15 @@ namespace dripline
         return this->on_reply_message( a_reply_ptr );
     }
 
-    void endpoint::on_request_message( const request_ptr_t a_request )
+    reply_ptr_t endpoint::on_request_message( const request_ptr_t a_request )
     {
         // the lockout key must be valid
         if( ! a_request->get_lockout_key_valid() )
         {
             LWARN( dlog, "Message had an invalid lockout key" );
-            send_reply( a_request->reply( dl_message_error_invalid_key(), "Lockout key could not be parsed" ) );
+            reply_ptr_t t_reply = a_request->reply( dl_message_error_invalid_key(), "Lockout key could not be parsed" );
+            send_reply( t_reply );
+            return t_reply;
         }
 
         reply_ptr_t t_reply;
@@ -97,7 +99,7 @@ namespace dripline
             send_reply( t_reply );
         }
 
-        return;
+        return t_reply;
     }
 
     void endpoint::send_reply( reply_ptr_t a_reply ) const
