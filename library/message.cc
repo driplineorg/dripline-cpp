@@ -12,7 +12,6 @@
 #include "dripline_constants.hh"
 #include "dripline_error.hh"
 #include "dripline_version.hh"
-#include "return_codes.hh"
 
 #include "logger.hh"
 #include "param_json.hh"
