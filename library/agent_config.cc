@@ -27,7 +27,7 @@ namespace dripline
         param_node t_amqp_node;
         t_amqp_node.add( "broker-port", 5672 );
         t_amqp_node.add( "broker", "localhost" );
-        t_amqp_node.add( "reply-timeout-ms", 10000 );
+        t_amqp_node.add( "timeout", 10 );
 #ifdef DRIPLINE_AUTH_FILE
         //add logic for default auth file if it exists
         scarab::path t_auth_default_path = scarab::expand_path( TOSTRING( DRIPLINE_AUTH_FILE ) );
