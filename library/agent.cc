@@ -173,7 +173,7 @@ namespace dripline
 
                 const param& t_payload = t_reply->payload();
 
-                LINFO( dlog, "Response:\n" <<
+                LPROG( dlog, "Response:\n" <<
                         "Return code: " << t_reply->get_return_code() << '\n' <<
                         "Return message: " << t_reply->return_msg() << '\n' <<
                         t_payload );
