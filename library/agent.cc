@@ -69,7 +69,7 @@ namespace dripline
         if( t_config.has( "amqp" ) )
         {
             t_amqp_node = std::move(t_config.remove( "amqp" )->as_node());
-            t_timeout = t_amqp_node.get_value( "reply-timeout-ms", 10000 );
+            t_timeout = t_amqp_node.get_value( "timeout", 10U ) * 1000; // convert seconds (dripline agent user interface) to milliseconds (expected by SimpleAmqpClient)
         }
 
         core t_core( t_amqp_node );
