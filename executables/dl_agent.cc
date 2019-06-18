@@ -84,6 +84,6 @@ int main( int argc, char** argv )
     // Parse CL options and run the application
     CLI11_PARSE( the_main, argc, argv );
 
-    return the_agent.get_return();
+    return the_agent.get_return() / 100; // this exit code is the class of the dripline return code
 }
 
