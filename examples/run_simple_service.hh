@@ -57,6 +57,7 @@ namespace dripline
         {
             ++t_spec_level;
             LINFO( rsslog, "Specifier level " << t_spec_level << ": " << a_request->parsed_specifier().front() );
+            a_request->parsed_specifier().pop_front();
         }
         return a_request->reply( dl_success(), "Congrats, you performed an OP_CMD that had " + std::to_string(t_spec_level) + " levels" );
     }
