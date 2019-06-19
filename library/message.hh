@@ -64,7 +64,7 @@ namespace dripline
             amqp_message_ptr create_amqp_message() const;
 
             /// from message object to string
-            bool encode_message_body( std::string& a_body ) const;
+            bool encode_message_body( std::string& a_body, const scarab::param_node& a_options = scarab::param_node() ) const;
 
         protected:
             virtual bool derived_modify_amqp_message( amqp_message_ptr t_amqp_msg ) const = 0;
