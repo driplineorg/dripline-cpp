@@ -23,6 +23,17 @@ stages:
 jobs:
   include:
     - stage: build-test
+      os: osx
+      compiler: clang
+      osx_image: xcode9.4
+      script:
+        - brew update
+        - brew install rabbitmq-c
+        - mkdir build
+        - cd build
+        - cmake ..
+        - make
+    - stage: build-test
       os: linux
       dist: xenial
       compiler: gcc
@@ -36,7 +47,10 @@ jobs:
             - librabbitmq-dev
       script:
         - export CC=gcc-5 && export CXX=g++-5
-        - echo "gcc build goes here"
+        - mkdir build
+        - cd build
+        - cmake ..
+        - make
     - stage: build-test
       os: linux
       dist: xenial
@@ -51,7 +65,10 @@ jobs:
             - librabbitmq-dev
       script:
         - export CC=clang && export CXX=clang++
-        - echo "clang build goes here"
+        - mkdir build               
+        - cd build
+        - cmake ..
+        - make
     - stage: deploy
       os: linux
       dist: xenial
