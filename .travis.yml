@@ -19,6 +19,7 @@ jobs:
   include:
     - stage: environment setup
       script:
-        - docker build -t driplineorg/dripline-cpp:$TRAVIS_BRANCH .
+        - export DOCKER_TAG=`sed s/\//-/ $TRAVIS_BRANCH`
+        - docker build -t driplineorg/dripline-cpp:$DOCKER_TAG .
         - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-        - docker push driplineorg/dripline-cpp:$TRAVIS_BRANCH
+        - docker push driplineorg/dripline-cpp:$DOCKER_TAG
