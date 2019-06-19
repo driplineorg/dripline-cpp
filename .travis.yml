@@ -18,13 +18,40 @@ language: cpp
 stages:
   - build-test
   - name: deploy
-    if: branch = master OR branch =~ /^v\d+\.\d+\.\d+(-S*)?$/ OR branch = feature/travis
+    if: branch = master OR branch =~ /^v\d+\.\d+\.\d+(-S*)?$/
 
 jobs:
   include:
     - stage: build-test
+      os: linux
+      dist: xenial
+      compiler: gcc
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+            - libboost-all-dev
+            - librabbitmq-dev
       script:
-        - echo "hi"
+        - export CC=gcc-5 && export CXX=g++-5
+        - echo "gcc build goes here"
+    - stage: build-test
+      os: linux
+      dist: xenial
+      compiler: clang
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - clang
+            - libboost-all-dev
+            - librabbitmq-dev
+      script:
+        - export CC=clang && export CXX=clang++
+        - echo "clang build goes here"
     - stage: deploy
       os: linux
       dist: xenial
