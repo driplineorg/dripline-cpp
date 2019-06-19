@@ -1,25 +1,42 @@
 language: cpp
 
-dist: xenial
+#dist: xenial
 
-services:
-  - docker
+#services:
+#  - docker
 
-addons:
-  apt:
-    packages:
-      - docker-ce
+#addons:
+#  apt:
+#    packages:
+#      - docker-ce
 
 #branches:
 #  only:
 #    - master
 #    - /^v\d+\.\d+\.\d+(-S*)?$/
 
+stages:
+  - build-test
+  - name: deploy
+    if: branch = master OR branch =~ /^v\d+\.\d+\.\d+(-S*)?$/ OR branch = feature/travis
+
 jobs:
   include:
-    - stage: environment setup
+    - stage: build-test
+      script:
+        - echo "hi"
+    - stage: deploy
+      os: linux
+      dist: xenial
+      services:
+        - docker
+      addons:
+        apt:
+          packages:
+            - docker-ce
       script:
         - export DOCKER_TAG=`echo $TRAVIS_BRANCH | sed "s/\//-/"`
         - docker build -t driplineorg/dripline-cpp:$DOCKER_TAG .
         - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
         - docker push driplineorg/dripline-cpp:$DOCKER_TAG
+   
