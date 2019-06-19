@@ -1,19 +1,26 @@
 language: cpp
 
-before_script:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install rabbitmq-c; fi
-  - mkdir build
-  - cd build
-  - cmake ..
+stages:
+  - build-test
+  - name: deploy
+    if: branch = master OR branch =~ /^v\d+\.\d+\.\d+(-S*)?$/
 
-script: make
-  
-matrix:
-  allow_failures:
-    - os: linux  # trusty's version of rabbitmq-c is 0.4.1, which is too old, so the build fails; a docker build should be used instead
+jobs:
   include:
-    - os: linux
+    - stage: build-test
+      os: osx
+      compiler: clang
+      osx_image: xcode9.4
+      script:
+        - brew update
+        - brew install rabbitmq-c
+        - mkdir build
+        - cd build
+        - cmake ..
+        - make
+    - stage: build-test
+      os: linux
+      dist: xenial
       compiler: gcc
       addons:
         apt:
@@ -23,9 +30,15 @@ matrix:
             - g++-5
             - libboost-all-dev
             - librabbitmq-dev
-      env:
-         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
-    - os: linux
+      script:
+        - export CC=gcc-5 && export CXX=g++-5
+        - mkdir build
+        - cd build
+        - cmake ..
+        - make
+    - stage: build-test
+      os: linux
+      dist: xenial
       compiler: clang
       addons:
         apt:
@@ -35,11 +48,24 @@ matrix:
             - clang
             - libboost-all-dev
             - librabbitmq-dev
-      env:
-        - MATRIX_EVAL="CC=clang && CXX=clang++" 
-    - os: osx
-      osx_image: xcode9.4
-      compiler: clang
- 
-before_install:
-  - eval "${MATRIX_EVAL}"
+      script:
+        - export CC=clang && export CXX=clang++
+        - mkdir build               
+        - cd build
+        - cmake ..
+        - make
+    - stage: deploy
+      os: linux
+      dist: xenial
+      services:
+        - docker
+      addons:
+        apt:
+          packages:
+            - docker-ce
+      script:
+        - export DOCKER_TAG=`echo $TRAVIS_BRANCH | sed "s/\//-/"`
+        - docker build -t driplineorg/dripline-cpp:$DOCKER_TAG .
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+        - docker push driplineorg/dripline-cpp:$DOCKER_TAG
+   
