@@ -3,7 +3,7 @@ language: cpp
 stages:
   - build-test
   - name: deploy
-    if: branch = master OR branch =~ /^v\d+\.\d+\.\d+(-S*)?$/
+    if: branch = master OR branch =~ /^v\d+\.\d+\.\d+(-S*)?$/ OR branch = develop
 
 jobs:
   include:
