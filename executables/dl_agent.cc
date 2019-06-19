@@ -16,11 +16,15 @@
 #include "dripline_version.hh"
 
 #include "application.hh"
+#include "logger.hh"
 
 using namespace dripline;
 
 int main( int argc, char** argv )
 {
+    // Switch the logger out stream to std::cerr
+    scarab::logger::SetOutStream( &std::cerr );
+
     // Create the application and agent objects
     scarab::main_app the_main;
     agent the_agent;
