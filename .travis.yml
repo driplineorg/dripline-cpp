@@ -1,20 +1,5 @@
 language: cpp
 
-#dist: xenial
-
-#services:
-#  - docker
-
-#addons:
-#  apt:
-#    packages:
-#      - docker-ce
-
-#branches:
-#  only:
-#    - master
-#    - /^v\d+\.\d+\.\d+(-S*)?$/
-
 stages:
   - build-test
   - name: deploy
