@@ -76,6 +76,15 @@ namespace dripline
 
         // pull the special CL arguments out of the configuration
 
+        param_node t_agent_node;
+        bool t_pretty_print = false, t_suppress_output = false;
+        if( t_config.has( "agent" ) )
+        {
+            t_agent_node = std::move(t_config.remove( "agent" )->as_node());
+            t_pretty_print = t_agent_node.get_value( "pretty-print", t_pretty_print );
+            t_suppress_output = t_agent_node.get_value( "suppress-output", t_suppress_output );
+        }
+
         f_agent->routing_key() = t_config.get_value( "rk", f_agent->routing_key() );
         t_config.erase( "rk" );
 
@@ -177,6 +186,17 @@ namespace dripline
                         "Return code: " << t_reply->get_return_code() << '\n' <<
                         "Return message: " << t_reply->return_msg() << '\n' <<
                         t_payload );
+                if( ! t_suppress_output )
+                {
+                    scarab::param_node t_encoding_options;
+                    if( t_pretty_print )
+                    {
+                        t_encoding_options.add( "style", "pretty" );
+                    }
+                    std::string t_encoded_body;
+                    t_reply->encode_message_body( t_encoded_body, t_encoding_options );
+                    std::cout << t_encoded_body << std::endl;
+                }
 
                 if( ! t_save_filename.empty() && ! t_payload.is_null() )
                 {

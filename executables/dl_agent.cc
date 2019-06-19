@@ -74,6 +74,8 @@ int main( int argc, char** argv )
     the_main.add_config_option< std::string >( "-a,--auth-file", "amqp.auth-file", "Set the authentication file path" );
     the_main.add_config_option< unsigned >( "-t,--timeout", "amqp.timeout", "Set the timeout for waiting for a reply (seconds)" );
     the_main.add_config_option< std::string >( "-k,--lockout-key", "lockout-key", "Set the lockout key to send with the message" );
+    the_main.add_config_flag< bool >( "--suppress-output", "agent.suppress-output", "Suppress the output of the returned reply" );
+    the_main.add_config_flag< bool >( "--pretty-print", "agent.pretty-print", "Output the returned reply in nicely formatted JSON" );
     the_main.add_config_multi_option< std::string >( "-P,--payload", "payload", "Add values to the payload" );
     the_main.add_config_multi_option< std::string >( "-v,--values", "option-values", "Add ordered values" ); // stored in the config as "option-values" so they can be merged in later in the proper order
     the_main.add_config_flag< bool >( "--dry-run-msg", "dry-run-msg", "Print the message contents and exit" );
