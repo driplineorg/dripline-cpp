@@ -29,15 +29,19 @@ int main( int argc, char** argv )
     //std::string t_broker;
     //the_main.add_option( "-b,--broker", , "RabbitMQ broker" );
 
-    run_simple_service the_service;
+    int the_return = -1;
 
     auto t_service_callback = [&](){
+        run_simple_service the_service( the_main.master_config()["amqp"].as_node() );
+
         the_service.execute();
+
+        the_return = the_service.get_return();
     };
 
     the_main.callback( t_service_callback );
 
     CLI11_PARSE( the_main, argc, argv );
 
-    return the_service.get_return();
+    return the_return;
 }
