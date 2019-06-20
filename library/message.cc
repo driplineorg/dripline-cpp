@@ -217,7 +217,7 @@ namespace dripline
         return t_message;
     }
 
-    bool message::encode_message_body( std::string& a_body ) const
+    bool message::encode_message_body( std::string& a_body, const scarab::param_node& a_options ) const
     {
         param_node t_body_node;
         t_body_node.add( "msgtype", to_uint( message_type() ) );
@@ -226,7 +226,7 @@ namespace dripline
         //t_body_node.add( "specifier", f_specifier.to_string() );
         if( ! f_specifier.empty() )
         {
-            throw dripline_error() << "For dripline v2 compatibility the specifier is not used.  Please include the specifier information directly in the routing key";
+            LWARN( dlog, "For dripline v2 compatibility the specifier is not used.  Please include the specifier information directly in the routing key" );
         }
         t_body_node.add( "timestamp", scarab::get_formatted_now() );
         t_body_node.add( "sender_info", f_sender_info );
@@ -243,7 +243,7 @@ namespace dripline
             case encoding::json:
             {
                 param_output_json t_output;
-                if( ! t_output.write_string( t_body_node, a_body ) )
+                if( ! t_output.write_string( t_body_node, a_body, a_options ) )
                 {
                     LERROR( dlog, "Could not convert message body to string" );
                     return false;
