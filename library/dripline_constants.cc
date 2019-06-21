@@ -12,7 +12,7 @@
 
 namespace dripline
 {
-
+    // op_t utility functions
     // Conversion functions for use when a numeric value is needed
     DRIPLINE_API uint32_t to_uint( op_t an_op )
     {
@@ -27,7 +27,6 @@ namespace dripline
         return a_os << to_uint( an_op );
     }
     // Conversion functions for use when string values are required
-    // TODO op_t->string isn't too bad, but the string->op_t seems super ugly
     DRIPLINE_API std::string to_string( op_t an_op )
     {
         switch (an_op) {
@@ -40,7 +39,6 @@ namespace dripline
             case op_t::unknown: return "unknown";
             default: throw dripline_error() << "op_t value <" << an_op << "> not recognized";
         }
-        //TODO explicitly throw something here?
     }
     DRIPLINE_API op_t to_op_t( std::string an_op_str )
     {
@@ -52,9 +50,9 @@ namespace dripline
         if ( an_op_str == to_string( op_t::cmd ) ) return op_t::cmd;
         if ( an_op_str == to_string( op_t::unknown ) ) return op_t::unknown;
         throw dripline_error() << "unable to map <" << an_op_str << "> to an op_t value";
-        //TODO explicitly throw something here?
     }
 
+    // msg_t utility functions
     // Conversion functions for use when a numeric value is needed
     DRIPLINE_API uint32_t to_uint( msg_t a_msg )
     {
@@ -67,6 +65,25 @@ namespace dripline
     DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, msg_t a_msg )
     {
         return a_os << to_uint( a_msg );
+    }
+    // Conversion functions for use when string values are required
+    DRIPLINE_API std::string to_string( msg_t a_msg )
+    {
+        switch (a_msg) {
+            case msg_t::reply: return "reply";
+            case msg_t::request: return "request";
+            case msg_t::alert: return "alert";
+            case msg_t::unknown: return "unknown";
+            default: throw dripline_error() << "msg_t value <" << a_msg << "> not recognized";
+        }
+    }
+    DRIPLINE_API msg_t to_msg_t( std::string a_msg_str )
+    {
+        if ( a_msg_str == to_string( msg_t::reply ) ) return msg_t::reply;
+        if ( a_msg_str == to_string( msg_t::request ) ) return msg_t::request;
+        if ( a_msg_str == to_string( msg_t::alert ) ) return msg_t::alert;
+        if ( a_msg_str == to_string( msg_t::unknown ) ) return msg_t::unknown;
+        throw dripline_error() << "unable to map <" << a_msg_str << "> to a msg_t value";
     }
 
 } /* namespace dripline */
