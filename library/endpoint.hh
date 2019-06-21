@@ -82,24 +82,43 @@ namespace dripline
             reply_ptr_t __do_set_request( const request_ptr_t a_request );
             reply_ptr_t __do_cmd_request( const request_ptr_t a_request );
 
+        protected:
+            void send_reply( reply_ptr_t a_reply ) const;
+
         public:
             //******************
             // Lockout functions
             //******************
 
+            /// enable lockout with randomly-generated key
+            uuid_t enable_lockout( const scarab::param_node& a_tag );
+            /// enable lockout with user-supplied key
+            uuid_t enable_lockout( const scarab::param_node& a_tag, uuid_t a_key );
+            bool disable_lockout( const uuid_t& a_key, bool a_force = false );
             bool is_locked() const;
-            const scarab::param_node& get_lockout_tag() const;
             bool check_key( const uuid_t& a_key ) const;
+
+        protected:
+            /// Returns true if the server is unlocked or if it's locked and the key matches the lockout key; returns false otherwise.
+            bool authenticate( const uuid_t& a_key ) const;
+
+            mv_referrable( scarab::param_node, lockout_tag );
+            mv_accessible( uuid_t, lockout_key );
 
         private:
             //*****************
             // Request handlers
             //*****************
 
+            reply_ptr_t handle_lock_request( const request_ptr_t a_request );
+            reply_ptr_t handle_unlock_request( const request_ptr_t a_request );
+            reply_ptr_t handle_is_locked_request( const request_ptr_t a_request );
+            reply_ptr_t handle_set_condition_request( const request_ptr_t a_request );
             reply_ptr_t handle_ping_request( const request_ptr_t a_request );
 
-        protected:
-            void send_reply( reply_ptr_t a_reply ) const;
+            /// Default set-condition: no action taken; override for different behavior
+            virtual reply_ptr_t __do_handle_set_condition_request( const request_ptr_t a_request );
+
     };
 
     inline reply_ptr_t endpoint::do_run_request( const request_ptr_t a_request )
@@ -120,6 +139,26 @@ namespace dripline
     inline reply_ptr_t endpoint::do_cmd_request( const request_ptr_t a_request )
     {
         return a_request->reply( dl_device_error(), "Unhandled request type: OP_CMD" );
+    }
+
+    inline uuid_t endpoint::enable_lockout( const scarab::param_node& a_tag )
+    {
+        return enable_lockout( a_tag, generate_random_uuid() );
+    }
+
+    inline bool endpoint::is_locked() const
+    {
+        return ! f_lockout_key.is_nil();
+    }
+
+    inline bool endpoint::check_key( const uuid_t& a_key ) const
+    {
+        return f_lockout_key == a_key;
+    }
+
+    inline reply_ptr_t endpoint::__do_handle_set_condition_request( const request_ptr_t a_request )
+    {
+        return a_request->reply( dl_success(), "No action taken (this is the default method)" );
     }
 
 } /* namespace dripline */
