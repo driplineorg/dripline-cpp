@@ -124,15 +124,21 @@ namespace dripline
 #undef RC_LIST
 #define RC_LIST NEW_RC_LIST( database_error )
 
-    DEFINE_DL_RET_CODE( daq_error, 500 );
+    DEFINE_DL_RET_CODE( client_error, 500 );
 #undef RC_LIST
-#define RC_LIST NEW_RC_LIST( daq_error )
-    DEFINE_DL_RET_CODE( daq_not_enabled, 501 );
+#define RC_LIST NEW_RC_LIST( client_error )
+    DEFINE_DL_RET_CODE( client_error_invalid_request, 501 );
 #undef RC_LIST
-#define RC_LIST NEW_RC_LIST( daq_not_enabled )
-    DEFINE_DL_RET_CODE( daq_running, 502 );
+#define RC_LIST NEW_RC_LIST( client_error_invalid_request )
+    DEFINE_DL_RET_CODE( client_error_handling_reply, 502 );
 #undef RC_LIST
-#define RC_LIST NEW_RC_LIST( daq_running )
+#define RC_LIST NEW_RC_LIST( client_error_handling_reply )
+    DEFINE_DL_RET_CODE( client_error_unable_to_send, 503 );
+#undef RC_LIST
+#define RC_LIST NEW_RC_LIST( client_error_unable_to_send )
+    DEFINE_DL_RET_CODE( client_error_timeout, 504 );
+#undef RC_LIST
+#define RC_LIST NEW_RC_LIST( client_error_timeout )
 
     DEFINE_DL_RET_CODE( unhandled_exception, 999 );
 #undef RC_LIST

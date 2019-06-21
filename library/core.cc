@@ -79,14 +79,14 @@ namespace dripline
             f_username = t_amqp_auth["username"]().as_string();
             f_password = t_amqp_auth["password"]().as_string();
 
-            if( f_address.empty() && t_amqp_auth.has( "broker" ) )
+            if( t_amqp_auth.has( "broker" ) )
             {
                 f_address = t_amqp_auth["broker"]().as_string();
             }
         }
 
         // config file overrides auth file and defaults
-        if( !a_config.empty() )
+        if( ! a_config.empty() )
         {
             f_address = a_config.get_value( "broker", f_address );
             f_port = a_config.get_value( "broker-port", f_port );
@@ -253,6 +253,7 @@ namespace dripline
 
     amqp_channel_ptr core::send_withreply( message_ptr_t a_message, std::string& a_reply_consumer_tag, const std::string& a_exchange ) const
     {
+#ifndef DL_OFFLINE
         if ( ! f_make_connection )
         {
             throw dripline_error() << "cannot send reply with make_connection is false";
@@ -300,10 +301,14 @@ namespace dripline
             LERROR( dlog, "Error publishing request to queue: " << e.what() );
             return amqp_channel_ptr();
         }
+#else
+        throw a_message;
+#endif
     }
 
     bool core::send_noreply( message_ptr_t a_message, const std::string& a_exchange ) const
     {
+#ifndef DL_OFFLINE
         if( ! f_make_connection )
         {
             LDEBUG( dlog, "does not make amqp connection, not sending payload:" );
@@ -342,10 +347,17 @@ namespace dripline
             return false;
         }
         return true;
+#else
+        throw a_message;
+#endif
     }
 
     amqp_channel_ptr core::open_channel() const
     {
+#ifdef DL_OFFLINE
+        return amqp_channel_ptr();
+#endif
+
         if ( ! f_make_connection )
         {
             throw dripline_error() << "Should not call open_channel when f_make_connection is false";
@@ -375,6 +387,10 @@ namespace dripline
 
     bool core::setup_exchange( amqp_channel_ptr a_channel, const std::string& a_exchange )
     {
+#ifdef DL_OFFLINE
+        return false;
+#endif
+
         try
         {
             LDEBUG( dlog, "Declaring exchange <" << a_exchange << ">" );
@@ -395,6 +411,10 @@ namespace dripline
 
     bool core::setup_queue( amqp_channel_ptr a_channel, const std::string& a_queue_name )
     {
+#ifdef DL_OFFLINE
+        return false;
+#endif
+
         try
         {
             LDEBUG( dlog, "Declaring queue <" << a_queue_name << ">" );
@@ -416,6 +436,10 @@ namespace dripline
 
     bool core::listen_for_message( amqp_envelope_ptr& a_envelope, amqp_channel_ptr a_channel, const std::string& a_consumer_tag, int a_timeout_ms )
     {
+#ifdef DL_OFFLINE
+        return false;
+#endif
+
         while( true )
         {
             try
