@@ -10,7 +10,7 @@
 #include "catch.hpp"
 
 
-TEST_CASE( "lockout", "[service]" )
+TEST_CASE( "lockout", "[endpoint]" ) // even though a service is used here for convenience, lockout functionality lives in endpoint
 {
     dripline::service t_service( false );
 

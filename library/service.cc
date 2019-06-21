@@ -39,9 +39,7 @@ namespace dripline
             f_consumer_tag(),
             f_keys(),
             f_broadcast_key( "broadcast" ),
-            f_listen_timeout_ms( 500 ),
-            f_lockout_tag(),
-            f_lockout_key( generate_nil_uuid() )
+            f_listen_timeout_ms( 500 )
     {
         // get values from the config
         f_listen_timeout_ms = a_config.get_value( "listen-timeout-ms", f_listen_timeout_ms );
@@ -58,9 +56,7 @@ namespace dripline
             f_consumer_tag(),
             f_keys(),
             f_broadcast_key(),
-            f_listen_timeout_ms( 500 ),
-            f_lockout_tag(),
-            f_lockout_key( generate_nil_uuid() )
+            f_listen_timeout_ms( 500 )
     {
     }
 
@@ -345,76 +341,6 @@ namespace dripline
         }
 
         return true;
-    }
-
-    uuid_t service::enable_lockout( const scarab::param_node& a_tag, uuid_t a_key )
-    {
-        if( is_locked() ) return generate_nil_uuid();
-        if( a_key.is_nil() ) f_lockout_key = generate_random_uuid();
-        else f_lockout_key = a_key;
-        f_lockout_tag = a_tag;
-        return f_lockout_key;
-    }
-
-    bool service::disable_lockout( const uuid_t& a_key, bool a_force )
-    {
-        if( ! is_locked() ) return true;
-        if( ! a_force && a_key != f_lockout_key ) return false;
-        f_lockout_key = generate_nil_uuid();
-        f_lockout_tag.clear();
-        return true;
-    }
-
-    bool service::authenticate( const uuid_t& a_key ) const
-    {
-        LDEBUG( dlog, "Authenticating with key <" << a_key << ">" );
-        if( is_locked() ) return check_key( a_key );
-        return true;
-    }
-
-    reply_ptr_t service::handle_lock_request( const request_ptr_t a_request )
-    {
-        uuid_t t_new_key = enable_lockout( a_request->sender_info(), a_request->lockout_key() );
-        if( t_new_key.is_nil() )
-        {
-            return a_request->reply( dl_device_error(), "Unable to lock server" );;
-        }
-
-        param_ptr_t t_payload_ptr( new param_node() );
-        param_node& t_payload_node = t_payload_ptr->as_node();
-        t_payload_node.add( "key", string_from_uuid( t_new_key ) );
-        return a_request->reply( dl_success(), "Server is now locked", std::move(t_payload_ptr) );
-    }
-
-    reply_ptr_t service::handle_unlock_request( const request_ptr_t a_request )
-    {
-        if( ! is_locked() )
-        {
-            return a_request->reply( dl_warning_no_action_taken(), "Already unlocked" );
-        }
-
-        bool t_force = a_request->payload().get_value( "force", false );
-
-        if( disable_lockout( a_request->lockout_key(), t_force ) )
-        {
-            return a_request->reply( dl_success(), "Server unlocked" );
-        }
-        return a_request->reply( dl_device_error(), "Failed to unlock server" );;
-    }
-
-    reply_ptr_t service::handle_set_condition_request( const request_ptr_t a_request )
-    {
-        return this->__do_handle_set_condition_request( a_request );
-    }
-
-    reply_ptr_t service::handle_is_locked_request( const request_ptr_t a_request )
-    {
-        bool t_is_locked = is_locked();
-        scarab::param_ptr_t t_reply_payload( new param_node() );
-        scarab::param_node& t_reply_node = t_reply_payload->as_node();
-        t_reply_node.add( "is_locked", t_is_locked );
-        if( t_is_locked ) t_reply_node.add( "tag", f_lockout_tag );
-        return a_request->reply( dl_success(), "Checked lock status", std::move(t_reply_payload) );
     }
 
 } /* namespace dripline */
