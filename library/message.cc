@@ -20,6 +20,7 @@
 #include "time.hh"
 #include "version_wrapper.hh"
 
+#include <cmath>
 #include <map>
 
 using std::shared_ptr;
@@ -87,8 +88,8 @@ namespace dripline
 */
     std::tuple< std::string, unsigned, unsigned > message::parse_message_id( const string& a_message_id )
     {
-        unsigned t_first_separator = a_message_id.find_first_of( s_message_id_separator );
-        unsigned t_last_separator = a_message_id.find_last_of( s_message_id_separator );
+        std::string::size_type t_first_separator = a_message_id.find_first_of( s_message_id_separator );
+        std::string::size_type t_last_separator = a_message_id.find_last_of( s_message_id_separator );
         if( t_first_separator == a_message_id.npos || t_last_separator == a_message_id.npos )
         {
             throw dripline_error() << "Message ID is not formatted correctly\nShould be [UUID]/[chunk]/[total chunks]\nReceived: " << a_message_id;
@@ -187,7 +188,7 @@ namespace dripline
         }
 
         LDEBUG( dlog, "Processing message:\n" <<
-                 "Routing key: " << a_routing_key <<
+                 "Routing key: " << a_routing_key << '\n' <<
                  "Payload: " << t_payload_str );
 
         using scarab::at;

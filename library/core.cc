@@ -213,13 +213,6 @@ namespace dripline
             throw dripline_error() << "Unable to setup the exchange <" << a_exchange << ">";
         }
 
-        // convert the dripline::message object to an AMQP message
-        amqp_split_message_ptrs t_amqp_messages = a_message->create_amqp_messages();
-        if( t_amqp_messages.empty() )
-        {
-            throw dripline_error() << "Unable to convert the dripline::message object to AMQP messages";
-        }
-
         // create empty receive-reply object
         sent_msg_pkg_ptr t_receive_reply = std::make_shared< sent_msg_pkg >();
         std::unique_lock< std::mutex > t_rr_lock( t_receive_reply->f_mutex );
@@ -238,6 +231,13 @@ namespace dripline
             t_receive_reply->f_consumer_tag = t_channel->BasicConsume( t_reply_to );
             LDEBUG( dlog, "Reply-to for request: " << t_reply_to );
             LDEBUG( dlog, "Consumer tag for reply: " << t_receive_reply->f_consumer_tag );
+        }
+
+        // convert the dripline::message object to an AMQP message
+        amqp_split_message_ptrs t_amqp_messages = a_message->create_amqp_messages();
+        if( t_amqp_messages.empty() )
+        {
+            throw dripline_error() << "Unable to convert the dripline::message object to AMQP messages";
         }
 
         try
@@ -351,7 +351,7 @@ namespace dripline
 
     }
 
-    bool core::listen_for_message( amqp_envelope_ptr& a_envelope, amqp_channel_ptr a_channel, const std::string& a_consumer_tag, int a_timeout_ms )
+    bool core::listen_for_message( amqp_envelope_ptr& a_envelope, amqp_channel_ptr a_channel, const std::string& a_consumer_tag, int a_timeout_ms, bool a_do_ack )
     {
 #ifdef DL_OFFLINE
         return false;
@@ -369,7 +369,7 @@ namespace dripline
                 {
                     a_envelope = a_channel->BasicConsumeMessage( a_consumer_tag );
                 }
-                if( a_envelope ) a_channel->BasicAck( a_envelope );
+                if( a_envelope && a_do_ack ) a_channel->BasicAck( a_envelope );
                 return true;
             }
             catch( AmqpClient::ConnectionClosedException& e )

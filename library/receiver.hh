@@ -11,6 +11,8 @@
 #include "core.hh"
 #include "message.hh"
 
+#include <atomic>
+#include <condition_variable>
 #include <map>
 #include <thread>
 

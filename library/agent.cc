@@ -230,7 +230,7 @@ namespace dripline
             }
             else
             {
-                LWARN( dlog, "Timed out waiting for reply" );
+                LWARN( dlog, "Timed out or error while waiting for reply" );
                 f_agent->set_return( dl_client_error_timeout().rc_value() );
             }
             f_agent->set_reply( t_reply );

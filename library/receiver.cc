@@ -49,13 +49,21 @@ namespace dripline
         while( true )
         {
             amqp_envelope_ptr t_envelope;
-            a_chan_valid = core::listen_for_message( t_envelope, a_receive_reply->f_channel, a_receive_reply->f_consumer_tag, a_timeout_ms );
+            a_chan_valid = core::listen_for_message( t_envelope, a_receive_reply->f_channel, a_receive_reply->f_consumer_tag, a_timeout_ms, false );
 
             // there was an error listening on the channel; no message received
-            if( ! a_chan_valid ) return reply_ptr_t();
+            if( ! a_chan_valid )
+            {
+                LDEBUG( dlog, "There was some error while listening on the channel; no message received" );
+                return reply_ptr_t();
+            }
 
             // listening timed out
-            if( ! t_envelope ) return reply_ptr_t();
+            if( ! t_envelope )
+            {
+                LDEBUG( dlog, "An empty envelope was returned from listening to a channel; listening may have timed out" );
+                return reply_ptr_t();
+            }
 
             try
             {
