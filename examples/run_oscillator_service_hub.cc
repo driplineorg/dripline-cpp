@@ -25,17 +25,21 @@ int main( int argc, char** argv )
 
     the_main.default_config() = agent_config();
 
-    oscillator_service_hub the_service;
+    int the_return = -1;
 
     auto t_service_callback = [&](){
+        oscillator_service_hub the_service( the_main.master_config()["amqp"].as_node() );
+
         the_service.execute();
+
+        the_return = the_service.get_return();
     };
 
     the_main.callback( t_service_callback );
 
     CLI11_PARSE( the_main, argc, argv );
 
-    return the_service.get_return();
+    return the_return;
 }
 
 

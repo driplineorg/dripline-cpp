@@ -10,16 +10,11 @@
 
 #include "dripline_api.hh"
 
+#include "macros.hh"
+
 #include <cstdint>
 #include <limits>
 #include <ostream>
-
-
-// Return value constants
-#define RETURN_SUCCESS 0
-#define RETURN_ERROR 1
-#define RETURN_CANCELED 2
-#define RETURN_REVOKED 3
 
 namespace dripline
 {

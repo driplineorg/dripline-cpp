@@ -79,14 +79,14 @@ namespace dripline
             f_username = t_amqp_auth["username"]().as_string();
             f_password = t_amqp_auth["password"]().as_string();
 
-            if( f_address.empty() && t_amqp_auth.has( "broker" ) )
+            if( t_amqp_auth.has( "broker" ) )
             {
                 f_address = t_amqp_auth["broker"]().as_string();
             }
         }
 
         // config file overrides auth file and defaults
-        if( !a_config.empty() )
+        if( ! a_config.empty() )
         {
             f_address = a_config.get_value( "broker", f_address );
             f_port = a_config.get_value( "broker-port", f_port );

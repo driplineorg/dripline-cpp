@@ -65,7 +65,7 @@ namespace dripline
             static reply_ptr_t wait_for_reply( const cc_rr_pkg_ptr a_receive_reply, bool& a_chan_valid, int a_timeout_ms = 0 );
 
         private:
-            void do_cancellation();
+            void do_cancellation( int a_code );
 
             struct message_and_reply
             {
