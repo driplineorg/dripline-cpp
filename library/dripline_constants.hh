@@ -55,6 +55,9 @@ namespace dripline
     DRIPLINE_API uint32_t to_uint( msg_t a_msg );
     DRIPLINE_API msg_t to_msg_t( uint32_t a_msg_uint );
     DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, msg_t a_msg );
+    // Conversion functions for string values
+    DRIPLINE_API std::string to_string( msg_t a_msg );
+    DRIPLINE_API msg_t to_msg_t( std::string a_msg_str );
 
 } /* namespace dripline */
 
