@@ -17,7 +17,7 @@ LOGGER( rsslog, "run_simple_service" );
 namespace dripline
 {
 
-    class run_simple_service : public service
+    class DRIPLINE_EXAMPLES_API run_simple_service : public service
     {
         public:
             run_simple_service( const scarab::param_node& a_config = scarab::param_node() );
@@ -57,6 +57,7 @@ namespace dripline
         {
             ++t_spec_level;
             LINFO( rsslog, "Specifier level " << t_spec_level << ": " << a_request->parsed_specifier().front() );
+            a_request->parsed_specifier().pop_front();
         }
         return a_request->reply( dl_success(), "Congrats, you performed an OP_CMD that had " + std::to_string(t_spec_level) + " levels" );
     }

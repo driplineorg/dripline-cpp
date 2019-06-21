@@ -5,6 +5,7 @@
  *      Author: N.S. Oblath
  */
 
+#define DRIPLINE_API_EXPORTS
 
 #include "core.hh"
 
@@ -49,7 +50,9 @@ namespace dripline
             f_alerts_exchange( "alerts" ),
             f_make_connection( a_make_connection )
     {
-        std::string t_auth_file = a_config.get_value( "auth-file", a_auth_file );
+        // auth file passed as a parameter overrides a file passed in the config
+        std::string t_auth_file( a_auth_file );
+        if( t_auth_file.empty() ) t_auth_file = a_config.get_value( "auth-file", "" );
 
         // get auth file contents and override defaults
         if( ! t_auth_file.empty() )
@@ -62,8 +65,11 @@ namespace dripline
                 throw dripline_error() << "Authentication file <" << a_auth_file << "> could not be loaded";
             }
 
-            //TODO what is the desired behavior here, the prior check as if t_amqp_auth was NULL, that case
-            //     now causes scarab::error in the next line. Do we need to catch that and throw as dripline_error?
+            if( ! t_auth.has( "amqp" ) )
+            {
+                throw dripline_error() << "No \"amqp\" authentication information present in <" << a_auth_file << ">";
+            }
+
             const scarab::param_node& t_amqp_auth = t_auth["amqp"].as_node();
             if( ! t_amqp_auth.has( "username" ) || ! t_amqp_auth.has( "password" ) )
             {
@@ -72,14 +78,14 @@ namespace dripline
             f_username = t_amqp_auth["username"]().as_string();
             f_password = t_amqp_auth["password"]().as_string();
 
-            if( f_address.empty() && t_amqp_auth.has( "broker" ) )
+            if( t_amqp_auth.has( "broker" ) )
             {
                 f_address = t_amqp_auth["broker"]().as_string();
             }
         }
 
         // config file overrides auth file and defaults
-        if( !a_config.empty() )
+        if( ! a_config.empty() )
         {
             f_address = a_config.get_value( "broker", f_address );
             f_port = a_config.get_value( "broker-port", f_port );
@@ -152,18 +158,33 @@ namespace dripline
 
     sent_msg_pkg_ptr core::send( request_ptr_t a_request ) const
     {
+        if ( ! f_make_connection )
+        {
+            LWARN( dlog, "send called but make_connection is false, returning nullptr" );
+            return nullptr;
+        }
         LDEBUG( dlog, "Sending request with routing key <" << a_request->routing_key() << ">" );
         return do_send( std::static_pointer_cast< message >( a_request ), f_requests_exchange, true );
     }
 
     sent_msg_pkg_ptr core::send( reply_ptr_t a_reply ) const
     {
+        if ( ! f_make_connection )
+        {
+            LWARN( dlog, "send called but make_connection is false, returning nullptr" );
+            return nullptr;
+        }
         LDEBUG( dlog, "Sending reply with routing key <" << a_reply->routing_key() << ">" );
         return do_send( std::static_pointer_cast< message >( a_reply ), f_requests_exchange, false );
     }
 
     sent_msg_pkg_ptr core::send( alert_ptr_t a_alert ) const
     {
+        if ( ! f_make_connection )
+        {
+            LWARN( dlog, "send called but make_connection is false, returning nullptr" );
+            return nullptr;
+        }
         LDEBUG( dlog, "Sending alert with routing key <" << a_alert->routing_key() << ">" );
         return do_send( std::static_pointer_cast< message >( a_alert ), f_alerts_exchange, false );
     }
@@ -175,6 +196,7 @@ namespace dripline
         // the f_successful_send flag will be set accordingly: true if completely sent; false if partially sent
         // if there was an error, that will be returned in f_send_error_message, which will be empty otherwise
 
+#ifndef DL_OFFLINE
         if ( ! f_make_connection )
         {
             throw dripline_error() << "cannot send reply when make_connection is false";
@@ -240,11 +262,19 @@ namespace dripline
             t_receive_reply->f_successful_send = false;
             t_receive_reply->f_send_error_message = std::string("Error publishing request to queue: ") + std::string(e.what());
         }
+
         return t_receive_reply;
+#else
+        throw a_message;
+#endif
     }
 
     amqp_channel_ptr core::open_channel() const
     {
+#ifdef DL_OFFLINE
+        return amqp_channel_ptr();
+#endif
+
         if ( ! f_make_connection )
         {
             throw dripline_error() << "Should not call open_channel when f_make_connection is false";
@@ -274,6 +304,10 @@ namespace dripline
 
     bool core::setup_exchange( amqp_channel_ptr a_channel, const std::string& a_exchange )
     {
+#ifdef DL_OFFLINE
+        return false;
+#endif
+
         try
         {
             LDEBUG( dlog, "Declaring exchange <" << a_exchange << ">" );
@@ -294,6 +328,10 @@ namespace dripline
 
     bool core::setup_queue( amqp_channel_ptr a_channel, const std::string& a_queue_name )
     {
+#ifdef DL_OFFLINE
+        return false;
+#endif
+
         try
         {
             LDEBUG( dlog, "Declaring queue <" << a_queue_name << ">" );
@@ -315,6 +353,10 @@ namespace dripline
 
     bool core::listen_for_message( amqp_envelope_ptr& a_envelope, amqp_channel_ptr a_channel, const std::string& a_consumer_tag, int a_timeout_ms )
     {
+#ifdef DL_OFFLINE
+        return false;
+#endif
+
         while( true )
         {
             try

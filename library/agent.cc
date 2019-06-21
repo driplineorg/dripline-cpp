@@ -6,7 +6,6 @@
  */
 
 #define DRIPLINE_API_EXPORTS
-#define SCARAB_API_EXPORTS
 
 #include "agent.hh"
 
@@ -45,12 +44,18 @@ namespace dripline
             f_specifier(),
             f_lockout_key( generate_nil_uuid() ),
             f_reply(),
-            f_return( 0 )
+            f_return( dl_client_error().rc_value() )
     {
     }
 
     agent::~agent()
     {
+    }
+
+    void agent::sub_agent::execute( const scarab::param_node& a_config )
+    {
+        const scarab::param_array a_ord_args;
+        execute( a_config, a_ord_args );
     }
 
     void agent::sub_agent::execute( const scarab::param_node& a_config, const scarab::param_array& a_ord_args )
@@ -66,12 +71,21 @@ namespace dripline
         if( t_config.has( "amqp" ) )
         {
             t_amqp_node = std::move(t_config.remove( "amqp" )->as_node());
-            t_timeout = t_amqp_node.get_value( "reply-timeout-ms", 10000 );
+            t_timeout = t_amqp_node.get_value( "timeout", 10U ) * 1000; // convert seconds (dripline agent user interface) to milliseconds (expected by SimpleAmqpClient)
         }
 
         core t_core( t_amqp_node );
 
         // pull the special CL arguments out of the configuration
+
+        param_node t_agent_node;
+        bool t_pretty_print = false, t_suppress_output = false;
+        if( t_config.has( "agent" ) )
+        {
+            t_agent_node = std::move(t_config.remove( "agent" )->as_node());
+            t_pretty_print = t_agent_node.get_value( "pretty-print", t_pretty_print );
+            t_suppress_output = t_agent_node.get_value( "suppress-output", t_suppress_output );
+        }
 
         f_agent->routing_key() = t_config.get_value( "rk", f_agent->routing_key() );
         t_config.erase( "rk" );
@@ -87,7 +101,7 @@ namespace dripline
             if( ! t_lk_valid )
             {
                 LERROR( dlog, "Invalid lockout key provided: <" << t_config.get_value( "lockout-key", "" ) << ">" );
-                f_agent->set_return( RETURN_ERROR );
+                f_agent->set_return( dl_client_error().rc_value() );
                 return;
             }
         }
@@ -120,11 +134,12 @@ namespace dripline
 
         // create the request
         request_ptr_t t_request = this->create_request( t_config );
+        LDEBUG( dlog, "message payload to send is: " << t_request->payload() );
 
         if( ! t_request )
         {
             LERROR( dlog, "Unable to create request" );
-            f_agent->set_return( RETURN_ERROR );
+            f_agent->set_return( dl_client_error_invalid_request().rc_value() );
             return;
         }
 
@@ -132,6 +147,7 @@ namespace dripline
         if( t_is_dry_run )
         {
             LPROG( dlog, "Request:\n" << *t_request );
+            f_agent->set_return( dl_warning_no_action_taken().rc_value() );
             return;
         }
 
@@ -158,8 +174,8 @@ namespace dripline
 
         if( ! t_receive_reply->f_successful_send )
         {
-            LERROR( dlog, "Message sending failed:\n" + t_receive_reply->f_send_error_message );
-            f_agent->set_return( RETURN_ERROR );
+            LERROR( dlog, "Unable to send request:\n" + t_receive_reply->f_send_error_message );
+            f_agent->set_return( dl_client_error_unable_to_send().rc_value() );
             return;
         }
 
@@ -174,13 +190,33 @@ namespace dripline
             if( t_reply )
             {
                 LINFO( dlog, "Response received" );
+                f_agent->set_return( t_reply->get_return_code() );
 
                 const param& t_payload = t_reply->payload();
 
-                LINFO( dlog, "Response:\n" <<
+                LPROG( dlog, "Response:\n" <<
                         "Return code: " << t_reply->get_return_code() << '\n' <<
                         "Return message: " << t_reply->return_msg() << '\n' <<
                         t_payload );
+                if( ! t_suppress_output )
+                {
+                    scarab::param_node t_encoding_options;
+                    if( t_pretty_print )
+                    {
+                        t_encoding_options.add( "style", "pretty" );
+                    }
+                    std::vector< std::string > t_encoded_body;
+                    t_reply->encode_message_body( t_encoded_body, 500, t_encoding_options );
+                    if( ! t_encoded_body.empty() )
+                    {
+                        std::cout << t_encoded_body[0];
+                        if( t_encoded_body.size() > 1 )
+                        {
+                            std::cout << "\n<message truncated. . .>";
+                        }
+                        std::cout << std::endl;
+                    }
+                }
 
                 if( ! t_save_filename.empty() && ! t_payload.is_null() )
                 {
@@ -188,18 +224,21 @@ namespace dripline
                     if( ! t_translator.write_file( t_payload, t_save_filename ) )
                     {
                         LERROR( dlog, "Unable to write out payload" );
-                        f_agent->set_return( RETURN_ERROR );
+                        f_agent->set_return( dl_client_error_handling_reply().rc_value() );
                     }
                 }
             }
             else
             {
                 LWARN( dlog, "Timed out waiting for reply" );
+                f_agent->set_return( dl_client_error_timeout().rc_value() );
             }
             f_agent->set_reply( t_reply );
         }
-
-        f_agent->set_return( RETURN_SUCCESS );
+        else
+        {
+            f_agent->set_return( dl_success().rc_value() );
+        }
 
         return;
     }
@@ -269,7 +308,7 @@ namespace dripline
         }
 
         // at this point, all that remains in a_config should be other options that we want to add to the payload node
-        a_config.merge( a_config ); // copy a_config
+        t_payload_node.merge( a_config );
 
         return msg_request::create( std::move(t_payload_ptr),
                                     op_t::cmd,

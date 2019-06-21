@@ -5,10 +5,14 @@
 ##########
 
 set( dripline_examples_HEADERS
+    oscillator.hh
+    oscillator_service_hub.hh
     run_simple_service.hh
 )
 
 set( dripline_examples_SOURCES
+    oscillator.cc
+    oscillator_service_hub.cc
     run_simple_service.cc
 )
 
@@ -28,6 +32,7 @@ if( Dripline_ENABLE_EXECUTABLES )
         DriplineExamples
     )
     set( programs
+        run_oscillator_service_hub
         simple_service
     )
     pbuilder_executables( programs lib_dependencies )

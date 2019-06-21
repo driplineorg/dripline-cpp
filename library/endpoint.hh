@@ -33,7 +33,7 @@ namespace dripline
             //**************************
 
             /// Directly submit a request message to this endpoint
-            void submit_request_message( const request_ptr_t a_request );
+            reply_ptr_t submit_request_message( const request_ptr_t a_request );
 
             /// Directly submit a reply message to this endpoint
             void submit_reply_message( const reply_ptr_t a_reply );
@@ -47,7 +47,7 @@ namespace dripline
             //*************************
 
             /// Default request handler; passes request to initial request functions
-            virtual void on_request_message( const request_ptr_t a_request );
+            virtual reply_ptr_t on_request_message( const request_ptr_t a_request );
 
             /// Default reply handler; throws a dripline_error.
             /// Override this to enable handling of replies.

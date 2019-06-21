@@ -12,7 +12,6 @@
 #include "dripline_constants.hh"
 #include "dripline_error.hh"
 #include "dripline_version.hh"
-#include "return_codes.hh"
 
 #include "logger.hh"
 #include "map_at_default.hh"
@@ -345,7 +344,7 @@ namespace dripline
         }
     }
 
-    void message::encode_message_body( std::vector< string >& a_body_vec, unsigned a_max_size ) const
+    void message::encode_message_body( std::vector< string >& a_body_vec, unsigned a_max_size, const scarab::param_node& a_options ) const
     {
         switch( f_encoding )
         {
@@ -353,7 +352,7 @@ namespace dripline
             {
                 string t_body;
                 param_output_json t_output;
-                if( ! t_output.write_string( *f_payload, t_body ) )
+                if( ! t_output.write_string( *f_payload, t_body, a_options ) )
                 {
                     throw dripline_error() << "Could not convert message body to string";
                 }

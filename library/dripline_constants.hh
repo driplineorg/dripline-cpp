@@ -10,16 +10,11 @@
 
 #include "dripline_api.hh"
 
+#include "macros.hh"
+
 #include <cstdint>
 #include <limits>
 #include <ostream>
-
-
-// Return value constants
-#define RETURN_SUCCESS 0
-#define RETURN_ERROR 1
-#define RETURN_CANCELED 2
-#define RETURN_REVOKED 3
 
 namespace dripline
 {
@@ -29,7 +24,7 @@ namespace dripline
     // Please be sure that these constants are kept in sync with the dripline constants.
 
     // Operation constants
-    enum class op_t:uint32_t {
+    enum class DRIPLINE_API op_t:uint32_t {
             set = 0,
             get = 1,
             config = 6, // deprecated as of v2.0.0
@@ -48,7 +43,7 @@ namespace dripline
     DRIPLINE_API op_t to_op_t( std::string an_op_str );
 
     // Message type constants
-    enum class msg_t:uint32_t
+    enum class DRIPLINE_API msg_t:uint32_t
     {
         reply = 2,
         request = 3,

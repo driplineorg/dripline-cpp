@@ -1,21 +1,21 @@
 /*
- * simple_service.cc
+ * run_oscillator_service_hub.cc
  *
- *  Created on: Aug 23, 2018
+ *  Created on: May 16, 2019
  *      Author: N.S. Oblath
  */
 
 #include "agent_config.hh"
 #include "dripline_constants.hh"
 #include "dripline_version.hh"
-#include "run_simple_service.hh"
+#include "oscillator_service_hub.hh"
 
 #include "application.hh"
 #include "logger.hh"
 
 using namespace dripline;
 
-LOGGER( dlog, "simple_service" );
+LOGGER( dlog, "run_oscillation_service_hub" );
 
 int main( int argc, char** argv )
 {
@@ -25,14 +25,10 @@ int main( int argc, char** argv )
 
     the_main.default_config() = agent_config();
 
-    // options
-    //std::string t_broker;
-    //the_main.add_option( "-b,--broker", , "RabbitMQ broker" );
-
     int the_return = -1;
 
     auto t_service_callback = [&](){
-        run_simple_service the_service( the_main.master_config()["amqp"].as_node() );
+        oscillator_service_hub the_service( the_main.master_config()["amqp"].as_node() );
 
         the_service.execute();
 
@@ -45,3 +41,6 @@ int main( int argc, char** argv )
 
     return the_return;
 }
+
+
+

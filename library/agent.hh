@@ -35,12 +35,13 @@ namespace dripline
     class DRIPLINE_API agent
     {
         public:
-            class sub_agent
+            class DRIPLINE_API sub_agent
             {
                 public:
                     sub_agent( agent* an_agent ) : f_agent( an_agent ) {};
                     virtual ~sub_agent() {};
 
+                    void execute( const scarab::param_node& a_config );
                     void execute( const scarab::param_node& a_config, const scarab::param_array& a_ord_args );
 
                     virtual request_ptr_t create_request( scarab::param_node& a_config ) = 0;
@@ -50,7 +51,7 @@ namespace dripline
                     agent* f_agent;
             };
 
-            class sub_agent_run : public sub_agent
+            class DRIPLINE_API sub_agent_run : public sub_agent
             {
                 public:
                     sub_agent_run( agent* an_agent ) : sub_agent( an_agent ) {}
@@ -59,7 +60,7 @@ namespace dripline
                     virtual request_ptr_t create_request( scarab::param_node& a_config );
             };
 
-            class sub_agent_get : public sub_agent
+            class DRIPLINE_API sub_agent_get : public sub_agent
             {
                 public:
                     sub_agent_get( agent* an_agent ) : sub_agent( an_agent ) {}
@@ -68,7 +69,7 @@ namespace dripline
                     virtual request_ptr_t create_request( scarab::param_node& a_config );
             };
 
-            class sub_agent_set : public sub_agent
+            class DRIPLINE_API sub_agent_set : public sub_agent
             {
                 public:
                     sub_agent_set( agent* an_agent ) : sub_agent( an_agent ) {}
@@ -77,7 +78,7 @@ namespace dripline
                     virtual request_ptr_t create_request( scarab::param_node& a_config );
             };
 
-            class sub_agent_cmd : public sub_agent
+            class DRIPLINE_API sub_agent_cmd : public sub_agent
             {
                 public:
                     sub_agent_cmd( agent* an_agent ) : sub_agent( an_agent ) {}
@@ -90,6 +91,8 @@ namespace dripline
             agent();
             virtual ~agent();
 
+            template< typename sub_agent_type >
+            void execute( const scarab::param_node& a_config );
             template< typename sub_agent_type >
             void execute( const scarab::param_node& a_config, const scarab::param_array& a_ord_args );
 
@@ -104,6 +107,15 @@ namespace dripline
             mv_accessible( int, return );
 
     };
+
+    template< typename sub_agent_type >
+    void agent::execute( const scarab::param_node& a_config )
+    {
+        sub_agent_type t_sub_agent( this );
+        scarab::param_array t_ord_args;
+        t_sub_agent.execute( a_config, t_ord_args );
+        return;
+    }
 
     template< typename sub_agent_type >
     void agent::execute( const scarab::param_node& a_config, const scarab::param_array& a_ord_args )

@@ -69,7 +69,7 @@ namespace dripline
     }
 
 
-    void relayer::do_cancellation()
+    void relayer::do_cancellation( int )
     {
         LDEBUG( dlog, "Canceling relayer" );
         f_queue.interrupt();
