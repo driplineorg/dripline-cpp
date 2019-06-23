@@ -28,6 +28,7 @@ namespace dripline
             mv_referrable_const( std::string, name );
 
         protected:
+            friend class service;
             service& f_service;
 
         public:

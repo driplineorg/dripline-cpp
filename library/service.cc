@@ -9,8 +9,6 @@
 
 #include "service.hh"
 
-#include "dripline_error.hh"
-
 #include "authentication.hh"
 #include "logger.hh"
 
@@ -19,7 +17,6 @@ using scarab::param_node;
 using scarab::param_value;
 using scarab::param_ptr_t;
 
-using std::static_pointer_cast;
 using std::string;
 using std::set;
 
@@ -140,6 +137,7 @@ namespace dripline
 
             if( ! t_envelope && t_channel_valid )
             {
+                LDEBUG( dlog, "No message received or channel is not valid" );
                 continue;
             }
 
@@ -147,22 +145,25 @@ namespace dripline
             {
                 message_ptr_t t_message = message::process_envelope( t_envelope );
 
-                bool t_msg_handled = true;
-                if( t_message->is_request() )
+                std::string t_first_token( t_message->routing_key() );
+                t_first_token = t_first_token.substr( 0, t_first_token.find_first_of('.') );
+                LDEBUG( dlog, "First token in routing key: <" << t_first_token << ">" );
+
+                endpoint_ptr_t t_target;
+                if( t_first_token == f_name || t_first_token == f_broadcast_key )
                 {
-                    on_request_message( static_pointer_cast< msg_request >( t_message ) );
+                    do_on_message( this, t_message );
                 }
-                else if( t_message->is_alert() )
+                else
                 {
-                    on_alert_message( static_pointer_cast< msg_alert >( t_message ) );
-                }
-                else if( t_message->is_reply() )
-                {
-                    on_reply_message( static_pointer_cast< msg_reply >( t_message ) );
-                }
-                if( ! t_msg_handled )
-                {
-                    throw dripline_error() << "Message could not be handled";
+                    auto t_endpoint_itr = f_children.find( t_first_token );
+                    if( t_endpoint_itr == f_children.end() )
+                    {
+                        LERROR( dlog, "Did not find child endpoint called <" << t_first_token << ">" );
+                        throw dripline_error() << "Did not find child endpoint <" << t_first_token << ">";
+                    }
+
+                    do_on_message( t_endpoint_itr->second, t_message );
                 }
             }
             catch( dripline_error& e )

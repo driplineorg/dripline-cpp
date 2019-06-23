@@ -11,6 +11,8 @@
 #include "core.hh"
 #include "endpoint.hh"
 
+#include "dripline_error.hh"
+
 #include "cancelable.hh"
 #include "member_variables.hh"
 
@@ -79,6 +81,10 @@ namespace dripline
 
             mv_accessible( unsigned, listen_timeout_ms );
 
+        protected:
+            template< typename ptr_type >
+            void do_on_message( ptr_type a_endpoint_ptr, message_ptr_t a_message );
+
         public:
             //******************
             // Lockout functions
@@ -113,6 +119,27 @@ namespace dripline
             /// Default set-condition: no action taken; override for different behavior
             virtual reply_ptr_t __do_handle_set_condition_request( const request_ptr_t a_request );
     };
+
+    template< typename ptr_type >
+    void service::do_on_message( ptr_type a_endpoint_ptr, message_ptr_t a_message )
+    {
+        if( a_message->is_request() )
+        {
+            a_endpoint_ptr->on_request_message( std::static_pointer_cast< msg_request >( a_message ) );
+        }
+        else if( a_message->is_alert() )
+        {
+            a_endpoint_ptr->on_alert_message( std::static_pointer_cast< msg_alert >( a_message ) );
+        }
+        else if( a_message->is_reply() )
+        {
+            a_endpoint_ptr->on_reply_message( std::static_pointer_cast< msg_reply >( a_message ) );
+        }
+        else
+        {
+            throw dripline_error() << "Unknown message type";
+        }
+    }
 
     inline uuid_t service::enable_lockout( const scarab::param_node& a_tag )
     {
