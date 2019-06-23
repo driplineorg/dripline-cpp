@@ -9,8 +9,6 @@
 
 #include "service.hh"
 
-#include "dripline_error.hh"
-
 #include "authentication.hh"
 #include "logger.hh"
 
@@ -19,7 +17,6 @@ using scarab::param_node;
 using scarab::param_value;
 using scarab::param_ptr_t;
 
-using std::static_pointer_cast;
 using std::string;
 using std::set;
 
@@ -37,7 +34,7 @@ namespace dripline
             cancelable(),
             f_channel(),
             f_consumer_tag(),
-            f_keys(),
+            f_children(),
             f_broadcast_key( "broadcast" ),
             f_listen_timeout_ms( 500 )
     {
@@ -54,7 +51,7 @@ namespace dripline
             cancelable(),
             f_channel(),
             f_consumer_tag(),
-            f_keys(),
+            f_children(),
             f_broadcast_key(),
             f_listen_timeout_ms( 500 )
     {
@@ -105,7 +102,7 @@ namespace dripline
 
         if( ! setup_queue( f_channel, f_name ) ) return false;
 
-        if( ! bind_keys( f_keys ) ) return false;
+        if( ! bind_keys() ) return false;
 
         if( ! start_consuming() ) return false;
 
@@ -136,6 +133,7 @@ namespace dripline
 
             if( ! t_envelope && t_channel_valid )
             {
+                // we end up here every time the listen times out with no message received
                 continue;
             }
 
@@ -143,22 +141,25 @@ namespace dripline
             {
                 message_ptr_t t_message = message::process_envelope( t_envelope );
 
-                bool t_msg_handled = true;
-                if( t_message->is_request() )
+                std::string t_first_token( t_message->routing_key() );
+                t_first_token = t_first_token.substr( 0, t_first_token.find_first_of('.') );
+                LDEBUG( dlog, "First token in routing key: <" << t_first_token << ">" );
+
+                endpoint_ptr_t t_target;
+                if( t_first_token == f_name || t_first_token == f_broadcast_key )
                 {
-                    on_request_message( static_pointer_cast< msg_request >( t_message ) );
+                    do_on_message( this, t_message );
                 }
-                else if( t_message->is_alert() )
+                else
                 {
-                    on_alert_message( static_pointer_cast< msg_alert >( t_message ) );
-                }
-                else if( t_message->is_reply() )
-                {
-                    on_reply_message( static_pointer_cast< msg_reply >( t_message ) );
-                }
-                if( ! t_msg_handled )
-                {
-                    throw dripline_error() << "Message could not be handled";
+                    auto t_endpoint_itr = f_children.find( t_first_token );
+                    if( t_endpoint_itr == f_children.end() )
+                    {
+                        LERROR( dlog, "Did not find child endpoint called <" << t_first_token << ">" );
+                        throw dripline_error() << "Did not find child endpoint <" << t_first_token << ">";
+                    }
+
+                    do_on_message( t_endpoint_itr->second, t_message );
                 }
             }
             catch( dripline_error& e )
@@ -205,7 +206,7 @@ namespace dripline
     }
 
 
-    bool service::bind_keys( const set< string >& a_keys )
+    bool service::bind_keys()
     {
 #ifdef DL_OFFLINE
         return false;
@@ -213,11 +214,16 @@ namespace dripline
 
         try
         {
-            for( set< string >::const_iterator t_key_it = a_keys.begin(); t_key_it != a_keys.end(); ++t_key_it )
+            for( child_map_t::const_iterator t_child_it = f_children.begin();
+                    t_child_it != f_children.end();
+                    ++t_child_it )
             {
-                f_channel->BindQueue( f_name, f_requests_exchange, *t_key_it );
+                LDEBUG( dlog, "Binding key <" << t_child_it->first << ".#> to queue " << f_name );
+                f_channel->BindQueue( f_name, f_requests_exchange, t_child_it->first + ".#" );
             }
+            LDEBUG( dlog, "Binding key <" << f_name << ".#> to queue " << f_name );
             f_channel->BindQueue( f_name, f_requests_exchange, f_name + ".#" );
+            LDEBUG( dlog, "Binding key <" << f_broadcast_key << ".#> to queue " << f_name );
             f_channel->BindQueue( f_name, f_requests_exchange, f_broadcast_key + ".#" );
             return true;
         }

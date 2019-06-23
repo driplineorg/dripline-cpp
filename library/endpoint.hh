@@ -13,6 +13,9 @@
 
 namespace dripline
 {
+    class endpoint;
+    typedef std::shared_ptr< endpoint > endpoint_ptr_t;
+
     class service;
 
     class DRIPLINE_API endpoint
@@ -25,6 +28,7 @@ namespace dripline
             mv_referrable_const( std::string, name );
 
         protected:
+            friend class service;
             service& f_service;
 
         public:

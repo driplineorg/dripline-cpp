@@ -11,10 +11,13 @@
 #include "core.hh"
 #include "endpoint.hh"
 
+#include "dripline_error.hh"
+
 #include "cancelable.hh"
 #include "member_variables.hh"
 
 #include <atomic>
+#include <map>
 #include <memory>
 #include <string>
 #include <set>
@@ -58,7 +61,7 @@ namespace dripline
             bool stop();
 
         private:
-            bool bind_keys( const std::set< std::string >& a_keys );
+            bool bind_keys();
 
             bool start_consuming();
 
@@ -71,11 +74,39 @@ namespace dripline
 
             mv_referrable_const( std::string, consumer_tag );
 
-            mv_referrable( std::set< std::string >, keys );
+            typedef std::map< std::string, endpoint_ptr_t > child_map_t;
+            mv_referrable( child_map_t, children );
+
             mv_referrable( std::string, broadcast_key );
 
             mv_accessible( unsigned, listen_timeout_ms );
+
+        protected:
+            template< typename ptr_type >
+            void do_on_message( ptr_type a_endpoint_ptr, message_ptr_t a_message );
+
     };
+
+    template< typename ptr_type >
+    void service::do_on_message( ptr_type a_endpoint_ptr, message_ptr_t a_message )
+    {
+        if( a_message->is_request() )
+        {
+            a_endpoint_ptr->on_request_message( std::static_pointer_cast< msg_request >( a_message ) );
+        }
+        else if( a_message->is_alert() )
+        {
+            a_endpoint_ptr->on_alert_message( std::static_pointer_cast< msg_alert >( a_message ) );
+        }
+        else if( a_message->is_reply() )
+        {
+            a_endpoint_ptr->on_reply_message( std::static_pointer_cast< msg_reply >( a_message ) );
+        }
+        else
+        {
+            throw dripline_error() << "Unknown message type";
+        }
+    }
 
 } /* namespace dripline */
 
