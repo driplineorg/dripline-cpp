@@ -85,39 +85,6 @@ namespace dripline
             template< typename ptr_type >
             void do_on_message( ptr_type a_endpoint_ptr, message_ptr_t a_message );
 
-        public:
-            //******************
-            // Lockout functions
-            //******************
-
-            /// enable lockout with randomly-generated key
-            uuid_t enable_lockout( const scarab::param_node& a_tag );
-            /// enable lockout with user-supplied key
-            uuid_t enable_lockout( const scarab::param_node& a_tag, uuid_t a_key );
-            bool disable_lockout( const uuid_t& a_key, bool a_force = false );
-
-        private:
-            friend class endpoint;
-
-            /// Returns true if the server is unlocked or if it's locked and the key matches the lockout key; returns false otherwise.
-            bool authenticate( const uuid_t& a_key ) const;
-
-            scarab::param_node f_lockout_tag;
-            uuid_t f_lockout_key;
-
-        private:
-            //*****************
-            // Request handlers
-            //*****************
-
-            reply_ptr_t handle_lock_request( const request_ptr_t a_request );
-            reply_ptr_t handle_unlock_request( const request_ptr_t a_request );
-            reply_ptr_t handle_is_locked_request( const request_ptr_t a_request );
-            reply_ptr_t handle_set_condition_request( const request_ptr_t a_request );
-
-        private:
-            /// Default set-condition: no action taken; override for different behavior
-            virtual reply_ptr_t __do_handle_set_condition_request( const request_ptr_t a_request );
     };
 
     template< typename ptr_type >
@@ -139,16 +106,6 @@ namespace dripline
         {
             throw dripline_error() << "Unknown message type";
         }
-    }
-
-    inline uuid_t service::enable_lockout( const scarab::param_node& a_tag )
-    {
-        return enable_lockout( a_tag, generate_random_uuid() );
-    }
-
-    inline reply_ptr_t service::__do_handle_set_condition_request( const request_ptr_t a_request )
-    {
-        return a_request->reply( dl_success(), "No action taken (this is the default method)" );
     }
 
 } /* namespace dripline */
