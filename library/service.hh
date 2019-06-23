@@ -38,6 +38,13 @@ namespace dripline
             service& operator=( service&& ) = delete;
 
         public:
+            /// Add a synchronous child endpoint
+            bool add_child( endpoint_ptr_t a_endpoint_ptr );
+
+            /// Add an asynchronous child endpoint
+            bool add_asynch_child( endpoint_ptr_t a_endpoint_ptr );
+
+        public:
             /// Sends a request message and returns a channel on which to listen for a reply.
             virtual rr_pkg_ptr send( request_ptr_t a_request ) const;
 
@@ -75,7 +82,8 @@ namespace dripline
             mv_referrable_const( std::string, consumer_tag );
 
             typedef std::map< std::string, endpoint_ptr_t > child_map_t;
-            mv_referrable( child_map_t, children );
+            mv_referrable( child_map_t, sync_children );
+            mv_referrable( child_map_t, async_children );
 
             mv_referrable( std::string, broadcast_key );
 
@@ -106,6 +114,36 @@ namespace dripline
         {
             throw dripline_error() << "Unknown message type";
         }
+    }
+
+    inline bool service::add_child( endpoint_ptr_t a_endpoint_ptr )
+    {
+        auto t_inserted = f_sync_children.insert( std::make_pair( a_endpoint_ptr->name(), a_endpoint_ptr ) );
+        return t_inserted.second;
+    }
+
+    inline bool service::add_asynch_child( endpoint_ptr_t a_endpoint_ptr )
+    {
+        auto t_inserted = f_async_children.insert( std::make_pair( a_endpoint_ptr->name(), a_endpoint_ptr ) );
+        return t_inserted.second;
+    }
+
+    inline rr_pkg_ptr service::send( request_ptr_t a_request ) const
+    {
+        a_request->set_sender_service_name( f_name );
+        return core::send( a_request );
+    }
+
+    inline bool service::send( reply_ptr_t a_reply ) const
+    {
+        a_reply->set_sender_service_name( f_name );
+        return core::send( a_reply );
+    }
+
+    inline bool service::send( alert_ptr_t a_alert ) const
+    {
+        a_alert->set_sender_service_name( f_name );
+        return core::send( a_alert );
     }
 
 } /* namespace dripline */

@@ -121,13 +121,13 @@ namespace dripline
     oscillator_service_endpoints::oscillator_service_endpoints( const scarab::param_node& a_config ) :
             service( a_config, "osc_svc_ep" ),
             f_oscillator(),
-            f_return( RETURN_SUCCESS )
+            f_return( dl_success().rc_value() )
     {
-        f_children.insert( std::make_pair( "frequency", std::make_shared< oscillator_ep_frequency >( "frequency", *this ) ) );
-        f_children.insert( std::make_pair( "amplitude", std::make_shared< oscillator_ep_amplitude >( "amplitude", *this ) ) );
-        f_children.insert( std::make_pair( "in_phase", std::make_shared< oscillator_ep_in_phase >( "in_phase", *this ) ) );
-        f_children.insert( std::make_pair( "quadrature", std::make_shared< oscillator_ep_quadrature >( "quadrature", *this ) ) );
-        f_children.insert( std::make_pair( "iq", std::make_shared< oscillator_ep_iq >( "iq", *this ) ) );
+        add_child( std::make_shared< oscillator_ep_frequency >( "frequency", *this ) );
+        add_child( std::make_shared< oscillator_ep_amplitude >( "amplitude", *this ) );
+        add_child( std::make_shared< oscillator_ep_in_phase >( "in_phase", *this ) );
+        add_child( std::make_shared< oscillator_ep_quadrature >( "quadrature", *this ) );
+        add_child( std::make_shared< oscillator_ep_iq >( "iq", *this ) );
     }
 
     oscillator_service_endpoints::~oscillator_service_endpoints()

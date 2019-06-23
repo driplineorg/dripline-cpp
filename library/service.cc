@@ -34,7 +34,8 @@ namespace dripline
             cancelable(),
             f_channel(),
             f_consumer_tag(),
-            f_children(),
+            f_sync_children(),
+            f_async_children(),
             f_broadcast_key( "broadcast" ),
             f_listen_timeout_ms( 500 )
     {
@@ -51,7 +52,8 @@ namespace dripline
             cancelable(),
             f_channel(),
             f_consumer_tag(),
-            f_children(),
+            f_sync_children(),
+            f_async_children(),
             f_broadcast_key(),
             f_listen_timeout_ms( 500 )
     {
@@ -59,24 +61,6 @@ namespace dripline
 
     service::~service()
     {
-    }
-
-    rr_pkg_ptr service::send( request_ptr_t a_request ) const
-    {
-        a_request->set_sender_service_name( f_name );
-        return core::send( a_request );
-    }
-
-    bool service::send( reply_ptr_t a_reply ) const
-    {
-        a_reply->set_sender_service_name( f_name );
-        return core::send( a_reply );
-    }
-
-    bool service::send( alert_ptr_t a_alert ) const
-    {
-        a_alert->set_sender_service_name( f_name );
-        return core::send( a_alert );
     }
 
     bool service::start()
@@ -152,8 +136,8 @@ namespace dripline
                 }
                 else
                 {
-                    auto t_endpoint_itr = f_children.find( t_first_token );
-                    if( t_endpoint_itr == f_children.end() )
+                    auto t_endpoint_itr = f_sync_children.find( t_first_token );
+                    if( t_endpoint_itr == f_sync_children.end() )
                     {
                         LERROR( dlog, "Did not find child endpoint called <" << t_first_token << ">" );
                         throw dripline_error() << "Did not find child endpoint <" << t_first_token << ">";
@@ -214,8 +198,8 @@ namespace dripline
 
         try
         {
-            for( child_map_t::const_iterator t_child_it = f_children.begin();
-                    t_child_it != f_children.end();
+            for( child_map_t::const_iterator t_child_it = f_sync_children.begin();
+                    t_child_it != f_sync_children.end();
                     ++t_child_it )
             {
                 LDEBUG( dlog, "Binding key <" << t_child_it->first << ".#> to queue " << f_name );
