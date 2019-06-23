@@ -137,7 +137,7 @@ namespace dripline
 
             if( ! t_envelope && t_channel_valid )
             {
-                LDEBUG( dlog, "No message received or channel is not valid" );
+                // we end up here every time the listen times out with no message received
                 continue;
             }
 
@@ -219,12 +219,15 @@ namespace dripline
         try
         {
             for( child_map_t::const_iterator t_child_it = f_children.begin();
-                    t_child_it != f_children.begin();
+                    t_child_it != f_children.end();
                     ++t_child_it )
             {
+                LDEBUG( dlog, "Binding key <" << t_child_it->first << ".#> to queue " << f_name );
                 f_channel->BindQueue( f_name, f_requests_exchange, t_child_it->first + ".#" );
             }
+            LDEBUG( dlog, "Binding key <" << f_name << ".#> to queue " << f_name );
             f_channel->BindQueue( f_name, f_requests_exchange, f_name + ".#" );
+            LDEBUG( dlog, "Binding key <" << f_broadcast_key << ".#> to queue " << f_name );
             f_channel->BindQueue( f_name, f_requests_exchange, f_broadcast_key + ".#" );
             return true;
         }
