@@ -7,14 +7,12 @@
 
 #include "dripline_error.hh"
 #include "endpoint.hh"
-#include "service.hh"
 
 #include "catch.hpp"
 
 TEST_CASE( "submit_msg", "[endpoint]" )
 {
-    dripline::service t_service( false );
-    dripline::endpoint t_endpoint( "test_endpoint", t_service );
+    dripline::endpoint t_endpoint( "test_endpoint" );
 
     dripline::alert_ptr_t t_alert_ptr = dripline::msg_alert::create(scarab::param_ptr_t(new scarab::param()), "");
 

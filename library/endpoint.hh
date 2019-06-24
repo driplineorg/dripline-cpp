@@ -13,23 +13,21 @@
 
 namespace dripline
 {
-    class endpoint;
-    typedef std::shared_ptr< endpoint > endpoint_ptr_t;
-
-    class service;
-
     class DRIPLINE_API endpoint
     {
         public:
-            endpoint( const std::string& a_name, service& a_service );
+            endpoint( const std::string& a_name );
+            endpoint( const endpoint& a_orig );
+            endpoint( endpoint&& a_orig );
             virtual ~endpoint();
 
-        public:
-            mv_referrable_const( std::string, name );
+            endpoint& operator=( const endpoint& a_orig );
+            endpoint& operator=( endpoint&& a_orig );
 
-        protected:
-            friend class service;
-            service& f_service;
+        public:
+            mv_referrable( std::string, name );
+
+            mv_referrable( service_ptr_t, service );
 
         public:
             //**************************
@@ -44,6 +42,10 @@ namespace dripline
 
             /// Directly submit an alert message to this endpoint
             void submit_alert_message( const alert_ptr_t a_alert );
+
+            /// Submit a message to be sorted; note that you cannot get the reply_ptr_t using this method if you submit a request
+            /// This is really intended for use when handling messages received by a (parent) service.
+            void sort_message( const message_ptr_t a_request );
 
         protected:
             //*************************
@@ -87,7 +89,7 @@ namespace dripline
             reply_ptr_t __do_cmd_request( const request_ptr_t a_request );
 
         protected:
-            void send_reply( reply_ptr_t a_reply ) const;
+            virtual void send_reply( reply_ptr_t a_reply ) const;
 
         public:
             //******************

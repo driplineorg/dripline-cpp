@@ -9,24 +9,33 @@
 #define DRIPLINE_SERVICE_HH_
 
 #include "core.hh"
-#include "endpoint.hh"
+#include "listener.hh"
 
 #include "dripline_error.hh"
+#include "endpoint.hh"
 
-#include "cancelable.hh"
-#include "member_variables.hh"
-
-#include <atomic>
 #include <map>
 #include <memory>
-#include <string>
 #include <set>
+#include <vector>
 
 namespace dripline
 {
-
-    class DRIPLINE_API service : public core, public endpoint, public scarab::cancelable
+    class DRIPLINE_API service : public core, public endpoint, public listener, public std::enable_shared_from_this< service >
     {
+        protected:
+            enum class status
+            {
+                nothing = 0,
+                channel_created = 10,
+                exchange_declared = 20,
+                queue_declared = 30,
+                queue_bound = 40,
+                consuming = 50,
+                listening = 60,
+                processing = 70
+            };
+
         public:
             service( const scarab::param_node& a_config = scarab::param_node(), const std::string& a_queue_name = "",  const std::string& a_broker_address = "", unsigned a_port = 0, const std::string& a_auth_file = "", const bool a_make_connection = true );
             service( const bool a_make_connection, const scarab::param_node& a_config = scarab::param_node() );
@@ -36,6 +45,15 @@ namespace dripline
 
             service& operator=( const service& ) = delete;
             service& operator=( service&& ) = delete;
+
+            mv_accessible( status, status );
+
+        public:
+            /// Add a synchronous child endpoint
+            bool add_child( endpoint_ptr_t a_endpoint_ptr );
+
+            /// Add an asynchronous child endpoint
+            bool add_async_child( endpoint_ptr_t a_endpoint_ptr );
 
         public:
             /// Sends a request message and returns a channel on which to listen for a reply.
@@ -60,7 +78,11 @@ namespace dripline
             /// If no queue was created, this does nothing.
             bool stop();
 
-        private:
+        protected:
+            bool open_channels();
+
+            bool setup_queues();
+
             bool bind_keys();
 
             bool start_consuming();
@@ -69,43 +91,39 @@ namespace dripline
 
             bool remove_queue();
 
+            virtual bool listen_on_queue();
+
+            virtual void send_reply( reply_ptr_t a_reply ) const;
+
         public:
-            mv_referrable_const( amqp_channel_ptr, channel );
+            typedef std::map< std::string, endpoint_ptr_t > sync_map_t;
+            mv_referrable( sync_map_t, sync_children );
 
-            mv_referrable_const( std::string, consumer_tag );
-
-            typedef std::map< std::string, endpoint_ptr_t > child_map_t;
-            mv_referrable( child_map_t, children );
+            typedef std::map< std::string, listener_ptr_t > async_map_t;
+            mv_referrable( async_map_t, async_children );
 
             mv_referrable( std::string, broadcast_key );
 
-            mv_accessible( unsigned, listen_timeout_ms );
-
-        protected:
-            template< typename ptr_type >
-            void do_on_message( ptr_type a_endpoint_ptr, message_ptr_t a_message );
-
+        private:
+            virtual void do_cancellation( int a_code );
     };
 
-    template< typename ptr_type >
-    void service::do_on_message( ptr_type a_endpoint_ptr, message_ptr_t a_message )
+    inline rr_pkg_ptr service::send( request_ptr_t a_request ) const
     {
-        if( a_message->is_request() )
-        {
-            a_endpoint_ptr->on_request_message( std::static_pointer_cast< msg_request >( a_message ) );
-        }
-        else if( a_message->is_alert() )
-        {
-            a_endpoint_ptr->on_alert_message( std::static_pointer_cast< msg_alert >( a_message ) );
-        }
-        else if( a_message->is_reply() )
-        {
-            a_endpoint_ptr->on_reply_message( std::static_pointer_cast< msg_reply >( a_message ) );
-        }
-        else
-        {
-            throw dripline_error() << "Unknown message type";
-        }
+        a_request->set_sender_service_name( f_name );
+        return core::send( a_request );
+    }
+
+    inline bool service::send( reply_ptr_t a_reply ) const
+    {
+        a_reply->set_sender_service_name( f_name );
+        return core::send( a_reply );
+    }
+
+    inline bool service::send( alert_ptr_t a_alert ) const
+    {
+        a_alert->set_sender_service_name( f_name );
+        return core::send( a_alert );
     }
 
 } /* namespace dripline */

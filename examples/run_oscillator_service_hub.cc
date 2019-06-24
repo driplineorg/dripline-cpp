@@ -28,11 +28,11 @@ int main( int argc, char** argv )
     int the_return = -1;
 
     auto t_service_callback = [&](){
-        oscillator_service_hub the_service( the_main.master_config()["amqp"].as_node() );
+        auto the_service = std::make_shared< oscillator_service_hub >( the_main.master_config()["amqp"].as_node() );
 
-        the_service.execute();
+        the_service->execute();
 
-        the_return = the_service.get_return();
+        the_return = the_service->get_return();
     };
 
     the_main.callback( t_service_callback );
