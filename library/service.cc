@@ -24,14 +24,21 @@ namespace dripline
 {
     LOGGER( dlog, "service" );
 
+    void do_a_thing()
+    {
+        std::cout << "hi" << std::endl;
+        return;
+    }
+
     service::service( const scarab::param_node& a_config, const string& a_queue_name,  const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file, const bool a_make_connection ) :
             core( a_config, a_broker_address, a_port, a_auth_file, a_make_connection ),
             // logic for setting the name:
             //   a_queue_name if provided
             //   otherwise a_config["queue"] if it exists
             //   otherwise "dlcpp_service"
-            endpoint( a_queue_name.empty() ? a_config.get_value( "queue", "dlcpp_service" ) : a_queue_name, *this ),
+            endpoint( a_queue_name.empty() ? a_config.get_value( "queue", "dlcpp_service" ) : a_queue_name ),
             listener(),
+            std::enable_shared_from_this< service >(),
             f_status( status::nothing ),
             f_sync_children(),
             f_async_children(),
@@ -42,17 +49,23 @@ namespace dripline
 
         // override if specified as a separate argument
         if( ! a_queue_name.empty() ) f_name = a_queue_name;
+
+        // fill in the link to this in endpoint
+        endpoint::f_service = this->shared_from_this();
     }
 
     service::service( const bool a_make_connection, const scarab::param_node& a_config ) :
             core( a_make_connection, a_config ),
-            endpoint( "", *this ),
+            endpoint( "" ),
             listener(),
+            std::enable_shared_from_this< service >(),
             f_status( status::nothing ),
             f_sync_children(),
             f_async_children(),
             f_broadcast_key()
     {
+        // fill in the link to this in endpoint
+        endpoint::f_service = this->shared_from_this();
     }
 
     service::~service()
@@ -121,7 +134,8 @@ namespace dripline
                 t_child_it != f_async_children.end();
                 ++t_child_it )
         {
-            std::thread t_thread( &listener_endpoint::listen_on_queue, t_child_it->second.get() );
+            //std::thread t_thread( &listener_endpoint::listen_on_queue, t_child_it->second.get() );
+            std::thread t_thread( &do_a_thing );
             t_child_it->second->thread().swap( t_thread );
         }
 

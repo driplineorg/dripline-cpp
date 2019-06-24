@@ -13,23 +13,24 @@
 
 namespace dripline
 {
-    class endpoint;
-    typedef std::shared_ptr< endpoint > endpoint_ptr_t;
-
-    class service;
-
     class DRIPLINE_API endpoint
     {
         public:
-            endpoint( const std::string& a_name, service& a_service );
+            endpoint( const std::string& a_name, service_ptr_t a_service = service_ptr_t() );
+            endpoint( const endpoint& a_orig );
+            endpoint( endpoint&& a_orig );
             virtual ~endpoint();
+
+            endpoint& operator=( const endpoint& a_orig );
+            endpoint& operator=( endpoint&& a_orig );
 
         public:
             mv_referrable_const( std::string, name );
 
+            mv_referrable( service_ptr_t, service );
+
         protected:
             friend class service;
-            service& f_service;
 
         public:
             //**************************

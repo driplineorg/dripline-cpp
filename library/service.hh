@@ -21,8 +21,9 @@
 
 namespace dripline
 {
+    void do_a_thing();
 
-    class DRIPLINE_API service : public core, public endpoint, public listener
+    class DRIPLINE_API service : public core, public endpoint, public listener, public std::enable_shared_from_this< service >
     {
         protected:
             enum class status

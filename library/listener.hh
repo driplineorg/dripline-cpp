@@ -17,14 +17,16 @@
 
 namespace dripline
 {
-    class listener;
-    typedef std::shared_ptr< listener > listener_ptr_t;
-
     class listener : public scarab::cancelable
     {
         public:
             listener();
+            listener( const listener& ) = delete;
+            listener( listener&& a_orig );
             virtual ~listener();
+
+            listener& operator=( const listener& ) = delete;
+            listener& operator=( listener&& a_orig );
 
             virtual bool listen_on_queue() = 0;
 
@@ -41,7 +43,12 @@ namespace dripline
     {
         public:
             listener_endpoint( endpoint_ptr_t a_endpoint_ptr );
+            listener_endpoint( const listener_endpoint& ) = delete;
+            listener_endpoint( listener_endpoint&& a_orig );
             virtual ~listener_endpoint();
+
+            listener_endpoint& operator=( const listener_endpoint& ) = delete;
+            listener_endpoint& operator=( listener_endpoint&& a_orig );
 
             virtual bool listen_on_queue();
 

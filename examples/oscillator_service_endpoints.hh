@@ -31,7 +31,7 @@ namespace dripline
     class DRIPLINE_EXAMPLES_API oscillator_ep : public endpoint
     {
         public:
-            oscillator_ep( const std::string& a_name, service& a_service );
+            oscillator_ep( const std::string& a_name, service_ptr_t a_service );
             virtual ~oscillator_ep();
 
         protected:
@@ -41,7 +41,7 @@ namespace dripline
     class DRIPLINE_EXAMPLES_API oscillator_ep_frequency : public oscillator_ep
     {
         public:
-            oscillator_ep_frequency( const std::string& a_name, service& a_service );
+            oscillator_ep_frequency( const std::string& a_name, service_ptr_t a_service );
             virtual ~oscillator_ep_frequency();
 
             virtual reply_ptr_t do_get_request( const request_ptr_t a_request );
@@ -51,7 +51,7 @@ namespace dripline
     class DRIPLINE_EXAMPLES_API oscillator_ep_amplitude : public oscillator_ep
     {
         public:
-            oscillator_ep_amplitude( const std::string& a_name, service& a_service );
+            oscillator_ep_amplitude( const std::string& a_name, service_ptr_t a_service );
             virtual ~oscillator_ep_amplitude();
 
             virtual reply_ptr_t do_get_request( const request_ptr_t a_request );
@@ -61,7 +61,7 @@ namespace dripline
     class DRIPLINE_EXAMPLES_API oscillator_ep_in_phase : public oscillator_ep
     {
         public:
-            oscillator_ep_in_phase( const std::string& a_name, service& a_service );
+            oscillator_ep_in_phase( const std::string& a_name, service_ptr_t a_service );
             virtual ~oscillator_ep_in_phase();
 
             virtual reply_ptr_t do_get_request( const request_ptr_t a_request );
@@ -70,7 +70,7 @@ namespace dripline
     class DRIPLINE_EXAMPLES_API oscillator_ep_quadrature : public oscillator_ep
     {
         public:
-            oscillator_ep_quadrature( const std::string& a_name, service& a_service );
+            oscillator_ep_quadrature( const std::string& a_name, service_ptr_t a_service );
             virtual ~oscillator_ep_quadrature();
 
             virtual reply_ptr_t do_get_request( const request_ptr_t a_request );
@@ -79,7 +79,7 @@ namespace dripline
     class DRIPLINE_EXAMPLES_API oscillator_ep_iq : public oscillator_ep
     {
         public:
-            oscillator_ep_iq( const std::string& a_name, service& a_service );
+            oscillator_ep_iq( const std::string& a_name, service_ptr_t a_service );
             virtual ~oscillator_ep_iq();
 
             virtual reply_ptr_t do_get_request( const request_ptr_t a_request );

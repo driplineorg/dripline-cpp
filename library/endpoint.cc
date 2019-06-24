@@ -19,16 +19,46 @@ LOGGER( dlog, "endpoint" );
 namespace dripline
 {
 
-    endpoint::endpoint( const std::string& a_name, service& a_service ) :
+    endpoint::endpoint( const std::string& a_name, service_ptr_t a_service ) :
             f_name( a_name ),
             f_service( a_service ),
             f_lockout_tag(),
             f_lockout_key( generate_nil_uuid() )
-    {
-    }
+    {}
+
+    endpoint::endpoint( const endpoint& a_orig ) :
+            f_name( a_orig.f_name ),
+            f_service( a_orig.f_service ),
+            f_lockout_tag( a_orig.f_lockout_tag ),
+            f_lockout_key( a_orig.f_lockout_key )
+    {}
+
+    endpoint::endpoint( endpoint&& a_orig ) :
+            f_name( std::move(a_orig.f_name) ),
+            f_service( std::move(a_orig.f_service) ),
+            f_lockout_tag( std::move(a_orig.f_lockout_tag) ),
+            f_lockout_key( std::move(a_orig.f_lockout_key) )
+    {}
 
     endpoint::~endpoint()
+    {}
+
+    endpoint& endpoint::operator=( const endpoint& a_orig )
     {
+        f_name = a_orig.f_name;
+        f_service = a_orig.f_service;
+        f_lockout_tag = a_orig.f_lockout_tag;
+        f_lockout_key = a_orig.f_lockout_key;
+        return *this;
+    }
+
+    endpoint& endpoint::operator=( endpoint&& a_orig )
+    {
+        f_name = std::move(a_orig.f_name);
+        f_service = std::move(a_orig.f_service);
+        f_lockout_tag = std::move(a_orig.f_lockout_tag);
+        f_lockout_key = std::move(a_orig.f_lockout_key);
+        return *this;
     }
 
     reply_ptr_t endpoint::submit_request_message( const request_ptr_t a_request_ptr)
@@ -126,12 +156,18 @@ namespace dripline
 
     void endpoint::send_reply( reply_ptr_t a_reply ) const
     {
+        if( ! f_service )
+        {
+            LWARN( dlog, "Cannot send reply because the service pointer is not set" );
+            return;
+        }
+
         LDEBUG( dlog, "Sending reply message to <" << a_reply->routing_key() << ">:\n" <<
                  "    Return code: " << a_reply->get_return_code() << '\n' <<
                  "    Return message: " << a_reply->return_msg() << '\n' <<
                  "    Payload:\n" << a_reply->payload() );
 
-        if( ! f_service.send( a_reply ) )
+        if( ! f_service->send( a_reply ) )
         {
             LWARN( dlog, "Something went wrong while sending the reply" );
         }
@@ -152,7 +188,7 @@ namespace dripline
     {
         LDEBUG( dlog, "Run operation request received" );
 
-        if( ! f_service.authenticate( a_request->lockout_key() ) )
+        if( ! authenticate( a_request->lockout_key() ) )
         {
             std::stringstream t_conv;
             t_conv << a_request->lockout_key();
@@ -177,7 +213,7 @@ namespace dripline
         if( t_query_type == "is-locked" )
         {
             a_request->parsed_specifier().pop_front();
-            return f_service.handle_is_locked_request( a_request );
+            return handle_is_locked_request( a_request );
         }
 
         return do_get_request( a_request );
@@ -187,7 +223,7 @@ namespace dripline
     {
         LDEBUG( dlog, "Set request received" );
 
-        if( ! f_service.authenticate( a_request->lockout_key() ) )
+        if( ! authenticate( a_request->lockout_key() ) )
         {
             std::stringstream t_conv;
             t_conv << a_request->lockout_key();
@@ -212,7 +248,7 @@ namespace dripline
         //LWARN( mtlog, "uuid string: " << a_request->get_payload().get_value( "key", "") << ", uuid: " << uuid_from_string( a_request->get_payload().get_value( "key", "") ) );
         // this condition includes the exception for the unlock instruction that allows us to force the unlock regardless of the key.
         // disable_key() checks the lockout key if it's not forced, so it's okay that we bypass this call to authenticate() for the unlock instruction.
-        if( ! f_service.authenticate( a_request->lockout_key() ) && t_instruction != "unlock" && t_instruction != "ping" && t_instruction != "set_condition" )
+        if( ! authenticate( a_request->lockout_key() ) && t_instruction != "unlock" && t_instruction != "ping" && t_instruction != "set_condition" )
         {
             std::stringstream t_conv;
             t_conv << a_request->lockout_key();
@@ -224,12 +260,12 @@ namespace dripline
         if( t_instruction == "lock" )
         {
             a_request->parsed_specifier().pop_front();
-            return f_service.handle_lock_request( a_request );
+            return handle_lock_request( a_request );
         }
         else if( t_instruction == "unlock" )
         {
             a_request->parsed_specifier().pop_front();
-            return f_service.handle_unlock_request( a_request );
+            return handle_unlock_request( a_request );
         }
         else if( t_instruction == "ping" )
         {
@@ -239,7 +275,7 @@ namespace dripline
         else if( t_instruction == "set_condition" )
         {
             a_request->parsed_specifier().pop_front();
-            return f_service.handle_set_condition_request( a_request );
+            return handle_set_condition_request( a_request );
         }
 
         return do_cmd_request( a_request );
