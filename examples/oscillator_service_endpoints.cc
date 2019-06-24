@@ -20,16 +20,16 @@ LOGGER( dlog, "oscillator_service_endpoints" );
 
 namespace dripline
 {
-    oscillator_ep::oscillator_ep( const std::string& a_name, service_ptr_t a_service ) :
-            endpoint( a_name, a_service ),
-            f_osc_svc( static_cast< oscillator_service_endpoints* >( a_service.get() ) )
+    oscillator_ep::oscillator_ep( const std::string& a_name ) :
+            endpoint( a_name ),
+            f_osc_svc()
     {}
 
     oscillator_ep::~oscillator_ep()
     {}
 
-    oscillator_ep_frequency::oscillator_ep_frequency( const std::string& a_name, service_ptr_t a_service ) :
-            oscillator_ep( a_name, a_service )
+    oscillator_ep_frequency::oscillator_ep_frequency( const std::string& a_name ) :
+            oscillator_ep( a_name )
     {}
 
     oscillator_ep_frequency::~oscillator_ep_frequency()
@@ -49,8 +49,8 @@ namespace dripline
         return a_request->reply( dl_success(), "Frequency set" );
     }
 
-    oscillator_ep_amplitude::oscillator_ep_amplitude( const std::string& a_name, service_ptr_t a_service ) :
-            oscillator_ep( a_name, a_service )
+    oscillator_ep_amplitude::oscillator_ep_amplitude( const std::string& a_name ) :
+            oscillator_ep( a_name )
     {}
 
     oscillator_ep_amplitude::~oscillator_ep_amplitude()
@@ -70,8 +70,8 @@ namespace dripline
         return a_request->reply( dl_success(), "Frequency set" );
     }
 
-    oscillator_ep_in_phase::oscillator_ep_in_phase( const std::string& a_name, service_ptr_t a_service ) :
-            oscillator_ep( a_name, a_service )
+    oscillator_ep_in_phase::oscillator_ep_in_phase( const std::string& a_name ) :
+            oscillator_ep( a_name )
     {}
 
     oscillator_ep_in_phase::~oscillator_ep_in_phase()
@@ -85,8 +85,8 @@ namespace dripline
         return a_request->reply( dl_success(), "Get request succeeded", std::move(t_reply_payload) );
     }
 
-    oscillator_ep_quadrature::oscillator_ep_quadrature( const std::string& a_name, service_ptr_t a_service ) :
-            oscillator_ep( a_name, a_service )
+    oscillator_ep_quadrature::oscillator_ep_quadrature( const std::string& a_name ) :
+            oscillator_ep( a_name )
     {}
 
     oscillator_ep_quadrature::~oscillator_ep_quadrature()
@@ -100,8 +100,8 @@ namespace dripline
         return a_request->reply( dl_success(), "Get request succeeded", std::move(t_reply_payload) );
     }
 
-    oscillator_ep_iq::oscillator_ep_iq( const std::string& a_name, service_ptr_t a_service ) :
-            oscillator_ep( a_name, a_service )
+    oscillator_ep_iq::oscillator_ep_iq( const std::string& a_name ) :
+            oscillator_ep( a_name )
     {}
 
     oscillator_ep_iq::~oscillator_ep_iq()
@@ -123,15 +123,36 @@ namespace dripline
             f_oscillator(),
             f_return( dl_success().rc_value() )
     {
-        add_child( std::make_shared< oscillator_ep_frequency >( "frequency", shared_from_this() ) );
-        add_child( std::make_shared< oscillator_ep_amplitude >( "amplitude", shared_from_this() ) );
-        add_child( std::make_shared< oscillator_ep_in_phase >( "in_phase", shared_from_this() ) );
-        add_child( std::make_shared< oscillator_ep_quadrature >( "quadrature", shared_from_this() ) );
-        add_child( std::make_shared< oscillator_ep_iq >( "iq", shared_from_this() ) );
+        add_child( std::make_shared< oscillator_ep_frequency >( "frequency" ) );
+        add_child( std::make_shared< oscillator_ep_amplitude >( "amplitude" ) );
+        add_async_child( std::make_shared< oscillator_ep_in_phase >( "in_phase" ) );
+        add_async_child( std::make_shared< oscillator_ep_quadrature >( "quadrature" ) );
+        add_async_child( std::make_shared< oscillator_ep_iq >( "iq" ) );
     }
 
     oscillator_service_endpoints::~oscillator_service_endpoints()
     {
+    }
+
+    void oscillator_service_endpoints::set_pointers()
+    {
+        for( async_map_t::iterator t_child_it = f_async_children.begin();
+                t_child_it != f_async_children.end();
+                ++t_child_it )
+        {
+            auto t_listener_endpoint = std::static_pointer_cast< listener_endpoint >(t_child_it->second);
+            t_listener_endpoint->endpoint()->service() = shared_from_this();
+            auto t_osc_endpoint = std::static_pointer_cast< oscillator_ep >(t_listener_endpoint->endpoint());
+            t_osc_endpoint->f_osc_svc = this;
+        }
+        for( sync_map_t::iterator t_child_it = f_sync_children.begin();
+                t_child_it != f_sync_children.end();
+                ++t_child_it )
+        {
+            std::static_pointer_cast< oscillator_ep >(t_child_it->second)->f_service = shared_from_this();
+            std::static_pointer_cast< oscillator_ep >(t_child_it->second)->f_osc_svc = this;
+        }
+        return;
     }
 
     void oscillator_service_endpoints::execute()
