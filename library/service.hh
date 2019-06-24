@@ -21,12 +21,26 @@
 #include <memory>
 #include <string>
 #include <set>
+#include <thread>
+#include <vector>
 
 namespace dripline
 {
 
     class DRIPLINE_API service : public core, public endpoint, public scarab::cancelable
     {
+        protected:
+            enum class status
+            {
+                nothing = 0,
+                channel_created = 10,
+                exchange_declared = 20,
+                queue_declared = 30,
+                queue_bound = 40,
+                consuming = 50,
+                processing = 60
+            };
+
         public:
             service( const scarab::param_node& a_config = scarab::param_node(), const std::string& a_queue_name = "",  const std::string& a_broker_address = "", unsigned a_port = 0, const std::string& a_auth_file = "", const bool a_make_connection = true );
             service( const bool a_make_connection, const scarab::param_node& a_config = scarab::param_node() );
@@ -36,6 +50,8 @@ namespace dripline
 
             service& operator=( const service& ) = delete;
             service& operator=( service&& ) = delete;
+
+            mv_accessible( status, status );
 
         public:
             /// Add a synchronous child endpoint
@@ -67,7 +83,9 @@ namespace dripline
             /// If no queue was created, this does nothing.
             bool stop();
 
-        private:
+        protected:
+            bool setup_queues();
+
             bool bind_keys();
 
             bool start_consuming();
@@ -75,6 +93,11 @@ namespace dripline
             bool stop_consuming();
 
             bool remove_queue();
+
+            void listen_on_queue( const std::string& a_name );
+
+            template< typename ptr_type >
+            void do_on_message( ptr_type a_endpoint_ptr, message_ptr_t a_message );
 
         public:
             mv_referrable_const( amqp_channel_ptr, channel );
@@ -89,10 +112,7 @@ namespace dripline
 
             mv_accessible( unsigned, listen_timeout_ms );
 
-        protected:
-            template< typename ptr_type >
-            void do_on_message( ptr_type a_endpoint_ptr, message_ptr_t a_message );
-
+            mv_referrable( std::vector< std::thread >, threads );
     };
 
     template< typename ptr_type >

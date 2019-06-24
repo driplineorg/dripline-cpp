@@ -32,12 +32,14 @@ namespace dripline
             //   otherwise "dlcpp_service"
             endpoint( a_queue_name.empty() ? a_config.get_value( "queue", "dlcpp_service" ) : a_queue_name, *this ),
             cancelable(),
+            f_status( status::nothing ),
             f_channel(),
             f_consumer_tag(),
             f_sync_children(),
             f_async_children(),
             f_broadcast_key( "broadcast" ),
-            f_listen_timeout_ms( 500 )
+            f_listen_timeout_ms( 500 ),
+            f_threads()
     {
         // get values from the config
         f_listen_timeout_ms = a_config.get_value( "listen-timeout-ms", f_listen_timeout_ms );
@@ -50,17 +52,20 @@ namespace dripline
             core( a_make_connection, a_config ),
             endpoint( "", *this ),
             cancelable(),
+            f_status( status::nothing ),
             f_channel(),
             f_consumer_tag(),
             f_sync_children(),
             f_async_children(),
             f_broadcast_key(),
-            f_listen_timeout_ms( 500 )
+            f_listen_timeout_ms( 500 ),
+            f_threads()
     {
     }
 
     service::~service()
     {
+        if( f_status > status::exchange_declared ) stop();
     }
 
     bool service::start()
@@ -80,15 +85,20 @@ namespace dripline
 
         f_channel = open_channel();
         if( ! f_channel ) return false;
+        f_status = status::channel_created;
 
         if( ! setup_exchange( f_channel, f_requests_exchange ) ) return false;
         if( ! setup_exchange( f_channel, f_alerts_exchange ) ) return false;
+        f_status = status::exchange_declared;
 
-        if( ! setup_queue( f_channel, f_name ) ) return false;
+        if( ! setup_queues() ) return false;
+        f_status = status::queue_declared;
 
         if( ! bind_keys() ) return false;
+        f_status = status::queue_bound;
 
         if( ! start_consuming() ) return false;
+        f_status = status::consuming;
 
         f_canceled.store( false );
 
@@ -97,12 +107,28 @@ namespace dripline
 
     bool service::listen()
     {
-        LINFO( dlog, "Listening for incoming messages on <" << f_name << ">" );
-
         if ( ! f_make_connection )
         {
+            LWARN( dlog, "Should not listen for messages when make_connection is disabled" );
             return true;
         }
+
+        for( child_map_t::const_iterator t_child_it = f_async_children.begin();
+                t_child_it != f_async_children.end();
+                ++t_child_it )
+        {
+            f_threads.emplace_back( &service::listen_on_queue, this, t_child_it->first );
+        }
+
+        listen_on_queue( f_name );
+
+        return true;
+    }
+
+    void service::listen_on_queue( const std::string& a_name )
+    {
+        LINFO( dlog, "Listening for incoming messages on <" << a_name << ">" );
+
         while( ! f_canceled.load()  )
         {
 
@@ -120,6 +146,8 @@ namespace dripline
                 // we end up here every time the listen times out with no message received
                 continue;
             }
+
+            f_status = status::processing;
 
             try
             {
@@ -182,13 +210,40 @@ namespace dripline
     {
         LINFO( dlog, "Stopping service on <" << f_name << ">" );
 
-        if( ! stop_consuming() ) return false;
+        if( f_status >= status::consuming ) // consuming or processing
+        {
+            if( ! stop_consuming() ) return false;
+            f_status = status::queue_bound;
+        }
 
-        if( ! remove_queue() ) return false;
+        if( f_status >= status::queue_declared ) // queue_declared or queue_bound
+        {
+            if( ! remove_queue() ) return false;
+            f_status = status::exchange_declared;
+        }
 
         return true;
     }
 
+    bool service::setup_queues()
+    {
+#ifdef DL_OFFLINE
+        return false;
+#endif
+
+        LDEBUG( dlog, "Setting up queue for service <" << f_name << ">" );
+        if( ! setup_queue( f_channel, f_name ) ) return false;
+
+        for( child_map_t::const_iterator t_child_it = f_async_children.begin();
+                t_child_it != f_async_children.end();
+                ++t_child_it )
+        {
+            LDEBUG( dlog, "Setting up queue for child <" << t_child_it->first << ">" );
+            if( ! setup_queue( f_channel, t_child_it->first ) ) return false;
+        }
+
+        return true;
+    }
 
     bool service::bind_keys()
     {
@@ -198,6 +253,19 @@ namespace dripline
 
         try
         {
+            LDEBUG( dlog, "Binding key <" << f_name << ".#> to queue " << f_name );
+            f_channel->BindQueue( f_name, f_requests_exchange, f_name + ".#" );
+            LDEBUG( dlog, "Binding key <" << f_broadcast_key << ".#> to queue " << f_name );
+            f_channel->BindQueue( f_name, f_requests_exchange, f_broadcast_key + ".#" );
+            LDEBUG( dlog, "Binding keys for asynchronous children" );
+            for( child_map_t::const_iterator t_child_it = f_async_children.begin();
+                    t_child_it != f_async_children.end();
+                    ++t_child_it )
+            {
+                LDEBUG( dlog, "Binding key <" << t_child_it->first << ".#> to queue " << t_child_it->first );
+                f_channel->BindQueue( t_child_it->first, f_requests_exchange, t_child_it->first + ".#" );
+            }
+            LDEBUG( dlog, "Binding keys for synchronous children" );
             for( child_map_t::const_iterator t_child_it = f_sync_children.begin();
                     t_child_it != f_sync_children.end();
                     ++t_child_it )
@@ -205,10 +273,6 @@ namespace dripline
                 LDEBUG( dlog, "Binding key <" << t_child_it->first << ".#> to queue " << f_name );
                 f_channel->BindQueue( f_name, f_requests_exchange, t_child_it->first + ".#" );
             }
-            LDEBUG( dlog, "Binding key <" << f_name << ".#> to queue " << f_name );
-            f_channel->BindQueue( f_name, f_requests_exchange, f_name + ".#" );
-            LDEBUG( dlog, "Binding key <" << f_broadcast_key << ".#> to queue " << f_name );
-            f_channel->BindQueue( f_name, f_requests_exchange, f_broadcast_key + ".#" );
             return true;
         }
         catch( amqp_exception& e )
