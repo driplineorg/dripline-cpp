@@ -19,9 +19,9 @@ LOGGER( dlog, "endpoint" );
 namespace dripline
 {
 
-    endpoint::endpoint( const std::string& a_name, service_ptr_t a_service ) :
+    endpoint::endpoint( const std::string& a_name ) :
             f_name( a_name ),
-            f_service( a_service ),
+            f_service(),
             f_lockout_tag(),
             f_lockout_key( generate_nil_uuid() )
     {}

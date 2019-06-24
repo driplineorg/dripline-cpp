@@ -16,7 +16,7 @@ namespace dripline
     class DRIPLINE_API endpoint
     {
         public:
-            endpoint( const std::string& a_name, service_ptr_t a_service = service_ptr_t() );
+            endpoint( const std::string& a_name );
             endpoint( const endpoint& a_orig );
             endpoint( endpoint&& a_orig );
             virtual ~endpoint();
