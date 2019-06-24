@@ -14,7 +14,6 @@
 
 namespace dripline
 {
-
     LOGGER( dlog, "listener" );
 
     listener::listener() :

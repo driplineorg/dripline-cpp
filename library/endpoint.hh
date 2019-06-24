@@ -29,9 +29,6 @@ namespace dripline
 
             mv_referrable( service_ptr_t, service );
 
-        protected:
-            friend class service;
-
         public:
             //**************************
             // Direct message submission
@@ -45,6 +42,10 @@ namespace dripline
 
             /// Directly submit an alert message to this endpoint
             void submit_alert_message( const alert_ptr_t a_alert );
+
+            /// Submit a message to be sorted; note that you cannot get the reply_ptr_t using this method if you submit a request
+            /// This is really intended for use when handling messages received by a (parent) service.
+            void sort_message( const message_ptr_t a_request );
 
         protected:
             //*************************
@@ -88,9 +89,6 @@ namespace dripline
             reply_ptr_t __do_cmd_request( const request_ptr_t a_request );
 
         protected:
-            friend class listener_endpoint;
-            void sort_message( const message_ptr_t a_request );
-
             void send_reply( reply_ptr_t a_reply ) const;
 
         public:

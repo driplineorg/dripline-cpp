@@ -24,12 +24,6 @@ namespace dripline
 {
     LOGGER( dlog, "service" );
 
-    void do_a_thing()
-    {
-        std::cout << "hi" << std::endl;
-        return;
-    }
-
     service::service( const scarab::param_node& a_config, const string& a_queue_name,  const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file, const bool a_make_connection ) :
             core( a_config, a_broker_address, a_port, a_auth_file, a_make_connection ),
             // logic for setting the name:
@@ -134,9 +128,7 @@ namespace dripline
                 t_child_it != f_async_children.end();
                 ++t_child_it )
         {
-            //std::thread t_thread( &listener_endpoint::listen_on_queue, t_child_it->second.get() );
-            std::thread t_thread( &do_a_thing );
-            t_child_it->second->thread().swap( t_thread );
+            t_child_it->second->thread() = std::thread( &listener::listen_on_queue, t_child_it->second.get() );
         }
 
         listen_on_queue();
