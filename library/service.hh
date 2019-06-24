@@ -53,7 +53,7 @@ namespace dripline
             bool add_child( endpoint_ptr_t a_endpoint_ptr );
 
             /// Add an asynchronous child endpoint
-            bool add_asynch_child( endpoint_ptr_t a_endpoint_ptr );
+            bool add_async_child( endpoint_ptr_t a_endpoint_ptr );
 
         public:
             /// Sends a request message and returns a channel on which to listen for a reply.
@@ -93,6 +93,8 @@ namespace dripline
 
             virtual bool listen_on_queue();
 
+            virtual void send_reply( reply_ptr_t a_reply ) const;
+
         public:
             typedef std::map< std::string, endpoint_ptr_t > sync_map_t;
             mv_referrable( sync_map_t, sync_children );
@@ -105,12 +107,6 @@ namespace dripline
         private:
             virtual void do_cancellation( int a_code );
     };
-
-    inline bool service::add_child( endpoint_ptr_t a_endpoint_ptr )
-    {
-        auto t_inserted = f_sync_children.insert( std::make_pair( a_endpoint_ptr->name(), a_endpoint_ptr ) );
-        return t_inserted.second;
-    }
 
     inline rr_pkg_ptr service::send( request_ptr_t a_request ) const
     {

@@ -25,7 +25,7 @@ namespace dripline
             endpoint& operator=( endpoint&& a_orig );
 
         public:
-            mv_referrable_const( std::string, name );
+            mv_referrable( std::string, name );
 
             mv_referrable( service_ptr_t, service );
 
@@ -89,7 +89,7 @@ namespace dripline
             reply_ptr_t __do_cmd_request( const request_ptr_t a_request );
 
         protected:
-            void send_reply( reply_ptr_t a_reply ) const;
+            virtual void send_reply( reply_ptr_t a_reply ) const;
 
         public:
             //******************

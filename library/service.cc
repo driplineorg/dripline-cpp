@@ -43,9 +43,6 @@ namespace dripline
 
         // override if specified as a separate argument
         if( ! a_queue_name.empty() ) f_name = a_queue_name;
-
-        // fill in the link to this in endpoint
-        endpoint::f_service = this->shared_from_this();
     }
 
     service::service( const bool a_make_connection, const scarab::param_node& a_config ) :
@@ -58,8 +55,6 @@ namespace dripline
             f_async_children(),
             f_broadcast_key()
     {
-        // fill in the link to this in endpoint
-        endpoint::f_service = this->shared_from_this();
     }
 
     service::~service()
@@ -67,7 +62,24 @@ namespace dripline
         if( f_status > status::exchange_declared ) stop();
     }
 
-    bool service::add_asynch_child( endpoint_ptr_t a_endpoint_ptr )
+    bool service::add_child( endpoint_ptr_t a_endpoint_ptr )
+    {
+        auto t_inserted = f_sync_children.insert( std::make_pair( a_endpoint_ptr->name(), a_endpoint_ptr ) );
+        if( t_inserted.second )
+        {
+            try
+            {
+                a_endpoint_ptr->service() = shared_from_this();
+            }
+            catch( std::bad_weak_ptr& e )
+            {
+                LWARN( dlog, "add_child called from service constructor (or for some other reason the shared-pointer is bad); Service pointer not set.");
+            }
+        }
+        return t_inserted.second;
+    }
+
+    bool service::add_async_child( endpoint_ptr_t a_endpoint_ptr )
     {
         listener_ptr_t t_listener_ptr = std::dynamic_pointer_cast< listener >( a_endpoint_ptr );
         if( ! t_listener_ptr )
@@ -75,6 +87,17 @@ namespace dripline
             t_listener_ptr.reset( new listener_endpoint(a_endpoint_ptr) );
         }
         auto t_inserted = f_async_children.insert( std::make_pair( a_endpoint_ptr->name(), t_listener_ptr ) );
+        if( t_inserted.second )
+        {
+            try
+            {
+                a_endpoint_ptr->service() = shared_from_this();
+            }
+            catch( std::bad_weak_ptr& e )
+            {
+                LWARN( dlog, "add_async_child called from service constructor (or for some other reason the shared-pointer is bad); Service pointer not set.");
+            }
+        }
         return t_inserted.second;
     }
 
@@ -90,6 +113,9 @@ namespace dripline
             LERROR( dlog, "Service requires a queue name to be started" );
             return false;
         }
+
+        // fill in the link to this in endpoint because we couldn't do it in the constructor
+        endpoint::f_service = this->shared_from_this();
 
         LINFO( dlog, "Connecting to <" << f_address << ":" << f_port << ">" );
 
@@ -140,88 +166,6 @@ namespace dripline
             t_child_it->second->thread().join();
         }
 
-        return true;
-    }
-
-    bool service::listen_on_queue()
-    {
-        LINFO( dlog, "Listening for incoming messages on <" << f_name << ">" );
-
-        while( ! f_canceled.load()  )
-        {
-
-            amqp_envelope_ptr t_envelope;
-            bool t_channel_valid = core::listen_for_message( t_envelope, f_channel, f_consumer_tag, f_listen_timeout_ms );
-
-            if( f_canceled.load() )
-            {
-                LDEBUG( dlog, "Service canceled" );
-                return true;
-            }
-
-            if( ! t_envelope && t_channel_valid )
-            {
-                // we end up here every time the listen times out with no message received
-                continue;
-            }
-
-            f_status = status::processing;
-
-            try
-            {
-                message_ptr_t t_message = message::process_envelope( t_envelope );
-
-                std::string t_first_token( t_message->routing_key() );
-                t_first_token = t_first_token.substr( 0, t_first_token.find_first_of('.') );
-                LDEBUG( dlog, "First token in routing key: <" << t_first_token << ">" );
-
-                if( t_first_token == f_name || t_first_token == f_broadcast_key )
-                {
-                    sort_message( t_message );
-                }
-                else
-                {
-                    auto t_endpoint_itr = f_sync_children.find( t_first_token );
-                    if( t_endpoint_itr == f_sync_children.end() )
-                    {
-                        LERROR( dlog, "Did not find child endpoint called <" << t_first_token << ">" );
-                        throw dripline_error() << "Did not find child endpoint <" << t_first_token << ">";
-                    }
-
-                    t_endpoint_itr->second->sort_message( t_message );
-                }
-            }
-            catch( dripline_error& e )
-            {
-                LERROR( dlog, "<" << f_name << "> Dripline exception caught while handling message: " << e.what() );
-            }
-            catch( amqp_exception& e )
-            {
-                LERROR( dlog, "<" << f_name << "> AMQP exception caught while sending reply: (" << e.reply_code() << ") " << e.reply_text() );
-            }
-            catch( amqp_lib_exception& e )
-            {
-                LERROR( dlog, "<" << f_name << "> AMQP Library Exception caught while sending reply: (" << e.ErrorCode() << ") " << e.what() );
-            }
-            catch( std::exception& e )
-            {
-                LERROR( dlog, "<" << f_name << "> Standard exception caught while sending reply: " << e.what() );
-            }
-
-            if( ! t_channel_valid )
-            {
-                LERROR( dlog, "Channel is no longer valid for endpoint <" << f_name << ">" );
-                return false;
-            }
-
-            if( f_canceled.load() )
-            {
-                LDEBUG( dlog, "Service <" << f_name << "> canceled" );
-                return true;
-            }
-
-            f_status = status::listening;
-        }
         return true;
     }
 
@@ -464,6 +408,102 @@ namespace dripline
         }
 
         return true;
+    }
+
+    bool service::listen_on_queue()
+    {
+        LINFO( dlog, "Listening for incoming messages on <" << f_name << ">" );
+
+        while( ! f_canceled.load()  )
+        {
+
+            amqp_envelope_ptr t_envelope;
+            bool t_channel_valid = core::listen_for_message( t_envelope, f_channel, f_consumer_tag, f_listen_timeout_ms );
+
+            if( f_canceled.load() )
+            {
+                LDEBUG( dlog, "Service canceled" );
+                return true;
+            }
+
+            if( ! t_envelope && t_channel_valid )
+            {
+                // we end up here every time the listen times out with no message received
+                continue;
+            }
+
+            f_status = status::processing;
+
+            try
+            {
+                message_ptr_t t_message = message::process_envelope( t_envelope );
+
+                std::string t_first_token( t_message->routing_key() );
+                t_first_token = t_first_token.substr( 0, t_first_token.find_first_of('.') );
+                LDEBUG( dlog, "First token in routing key: <" << t_first_token << ">" );
+
+                if( t_first_token == f_name || t_first_token == f_broadcast_key )
+                {
+                    sort_message( t_message );
+                }
+                else
+                {
+                    auto t_endpoint_itr = f_sync_children.find( t_first_token );
+                    if( t_endpoint_itr == f_sync_children.end() )
+                    {
+                        LERROR( dlog, "Did not find child endpoint called <" << t_first_token << ">" );
+                        throw dripline_error() << "Did not find child endpoint <" << t_first_token << ">";
+                    }
+
+                    t_endpoint_itr->second->sort_message( t_message );
+                }
+            }
+            catch( dripline_error& e )
+            {
+                LERROR( dlog, "<" << f_name << "> Dripline exception caught while handling message: " << e.what() );
+            }
+            catch( amqp_exception& e )
+            {
+                LERROR( dlog, "<" << f_name << "> AMQP exception caught while sending reply: (" << e.reply_code() << ") " << e.reply_text() );
+            }
+            catch( amqp_lib_exception& e )
+            {
+                LERROR( dlog, "<" << f_name << "> AMQP Library Exception caught while sending reply: (" << e.ErrorCode() << ") " << e.what() );
+            }
+            catch( std::exception& e )
+            {
+                LERROR( dlog, "<" << f_name << "> Standard exception caught while sending reply: " << e.what() );
+            }
+
+            if( ! t_channel_valid )
+            {
+                LERROR( dlog, "Channel is no longer valid for endpoint <" << f_name << ">" );
+                return false;
+            }
+
+            if( f_canceled.load() )
+            {
+                LDEBUG( dlog, "Service <" << f_name << "> canceled" );
+                return true;
+            }
+
+            f_status = status::listening;
+        }
+        return true;
+    }
+
+    void service::send_reply( reply_ptr_t a_reply ) const
+    {
+        LDEBUG( dlog, "Sending reply message to <" << a_reply->routing_key() << ">:\n" <<
+                 "    Return code: " << a_reply->get_return_code() << '\n' <<
+                 "    Return message: " << a_reply->return_msg() << '\n' <<
+                 "    Payload:\n" << a_reply->payload() );
+
+        if( ! send( a_reply ) )
+        {
+            LWARN( dlog, "Something went wrong while sending the reply" );
+        }
+        return;
     }
 
     void service::do_cancellation( int a_code )
