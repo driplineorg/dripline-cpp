@@ -87,6 +87,9 @@ namespace dripline
             reply_ptr_t __do_cmd_request( const request_ptr_t a_request );
 
         protected:
+            friend class listener_endpoint;
+            void sort_message( const message_ptr_t a_request );
+
             void send_reply( reply_ptr_t a_reply ) const;
 
         public:

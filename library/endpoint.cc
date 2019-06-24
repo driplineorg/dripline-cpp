@@ -104,6 +104,26 @@ namespace dripline
         return t_reply;
     }
 
+    void endpoint::sort_message( message_ptr_t a_message )
+    {
+        if( a_message->is_request() )
+        {
+            on_request_message( std::static_pointer_cast< msg_request >( a_message ) );
+        }
+        else if( a_message->is_alert() )
+        {
+            on_alert_message( std::static_pointer_cast< msg_alert >( a_message ) );
+        }
+        else if( a_message->is_reply() )
+        {
+            on_reply_message( std::static_pointer_cast< msg_reply >( a_message ) );
+        }
+        else
+        {
+            throw dripline_error() << "Unknown message type";
+        }
+    }
+
     void endpoint::send_reply( reply_ptr_t a_reply ) const
     {
         LDEBUG( dlog, "Sending reply message to <" << a_reply->routing_key() << ">:\n" <<

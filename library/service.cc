@@ -31,15 +31,11 @@ namespace dripline
             //   otherwise a_config["queue"] if it exists
             //   otherwise "dlcpp_service"
             endpoint( a_queue_name.empty() ? a_config.get_value( "queue", "dlcpp_service" ) : a_queue_name, *this ),
-            cancelable(),
+            listener(),
             f_status( status::nothing ),
-            f_channel(),
-            f_consumer_tag(),
             f_sync_children(),
             f_async_children(),
-            f_broadcast_key( "broadcast" ),
-            f_listen_timeout_ms( 500 ),
-            f_threads()
+            f_broadcast_key( "broadcast" )
     {
         // get values from the config
         f_listen_timeout_ms = a_config.get_value( "listen-timeout-ms", f_listen_timeout_ms );
@@ -51,21 +47,28 @@ namespace dripline
     service::service( const bool a_make_connection, const scarab::param_node& a_config ) :
             core( a_make_connection, a_config ),
             endpoint( "", *this ),
-            cancelable(),
+            listener(),
             f_status( status::nothing ),
-            f_channel(),
-            f_consumer_tag(),
             f_sync_children(),
             f_async_children(),
-            f_broadcast_key(),
-            f_listen_timeout_ms( 500 ),
-            f_threads()
+            f_broadcast_key()
     {
     }
 
     service::~service()
     {
         if( f_status > status::exchange_declared ) stop();
+    }
+
+    bool service::add_asynch_child( endpoint_ptr_t a_endpoint_ptr )
+    {
+        listener_ptr_t t_listener_ptr = std::dynamic_pointer_cast< listener >( a_endpoint_ptr );
+        if( ! t_listener_ptr )
+        {
+            t_listener_ptr.reset( new listener_endpoint(a_endpoint_ptr) );
+        }
+        auto t_inserted = f_async_children.insert( std::make_pair( a_endpoint_ptr->name(), t_listener_ptr ) );
+        return t_inserted.second;
     }
 
     bool service::start()
@@ -83,8 +86,7 @@ namespace dripline
 
         LINFO( dlog, "Connecting to <" << f_address << ":" << f_port << ">" );
 
-        f_channel = open_channel();
-        if( ! f_channel ) return false;
+        if( ! open_channels() ) return false;
         f_status = status::channel_created;
 
         if( ! setup_exchange( f_channel, f_requests_exchange ) ) return false;
@@ -113,27 +115,37 @@ namespace dripline
             return true;
         }
 
-        for( child_map_t::const_iterator t_child_it = f_async_children.begin();
+        f_status = status::listening;
+
+        for( async_map_t::iterator t_child_it = f_async_children.begin();
                 t_child_it != f_async_children.end();
                 ++t_child_it )
         {
-            f_threads.emplace_back( &service::listen_on_queue, this, t_child_it->first );
+            std::thread t_thread( &listener_endpoint::listen_on_queue, t_child_it->second.get() );
+            t_child_it->second->thread().swap( t_thread );
         }
 
-        listen_on_queue( f_name );
+        listen_on_queue();
+
+        for( async_map_t::iterator t_child_it = f_async_children.begin();
+                t_child_it != f_async_children.end();
+                ++t_child_it )
+        {
+            t_child_it->second->thread().join();
+        }
 
         return true;
     }
 
-    void service::listen_on_queue( const std::string& a_name )
+    bool service::listen_on_queue()
     {
-        LINFO( dlog, "Listening for incoming messages on <" << a_name << ">" );
+        LINFO( dlog, "Listening for incoming messages on <" << f_name << ">" );
 
         while( ! f_canceled.load()  )
         {
 
             amqp_envelope_ptr t_envelope;
-            bool t_channel_valid = listen_for_message( t_envelope, f_channel, f_consumer_tag, f_listen_timeout_ms );
+            bool t_channel_valid = core::listen_for_message( t_envelope, f_channel, f_consumer_tag, f_listen_timeout_ms );
 
             if( f_canceled.load() )
             {
@@ -157,10 +169,9 @@ namespace dripline
                 t_first_token = t_first_token.substr( 0, t_first_token.find_first_of('.') );
                 LDEBUG( dlog, "First token in routing key: <" << t_first_token << ">" );
 
-                endpoint_ptr_t t_target;
                 if( t_first_token == f_name || t_first_token == f_broadcast_key )
                 {
-                    do_on_message( this, t_message );
+                    sort_message( t_message );
                 }
                 else
                 {
@@ -171,37 +182,39 @@ namespace dripline
                         throw dripline_error() << "Did not find child endpoint <" << t_first_token << ">";
                     }
 
-                    do_on_message( t_endpoint_itr->second, t_message );
+                    t_endpoint_itr->second->sort_message( t_message );
                 }
             }
             catch( dripline_error& e )
             {
-                LERROR( dlog, "Dripline exception caught while handling message: " << e.what() );
+                LERROR( dlog, "<" << f_name << "> Dripline exception caught while handling message: " << e.what() );
             }
             catch( amqp_exception& e )
             {
-                LERROR( dlog, "AMQP exception caught while sending reply: (" << e.reply_code() << ") " << e.reply_text() );
+                LERROR( dlog, "<" << f_name << "> AMQP exception caught while sending reply: (" << e.reply_code() << ") " << e.reply_text() );
             }
             catch( amqp_lib_exception& e )
             {
-                LERROR( dlog, "AMQP Library Exception caught while sending reply: (" << e.ErrorCode() << ") " << e.what() );
+                LERROR( dlog, "<" << f_name << "> AMQP Library Exception caught while sending reply: (" << e.ErrorCode() << ") " << e.what() );
             }
             catch( std::exception& e )
             {
-                LERROR( dlog, "Standard exception caught while sending reply: " << e.what() );
+                LERROR( dlog, "<" << f_name << "> Standard exception caught while sending reply: " << e.what() );
             }
 
             if( ! t_channel_valid )
             {
-                LERROR( dlog, "Channel is no longer valid" );
+                LERROR( dlog, "Channel is no longer valid for endpoint <" << f_name << ">" );
                 return false;
             }
 
             if( f_canceled.load() )
             {
-                LDEBUG( dlog, "Service canceled" );
+                LDEBUG( dlog, "Service <" << f_name << "> canceled" );
                 return true;
             }
+
+            f_status = status::listening;
         }
         return true;
     }
@@ -210,7 +223,12 @@ namespace dripline
     {
         LINFO( dlog, "Stopping service on <" << f_name << ">" );
 
-        if( f_status >= status::consuming ) // consuming or processing
+        if( f_status >= status::listening ) // listening or processing
+        {
+            this->cancel( dl_success().rc_value() );
+            f_status = status::consuming;
+        }
+        if( f_status >= status::queue_bound ) // queue_bound or consuming
         {
             if( ! stop_consuming() ) return false;
             f_status = status::queue_bound;
@@ -225,6 +243,27 @@ namespace dripline
         return true;
     }
 
+    bool service::open_channels()
+    {
+#ifdef DL_OFFLINE
+        return false;
+#endif
+
+        LDEBUG( dlog, "Opening channel for service <" << f_name << ">" );
+        f_channel = open_channel();
+        if( ! f_channel ) return false;
+
+        for( async_map_t::iterator t_child_it = f_async_children.begin();
+                t_child_it != f_async_children.end();
+                ++t_child_it )
+        {
+            LDEBUG( dlog, "Opening channel for child <" << t_child_it->first << ">" );
+            t_child_it->second->channel() = open_channel();
+            t_child_it->second->set_listen_timeout_ms( f_listen_timeout_ms );
+        }
+        return true;
+    }
+
     bool service::setup_queues()
     {
 #ifdef DL_OFFLINE
@@ -234,12 +273,12 @@ namespace dripline
         LDEBUG( dlog, "Setting up queue for service <" << f_name << ">" );
         if( ! setup_queue( f_channel, f_name ) ) return false;
 
-        for( child_map_t::const_iterator t_child_it = f_async_children.begin();
+        for( async_map_t::iterator t_child_it = f_async_children.begin();
                 t_child_it != f_async_children.end();
                 ++t_child_it )
         {
-            LDEBUG( dlog, "Setting up queue for child <" << t_child_it->first << ">" );
-            if( ! setup_queue( f_channel, t_child_it->first ) ) return false;
+            LDEBUG( dlog, "Setting up queue for async child <" << t_child_it->first << ">" );
+            if( ! setup_queue( t_child_it->second->channel(), t_child_it->first ) ) return false;
         }
 
         return true;
@@ -257,21 +296,22 @@ namespace dripline
             f_channel->BindQueue( f_name, f_requests_exchange, f_name + ".#" );
             LDEBUG( dlog, "Binding key <" << f_broadcast_key << ".#> to queue " << f_name );
             f_channel->BindQueue( f_name, f_requests_exchange, f_broadcast_key + ".#" );
-            LDEBUG( dlog, "Binding keys for asynchronous children" );
-            for( child_map_t::const_iterator t_child_it = f_async_children.begin();
-                    t_child_it != f_async_children.end();
-                    ++t_child_it )
-            {
-                LDEBUG( dlog, "Binding key <" << t_child_it->first << ".#> to queue " << t_child_it->first );
-                f_channel->BindQueue( t_child_it->first, f_requests_exchange, t_child_it->first + ".#" );
-            }
             LDEBUG( dlog, "Binding keys for synchronous children" );
-            for( child_map_t::const_iterator t_child_it = f_sync_children.begin();
+            for( sync_map_t::const_iterator t_child_it = f_sync_children.begin();
                     t_child_it != f_sync_children.end();
                     ++t_child_it )
             {
                 LDEBUG( dlog, "Binding key <" << t_child_it->first << ".#> to queue " << f_name );
                 f_channel->BindQueue( f_name, f_requests_exchange, t_child_it->first + ".#" );
+            }
+
+            LDEBUG( dlog, "Binding keys for asynchronous children" );
+            for( async_map_t::iterator t_child_it = f_async_children.begin();
+                    t_child_it != f_async_children.end();
+                    ++t_child_it )
+            {
+                LDEBUG( dlog, "Binding key <" << t_child_it->first << ".#> to queue " << t_child_it->first );
+                t_child_it->second->channel()->BindQueue( t_child_it->first, f_requests_exchange, t_child_it->first + ".#" );
             }
             return true;
         }
@@ -295,9 +335,17 @@ namespace dripline
 
         try
         {
-            LDEBUG( dlog, "Starting to consume messages" );
+            LDEBUG( dlog, "Starting to consume messages on <" << f_name << ">" );
             // second bool is setting no_ack to false
             f_consumer_tag = f_channel->BasicConsume( f_name, "", true, false );
+
+            for( async_map_t::iterator t_child_it = f_async_children.begin();
+                    t_child_it != f_async_children.end();
+                    ++t_child_it )
+            {
+                LDEBUG( dlog, "Starting to consume messages on <" << t_child_it->first << ".#> to queue " << t_child_it->first );
+                t_child_it->second->consumer_tag() = t_child_it->second->channel()->BasicConsume( t_child_it->first, "", true, false );
+            }
             return true;
         }
         catch( amqp_exception& e )
@@ -325,9 +373,17 @@ namespace dripline
         }
         try
         {
-            LDEBUG( dlog, "Stopping consuming messages (consumer " << f_consumer_tag << ")" );
+            LDEBUG( dlog, "Stopping consuming messages for <" << f_name << "> (consumer " << f_consumer_tag << ")" );
             f_channel->BasicCancel( f_consumer_tag );
             f_consumer_tag.clear();
+
+            for( async_map_t::iterator t_child_it = f_async_children.begin();
+                    t_child_it != f_async_children.end();
+                    ++t_child_it )
+            {
+                LDEBUG( dlog, "Stopping consuming messages for <" << t_child_it->first << "> (consumer " << t_child_it->second->consumer_tag() << ")" );
+                t_child_it->second->channel()->BasicCancel( t_child_it->second->consumer_tag() );
+            }
             return true;
         }
         catch( amqp_exception& e )
@@ -371,7 +427,14 @@ namespace dripline
         {
             LDEBUG( dlog, "Deleting queue <" << f_name << ">" );
             f_channel->DeleteQueue( f_name, false );
-            f_name.clear();
+
+            for( async_map_t::iterator t_child_it = f_async_children.begin();
+                    t_child_it != f_async_children.end();
+                    ++t_child_it )
+            {
+                LDEBUG( dlog, "Deleting queue <" << t_child_it->first << ">" );
+                t_child_it->second->channel()->DeleteQueue( t_child_it->first, false );
+            }
         }
         catch( AmqpClient::ConnectionClosedException& e )
         {
@@ -395,6 +458,17 @@ namespace dripline
         }
 
         return true;
+    }
+
+    void service::do_cancellation( int a_code )
+    {
+        for( async_map_t::iterator t_child_it = f_async_children.begin();
+                t_child_it != f_async_children.end();
+                ++t_child_it )
+        {
+            LDEBUG( dlog, "Canceling child endpoint <" << t_child_it->first << ">" );
+            t_child_it->second->cancel( a_code );
+        }
     }
 
 } /* namespace dripline */
