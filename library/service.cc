@@ -9,8 +9,6 @@
 
 #include "service.hh"
 
-#include "dripline_error.hh"
-
 #include "authentication.hh"
 #include "logger.hh"
 
@@ -19,7 +17,6 @@ using scarab::param_node;
 using scarab::param_value;
 using scarab::param_ptr_t;
 
-using std::static_pointer_cast;
 using std::string;
 using std::set;
 
@@ -33,17 +30,17 @@ namespace dripline
             //   a_queue_name if provided
             //   otherwise a_config["queue"] if it exists
             //   otherwise "dlcpp_service"
-            endpoint( a_queue_name.empty() ? a_config.get_value( "queue", "dlcpp_service" ) : a_queue_name, *this ),
-            cancelable(),
-            f_channel(),
-            f_consumer_tag(),
-            f_keys(),
-            f_broadcast_key( "broadcast" ),
-            f_listen_timeout_ms( 500 ),
+<<<<<<< HEAD
             f_single_message_wait_ms( 1000 ),
             f_msg_receiver(),
-            f_lockout_tag(),
-            f_lockout_key( generate_nil_uuid() )
+=======
+            endpoint( a_queue_name.empty() ? a_config.get_value( "queue", "dlcpp_service" ) : a_queue_name ),
+            listener(),
+            std::enable_shared_from_this< service >(),
+            f_status( status::nothing ),
+            f_sync_children(),
+            f_async_children(),
+            f_broadcast_key( "broadcast" )
     {
         // get values from the config
         f_listen_timeout_ms = a_config.get_value( "listen-timeout-ms", f_listen_timeout_ms );
@@ -54,22 +51,23 @@ namespace dripline
 
     service::service( const bool a_make_connection, const scarab::param_node& a_config ) :
             core( a_make_connection, a_config ),
-            endpoint( "", *this ),
-            cancelable(),
-            f_channel(),
-            f_consumer_tag(),
-            f_keys(),
-            f_broadcast_key(),
-            f_listen_timeout_ms( 500 ),
+<<<<<<< HEAD
             f_single_message_wait_ms( 1000 ),
             f_msg_receiver(),
-            f_lockout_tag(),
-            f_lockout_key( generate_nil_uuid() )
+=======
+            endpoint( "" ),
+            listener(),
+            std::enable_shared_from_this< service >(),
+            f_status( status::nothing ),
+            f_sync_children(),
+            f_async_children(),
+            f_broadcast_key()
     {
     }
 
     service::~service()
     {
+        if( f_status > status::exchange_declared ) stop();
     }
 
     sent_msg_pkg_ptr service::send( request_ptr_t a_request ) const
@@ -90,6 +88,45 @@ namespace dripline
         return core::send( a_alert );
     }
 
+    bool service::add_child( endpoint_ptr_t a_endpoint_ptr )
+    {
+        auto t_inserted = f_sync_children.insert( std::make_pair( a_endpoint_ptr->name(), a_endpoint_ptr ) );
+        if( t_inserted.second )
+        {
+            try
+            {
+                a_endpoint_ptr->service() = shared_from_this();
+            }
+            catch( std::bad_weak_ptr& e )
+            {
+                LWARN( dlog, "add_child called from service constructor (or for some other reason the shared-pointer is bad); Service pointer not set.");
+            }
+        }
+        return t_inserted.second;
+    }
+
+    bool service::add_async_child( endpoint_ptr_t a_endpoint_ptr )
+    {
+        listener_ptr_t t_listener_ptr = std::dynamic_pointer_cast< listener >( a_endpoint_ptr );
+        if( ! t_listener_ptr )
+        {
+            t_listener_ptr.reset( new listener_endpoint(a_endpoint_ptr) );
+        }
+        auto t_inserted = f_async_children.insert( std::make_pair( a_endpoint_ptr->name(), t_listener_ptr ) );
+        if( t_inserted.second )
+        {
+            try
+            {
+                a_endpoint_ptr->service() = shared_from_this();
+            }
+            catch( std::bad_weak_ptr& e )
+            {
+                LWARN( dlog, "add_async_child called from service constructor (or for some other reason the shared-pointer is bad); Service pointer not set.");
+            }
+        }
+        return t_inserted.second;
+    }
+
     bool service::start()
     {
         if( ! f_make_connection )
@@ -103,19 +140,26 @@ namespace dripline
             return false;
         }
 
+        // fill in the link to this in endpoint because we couldn't do it in the constructor
+        endpoint::f_service = this->shared_from_this();
+
         LINFO( dlog, "Connecting to <" << f_address << ":" << f_port << ">" );
 
-        f_channel = open_channel();
-        if( ! f_channel ) return false;
+        if( ! open_channels() ) return false;
+        f_status = status::channel_created;
 
         if( ! setup_exchange( f_channel, f_requests_exchange ) ) return false;
         if( ! setup_exchange( f_channel, f_alerts_exchange ) ) return false;
+        f_status = status::exchange_declared;
 
-        if( ! setup_queue( f_channel, f_name ) ) return false;
+        if( ! setup_queues() ) return false;
+        f_status = status::queue_declared;
 
-        if( ! bind_keys( f_keys ) ) return false;
+        if( ! bind_keys() ) return false;
+        f_status = status::queue_bound;
 
         if( ! start_consuming() ) return false;
+        f_status = status::consuming;
 
         f_canceled.store( false );
 
@@ -124,89 +168,30 @@ namespace dripline
 
     bool service::listen()
     {
-        LINFO( dlog, "Listening for incoming messages on <" << f_name << ">" );
-
         if ( ! f_make_connection )
         {
+            LWARN( dlog, "Should not listen for messages when make_connection is disabled" );
             return true;
         }
-        while( ! f_canceled.load()  )
+
+        f_status = status::listening;
+
+        for( async_map_t::iterator t_child_it = f_async_children.begin();
+                t_child_it != f_async_children.end();
+                ++t_child_it )
         {
-
-            amqp_envelope_ptr t_envelope;
-            bool t_channel_valid = listen_for_message( t_envelope, f_channel, f_consumer_tag, f_listen_timeout_ms );
-
-            if( f_canceled.load() )
-            {
-                LDEBUG( dlog, "Service canceled" );
-                return true;
-            }
-
-            if( ! t_envelope && t_channel_valid )
-            {
-                continue;
-            }
-
-            amqp_message_ptr t_message = t_envelope->Message();
-
-            auto t_parsed_message_id = message::parse_message_id( t_message->MessageId() );
-            if( f_msg_receiver.incoming_messages().count( std::get<0>(t_parsed_message_id) ) == 0 )
-            {
-                // this path: first chunk for this message
-                // create the new message_pack object
-                incoming_message_pack& t_pack = f_msg_receiver.incoming_messages()[std::get<0>(t_parsed_message_id)];
-                // set the f_messages vector to the expected size
-                t_pack.f_messages.resize( std::get<2>(t_parsed_message_id) );
-                // put in place the first message chunk received
-                t_pack.f_messages[std::get<1>(t_parsed_message_id)] = t_message;
-                t_pack.f_routing_key = t_envelope->RoutingKey();
-
-                // start the thread to wait for message chunks
-                t_pack.f_thread = std::thread([this, &t_pack, &t_parsed_message_id](){ wait_for_message(t_pack, std::get<0>(t_parsed_message_id)); });
-                t_pack.f_thread.detach();
-            }
-            else
-            {
-                // this path: have already received chunks from this message
-                incoming_message_pack& t_pack = f_msg_receiver.incoming_messages()[std::get<0>(t_parsed_message_id)];
-                if( t_pack.f_processing.load() )
-                {
-                    LWARN( dlog, "Message <" << std::get<0>(t_parsed_message_id) << "> is already being processed\n" <<
-                            "Just received chunk " << std::get<1>(t_parsed_message_id) << " of " << std::get<2>(t_parsed_message_id) );
-                }
-                else
-                {
-                    // lock mutex to access f_messages
-                    std::unique_lock< std::mutex > t_lock( t_pack.f_mutex );
-                    if( t_pack.f_messages[std::get<1>(t_parsed_message_id)] )
-                    {
-                        LWARN( dlog, "Received duplicate message chunk for message <" << std::get<0>(t_parsed_message_id) << ">; chunk " << std::get<1>(t_parsed_message_id) );
-                    }
-                    else
-                    {
-                        // add chunk to set of chunks
-                        t_pack.f_messages[std::get<1>(t_parsed_message_id)] = t_message;
-                        ++t_pack.f_chunks_received;
-                        t_lock.unlock();
-                        // inform the message-processing thread it should check whether it has the complete message
-                        t_pack.f_conv.notify_one();
-                    }
-                }
-            }
-
-
-            if( ! t_channel_valid )
-            {
-                LERROR( dlog, "Channel is no longer valid" );
-                return false;
-            }
-
-            if( f_canceled.load() )
-            {
-                LDEBUG( dlog, "Service canceled" );
-                return true;
-            }
+            t_child_it->second->thread() = std::thread( &listener::listen_on_queue, t_child_it->second.get() );
         }
+
+        listen_on_queue();
+
+        for( async_map_t::iterator t_child_it = f_async_children.begin();
+                t_child_it != f_async_children.end();
+                ++t_child_it )
+        {
+            t_child_it->second->thread().join();
+        }
+
         return true;
     }
 
@@ -214,15 +199,69 @@ namespace dripline
     {
         LINFO( dlog, "Stopping service on <" << f_name << ">" );
 
-        if( ! stop_consuming() ) return false;
+        if( f_status >= status::listening ) // listening or processing
+        {
+            this->cancel( dl_success().rc_value() );
+            f_status = status::consuming;
+        }
+        if( f_status >= status::queue_bound ) // queue_bound or consuming
+        {
+            if( ! stop_consuming() ) return false;
+            f_status = status::queue_bound;
+        }
 
-        if( ! remove_queue() ) return false;
+
+        if( f_status >= status::queue_declared ) // queue_declared or queue_bound
+        {
+            if( ! remove_queue() ) return false;
+            f_status = status::exchange_declared;
+        }
 
         return true;
     }
 
+    bool service::open_channels()
+    {
+#ifdef DL_OFFLINE
+        return false;
+#endif
 
-    bool service::bind_keys( const set< string >& a_keys )
+        LDEBUG( dlog, "Opening channel for service <" << f_name << ">" );
+        f_channel = open_channel();
+        if( ! f_channel ) return false;
+
+        for( async_map_t::iterator t_child_it = f_async_children.begin();
+                t_child_it != f_async_children.end();
+                ++t_child_it )
+        {
+            LDEBUG( dlog, "Opening channel for child <" << t_child_it->first << ">" );
+            t_child_it->second->channel() = open_channel();
+            t_child_it->second->set_listen_timeout_ms( f_listen_timeout_ms );
+        }
+        return true;
+    }
+
+    bool service::setup_queues()
+    {
+#ifdef DL_OFFLINE
+        return false;
+#endif
+
+        LDEBUG( dlog, "Setting up queue for service <" << f_name << ">" );
+        if( ! setup_queue( f_channel, f_name ) ) return false;
+
+        for( async_map_t::iterator t_child_it = f_async_children.begin();
+                t_child_it != f_async_children.end();
+                ++t_child_it )
+        {
+            LDEBUG( dlog, "Setting up queue for async child <" << t_child_it->first << ">" );
+            if( ! setup_queue( t_child_it->second->channel(), t_child_it->first ) ) return false;
+        }
+
+        return true;
+    }
+
+    bool service::bind_keys()
     {
 #ifdef DL_OFFLINE
         return false;
@@ -230,12 +269,27 @@ namespace dripline
 
         try
         {
-            for( set< string >::const_iterator t_key_it = a_keys.begin(); t_key_it != a_keys.end(); ++t_key_it )
-            {
-                f_channel->BindQueue( f_name, f_requests_exchange, *t_key_it );
-            }
+            LDEBUG( dlog, "Binding key <" << f_name << ".#> to queue " << f_name );
             f_channel->BindQueue( f_name, f_requests_exchange, f_name + ".#" );
+            LDEBUG( dlog, "Binding key <" << f_broadcast_key << ".#> to queue " << f_name );
             f_channel->BindQueue( f_name, f_requests_exchange, f_broadcast_key + ".#" );
+            LDEBUG( dlog, "Binding keys for synchronous children" );
+            for( sync_map_t::const_iterator t_child_it = f_sync_children.begin();
+                    t_child_it != f_sync_children.end();
+                    ++t_child_it )
+            {
+                LDEBUG( dlog, "Binding key <" << t_child_it->first << ".#> to queue " << f_name );
+                f_channel->BindQueue( f_name, f_requests_exchange, t_child_it->first + ".#" );
+            }
+
+            LDEBUG( dlog, "Binding keys for asynchronous children" );
+            for( async_map_t::iterator t_child_it = f_async_children.begin();
+                    t_child_it != f_async_children.end();
+                    ++t_child_it )
+            {
+                LDEBUG( dlog, "Binding key <" << t_child_it->first << ".#> to queue " << t_child_it->first );
+                t_child_it->second->channel()->BindQueue( t_child_it->first, f_requests_exchange, t_child_it->first + ".#" );
+            }
             return true;
         }
         catch( amqp_exception& e )
@@ -258,9 +312,17 @@ namespace dripline
 
         try
         {
-            LDEBUG( dlog, "Starting to consume messages" );
+            LDEBUG( dlog, "Starting to consume messages on <" << f_name << ">" );
             // second bool is setting no_ack to false
             f_consumer_tag = f_channel->BasicConsume( f_name, "", true, false );
+
+            for( async_map_t::iterator t_child_it = f_async_children.begin();
+                    t_child_it != f_async_children.end();
+                    ++t_child_it )
+            {
+                LDEBUG( dlog, "Starting to consume messages on <" << t_child_it->first << ".#> to queue " << t_child_it->first );
+                t_child_it->second->consumer_tag() = t_child_it->second->channel()->BasicConsume( t_child_it->first, "", true, false );
+            }
             return true;
         }
         catch( amqp_exception& e )
@@ -288,9 +350,17 @@ namespace dripline
         }
         try
         {
-            LDEBUG( dlog, "Stopping consuming messages (consumer " << f_consumer_tag << ")" );
+            LDEBUG( dlog, "Stopping consuming messages for <" << f_name << "> (consumer " << f_consumer_tag << ")" );
             f_channel->BasicCancel( f_consumer_tag );
             f_consumer_tag.clear();
+
+            for( async_map_t::iterator t_child_it = f_async_children.begin();
+                    t_child_it != f_async_children.end();
+                    ++t_child_it )
+            {
+                LDEBUG( dlog, "Stopping consuming messages for <" << t_child_it->first << "> (consumer " << t_child_it->second->consumer_tag() << ")" );
+                t_child_it->second->channel()->BasicCancel( t_child_it->second->consumer_tag() );
+            }
             return true;
         }
         catch( amqp_exception& e )
@@ -334,7 +404,14 @@ namespace dripline
         {
             LDEBUG( dlog, "Deleting queue <" << f_name << ">" );
             f_channel->DeleteQueue( f_name, false );
-            f_name.clear();
+
+            for( async_map_t::iterator t_child_it = f_async_children.begin();
+                    t_child_it != f_async_children.end();
+                    ++t_child_it )
+            {
+                LDEBUG( dlog, "Deleting queue <" << t_child_it->first << ">" );
+                t_child_it->second->channel()->DeleteQueue( t_child_it->first, false );
+            }
         }
         catch( AmqpClient::ConnectionClosedException& e )
         {
@@ -360,10 +437,12 @@ namespace dripline
         return true;
     }
 
+<<<<<<< HEAD
     void service::wait_for_message( incoming_message_pack& a_pack, const std::string& a_message_id )
     {
         std::unique_lock< std::mutex > t_lock( a_pack.f_mutex );
 
+        // if the message is already complete, submit it for processing
         if( a_pack.f_chunks_received == a_pack.f_messages.size() )
         {
             t_lock.release(); // process_message() will unlock the mutex before erasing the message pack
@@ -375,6 +454,7 @@ namespace dripline
 
         while( a_pack.f_conv.wait_until( t_lock, t_now + std::chrono::milliseconds(f_single_message_wait_ms) ) == std::cv_status::no_timeout )
         {
+            // if the message is complete during the waiting period, submit it for processing
             if( a_pack.f_chunks_received == a_pack.f_messages.size() )
             {
                 t_lock.release(); // process_message() will unlock the mutex before erasing the message pack
@@ -383,6 +463,7 @@ namespace dripline
             }
         }
 
+        // once the waiting period is over, submit it whether it's complete or not
         t_lock.release(); // process_message() will unlock the mutex before erasing the message pack
         process_message( a_pack, a_message_id );
 
@@ -437,74 +518,165 @@ namespace dripline
         return;
     }
 
-    uuid_t service::enable_lockout( const scarab::param_node& a_tag, uuid_t a_key )
-    {
-        if( is_locked() ) return generate_nil_uuid();
-        if( a_key.is_nil() ) f_lockout_key = generate_random_uuid();
-        else f_lockout_key = a_key;
-        f_lockout_tag = a_tag;
-        return f_lockout_key;
-    }
+=======
 
-    bool service::disable_lockout( const uuid_t& a_key, bool a_force )
+        <<<<<<< HEAD
+                    amqp_message_ptr t_message = t_envelope->Message();
+
+                    auto t_parsed_message_id = message::parse_message_id( t_message->MessageId() );
+                    if( f_msg_receiver.incoming_messages().count( std::get<0>(t_parsed_message_id) ) == 0 )
+                    {
+                        // this path: first chunk for this message
+                        // create the new message_pack object
+                        incoming_message_pack& t_pack = f_msg_receiver.incoming_messages()[std::get<0>(t_parsed_message_id)];
+                        // set the f_messages vector to the expected size
+                        t_pack.f_messages.resize( std::get<2>(t_parsed_message_id) );
+                        // put in place the first message chunk received
+                        t_pack.f_messages[std::get<1>(t_parsed_message_id)] = t_message;
+                        t_pack.f_routing_key = t_envelope->RoutingKey();
+
+                        // start the thread to wait for message chunks
+                        t_pack.f_thread = std::thread([this, &t_pack, &t_parsed_message_id](){ wait_for_message(t_pack, std::get<0>(t_parsed_message_id)); });
+                        t_pack.f_thread.detach();
+                    }
+                    else
+                    {
+                        // this path: have already received chunks from this message
+                        incoming_message_pack& t_pack = f_msg_receiver.incoming_messages()[std::get<0>(t_parsed_message_id)];
+                        if( t_pack.f_processing.load() )
+                        {
+                            LWARN( dlog, "Message <" << std::get<0>(t_parsed_message_id) << "> is already being processed\n" <<
+                                    "Just received chunk " << std::get<1>(t_parsed_message_id) << " of " << std::get<2>(t_parsed_message_id) );
+                        }
+                        else
+                        {
+                            // lock mutex to access f_messages
+                            std::unique_lock< std::mutex > t_lock( t_pack.f_mutex );
+                            if( t_pack.f_messages[std::get<1>(t_parsed_message_id)] )
+                            {
+                                LWARN( dlog, "Received duplicate message chunk for message <" << std::get<0>(t_parsed_message_id) << ">; chunk " << std::get<1>(t_parsed_message_id) );
+                            }
+                            else
+                            {
+                                // add chunk to set of chunks
+                                t_pack.f_messages[std::get<1>(t_parsed_message_id)] = t_message;
+                                ++t_pack.f_chunks_received;
+                                t_lock.unlock();
+                                // inform the message-processing thread it should check whether it has the complete message
+                                t_pack.f_conv.notify_one();
+                            }
+                        }
+                    }
+
+        =======
+
+
+
+    bool service::listen_on_queue()
     {
-        if( ! is_locked() ) return true;
-        if( ! a_force && a_key != f_lockout_key ) return false;
-        f_lockout_key = generate_nil_uuid();
-        f_lockout_tag.clear();
+        LINFO( dlog, "Listening for incoming messages on <" << f_name << ">" );
+
+        while( ! f_canceled.load()  )
+        {
+
+            amqp_envelope_ptr t_envelope;
+            bool t_channel_valid = core::listen_for_message( t_envelope, f_channel, f_consumer_tag, f_listen_timeout_ms );
+
+            if( f_canceled.load() )
+            {
+                LDEBUG( dlog, "Service canceled" );
+                return true;
+            }
+
+            if( ! t_envelope && t_channel_valid )
+            {
+                // we end up here every time the listen times out with no message received
+                continue;
+            }
+
+            f_status = status::processing;
+
+            try
+            {
+                message_ptr_t t_message = message::process_envelope( t_envelope );
+
+                std::string t_first_token( t_message->routing_key() );
+                t_first_token = t_first_token.substr( 0, t_first_token.find_first_of('.') );
+                LDEBUG( dlog, "First token in routing key: <" << t_first_token << ">" );
+
+                if( t_first_token == f_name || t_first_token == f_broadcast_key )
+                {
+                    sort_message( t_message );
+                }
+                else
+                {
+                    auto t_endpoint_itr = f_sync_children.find( t_first_token );
+                    if( t_endpoint_itr == f_sync_children.end() )
+                    {
+                        LERROR( dlog, "Did not find child endpoint called <" << t_first_token << ">" );
+                        throw dripline_error() << "Did not find child endpoint <" << t_first_token << ">";
+                    }
+
+                    t_endpoint_itr->second->sort_message( t_message );
+                }
+            }
+            catch( dripline_error& e )
+            {
+                LERROR( dlog, "<" << f_name << "> Dripline exception caught while handling message: " << e.what() );
+            }
+            catch( amqp_exception& e )
+            {
+                LERROR( dlog, "<" << f_name << "> AMQP exception caught while sending reply: (" << e.reply_code() << ") " << e.reply_text() );
+            }
+            catch( amqp_lib_exception& e )
+            {
+                LERROR( dlog, "<" << f_name << "> AMQP Library Exception caught while sending reply: (" << e.ErrorCode() << ") " << e.what() );
+            }
+            catch( std::exception& e )
+            {
+                LERROR( dlog, "<" << f_name << "> Standard exception caught while sending reply: " << e.what() );
+            }
+
+            if( ! t_channel_valid )
+            {
+                LERROR( dlog, "Channel is no longer valid for endpoint <" << f_name << ">" );
+                return false;
+            }
+
+            if( f_canceled.load() )
+            {
+                LDEBUG( dlog, "Service <" << f_name << "> canceled" );
+                return true;
+            }
+
+            f_status = status::listening;
+        }
         return true;
     }
 
-    bool service::authenticate( const uuid_t& a_key ) const
+    void service::send_reply( reply_ptr_t a_reply ) const
     {
-        LDEBUG( dlog, "Authenticating with key <" << a_key << ">" );
-        if( is_locked() ) return check_key( a_key );
-        return true;
-    }
+        LDEBUG( dlog, "Sending reply message to <" << a_reply->routing_key() << ">:\n" <<
+                 "    Return code: " << a_reply->get_return_code() << '\n' <<
+                 "    Return message: " << a_reply->return_msg() << '\n' <<
+                 "    Payload:\n" << a_reply->payload() );
 
-    reply_ptr_t service::handle_lock_request( const request_ptr_t a_request )
-    {
-        uuid_t t_new_key = enable_lockout( a_request->get_sender_info(), a_request->lockout_key() );
-        if( t_new_key.is_nil() )
+        if( ! send( a_reply ) )
         {
-            return a_request->reply( dl_device_error(), "Unable to lock server" );;
+            LWARN( dlog, "Something went wrong while sending the reply" );
         }
-
-        param_ptr_t t_payload_ptr( new param_node() );
-        param_node& t_payload_node = t_payload_ptr->as_node();
-        t_payload_node.add( "key", string_from_uuid( t_new_key ) );
-        return a_request->reply( dl_success(), "Server is now locked", std::move(t_payload_ptr) );
+        return;
     }
 
-    reply_ptr_t service::handle_unlock_request( const request_ptr_t a_request )
+    void service::do_cancellation( int a_code )
     {
-        if( ! is_locked() )
+        for( async_map_t::iterator t_child_it = f_async_children.begin();
+                t_child_it != f_async_children.end();
+                ++t_child_it )
         {
-            return a_request->reply( dl_warning_no_action_taken(), "Already unlocked" );
+            LDEBUG( dlog, "Canceling child endpoint <" << t_child_it->first << ">" );
+            t_child_it->second->cancel( a_code );
         }
-
-        bool t_force = a_request->payload().get_value( "force", false );
-
-        if( disable_lockout( a_request->lockout_key(), t_force ) )
-        {
-            return a_request->reply( dl_success(), "Server unlocked" );
-        }
-        return a_request->reply( dl_device_error(), "Failed to unlock server" );;
-    }
-
-    reply_ptr_t service::handle_set_condition_request( const request_ptr_t a_request )
-    {
-        return this->__do_handle_set_condition_request( a_request );
-    }
-
-    reply_ptr_t service::handle_is_locked_request( const request_ptr_t a_request )
-    {
-        bool t_is_locked = is_locked();
-        scarab::param_ptr_t t_reply_payload( new param_node() );
-        scarab::param_node& t_reply_node = t_reply_payload->as_node();
-        t_reply_node.add( "is_locked", t_is_locked );
-        if( t_is_locked ) t_reply_node.add( "tag", f_lockout_tag );
-        return a_request->reply( dl_success(), "Checked lock status", std::move(t_reply_payload) );
     }
 
 } /* namespace dripline */

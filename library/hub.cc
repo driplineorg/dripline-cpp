@@ -26,7 +26,6 @@ namespace dripline
             f_set_handlers(),
             f_cmd_handlers()
     {
-        f_keys.insert( f_name + string( ".#" ) );
     }
 
     hub::~hub()

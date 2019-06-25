@@ -9,6 +9,7 @@
 
 #include "core.hh"
 #include "dripline_error.hh"
+#include "message.hh"
 
 #include "logger.hh"
 
@@ -18,12 +19,26 @@ namespace dripline
 {
 
     receiver::receiver() :
-            f_incoming_messages()
+            scarab::cancelable(),
+            f_incoming_messages(),
+            f_message_queue()
     {
     }
 
     receiver::~receiver()
     {
+    }
+
+    void receiver::execute()
+    {
+        while( ! is_canceled() )
+        {
+            message_ptr_t t_message;
+            if( f_message_queue.wait_and_pop( t_message ) )
+            {
+                this->submit_message( t_message );
+            }
+        }
     }
 
     reply_ptr_t receiver::wait_for_reply( const sent_msg_pkg_ptr a_receive_reply, int a_timeout_ms )

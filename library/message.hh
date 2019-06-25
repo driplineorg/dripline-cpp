@@ -14,6 +14,7 @@
 #include "amqp.hh"
 #include "dripline_api.hh"
 #include "dripline_constants.hh"
+#include "dripline_fwd.hh"
 #include "return_codes.hh"
 #include "specifier.hh"
 #include "uuid.hh"
@@ -26,16 +27,6 @@ namespace dripline
 {
     class dripline_error;
     struct return_code;
-
-    class message;
-    class msg_request;
-    class msg_reply;
-    class msg_alert;
-
-    typedef std::shared_ptr< message > message_ptr_t;
-    typedef std::shared_ptr< msg_request > request_ptr_t;
-    typedef std::shared_ptr< msg_reply > reply_ptr_t;
-    typedef std::shared_ptr< msg_alert > alert_ptr_t;
 
     //***********
     // Message

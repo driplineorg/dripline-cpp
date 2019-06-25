@@ -30,7 +30,6 @@ namespace dripline
         std::string f_send_error_message;
         ~sent_msg_pkg();
     };
-    typedef std::shared_ptr< sent_msg_pkg > sent_msg_pkg_ptr;
 
     class DRIPLINE_API core
     {
@@ -86,6 +85,7 @@ namespace dripline
 
             static bool setup_queue( amqp_channel_ptr a_channel, const std::string& a_queue_name );
 
+        public:
             /// return: if false, channel is no longer useable; if true, may be reused
             static bool listen_for_message( amqp_envelope_ptr& a_envelope, amqp_channel_ptr a_channel, const std::string& a_consumer_tag, int a_timeout_ms = 0, bool a_do_ack = true );
     };

@@ -15,6 +15,7 @@ set( dripline_HEADERS
     dripline_version.hh
     endpoint.hh
     hub.hh
+    listener.hh
     message.hh
     receiver.hh
     relayer.hh
@@ -33,6 +34,7 @@ set( dripline_SOURCES
     dripline_version.cc
     endpoint.cc
     hub.cc
+    listener.cc
     message.cc
     receiver.cc
     relayer.cc

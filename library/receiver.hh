@@ -8,8 +8,12 @@
 #ifndef DRIPLINE_RECEIVER_HH_
 #define DRIPLINE_RECEIVER_HH_
 
-#include "core.hh"
-#include "message.hh"
+#include "dripline_api.hh"
+#include "dripline_fwd.hh"
+
+#include "cancelable.hh"
+#include "concurrent_queue.hh"
+#include "member_variables.hh"
 
 #include <atomic>
 #include <condition_variable>
@@ -32,13 +36,19 @@ namespace dripline
     typedef std::map< std::string, incoming_message_pack > incoming_message_map;
 
 
-    class DRIPLINE_API receiver
+    class DRIPLINE_API receiver : public scarab::cancelable
     {
         public:
             receiver();
             virtual ~receiver();
 
             mv_referrable( incoming_message_map, incoming_messages );
+
+        public:
+            void execute();
+            virtual void submit_message( message_ptr_t a_message ) = 0;
+
+            mv_referrable( scarab::concurrent_queue< message_ptr_t >, message_queue );
 
         public:
             /// Wait for a reply message
