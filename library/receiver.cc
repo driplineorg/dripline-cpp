@@ -144,6 +144,8 @@ namespace dripline
             a_pack.f_mutex.unlock();
             incoming_messages().erase( a_message_id );
 
+            // if the message is not valid at this point, continue processing it, and we'll deal with it in the endpoint class
+
             this->process_message( t_message );
 
             return;
