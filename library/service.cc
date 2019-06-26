@@ -30,20 +30,19 @@ namespace dripline
             //   a_queue_name if provided
             //   otherwise a_config["queue"] if it exists
             //   otherwise "dlcpp_service"
-<<<<<<< HEAD
-            f_single_message_wait_ms( 1000 ),
-            f_msg_receiver(),
-=======
             endpoint( a_queue_name.empty() ? a_config.get_value( "queue", "dlcpp_service" ) : a_queue_name ),
             listener(),
+            receiver_parallel(),
             std::enable_shared_from_this< service >(),
             f_status( status::nothing ),
+            f_single_message_wait_ms( 1000 ),
             f_sync_children(),
             f_async_children(),
             f_broadcast_key( "broadcast" )
     {
         // get values from the config
         f_listen_timeout_ms = a_config.get_value( "listen-timeout-ms", f_listen_timeout_ms );
+        f_single_message_wait_ms = a_config.get_value( "message-wait-ms", f_single_message_wait_ms );
 
         // override if specified as a separate argument
         if( ! a_queue_name.empty() ) f_name = a_queue_name;
@@ -51,14 +50,12 @@ namespace dripline
 
     service::service( const bool a_make_connection, const scarab::param_node& a_config ) :
             core( a_make_connection, a_config ),
-<<<<<<< HEAD
-            f_single_message_wait_ms( 1000 ),
-            f_msg_receiver(),
-=======
             endpoint( "" ),
             listener(),
+            receiver_parallel(),
             std::enable_shared_from_this< service >(),
             f_status( status::nothing ),
+            f_single_message_wait_ms( 1000 ),
             f_sync_children(),
             f_async_children(),
             f_broadcast_key()
@@ -68,24 +65,6 @@ namespace dripline
     service::~service()
     {
         if( f_status > status::exchange_declared ) stop();
-    }
-
-    sent_msg_pkg_ptr service::send( request_ptr_t a_request ) const
-    {
-        a_request->sender_service_name() = f_name;
-        return core::send( a_request );
-    }
-
-    sent_msg_pkg_ptr service::send( reply_ptr_t a_reply ) const
-    {
-        a_reply->sender_service_name() = f_name ;
-        return core::send( a_reply );
-    }
-
-    sent_msg_pkg_ptr service::send( alert_ptr_t a_alert ) const
-    {
-        a_alert->sender_service_name() = f_name;
-        return core::send( a_alert );
     }
 
     bool service::add_child( endpoint_ptr_t a_endpoint_ptr )
@@ -176,6 +155,8 @@ namespace dripline
 
         f_status = status::listening;
 
+        std::thread t_rec_thread( &receiver::execute, this );
+
         for( async_map_t::iterator t_child_it = f_async_children.begin();
                 t_child_it != f_async_children.end();
                 ++t_child_it )
@@ -191,6 +172,8 @@ namespace dripline
         {
             t_child_it->second->thread().join();
         }
+
+        t_rec_thread.join();
 
         return true;
     }
@@ -437,7 +420,6 @@ namespace dripline
         return true;
     }
 
-<<<<<<< HEAD
     void service::wait_for_message( incoming_message_pack& a_pack, const std::string& a_message_id )
     {
         std::unique_lock< std::mutex > t_lock( a_pack.f_mutex );
@@ -478,98 +460,25 @@ namespace dripline
             message_ptr_t t_message = message::process_message( a_pack.f_messages, a_pack.f_routing_key );
 
             a_pack.f_mutex.unlock();
-            f_msg_receiver.incoming_messages().erase( a_message_id );
+            incoming_messages().erase( a_message_id );
 
-            bool t_msg_handled = true;
-            if( t_message->is_request() )
-            {
-                on_request_message( static_pointer_cast< msg_request >( t_message ) );
-            }
-            else if( t_message->is_alert() )
-            {
-                on_alert_message( static_pointer_cast< msg_alert >( t_message ) );
-            }
-            else if( t_message->is_reply() )
-            {
-                on_reply_message( static_pointer_cast< msg_reply >( t_message ) );
-            }
-            if( ! t_msg_handled )
-            {
-                throw dripline_error() << "Message could not be handled";
-            }
+            f_message_queue.push( t_message );
+
+            return;
         }
         catch( dripline_error& e )
         {
             LERROR( dlog, "Dripline exception caught while handling message: " << e.what() );
-        }
-        catch( amqp_exception& e )
-        {
-            LERROR( dlog, "AMQP exception caught while sending reply: (" << e.reply_code() << ") " << e.reply_text() );
-        }
-        catch( amqp_lib_exception& e )
-        {
-            LERROR( dlog, "AMQP Library Exception caught while sending reply: (" << e.ErrorCode() << ") " << e.what() );
         }
         catch( std::exception& e )
         {
             LERROR( dlog, "Standard exception caught while sending reply: " << e.what() );
         }
 
+        // TODO: send reply if message was a request?
+
         return;
     }
-
-=======
-
-        <<<<<<< HEAD
-                    amqp_message_ptr t_message = t_envelope->Message();
-
-                    auto t_parsed_message_id = message::parse_message_id( t_message->MessageId() );
-                    if( f_msg_receiver.incoming_messages().count( std::get<0>(t_parsed_message_id) ) == 0 )
-                    {
-                        // this path: first chunk for this message
-                        // create the new message_pack object
-                        incoming_message_pack& t_pack = f_msg_receiver.incoming_messages()[std::get<0>(t_parsed_message_id)];
-                        // set the f_messages vector to the expected size
-                        t_pack.f_messages.resize( std::get<2>(t_parsed_message_id) );
-                        // put in place the first message chunk received
-                        t_pack.f_messages[std::get<1>(t_parsed_message_id)] = t_message;
-                        t_pack.f_routing_key = t_envelope->RoutingKey();
-
-                        // start the thread to wait for message chunks
-                        t_pack.f_thread = std::thread([this, &t_pack, &t_parsed_message_id](){ wait_for_message(t_pack, std::get<0>(t_parsed_message_id)); });
-                        t_pack.f_thread.detach();
-                    }
-                    else
-                    {
-                        // this path: have already received chunks from this message
-                        incoming_message_pack& t_pack = f_msg_receiver.incoming_messages()[std::get<0>(t_parsed_message_id)];
-                        if( t_pack.f_processing.load() )
-                        {
-                            LWARN( dlog, "Message <" << std::get<0>(t_parsed_message_id) << "> is already being processed\n" <<
-                                    "Just received chunk " << std::get<1>(t_parsed_message_id) << " of " << std::get<2>(t_parsed_message_id) );
-                        }
-                        else
-                        {
-                            // lock mutex to access f_messages
-                            std::unique_lock< std::mutex > t_lock( t_pack.f_mutex );
-                            if( t_pack.f_messages[std::get<1>(t_parsed_message_id)] )
-                            {
-                                LWARN( dlog, "Received duplicate message chunk for message <" << std::get<0>(t_parsed_message_id) << ">; chunk " << std::get<1>(t_parsed_message_id) );
-                            }
-                            else
-                            {
-                                // add chunk to set of chunks
-                                t_pack.f_messages[std::get<1>(t_parsed_message_id)] = t_message;
-                                ++t_pack.f_chunks_received;
-                                t_lock.unlock();
-                                // inform the message-processing thread it should check whether it has the complete message
-                                t_pack.f_conv.notify_one();
-                            }
-                        }
-                    }
-
-        =======
-
 
 
     bool service::listen_on_queue()
@@ -598,43 +507,62 @@ namespace dripline
 
             try
             {
-                message_ptr_t t_message = message::process_envelope( t_envelope );
+                amqp_message_ptr t_message = t_envelope->Message();
 
-                std::string t_first_token( t_message->routing_key() );
-                t_first_token = t_first_token.substr( 0, t_first_token.find_first_of('.') );
-                LDEBUG( dlog, "First token in routing key: <" << t_first_token << ">" );
+                // TODO if the number of chunks expected is 1, pass this directly to be processed
 
-                if( t_first_token == f_name || t_first_token == f_broadcast_key )
+                auto t_parsed_message_id = message::parse_message_id( t_message->MessageId() );
+                if( incoming_messages().count( std::get<0>(t_parsed_message_id) ) == 0 )
                 {
-                    sort_message( t_message );
+                    // this path: first chunk for this message
+                    // create the new message_pack object
+                    incoming_message_pack& t_pack = incoming_messages()[std::get<0>(t_parsed_message_id)];
+                    // set the f_messages vector to the expected size
+                    t_pack.f_messages.resize( std::get<2>(t_parsed_message_id) );
+                    // put in place the first message chunk received
+                    t_pack.f_messages[std::get<1>(t_parsed_message_id)] = t_message;
+                    t_pack.f_routing_key = t_envelope->RoutingKey();
+
+                    // start the thread to wait for message chunks
+                    t_pack.f_thread = std::thread([this, &t_pack, &t_parsed_message_id](){ wait_for_message(t_pack, std::get<0>(t_parsed_message_id)); });
+                    t_pack.f_thread.detach();
                 }
                 else
                 {
-                    auto t_endpoint_itr = f_sync_children.find( t_first_token );
-                    if( t_endpoint_itr == f_sync_children.end() )
+                    // this path: have already received chunks from this message
+                    incoming_message_pack& t_pack = incoming_messages()[std::get<0>(t_parsed_message_id)];
+                    if( t_pack.f_processing.load() )
                     {
-                        LERROR( dlog, "Did not find child endpoint called <" << t_first_token << ">" );
-                        throw dripline_error() << "Did not find child endpoint <" << t_first_token << ">";
+                        LWARN( dlog, "Message <" << std::get<0>(t_parsed_message_id) << "> is already being processed\n" <<
+                                "Just received chunk " << std::get<1>(t_parsed_message_id) << " of " << std::get<2>(t_parsed_message_id) );
                     }
-
-                    t_endpoint_itr->second->sort_message( t_message );
-                }
+                    else
+                    {
+                        // lock mutex to access f_messages
+                        std::unique_lock< std::mutex > t_lock( t_pack.f_mutex );
+                        if( t_pack.f_messages[std::get<1>(t_parsed_message_id)] )
+                        {
+                            LWARN( dlog, "Received duplicate message chunk for message <" << std::get<0>(t_parsed_message_id) << ">; chunk " << std::get<1>(t_parsed_message_id) );
+                        }
+                        else
+                        {
+                            // add chunk to set of chunks
+                            t_pack.f_messages[std::get<1>(t_parsed_message_id)] = t_message;
+                            ++t_pack.f_chunks_received;
+                            t_lock.unlock();
+                            // inform the message-processing thread it should check whether it has the complete message
+                            t_pack.f_conv.notify_one();
+                        }
+                    }
+                } // new/current message if/else block
             }
             catch( dripline_error& e )
             {
                 LERROR( dlog, "<" << f_name << "> Dripline exception caught while handling message: " << e.what() );
             }
-            catch( amqp_exception& e )
-            {
-                LERROR( dlog, "<" << f_name << "> AMQP exception caught while sending reply: (" << e.reply_code() << ") " << e.reply_text() );
-            }
-            catch( amqp_lib_exception& e )
-            {
-                LERROR( dlog, "<" << f_name << "> AMQP Library Exception caught while sending reply: (" << e.ErrorCode() << ") " << e.what() );
-            }
             catch( std::exception& e )
             {
-                LERROR( dlog, "<" << f_name << "> Standard exception caught while sending reply: " << e.what() );
+                LERROR( dlog, "<" << f_name << "> Standard exception caught while handling message: " << e.what() );
             }
 
             if( ! t_channel_valid )
@@ -652,6 +580,55 @@ namespace dripline
             f_status = status::listening;
         }
         return true;
+    }
+
+    void service::submit_message( message_ptr_t a_message )
+    {
+        try
+        {
+            std::string t_first_token( a_message->routing_key() );
+            t_first_token = t_first_token.substr( 0, t_first_token.find_first_of('.') );
+            LDEBUG( dlog, "First token in routing key: <" << t_first_token << ">" );
+
+            if( t_first_token == f_name || t_first_token == f_broadcast_key )
+            {
+                sort_message( a_message );
+            }
+            else
+            {
+                auto t_endpoint_itr = f_sync_children.find( t_first_token );
+                if( t_endpoint_itr == f_sync_children.end() )
+                {
+                    LERROR( dlog, "Did not find child endpoint called <" << t_first_token << ">" );
+                    throw dripline_error() << "Did not find child endpoint <" << t_first_token << ">";
+                }
+
+                t_endpoint_itr->second->sort_message( a_message );
+            }
+
+            // by this point we assume a reply has been sent
+            return;
+        }
+        catch( dripline_error& e )
+        {
+            LERROR( dlog, "<" << f_name << "> Dripline exception caught while handling message: " << e.what() );
+        }
+        catch( amqp_exception& e )
+        {
+            LERROR( dlog, "<" << f_name << "> AMQP exception caught while sending reply: (" << e.reply_code() << ") " << e.reply_text() );
+        }
+        catch( amqp_lib_exception& e )
+        {
+            LERROR( dlog, "<" << f_name << "> AMQP Library Exception caught while sending reply: (" << e.ErrorCode() << ") " << e.what() );
+        }
+        catch( std::exception& e )
+        {
+            LERROR( dlog, "<" << f_name << "> Standard exception caught while sending reply: " << e.what() );
+        }
+
+        // TODO: each of the above catch sections can generate a reply if the message is a request
+
+        return;
     }
 
     void service::send_reply( reply_ptr_t a_reply ) const

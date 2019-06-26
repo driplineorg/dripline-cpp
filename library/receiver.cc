@@ -19,26 +19,12 @@ namespace dripline
 {
 
     receiver::receiver() :
-            scarab::cancelable(),
-            f_incoming_messages(),
-            f_message_queue()
+            f_incoming_messages()
     {
     }
 
     receiver::~receiver()
     {
-    }
-
-    void receiver::execute()
-    {
-        while( ! is_canceled() )
-        {
-            message_ptr_t t_message;
-            if( f_message_queue.wait_and_pop( t_message ) )
-            {
-                this->submit_message( t_message );
-            }
-        }
     }
 
     reply_ptr_t receiver::wait_for_reply( const sent_msg_pkg_ptr a_receive_reply, int a_timeout_ms )
@@ -176,5 +162,30 @@ namespace dripline
         return reply_ptr_t();
 
     }
+
+    receiver_parallel::receiver_parallel() :
+            receiver(),
+            scarab::cancelable(),
+            f_message_queue()
+    {
+    }
+
+    receiver_parallel::~receiver_parallel()
+    {
+    }
+
+    void receiver_parallel::execute()
+    {
+        while( ! is_canceled() )
+        {
+            message_ptr_t t_message;
+            if( f_message_queue.wait_and_pop( t_message ) )
+            {
+                this->submit_message( t_message );
+            }
+        }
+    }
+
+
 
 } /* namespace dripline */

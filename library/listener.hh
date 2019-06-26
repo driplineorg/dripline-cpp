@@ -17,7 +17,7 @@
 
 namespace dripline
 {
-    class listener : public scarab::cancelable
+    class listener : public virtual scarab::cancelable
     {
         public:
             listener();
