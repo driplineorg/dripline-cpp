@@ -24,7 +24,7 @@ namespace dripline
             cancelable(),
             f_channel(),
             f_consumer_tag(),
-            f_listen_timeout_ms( 0 ),
+            f_listen_timeout_ms( 1000 ),
             f_listener_thread(),
             f_receiver_thread()
     {}

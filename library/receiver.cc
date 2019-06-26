@@ -316,7 +316,7 @@ namespace dripline
         while( ! is_canceled() )
         {
             message_ptr_t t_message;
-            if( f_message_queue.wait_and_pop( t_message ) )
+            if( f_message_queue.timed_wait_and_pop( t_message ) )
             {
                 this->submit_message( t_message );
             }

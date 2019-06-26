@@ -424,9 +424,8 @@ namespace dripline
     {
         LINFO( dlog, "Listening for incoming messages on <" << f_name << ">" );
 
-        while( ! f_canceled.load()  )
+        while( ! is_canceled()  )
         {
-
             amqp_envelope_ptr t_envelope;
             bool t_channel_valid = core::listen_for_message( t_envelope, f_channel, f_consumer_tag, f_listen_timeout_ms );
 
@@ -528,6 +527,7 @@ namespace dripline
 
     void service::do_cancellation( int a_code )
     {
+        LDEBUG( dlog, "Canceling service <" << f_name << ">" );
         for( async_map_t::iterator t_child_it = f_async_children.begin();
                 t_child_it != f_async_children.end();
                 ++t_child_it )
@@ -535,6 +535,7 @@ namespace dripline
             LDEBUG( dlog, "Canceling child endpoint <" << t_child_it->first << ">" );
             t_child_it->second->cancel( a_code );
         }
+        return;
     }
 
 } /* namespace dripline */
