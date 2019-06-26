@@ -35,6 +35,7 @@ namespace dripline
         try
         {
             amqp_message_ptr t_message = a_envelope->Message();
+            LDEBUG( dlog, "Received a message chunk <" << t_message->MessageId() );
 
             // TODO if the number of chunks expected is 1, pass this directly to be processed
 
@@ -42,6 +43,7 @@ namespace dripline
             if( incoming_messages().count( std::get<0>(t_parsed_message_id) ) == 0 )
             {
                 // this path: first chunk for this message
+                LDEBUG( dlog, "This is the first chunk for this message; creating new message pack" );
                 // create the new message_pack object
                 incoming_message_pack& t_pack = incoming_messages()[std::get<0>(t_parsed_message_id)];
                 // set the f_messages vector to the expected size
@@ -49,6 +51,7 @@ namespace dripline
                 // put in place the first message chunk received
                 t_pack.f_messages[std::get<1>(t_parsed_message_id)] = t_message;
                 t_pack.f_routing_key = a_envelope->RoutingKey();
+                t_pack.f_chunks_received = 1;
 
                 // start the thread to wait for message chunks
                 t_pack.f_thread = std::thread([this, &t_pack, &t_parsed_message_id](){ wait_for_message(t_pack, std::get<0>(t_parsed_message_id)); });
@@ -57,6 +60,7 @@ namespace dripline
             else
             {
                 // this path: have already received chunks from this message
+                LDEBUG( dlog, "This is not the first chunk for this message; adding to message pack" );
                 incoming_message_pack& t_pack = incoming_messages()[std::get<0>(t_parsed_message_id)];
                 if( t_pack.f_processing.load() )
                 {
@@ -99,6 +103,8 @@ namespace dripline
     {
         std::unique_lock< std::mutex > t_lock( a_pack.f_mutex );
 
+        LDEBUG( dlog, "Waiting for message; chunks received: " << a_pack.f_chunks_received << "  chunks expected: " << a_pack.f_messages.size() );
+
         // if the message is already complete, submit it for processing
         if( a_pack.f_chunks_received == a_pack.f_messages.size() )
         {
@@ -122,6 +128,7 @@ namespace dripline
 
         // once the waiting period is over, submit it whether it's complete or not
         t_lock.release(); // process_message() will unlock the mutex before erasing the message pack
+        LWARN( dlog, "Timed out; message may be incomplete" );
         process_message_pack( a_pack, a_message_id );
 
         return;
@@ -200,11 +207,13 @@ namespace dripline
             try
             {
                 amqp_message_ptr t_message = t_envelope->Message();
+                LDEBUG( dlog, "Received a message chunk <" << t_message->MessageId() );
 
                 auto t_parsed_message_id = message::parse_message_id( t_message->MessageId() );
                 if( f_incoming_messages.count( std::get<0>(t_parsed_message_id) ) == 0 )
                 {
                     // this path: first chunk for this message
+                    LDEBUG( dlog, "This is the first chunk for this message; creating new message pack" );
                     // create the new message_pack object
                     incoming_message_pack& t_pack = f_incoming_messages[std::get<0>(t_parsed_message_id)];
                     // set the f_messages vector to the expected size
@@ -212,7 +221,9 @@ namespace dripline
                     // put in place the first message chunk received
                     t_pack.f_messages[std::get<1>(t_parsed_message_id)] = t_message;
                     t_pack.f_routing_key = t_envelope->RoutingKey();
+                    t_pack.f_chunks_received = 1;
 
+                    LWARN( dlog, "chunks received: " << t_pack.f_chunks_received << "   message size: " << t_pack.f_messages.size() );
                     if( t_pack.f_chunks_received == t_pack.f_messages.size() )
                     {
                         return process_received_reply( t_pack, std::get<0>(t_parsed_message_id) );
@@ -221,6 +232,7 @@ namespace dripline
                 else
                 {
                     // this path: have already received chunks from this message
+                    LDEBUG( dlog, "This is not the first chunk for this message; adding to message pack" );
                     incoming_message_pack& t_pack = f_incoming_messages[std::get<0>(t_parsed_message_id)];
                     if( t_pack.f_processing.load() )
                     {
@@ -238,6 +250,7 @@ namespace dripline
                             // add chunk to set of chunks
                             t_pack.f_messages[std::get<1>(t_parsed_message_id)] = t_message;
                             ++t_pack.f_chunks_received;
+                            LWARN( dlog, "chunks received: " << t_pack.f_chunks_received << "   message size: " << t_pack.f_messages.size() );
                             if( t_pack.f_chunks_received == t_pack.f_messages.size() )
                             {
                                 return process_received_reply( t_pack, std::get<0>(t_parsed_message_id) );
