@@ -8,9 +8,7 @@
 #ifndef DRIPLINE_AGENT_CONFIG_HH_
 #define DRIPLINE_AGENT_CONFIG_HH_
 
-#include "dripline_api.hh"
-
-#include "param.hh"
+#include "amqp_config.hh" // for convenience of things using agent_config, include this here
 
 namespace dripline
 {

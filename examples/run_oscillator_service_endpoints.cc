@@ -23,7 +23,9 @@ int main( int argc, char** argv )
 
     the_main.set_version( new dripline::version() );
 
-    the_main.default_config() = agent_config();
+    the_main.default_config().add( "amqp", amqp_config() );
+
+    add_amqp_options( the_main );
 
     int the_return = -1;
 
