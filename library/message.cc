@@ -441,13 +441,16 @@ namespace dripline
     {
         param_node t_message_node;
         t_message_node.add( "routing_key", f_routing_key );
+        t_message_node.add( "specifier", f_specifier.unparsed() );
         t_message_node.add( "correlation_id", f_correlation_id );
         t_message_node.add( "message_id", f_message_id );
         t_message_node.add( "reply_to", f_reply_to );
+        t_message_node.add( "message_type", to_uint(message_type()) );
         t_message_node.add( "encoding", interpret_encoding() );
         t_message_node.add( "timestamp", f_timestamp );
         t_message_node.add( "sender_info", get_sender_info() );
         t_message_node.add( "payload", payload() );
+        this->derived_modify_message_param( t_message_node );
         return t_message_node;
     }
 
@@ -615,6 +618,7 @@ namespace dripline
         a_os << "Routing key: " << a_message.routing_key() << '\n';
         a_os << "Correlation ID: " << a_message.correlation_id() << '\n';
         a_os << "Reply To: " << a_message.reply_to() << '\n';
+        a_os << "Message Type: " << to_uint(a_message.message_type()) << '\n';
         a_os << "Encoding: " << a_message.get_encoding() << '\n';
         a_os << "Timestamp: " << a_message.timestamp() << '\n';
         a_os << "Sender Info:\n";

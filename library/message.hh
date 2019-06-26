@@ -66,7 +66,9 @@ namespace dripline
             std::string encode_full_message( unsigned a_max_size, const scarab::param_node& a_options = scarab::param_node() ) const;
 
         protected:
-            virtual void derived_modify_amqp_message( amqp_message_ptr t_amqp_msg, AmqpClient::Table& t_properties ) const = 0;
+            virtual void derived_modify_amqp_message( amqp_message_ptr a_amqp_msg, AmqpClient::Table& a_properties ) const = 0;
+
+            virtual void derived_modify_message_param( scarab::param_node& a_message_node ) const = 0;
 
             std::string interpret_encoding() const;
 
@@ -149,7 +151,8 @@ namespace dripline
             reply_ptr_t reply( const unsigned a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload = scarab::param_ptr_t( new scarab::param() ) ) const;
 
         private:
-            void derived_modify_amqp_message( amqp_message_ptr t_amqp_msg, AmqpClient::Table& t_properties ) const;
+            void derived_modify_amqp_message( amqp_message_ptr a_amqp_msg, AmqpClient::Table& a_properties ) const;
+            virtual void derived_modify_message_param( scarab::param_node& a_message_node ) const;
 
         public:
             virtual msg_t message_type() const;
@@ -186,7 +189,8 @@ namespace dripline
             bool is_alert() const;
 
         private:
-            void derived_modify_amqp_message( amqp_message_ptr t_amqp_msg, AmqpClient::Table& t_properties ) const;
+            void derived_modify_amqp_message( amqp_message_ptr a_amqp_msg, AmqpClient::Table& a_properties ) const;
+            virtual void derived_modify_message_param( scarab::param_node& a_message_node ) const;
 
         public:
             virtual msg_t message_type() const;
@@ -222,7 +226,8 @@ namespace dripline
             bool is_alert() const;
 
         private:
-            void derived_modify_amqp_message( amqp_message_ptr t_amqp_msg, AmqpClient::Table& t_properties ) const;
+            void derived_modify_amqp_message( amqp_message_ptr a_amqp_msg, AmqpClient::Table& a_properties ) const;
+            virtual void derived_modify_message_param( scarab::param_node& a_message_node ) const;
 
         public:
             virtual msg_t message_type() const;
@@ -339,6 +344,13 @@ namespace dripline
         return;
     }
 
+    inline void msg_request::derived_modify_message_param( scarab::param_node& a_message_node ) const
+    {
+        a_message_node.add( "msg_op", to_uint(f_message_op) );
+        a_message_node.add( "lockout_key", string_from_uuid(lockout_key()) );
+        return;
+    }
+
     inline reply_ptr_t msg_request::reply( const return_code& a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload ) const
     {
         return msg_reply::create( a_retcode, a_ret_msg, std::move(a_payload), *this );
@@ -379,10 +391,17 @@ namespace dripline
         return false;
     }
 
-    inline void msg_reply::derived_modify_amqp_message( amqp_message_ptr /*a_amqp_msg*/, AmqpClient::Table& a_properties ) const
+    inline void msg_reply::derived_modify_amqp_message( amqp_message_ptr, AmqpClient::Table& a_properties ) const
     {
         a_properties.insert( AmqpClient::TableEntry( "retcode", AmqpClient::TableValue(f_return_code) ) );
         a_properties.insert( AmqpClient::TableEntry( "return_msg", AmqpClient::TableValue(f_return_msg) ) );
+        return;
+    }
+
+    inline void msg_reply::derived_modify_message_param( scarab::param_node& a_message_node ) const
+    {
+        a_message_node.add( "return_code", f_return_code );
+        a_message_node.add( "return_message", f_return_msg );
         return;
     }
 
@@ -403,7 +422,12 @@ namespace dripline
         return true;
     }
 
-    inline void msg_alert::derived_modify_amqp_message( amqp_message_ptr /*a_amqp_msg*/, AmqpClient::Table& /*a_properties*/ ) const
+    inline void msg_alert::derived_modify_amqp_message( amqp_message_ptr, AmqpClient::Table& ) const
+    {
+        return;
+    }
+
+    inline void msg_alert::derived_modify_message_param( scarab::param_node& ) const
     {
         return;
     }
