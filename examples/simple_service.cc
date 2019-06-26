@@ -1,45 +1,57 @@
 /*
- * simple_service.cc
+ * run_simple_service.cc
  *
  *  Created on: Aug 23, 2018
  *      Author: N.S. Oblath
  */
 
-#include "agent_config.hh"
-#include "dripline_constants.hh"
-#include "dripline_version.hh"
+#define DRIPLINE_EXAMPLES_API_EXPORTS
+
 #include "run_simple_service.hh"
 
-#include "application.hh"
+#include "dripline_error.hh"
+
 #include "logger.hh"
+#include "signal_handler.hh"
 
-using namespace dripline;
+#include <chrono>
+#include <thread>
 
-LOGGER( dlog, "simple_service" );
+LOGGER( dlog, "run_simple_service" )
 
-int main( int argc, char** argv )
+namespace dripline
 {
-    scarab::main_app the_main;
 
-    the_main.set_version( new dripline::version() );
+    run_simple_service::run_simple_service( const scarab::param_node& a_config ) :
+            service( a_config, "simple" ),
+            f_return( RETURN_SUCCESS )
+    {
+    }
 
-    the_main.default_config().add( "amqp", amqp_config() );
+    run_simple_service::~run_simple_service()
+    {
+    }
 
-    add_amqp_options( the_main );
+    void run_simple_service::execute()
+    {
+        scarab::signal_handler t_sig_hand;
+        t_sig_hand.add_cancelable( this );
 
-    int the_return = -1;
+        try
+        {
+            if( ! start() ) throw dripline_error() << "Unable to start service";
 
-    auto t_service_callback = [&](){
-        auto the_service = std::make_shared< run_simple_service >( the_main.master_config()["amqp"].as_node() );
+            if( ! listen() ) throw dripline_error() << "Unable to start listening";
 
-        the_service->execute();
+            if( ! stop() ) throw dripline_error() << "Unable to stop service";
+        }
+        catch( std::exception& e )
+        {
+            LERROR( dlog, "Exception caught: " << e.what() );
+            f_return = RETURN_ERROR;
+        }
 
-        the_return = the_service->get_return();
-    };
+        return;
+    }
 
-    the_main.callback( t_service_callback );
-
-    CLI11_PARSE( the_main, argc, argv );
-
-    return the_return;
-}
+} /* namespace dripline */
