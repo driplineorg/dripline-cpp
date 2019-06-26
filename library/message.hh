@@ -59,8 +59,11 @@ namespace dripline
             /// from message object to AMQP
             amqp_split_message_ptrs create_amqp_messages( unsigned a_max_size = 1000 );
 
-            /// from message object to string
+            /// converts the message-body to a strings (default encoding is JSON) for creating AMQP messages
             void encode_message_body( std::vector< std::string >& a_body_vec, unsigned a_max_size, const scarab::param_node& a_options = scarab::param_node() ) const;
+
+            /// convert the entire message into a single string (default encoding is JSON)
+            std::string encode_full_message( unsigned a_max_size, const scarab::param_node& a_options = scarab::param_node() ) const;
 
         protected:
             virtual void derived_modify_amqp_message( amqp_message_ptr t_amqp_msg, AmqpClient::Table& t_properties ) const = 0;
@@ -105,6 +108,7 @@ namespace dripline
             scarab::param_node get_sender_info() const;
             void set_sender_info( const scarab::param_node& a_sender_info );
 
+            scarab::param_node get_message_param() const;
         public:
             scarab::param& payload();
             const scarab::param& payload() const;

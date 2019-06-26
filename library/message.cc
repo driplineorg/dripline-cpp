@@ -370,21 +370,44 @@ namespace dripline
         return;
     }
 
+    std::string message::encode_full_message( unsigned a_max_size, const scarab::param_node& a_options ) const
+    {
+        switch( f_encoding )
+        {
+            case encoding::json:
+            {
+                param_node t_message_node = get_message_param();
+                param_output_json t_output;
+                string t_message_string;
+                if( ! t_output.write_string( t_message_node, t_message_string, a_options ) )
+                {
+                    throw dripline_error() << "Could not convert message to string";
+                }
+                if( t_message_string.size() > a_max_size ) t_message_string.resize( a_max_size );
+                return t_message_string;
+                break;
+            }
+            default:
+                throw dripline_error() << "Cannot encode using <" << interpret_encoding() << ">(" << f_encoding << ")";
+                break;
+        }
+    }
+
     string message::interpret_encoding() const
     {
         switch( f_encoding )
         {
             case encoding::json:
-                return std::string( "application/json" );
+                return string( "application/json" );
                 break;
             default:
-                return std::string( "Unknown" );
+                return string( "Unknown" );
         }
     }
 
-    scarab::param_node message::get_sender_info() const
+    param_node message::get_sender_info() const
     {
-        scarab::param_node t_sender_info;
+        param_node t_sender_info;
         t_sender_info.add( "package", f_sender_package );
         t_sender_info.add( "exe", f_sender_exe );
         t_sender_info.add( "version", f_sender_version );
@@ -395,7 +418,7 @@ namespace dripline
         return t_sender_info;
     }
 
-    void message::set_sender_info( const scarab::param_node& a_sender_info )
+    void message::set_sender_info( const param_node& a_sender_info )
     {
         //f_sender_info = a_sender_info;
         //f_sender_info.add( "package", "N/A" ); // sets default if not present
@@ -412,6 +435,20 @@ namespace dripline
         f_sender_username = a_sender_info["username"]().as_string();
         //f_sender_info.add( "service_name", "N/A" ); // sets default if not present
         f_sender_service_name = a_sender_info["service_name"]().as_string();
+    }
+
+    param_node message::get_message_param() const
+    {
+        param_node t_message_node;
+        t_message_node.add( "routing_key", f_routing_key );
+        t_message_node.add( "correlation_id", f_correlation_id );
+        t_message_node.add( "message_id", f_message_id );
+        t_message_node.add( "reply_to", f_reply_to );
+        t_message_node.add( "encoding", interpret_encoding() );
+        t_message_node.add( "timestamp", f_timestamp );
+        t_message_node.add( "sender_info", get_sender_info() );
+        t_message_node.add( "payload", payload() );
+        return t_message_node;
     }
 
 

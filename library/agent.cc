@@ -79,10 +79,11 @@ namespace dripline
         // pull the special CL arguments out of the configuration
 
         param_node t_agent_node;
-        bool t_pretty_print = false, t_suppress_output = false;
+        bool t_json_print = false, t_pretty_print = false, t_suppress_output = false;
         if( t_config.has( "agent" ) )
         {
             t_agent_node = std::move(t_config.remove( "agent" )->as_node());
+            t_json_print = t_agent_node.get_value( "json-print", t_json_print );
             t_pretty_print = t_agent_node.get_value( "pretty-print", t_pretty_print );
             t_suppress_output = t_agent_node.get_value( "suppress-output", t_suppress_output );
         }
@@ -198,23 +199,22 @@ namespace dripline
                         "Return code: " << t_reply->get_return_code() << '\n' <<
                         "Return message: " << t_reply->return_msg() << '\n' <<
                         t_payload );
+
                 if( ! t_suppress_output )
                 {
-                    scarab::param_node t_encoding_options;
-                    if( t_pretty_print )
+                    if( ! t_json_print && ! t_pretty_print )
                     {
-                        t_encoding_options.add( "style", "pretty" );
+                        std::cout << *t_reply << std::endl;
                     }
-                    std::vector< std::string > t_encoded_body;
-                    t_reply->encode_message_body( t_encoded_body, 500, t_encoding_options );
-                    if( ! t_encoded_body.empty() )
+                    else
                     {
-                        std::cout << t_encoded_body[0];
-                        if( t_encoded_body.size() > 1 )
+                        param_node t_encoding_options;
+                        if( t_pretty_print )
                         {
-                            std::cout << "\n<message truncated. . .>";
+                            t_encoding_options.add( "style", "pretty" );
                         }
-                        std::cout << std::endl;
+                        std::string t_encoded_message = t_reply->encode_full_message( 5000, t_encoding_options );
+                        std::cout << t_encoded_message << std::endl;
                     }
                 }
 

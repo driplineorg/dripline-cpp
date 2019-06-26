@@ -225,7 +225,6 @@ namespace dripline
                     t_pack.f_routing_key = t_envelope->RoutingKey();
                     t_pack.f_chunks_received = 1;
 
-                    LWARN( dlog, "chunks received: " << t_pack.f_chunks_received << "   message size: " << t_pack.f_messages.size() );
                     if( t_pack.f_chunks_received == t_pack.f_messages.size() )
                     {
                         return process_received_reply( t_pack, std::get<0>(t_parsed_message_id) );
