@@ -167,10 +167,6 @@ namespace dripline
             {
                 t_payload_error_msg = "Message body could not be parsed; skipping request";
             }
-            if( ! t_payload->is_node() )
-            {
-                t_payload_error_msg = "Payload did not parse into a node";
-            }
         }
         else
         {
