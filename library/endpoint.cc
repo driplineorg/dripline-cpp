@@ -308,7 +308,7 @@ namespace dripline
 
     reply_ptr_t endpoint::handle_lock_request( const request_ptr_t a_request )
     {
-        uuid_t t_new_key = enable_lockout( a_request->sender_info(), a_request->lockout_key() );
+        uuid_t t_new_key = enable_lockout( a_request->get_sender_info(), a_request->lockout_key() );
         if( t_new_key.is_nil() )
         {
             return a_request->reply( dl_device_error(), "Unable to lock server" );;

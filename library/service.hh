@@ -26,7 +26,7 @@ namespace dripline
             public core,
             public endpoint,
             public listener,
-            public receiver_parallel,
+            public concurrent_receiver,
             public std::enable_shared_from_this< service >
     {
         protected:
@@ -96,11 +96,6 @@ namespace dripline
             bool stop_consuming();
 
             bool remove_queue();
-
-            void wait_for_message( incoming_message_pack& a_pack, const std::string& a_message_id );
-            void process_message( incoming_message_pack& a_pack, const std::string& a_message_id );
-
-            mv_accessible( unsigned, single_message_wait_ms );
 
         public:
 

@@ -32,10 +32,9 @@ namespace dripline
             //   otherwise "dlcpp_service"
             endpoint( a_queue_name.empty() ? a_config.get_value( "queue", "dlcpp_service" ) : a_queue_name ),
             listener(),
-            receiver_parallel(),
+            concurrent_receiver(),
             std::enable_shared_from_this< service >(),
             f_status( status::nothing ),
-            f_single_message_wait_ms( 1000 ),
             f_sync_children(),
             f_async_children(),
             f_broadcast_key( "broadcast" )
@@ -52,10 +51,9 @@ namespace dripline
             core( a_make_connection, a_config ),
             endpoint( "" ),
             listener(),
-            receiver_parallel(),
+            concurrent_receiver(),
             std::enable_shared_from_this< service >(),
             f_status( status::nothing ),
-            f_single_message_wait_ms( 1000 ),
             f_sync_children(),
             f_async_children(),
             f_broadcast_key()
@@ -89,7 +87,7 @@ namespace dripline
         listener_ptr_t t_listener_ptr = std::dynamic_pointer_cast< listener >( a_endpoint_ptr );
         if( ! t_listener_ptr )
         {
-            t_listener_ptr.reset( new listener_endpoint(a_endpoint_ptr) );
+            t_listener_ptr.reset( new endpoint_listener_receiver( a_endpoint_ptr ) );
         }
         auto t_inserted = f_async_children.insert( std::make_pair( a_endpoint_ptr->name(), t_listener_ptr ) );
         if( t_inserted.second )
@@ -155,13 +153,14 @@ namespace dripline
 
         f_status = status::listening;
 
-        std::thread t_rec_thread( &receiver::execute, this );
+        f_receiver_thread = std::thread( &concurrent_receiver::execute, this );
 
         for( async_map_t::iterator t_child_it = f_async_children.begin();
                 t_child_it != f_async_children.end();
                 ++t_child_it )
         {
-            t_child_it->second->thread() = std::thread( &listener::listen_on_queue, t_child_it->second.get() );
+            t_child_it->second->receiver_thread() = std::thread( &concurrent_receiver::execute, static_cast< endpoint_listener_receiver* >(t_child_it->second.get()) );
+            t_child_it->second->listener_thread() = std::thread( &listener::listen_on_queue, t_child_it->second.get() );
         }
 
         listen_on_queue();
@@ -170,10 +169,11 @@ namespace dripline
                 t_child_it != f_async_children.end();
                 ++t_child_it )
         {
-            t_child_it->second->thread().join();
+            t_child_it->second->listener_thread().join();
+            t_child_it->second->receiver_thread().join();
         }
 
-        t_rec_thread.join();
+        f_receiver_thread.join();
 
         return true;
     }
@@ -420,67 +420,6 @@ namespace dripline
         return true;
     }
 
-    void service::wait_for_message( incoming_message_pack& a_pack, const std::string& a_message_id )
-    {
-        std::unique_lock< std::mutex > t_lock( a_pack.f_mutex );
-
-        // if the message is already complete, submit it for processing
-        if( a_pack.f_chunks_received == a_pack.f_messages.size() )
-        {
-            t_lock.release(); // process_message() will unlock the mutex before erasing the message pack
-            process_message( a_pack, a_message_id );
-            return;
-        }
-
-        auto t_now = std::chrono::system_clock::now();
-
-        while( a_pack.f_conv.wait_until( t_lock, t_now + std::chrono::milliseconds(f_single_message_wait_ms) ) == std::cv_status::no_timeout )
-        {
-            // if the message is complete during the waiting period, submit it for processing
-            if( a_pack.f_chunks_received == a_pack.f_messages.size() )
-            {
-                t_lock.release(); // process_message() will unlock the mutex before erasing the message pack
-                process_message( a_pack, a_message_id );
-                return;
-            }
-        }
-
-        // once the waiting period is over, submit it whether it's complete or not
-        t_lock.release(); // process_message() will unlock the mutex before erasing the message pack
-        process_message( a_pack, a_message_id );
-
-        return;
-    }
-
-    void service::process_message( incoming_message_pack& a_pack, const std::string& a_message_id )
-    {
-        a_pack.f_processing.store( true );
-        try
-        {
-            message_ptr_t t_message = message::process_message( a_pack.f_messages, a_pack.f_routing_key );
-
-            a_pack.f_mutex.unlock();
-            incoming_messages().erase( a_message_id );
-
-            f_message_queue.push( t_message );
-
-            return;
-        }
-        catch( dripline_error& e )
-        {
-            LERROR( dlog, "Dripline exception caught while handling message: " << e.what() );
-        }
-        catch( std::exception& e )
-        {
-            LERROR( dlog, "Standard exception caught while sending reply: " << e.what() );
-        }
-
-        // TODO: send reply if message was a request?
-
-        return;
-    }
-
-
     bool service::listen_on_queue()
     {
         LINFO( dlog, "Listening for incoming messages on <" << f_name << ">" );
@@ -505,65 +444,7 @@ namespace dripline
 
             f_status = status::processing;
 
-            try
-            {
-                amqp_message_ptr t_message = t_envelope->Message();
-
-                // TODO if the number of chunks expected is 1, pass this directly to be processed
-
-                auto t_parsed_message_id = message::parse_message_id( t_message->MessageId() );
-                if( incoming_messages().count( std::get<0>(t_parsed_message_id) ) == 0 )
-                {
-                    // this path: first chunk for this message
-                    // create the new message_pack object
-                    incoming_message_pack& t_pack = incoming_messages()[std::get<0>(t_parsed_message_id)];
-                    // set the f_messages vector to the expected size
-                    t_pack.f_messages.resize( std::get<2>(t_parsed_message_id) );
-                    // put in place the first message chunk received
-                    t_pack.f_messages[std::get<1>(t_parsed_message_id)] = t_message;
-                    t_pack.f_routing_key = t_envelope->RoutingKey();
-
-                    // start the thread to wait for message chunks
-                    t_pack.f_thread = std::thread([this, &t_pack, &t_parsed_message_id](){ wait_for_message(t_pack, std::get<0>(t_parsed_message_id)); });
-                    t_pack.f_thread.detach();
-                }
-                else
-                {
-                    // this path: have already received chunks from this message
-                    incoming_message_pack& t_pack = incoming_messages()[std::get<0>(t_parsed_message_id)];
-                    if( t_pack.f_processing.load() )
-                    {
-                        LWARN( dlog, "Message <" << std::get<0>(t_parsed_message_id) << "> is already being processed\n" <<
-                                "Just received chunk " << std::get<1>(t_parsed_message_id) << " of " << std::get<2>(t_parsed_message_id) );
-                    }
-                    else
-                    {
-                        // lock mutex to access f_messages
-                        std::unique_lock< std::mutex > t_lock( t_pack.f_mutex );
-                        if( t_pack.f_messages[std::get<1>(t_parsed_message_id)] )
-                        {
-                            LWARN( dlog, "Received duplicate message chunk for message <" << std::get<0>(t_parsed_message_id) << ">; chunk " << std::get<1>(t_parsed_message_id) );
-                        }
-                        else
-                        {
-                            // add chunk to set of chunks
-                            t_pack.f_messages[std::get<1>(t_parsed_message_id)] = t_message;
-                            ++t_pack.f_chunks_received;
-                            t_lock.unlock();
-                            // inform the message-processing thread it should check whether it has the complete message
-                            t_pack.f_conv.notify_one();
-                        }
-                    }
-                } // new/current message if/else block
-            }
-            catch( dripline_error& e )
-            {
-                LERROR( dlog, "<" << f_name << "> Dripline exception caught while handling message: " << e.what() );
-            }
-            catch( std::exception& e )
-            {
-                LERROR( dlog, "<" << f_name << "> Standard exception caught while handling message: " << e.what() );
-            }
+            handle_message_chunk( t_envelope );
 
             if( ! t_channel_valid )
             {

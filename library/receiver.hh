@@ -42,7 +42,17 @@ namespace dripline
             receiver();
             virtual ~receiver();
 
+        public:
+            void handle_message_chunk( amqp_envelope_ptr a_envelope );
+
+            void wait_for_message( incoming_message_pack& a_pack, const std::string& a_message_id );
+            void process_message_pack( incoming_message_pack& a_pack, const std::string& a_message_id );
+
+            // default implementation; always throws dripline_error
+            virtual void process_message( message_ptr_t a_message );
+
             mv_referrable( incoming_message_map, incoming_messages );
+            mv_accessible( unsigned, single_message_wait_ms );
 
         public:
             /// Wait for a reply message
@@ -57,13 +67,15 @@ namespace dripline
 
     };
 
-    class DRIPLINE_API receiver_parallel : public receiver, public virtual scarab::cancelable
+    class DRIPLINE_API concurrent_receiver : public receiver, public virtual scarab::cancelable
     {
         public:
-            receiver_parallel();
-            virtual ~receiver_parallel();
+            concurrent_receiver();
+            virtual ~concurrent_receiver();
 
         public:
+            virtual void process_message( message_ptr_t a_message );
+
             void execute();
 
         protected:

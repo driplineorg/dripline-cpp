@@ -30,6 +30,9 @@ namespace dripline
     class listener;
     typedef std::shared_ptr< listener > listener_ptr_t;
 
+    class endpoint_listener_receiver;
+    typedef std::shared_ptr< endpoint_listener_receiver > elr_ptr_t;
+
     class endpoint;
     typedef std::shared_ptr< endpoint > endpoint_ptr_t;
 
