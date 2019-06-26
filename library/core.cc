@@ -48,6 +48,7 @@ namespace dripline
             f_password( "guest" ),
             f_requests_exchange( "requests" ),
             f_alerts_exchange( "alerts" ),
+            f_max_payload_size( DL_MAX_PAYLOAD_SIZE ),
             f_make_connection( a_make_connection )
     {
         // auth file passed as a parameter overrides a file passed in the config
@@ -91,6 +92,7 @@ namespace dripline
             f_port = a_config.get_value( "broker-port", f_port );
             f_requests_exchange = a_config.get_value( "requests-exchange", f_requests_exchange );
             f_alerts_exchange = a_config.get_value( "alerts-exchange", f_alerts_exchange );
+            f_max_payload_size = a_config.get_value( "max-payload-size", f_max_payload_size );
             f_make_connection = a_config.get_value( "make-connection", f_make_connection );
         }
 
@@ -113,19 +115,22 @@ namespace dripline
             f_password( a_orig.f_password ),
             f_requests_exchange( a_orig.f_requests_exchange ),
             f_alerts_exchange( a_orig.f_alerts_exchange ),
+            f_max_payload_size( a_orig.f_max_payload_size ),
             f_make_connection( a_orig.f_make_connection )
     {}
 
     core::core( core&& a_orig ) :
-            f_address( std::move( a_orig.f_address ) ),
+            f_address( std::move(a_orig.f_address) ),
             f_port( a_orig.f_port ),
-            f_username( std::move( a_orig.f_username ) ),
-            f_password( std::move( a_orig.f_password ) ),
-            f_requests_exchange( std::move( a_orig.f_requests_exchange ) ),
-            f_alerts_exchange( std::move( a_orig.f_alerts_exchange) ),
-            f_make_connection( std::move( a_orig.f_make_connection ) )
+            f_username( std::move(a_orig.f_username) ),
+            f_password( std::move(a_orig.f_password) ),
+            f_requests_exchange( std::move(a_orig.f_requests_exchange) ),
+            f_alerts_exchange( std::move(a_orig.f_alerts_exchange) ),
+            f_max_payload_size( a_orig.f_max_payload_size ),
+            f_make_connection( std::move(a_orig.f_make_connection) )
     {
         a_orig.f_port = 0;
+        a_orig.f_max_payload_size = DL_MAX_PAYLOAD_SIZE;
     }
 
     core::~core()
@@ -139,6 +144,7 @@ namespace dripline
         f_password = a_orig.f_password;
         f_requests_exchange = a_orig.f_requests_exchange;
         f_alerts_exchange = a_orig.f_alerts_exchange;
+        f_max_payload_size = a_orig.f_max_payload_size;
         f_make_connection = a_orig.f_make_connection;
         return *this;
     }
@@ -152,6 +158,8 @@ namespace dripline
         f_password = std::move( a_orig.f_password );
         f_requests_exchange = std::move( a_orig.f_requests_exchange );
         f_alerts_exchange = std::move( a_orig.f_alerts_exchange );
+        f_max_payload_size = a_orig.f_max_payload_size;
+        a_orig.f_max_payload_size = DL_MAX_PAYLOAD_SIZE;
         f_make_connection = std::move( a_orig.f_make_connection );
         return *this;
     }
@@ -234,7 +242,7 @@ namespace dripline
         }
 
         // convert the dripline::message object to an AMQP message
-        amqp_split_message_ptrs t_amqp_messages = a_message->create_amqp_messages();
+        amqp_split_message_ptrs t_amqp_messages = a_message->create_amqp_messages( f_max_payload_size );
         if( t_amqp_messages.empty() )
         {
             throw dripline_error() << "Unable to convert the dripline::message object to AMQP messages";

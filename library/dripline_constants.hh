@@ -18,6 +18,9 @@
 
 namespace dripline
 {
+#ifndef DL_MAX_PAYLOAD_SIZE
+#define DL_MAX_PAYLOAD_SIZE 10000
+#endif
 
     // Dripline message constants
     // Conforming to the dripline wire protocol: https://github.com/project8/hardware/wiki/Wire-Protocol

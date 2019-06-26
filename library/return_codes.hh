@@ -119,6 +119,9 @@ namespace dripline
     DEFINE_DL_RET_CODE( message_error_dripline_deprecated, 309 );
 #undef RC_LIST
 #define RC_LIST NEW_RC_LIST( message_error_dripline_deprecated )
+    DEFINE_DL_RET_CODE( message_error_invalid_specifier, 310 );
+#undef RC_LIST
+#define RC_LIST NEW_RC_LIST( message_error_invalid_specifier )
 
     DEFINE_DL_RET_CODE( database_error, 400 );
 #undef RC_LIST

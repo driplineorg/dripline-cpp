@@ -39,6 +39,7 @@ namespace dripline
             LDEBUG( dlog, "default auth file <" << t_auth_default_path.string() << "> does not exist, not setting" );
         }
 #endif
+        add( "max-payload-size", DL_MAX_PAYLOAD_SIZE );
     }
 
     amqp_config::~amqp_config()
@@ -50,6 +51,7 @@ namespace dripline
         an_app.add_config_option< std::string >( "-b,--broker", "amqp.broker", "Set the dripline broker address" );
         an_app.add_config_option< unsigned >( "-p,--port", "amqp.broker-port", "Set the port for communication with the dripline broker" );
         an_app.add_config_option< std::string >( "-a,--auth-file", "amqp.auth-file", "Set the authentication file path" );
+        an_app.add_config_option< unsigned >( "--max-payload", "amqp.max-payload-size", "Set the maximum payload size (in bytes)" );
         return;
     }
 

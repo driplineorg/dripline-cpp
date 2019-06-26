@@ -37,8 +37,6 @@ namespace dripline
             amqp_message_ptr t_message = a_envelope->Message();
             LDEBUG( dlog, "Received a message chunk <" << t_message->MessageId() );
 
-            // TODO if the number of chunks expected is 1, pass this directly to be processed
-
             auto t_parsed_message_id = message::parse_message_id( t_message->MessageId() );
             if( incoming_messages().count( std::get<0>(t_parsed_message_id) ) == 0 )
             {
@@ -53,9 +51,18 @@ namespace dripline
                 t_pack.f_routing_key = a_envelope->RoutingKey();
                 t_pack.f_chunks_received = 1;
 
-                // start the thread to wait for message chunks
-                t_pack.f_thread = std::thread([this, &t_pack, &t_parsed_message_id](){ wait_for_message(t_pack, std::get<0>(t_parsed_message_id)); });
-                t_pack.f_thread.detach();
+                if( t_pack.f_messages.size() == 1 )
+                {
+                    // if we only expect one chunk, we can bypass creating a separate thread, etc
+                    LDEBUG( dlog, "Single-chunk message being sent directly to processing" );
+                    process_message_pack( t_pack, t_message->MessageId() );
+                }
+                else
+                {
+                    // start the thread to wait for message chunks
+                    t_pack.f_thread = std::thread([this, &t_pack, &t_parsed_message_id](){ wait_for_message(t_pack, std::get<0>(t_parsed_message_id)); });
+                    t_pack.f_thread.detach();
+                }
             }
             else
             {
@@ -251,7 +258,6 @@ namespace dripline
                             // add chunk to set of chunks
                             t_pack.f_messages[std::get<1>(t_parsed_message_id)] = t_message;
                             ++t_pack.f_chunks_received;
-                            LWARN( dlog, "chunks received: " << t_pack.f_chunks_received << "   message size: " << t_pack.f_messages.size() );
                             if( t_pack.f_chunks_received == t_pack.f_messages.size() )
                             {
                                 return process_received_reply( t_pack, std::get<0>(t_parsed_message_id) );

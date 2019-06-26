@@ -57,7 +57,7 @@ namespace dripline
             static message_ptr_t process_message( amqp_split_message_ptrs a_message_ptrs, const std::string& a_routing_key );
 
             /// from message object to AMQP
-            amqp_split_message_ptrs create_amqp_messages( unsigned a_max_size = 1000 );
+            amqp_split_message_ptrs create_amqp_messages( unsigned a_max_size = DL_MAX_PAYLOAD_SIZE );
 
             /// converts the message-body to a strings (default encoding is JSON) for creating AMQP messages
             void encode_message_body( std::vector< std::string >& a_body_vec, unsigned a_max_size, const scarab::param_node& a_options = scarab::param_node() ) const;

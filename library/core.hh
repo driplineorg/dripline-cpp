@@ -68,6 +68,8 @@ namespace dripline
             mv_referrable( std::string, requests_exchange );
             mv_referrable( std::string, alerts_exchange );
 
+            mv_accessible( unsigned, max_payload_size );
+
             mv_accessible( bool, make_connection );
 
         protected:
