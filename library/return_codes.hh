@@ -16,6 +16,9 @@
  *  #undef RC_LIST
  *  #define RC_LIST NEW_RC_LIST( [name] )
  *
+ *  New return codes can be defined in client code by including this header, and using the 3-line sequence above.
+ *  Note that this must be done in the `dripline` namespace.  Resulting return codes will be in that namespace.
+ *
  *  Technical details:
  *
  *  - All return code classes inherit from the class return_code and std::integral_constant< unsigned, [value] >.
@@ -44,15 +47,15 @@ namespace dripline
 #define NEW_RC_LIST( name ) rc_list_##name##_t
 
 #define DEFINE_DL_RET_CODE( name, the_value ) \
-    struct DRIPLINE_API dl_##name : public return_code, public std::integral_constant< unsigned, the_value > \
+    struct DRIPLINE_API dl_##name : public ::dripline::return_code, public std::integral_constant< unsigned, the_value > \
     { \
         virtual ~dl_##name() {} \
         virtual unsigned rc_value() const { return dl_##name::value; } \
     }; \
-    using NEW_RC_LIST(name) = scarab::unique_append< std::integral_constant< unsigned, the_value >, RC_LIST >;
+    using NEW_RC_LIST(name) = ::scarab::unique_append< std::integral_constant< unsigned, the_value >, RC_LIST >;
 
     // Start off the typelist as an empty list
-    using rc_list_void = scarab::type_list<>;
+    using rc_list_void = ::scarab::type_list<>;
 #define RC_LIST rc_list_void
 
 
