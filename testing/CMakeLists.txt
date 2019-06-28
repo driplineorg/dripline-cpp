@@ -12,6 +12,7 @@ set( testing_SOURCES
     test_core.cc
     test_endpoint.cc
     test_lockout.cc
+    test_messages.cc
     test_return_codes.cc
     test_specifier.cc
     use_catch.cc

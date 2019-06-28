@@ -5,7 +5,11 @@
  *      Author: N.S. Oblath
  */
 
+#define DRIPLINE_API_EXPORTS
+
 #include "listener.hh"
+
+#include "endpoint.hh"
 
 #include "core.hh"
 #include "dripline_error.hh"
@@ -20,8 +24,9 @@ namespace dripline
             cancelable(),
             f_channel(),
             f_consumer_tag(),
-            f_listen_timeout_ms( 0 ),
-            f_thread()
+            f_listen_timeout_ms( 1000 ),
+            f_listener_thread(),
+            f_receiver_thread()
     {}
 
     listener::listener( listener&& a_orig ) :
@@ -29,7 +34,8 @@ namespace dripline
             f_channel( std::move(a_orig.f_channel) ),
             f_consumer_tag( std::move(a_orig.f_consumer_tag) ),
             f_listen_timeout_ms( std::move(a_orig.f_listen_timeout_ms) ),
-            f_thread( std::move(a_orig.f_thread) )
+            f_listener_thread( std::move(a_orig.f_listener_thread) ),
+            f_receiver_thread( std::move(a_orig.f_receiver_thread) )
     {}
 
     listener::~listener()
@@ -41,31 +47,32 @@ namespace dripline
         f_channel = std::move(a_orig.f_channel);
         f_consumer_tag = std::move(a_orig.f_consumer_tag);
         f_consumer_tag = std::move(a_orig.f_listen_timeout_ms);
-        f_thread = std::move(a_orig.f_thread);
+        f_listener_thread = std::move(a_orig.f_listener_thread);
+        f_receiver_thread = std::move(a_orig.f_receiver_thread);
         return *this;
     }
 
-    listener_endpoint::listener_endpoint( endpoint_ptr_t a_endpoint_ptr ) :
+    endpoint_listener_receiver::endpoint_listener_receiver( endpoint_ptr_t a_endpoint_ptr ) :
             listener(),
             f_endpoint( a_endpoint_ptr )
     {}
 
-    listener_endpoint::listener_endpoint( listener_endpoint&& a_orig ) :
+    endpoint_listener_receiver::endpoint_listener_receiver( endpoint_listener_receiver&& a_orig ) :
             listener( std::move(a_orig) ),
             f_endpoint( std::move(a_orig.f_endpoint) )
     {}
 
-    listener_endpoint::~listener_endpoint()
+    endpoint_listener_receiver::~endpoint_listener_receiver()
     {}
 
-    listener_endpoint& listener_endpoint::operator=( listener_endpoint&& a_orig )
+    endpoint_listener_receiver& endpoint_listener_receiver::operator=( endpoint_listener_receiver&& a_orig )
     {
         listener::operator=( std::move(a_orig) );
         f_endpoint = std::move(a_orig.f_endpoint);
         return *this;
     }
 
-    bool listener_endpoint::listen_on_queue()
+    bool endpoint_listener_receiver::listen_on_queue()
     {
         LINFO( dlog, "Listening for incoming messages on <" << f_endpoint->name() << ">" );
 
@@ -87,28 +94,7 @@ namespace dripline
                 continue;
             }
 
-            try
-            {
-                message_ptr_t t_message = message::process_envelope( t_envelope );
-
-                f_endpoint->sort_message( t_message );
-            }
-            catch( dripline_error& e )
-            {
-                LERROR( dlog, "<" << f_endpoint->name() << ">: Dripline exception caught while handling message: " << e.what() );
-            }
-            catch( amqp_exception& e )
-            {
-                LERROR( dlog, "<" << f_endpoint->name() << ">: AMQP exception caught while sending reply: (" << e.reply_code() << ") " << e.reply_text() );
-            }
-            catch( amqp_lib_exception& e )
-            {
-                LERROR( dlog, "<" << f_endpoint->name() << ">: AMQP Library Exception caught while sending reply: (" << e.ErrorCode() << ") " << e.what() );
-            }
-            catch( std::exception& e )
-            {
-                LERROR( dlog, "<" << f_endpoint->name() << ">: Standard exception caught while sending reply: " << e.what() );
-            }
+            handle_message_chunk( t_envelope );
 
             if( ! t_channel_valid )
             {
@@ -123,6 +109,37 @@ namespace dripline
             }
         }
         return true;
+    }
+
+    void endpoint_listener_receiver::submit_message( message_ptr_t a_message )
+    {
+        try
+        {
+            f_endpoint->sort_message( a_message );
+
+            // by this point we assume a reply has been sent
+            return;
+        }
+        catch( dripline_error& e )
+        {
+            LERROR( dlog, "<" << f_endpoint->name() << ">: Dripline exception caught while handling message: " << e.what() );
+        }
+        catch( amqp_exception& e )
+        {
+            LERROR( dlog, "<" << f_endpoint->name() << ">: AMQP exception caught while sending reply: (" << e.reply_code() << ") " << e.reply_text() );
+        }
+        catch( amqp_lib_exception& e )
+        {
+            LERROR( dlog, "<" << f_endpoint->name() << ">: AMQP Library Exception caught while sending reply: (" << e.ErrorCode() << ") " << e.what() );
+        }
+        catch( std::exception& e )
+        {
+            LERROR( dlog, "<" << f_endpoint->name() << ">: Standard exception caught while sending reply: " << e.what() );
+        }
+
+        // TODO: each of the above catch sections can generate a reply if the message is a request
+
+        return;
     }
 
 } /* namespace dripline */

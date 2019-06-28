@@ -78,6 +78,22 @@ namespace dripline
 
     reply_ptr_t endpoint::on_request_message( const request_ptr_t a_request )
     {
+        if( ! a_request->get_is_valid() )
+        {
+            LWARN( dlog, "Request message is not valid" );
+            std::string t_message( "Request message was not valid" );
+            // check in the payload for error information
+            if( a_request->payload().is_node() )
+            {
+                const scarab::param_node& t_payload = a_request->payload().as_node();
+                if( t_payload.has("error") ) t_message += "; " + t_payload["error"]().as_string();
+            }
+            reply_ptr_t t_reply = a_request->reply( dl_message_error_decoding_fail(), "Request message was not valid" );
+            t_reply->payload() = a_request->payload();
+            send_reply( t_reply );
+            return t_reply;
+        }
+
         // the lockout key must be valid
         if( ! a_request->get_lockout_key_valid() )
         {
@@ -308,7 +324,7 @@ namespace dripline
 
     reply_ptr_t endpoint::handle_lock_request( const request_ptr_t a_request )
     {
-        uuid_t t_new_key = enable_lockout( a_request->sender_info(), a_request->lockout_key() );
+        uuid_t t_new_key = enable_lockout( a_request->get_sender_info(), a_request->lockout_key() );
         if( t_new_key.is_nil() )
         {
             return a_request->reply( dl_device_error(), "Unable to lock server" );;

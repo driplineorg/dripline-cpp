@@ -32,6 +32,7 @@ namespace dripline
             //   otherwise "dlcpp_service"
             endpoint( a_queue_name.empty() ? a_config.get_value( "queue", "dlcpp_service" ) : a_queue_name ),
             listener(),
+            concurrent_receiver(),
             std::enable_shared_from_this< service >(),
             f_status( status::nothing ),
             f_sync_children(),
@@ -40,6 +41,7 @@ namespace dripline
     {
         // get values from the config
         f_listen_timeout_ms = a_config.get_value( "listen-timeout-ms", f_listen_timeout_ms );
+        f_single_message_wait_ms = a_config.get_value( "message-wait-ms", f_single_message_wait_ms );
 
         // override if specified as a separate argument
         if( ! a_queue_name.empty() ) f_name = a_queue_name;
@@ -49,6 +51,7 @@ namespace dripline
             core( a_make_connection, a_config ),
             endpoint( "" ),
             listener(),
+            concurrent_receiver(),
             std::enable_shared_from_this< service >(),
             f_status( status::nothing ),
             f_sync_children(),
@@ -84,7 +87,7 @@ namespace dripline
         listener_ptr_t t_listener_ptr = std::dynamic_pointer_cast< listener >( a_endpoint_ptr );
         if( ! t_listener_ptr )
         {
-            t_listener_ptr.reset( new listener_endpoint(a_endpoint_ptr) );
+            t_listener_ptr.reset( new endpoint_listener_receiver( a_endpoint_ptr ) );
         }
         auto t_inserted = f_async_children.insert( std::make_pair( a_endpoint_ptr->name(), t_listener_ptr ) );
         if( t_inserted.second )
@@ -150,11 +153,14 @@ namespace dripline
 
         f_status = status::listening;
 
+        f_receiver_thread = std::thread( &concurrent_receiver::execute, this );
+
         for( async_map_t::iterator t_child_it = f_async_children.begin();
                 t_child_it != f_async_children.end();
                 ++t_child_it )
         {
-            t_child_it->second->thread() = std::thread( &listener::listen_on_queue, t_child_it->second.get() );
+            t_child_it->second->receiver_thread() = std::thread( &concurrent_receiver::execute, static_cast< endpoint_listener_receiver* >(t_child_it->second.get()) );
+            t_child_it->second->listener_thread() = std::thread( &listener::listen_on_queue, t_child_it->second.get() );
         }
 
         listen_on_queue();
@@ -163,8 +169,11 @@ namespace dripline
                 t_child_it != f_async_children.end();
                 ++t_child_it )
         {
-            t_child_it->second->thread().join();
+            t_child_it->second->listener_thread().join();
+            t_child_it->second->receiver_thread().join();
         }
+
+        f_receiver_thread.join();
 
         return true;
     }
@@ -183,6 +192,7 @@ namespace dripline
             if( ! stop_consuming() ) return false;
             f_status = status::queue_bound;
         }
+
 
         if( f_status >= status::queue_declared ) // queue_declared or queue_bound
         {
@@ -414,9 +424,8 @@ namespace dripline
     {
         LINFO( dlog, "Listening for incoming messages on <" << f_name << ">" );
 
-        while( ! f_canceled.load()  )
+        while( ! is_canceled()  )
         {
-
             amqp_envelope_ptr t_envelope;
             bool t_channel_valid = core::listen_for_message( t_envelope, f_channel, f_consumer_tag, f_listen_timeout_ms );
 
@@ -434,46 +443,7 @@ namespace dripline
 
             f_status = status::processing;
 
-            try
-            {
-                message_ptr_t t_message = message::process_envelope( t_envelope );
-
-                std::string t_first_token( t_message->routing_key() );
-                t_first_token = t_first_token.substr( 0, t_first_token.find_first_of('.') );
-                LDEBUG( dlog, "First token in routing key: <" << t_first_token << ">" );
-
-                if( t_first_token == f_name || t_first_token == f_broadcast_key )
-                {
-                    sort_message( t_message );
-                }
-                else
-                {
-                    auto t_endpoint_itr = f_sync_children.find( t_first_token );
-                    if( t_endpoint_itr == f_sync_children.end() )
-                    {
-                        LERROR( dlog, "Did not find child endpoint called <" << t_first_token << ">" );
-                        throw dripline_error() << "Did not find child endpoint <" << t_first_token << ">";
-                    }
-
-                    t_endpoint_itr->second->sort_message( t_message );
-                }
-            }
-            catch( dripline_error& e )
-            {
-                LERROR( dlog, "<" << f_name << "> Dripline exception caught while handling message: " << e.what() );
-            }
-            catch( amqp_exception& e )
-            {
-                LERROR( dlog, "<" << f_name << "> AMQP exception caught while sending reply: (" << e.reply_code() << ") " << e.reply_text() );
-            }
-            catch( amqp_lib_exception& e )
-            {
-                LERROR( dlog, "<" << f_name << "> AMQP Library Exception caught while sending reply: (" << e.ErrorCode() << ") " << e.what() );
-            }
-            catch( std::exception& e )
-            {
-                LERROR( dlog, "<" << f_name << "> Standard exception caught while sending reply: " << e.what() );
-            }
+            handle_message_chunk( t_envelope );
 
             if( ! t_channel_valid )
             {
@@ -492,6 +462,55 @@ namespace dripline
         return true;
     }
 
+    void service::submit_message( message_ptr_t a_message )
+    {
+        try
+        {
+            std::string t_first_token( a_message->routing_key() );
+            t_first_token = t_first_token.substr( 0, t_first_token.find_first_of('.') );
+            LDEBUG( dlog, "First token in routing key: <" << t_first_token << ">" );
+
+            if( t_first_token == f_name || t_first_token == f_broadcast_key )
+            {
+                sort_message( a_message );
+            }
+            else
+            {
+                auto t_endpoint_itr = f_sync_children.find( t_first_token );
+                if( t_endpoint_itr == f_sync_children.end() )
+                {
+                    LERROR( dlog, "Did not find child endpoint called <" << t_first_token << ">" );
+                    throw dripline_error() << "Did not find child endpoint <" << t_first_token << ">";
+                }
+
+                t_endpoint_itr->second->sort_message( a_message );
+            }
+
+            // by this point we assume a reply has been sent
+            return;
+        }
+        catch( dripline_error& e )
+        {
+            LERROR( dlog, "<" << f_name << "> Dripline exception caught while handling message: " << e.what() );
+        }
+        catch( amqp_exception& e )
+        {
+            LERROR( dlog, "<" << f_name << "> AMQP exception caught while sending reply: (" << e.reply_code() << ") " << e.reply_text() );
+        }
+        catch( amqp_lib_exception& e )
+        {
+            LERROR( dlog, "<" << f_name << "> AMQP Library Exception caught while sending reply: (" << e.ErrorCode() << ") " << e.what() );
+        }
+        catch( std::exception& e )
+        {
+            LERROR( dlog, "<" << f_name << "> Standard exception caught while sending reply: " << e.what() );
+        }
+
+        // TODO: each of the above catch sections can generate a reply if the message is a request
+
+        return;
+    }
+
     void service::send_reply( reply_ptr_t a_reply ) const
     {
         LDEBUG( dlog, "Sending reply message to <" << a_reply->routing_key() << ">:\n" <<
@@ -508,6 +527,7 @@ namespace dripline
 
     void service::do_cancellation( int a_code )
     {
+        LDEBUG( dlog, "Canceling service <" << f_name << ">" );
         for( async_map_t::iterator t_child_it = f_async_children.begin();
                 t_child_it != f_async_children.end();
                 ++t_child_it )
@@ -515,6 +535,7 @@ namespace dripline
             LDEBUG( dlog, "Canceling child endpoint <" << t_child_it->first << ">" );
             t_child_it->second->cancel( a_code );
         }
+        return;
     }
 
 } /* namespace dripline */

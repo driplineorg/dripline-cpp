@@ -8,7 +8,9 @@
 #ifndef DRIPLINE_LISTENER_HH_
 #define DRIPLINE_LISTENER_HH_
 
-#include "endpoint.hh"
+#include "dripline_fwd.hh"
+
+#include "receiver.hh"
 
 #include "cancelable.hh"
 #include "member_variables.hh"
@@ -17,7 +19,7 @@
 
 namespace dripline
 {
-    class listener : public scarab::cancelable
+    class DRIPLINE_API listener : public virtual scarab::cancelable
     {
         public:
             listener();
@@ -36,23 +38,26 @@ namespace dripline
 
             mv_accessible( unsigned, listen_timeout_ms );
 
-            mv_referrable( std::thread, thread );
+            mv_referrable( std::thread, listener_thread );
+            mv_referrable( std::thread, receiver_thread );
     };
 
-    class listener_endpoint : public listener
+    class DRIPLINE_API endpoint_listener_receiver : public listener, public concurrent_receiver
     {
         public:
-            listener_endpoint( endpoint_ptr_t a_endpoint_ptr );
-            listener_endpoint( const listener_endpoint& ) = delete;
-            listener_endpoint( listener_endpoint&& a_orig );
-            virtual ~listener_endpoint();
+            endpoint_listener_receiver( endpoint_ptr_t a_endpoint_ptr );
+            endpoint_listener_receiver( const endpoint_listener_receiver& ) = delete;
+            endpoint_listener_receiver( endpoint_listener_receiver&& a_orig );
+            virtual ~endpoint_listener_receiver();
 
-            listener_endpoint& operator=( const listener_endpoint& ) = delete;
-            listener_endpoint& operator=( listener_endpoint&& a_orig );
+            endpoint_listener_receiver& operator=( const endpoint_listener_receiver& ) = delete;
+            endpoint_listener_receiver& operator=( endpoint_listener_receiver&& a_orig );
 
             virtual bool listen_on_queue();
 
         protected:
+            virtual void submit_message( message_ptr_t a_message );
+
             mv_referrable( endpoint_ptr_t,  endpoint );
     };
 

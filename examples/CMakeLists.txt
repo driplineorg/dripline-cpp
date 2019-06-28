@@ -8,14 +8,14 @@ set( dripline_examples_HEADERS
     oscillator.hh
     oscillator_service_endpoints.hh
     oscillator_service_hub.hh
-    run_simple_service.hh
+    simple_service.hh
 )
 
 set( dripline_examples_SOURCES
     oscillator.cc
     oscillator_service_endpoints.cc
     oscillator_service_hub.cc
-    run_simple_service.cc
+    simple_service.cc
 )
 
 set ( dripline_examples_LIBS
@@ -36,7 +36,7 @@ if( Dripline_ENABLE_EXECUTABLES )
     set( programs
         run_oscillator_service_endpoints
         run_oscillator_service_hub
-        simple_service
+        run_simple_service
     )
     pbuilder_executables( programs lib_dependencies )
 endif( Dripline_ENABLE_EXECUTABLES )

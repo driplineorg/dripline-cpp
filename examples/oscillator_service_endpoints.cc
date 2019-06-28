@@ -140,7 +140,7 @@ namespace dripline
                 t_child_it != f_async_children.end();
                 ++t_child_it )
         {
-            auto t_listener_endpoint = std::static_pointer_cast< listener_endpoint >(t_child_it->second);
+            auto t_listener_endpoint = std::static_pointer_cast< endpoint_listener_receiver >(t_child_it->second);
             t_listener_endpoint->endpoint()->service() = shared_from_this();
             auto t_osc_endpoint = std::static_pointer_cast< oscillator_ep >(t_listener_endpoint->endpoint());
             t_osc_endpoint->f_osc_svc = this;

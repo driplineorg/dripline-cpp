@@ -10,9 +10,11 @@
 #include "agent.hh"
 
 #include "agent_config.hh"
-#include "dripline_constants.hh"
-#include "dripline_version.hh"
 #include "core.hh"
+#include "dripline_constants.hh"
+#include "dripline_error.hh"
+#include "dripline_version.hh"
+#include "receiver.hh"
 #include "uuid.hh"
 
 #include "logger.hh"
@@ -77,10 +79,11 @@ namespace dripline
         // pull the special CL arguments out of the configuration
 
         param_node t_agent_node;
-        bool t_pretty_print = false, t_suppress_output = false;
+        bool t_json_print = false, t_pretty_print = false, t_suppress_output = false;
         if( t_config.has( "agent" ) )
         {
             t_agent_node = std::move(t_config.remove( "agent" )->as_node());
+            t_json_print = t_agent_node.get_value( "json-print", t_json_print );
             t_pretty_print = t_agent_node.get_value( "pretty-print", t_pretty_print );
             t_suppress_output = t_agent_node.get_value( "suppress-output", t_suppress_output );
         }
@@ -159,11 +162,20 @@ namespace dripline
 
         LDEBUG( dlog, "Sending message w/ msgop = " << t_request->get_message_op() << " to " << t_request->routing_key() );
 
-        rr_pkg_ptr t_receive_reply = t_core.send( t_request );
+        sent_msg_pkg_ptr t_receive_reply;
+        try
+        {
+            t_receive_reply = t_core.send( t_request );
+        }
+        catch( dripline_error& e )
+        {
+            LERROR( dlog, "Unable to send request:\n" << e.what() );
+            return;
+        }
 
         if( ! t_receive_reply->f_successful_send )
         {
-            LERROR( dlog, "Unable to send request" );
+            LERROR( dlog, "Unable to send request:\n" + t_receive_reply->f_send_error_message );
             f_agent->set_return( dl_client_error_unable_to_send().rc_value() );
             return;
         }
@@ -173,7 +185,8 @@ namespace dripline
             LINFO( dlog, "Waiting for a reply from the server; use ctrl-c to cancel" );
 
             // timed blocking call to wait for incoming message
-            dripline::reply_ptr_t t_reply = t_core.wait_for_reply( t_receive_reply, t_timeout );
+            receiver t_msg_receiver;
+            dripline::reply_ptr_t t_reply = t_msg_receiver.wait_for_reply( t_receive_reply, t_timeout );
 
             if( t_reply )
             {
@@ -186,16 +199,23 @@ namespace dripline
                         "Return code: " << t_reply->get_return_code() << '\n' <<
                         "Return message: " << t_reply->return_msg() << '\n' <<
                         t_payload );
+
                 if( ! t_suppress_output )
                 {
-                    scarab::param_node t_encoding_options;
-                    if( t_pretty_print )
+                    if( ! t_json_print && ! t_pretty_print )
                     {
-                        t_encoding_options.add( "style", "pretty" );
+                        std::cout << *t_reply << std::endl;
                     }
-                    std::string t_encoded_body;
-                    t_reply->encode_message_body( t_encoded_body, t_encoding_options );
-                    std::cout << t_encoded_body << std::endl;
+                    else
+                    {
+                        param_node t_encoding_options;
+                        if( t_pretty_print )
+                        {
+                            t_encoding_options.add( "style", "pretty" );
+                        }
+                        std::string t_encoded_message = t_reply->encode_full_message( 5000, t_encoding_options );
+                        std::cout << t_encoded_message << std::endl;
+                    }
                 }
 
                 if( ! t_save_filename.empty() && ! t_payload.is_null() )
@@ -210,7 +230,7 @@ namespace dripline
             }
             else
             {
-                LWARN( dlog, "Timed out waiting for reply" );
+                LWARN( dlog, "Timed out or error while waiting for reply" );
                 f_agent->set_return( dl_client_error_timeout().rc_value() );
             }
             f_agent->set_reply( t_reply );

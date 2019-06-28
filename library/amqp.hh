@@ -23,6 +23,8 @@ namespace dripline
     typedef AmqpClient::AmqpException amqp_exception;
     typedef AmqpClient::AmqpLibraryException amqp_lib_exception;
 
+    typedef std::vector< amqp_message_ptr > amqp_split_message_ptrs;
+
 } /* namespace dripline */
 
 #endif /* DRIPLINE_AMPQ_HH_ */

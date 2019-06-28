@@ -8,11 +8,12 @@
 #ifndef DRIPLINE_SERVICE_HH_
 #define DRIPLINE_SERVICE_HH_
 
-#include "core.hh"
-#include "listener.hh"
-
-#include "dripline_error.hh"
 #include "endpoint.hh"
+#include "listener.hh"
+#include "receiver.hh"
+
+#include "core.hh"
+#include "dripline_error.hh"
 
 #include <map>
 #include <memory>
@@ -21,7 +22,12 @@
 
 namespace dripline
 {
-    class DRIPLINE_API service : public core, public endpoint, public listener, public std::enable_shared_from_this< service >
+    class DRIPLINE_API service :
+            public core,
+            public endpoint,
+            public listener,
+            public concurrent_receiver,
+            public std::enable_shared_from_this< service >
     {
         protected:
             enum class status
@@ -57,13 +63,13 @@ namespace dripline
 
         public:
             /// Sends a request message and returns a channel on which to listen for a reply.
-            virtual rr_pkg_ptr send( request_ptr_t a_request ) const;
+            virtual sent_msg_pkg_ptr send( request_ptr_t a_request ) const;
 
             /// Sends a reply message
-            virtual bool send( reply_ptr_t a_reply ) const;
+            virtual sent_msg_pkg_ptr send( reply_ptr_t a_reply ) const;
 
             /// Sends an alert message
-            virtual bool send( alert_ptr_t a_alert ) const;
+            virtual sent_msg_pkg_ptr send( alert_ptr_t a_alert ) const;
 
         public:
             /// Creates a channel to the broker and establishes the queue for receiving messages.
@@ -91,7 +97,11 @@ namespace dripline
 
             bool remove_queue();
 
+        public:
+
             virtual bool listen_on_queue();
+
+            virtual void submit_message( message_ptr_t a_message );
 
             virtual void send_reply( reply_ptr_t a_reply ) const;
 
@@ -108,21 +118,21 @@ namespace dripline
             virtual void do_cancellation( int a_code );
     };
 
-    inline rr_pkg_ptr service::send( request_ptr_t a_request ) const
+    inline sent_msg_pkg_ptr service::send( request_ptr_t a_request ) const
     {
-        a_request->set_sender_service_name( f_name );
+        a_request->sender_service_name() = f_name;
         return core::send( a_request );
     }
 
-    inline bool service::send( reply_ptr_t a_reply ) const
+    inline sent_msg_pkg_ptr service::send( reply_ptr_t a_reply ) const
     {
-        a_reply->set_sender_service_name( f_name );
+        a_reply->sender_service_name() = f_name ;
         return core::send( a_reply );
     }
 
-    inline bool service::send( alert_ptr_t a_alert ) const
+    inline sent_msg_pkg_ptr service::send( alert_ptr_t a_alert ) const
     {
-        a_alert->set_sender_service_name( f_name );
+        a_alert->sender_service_name() = f_name;
         return core::send( a_alert );
     }
 
