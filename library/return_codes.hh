@@ -120,23 +120,19 @@ namespace dripline
 #undef RC_LIST
 #define RC_LIST NEW_RC_LIST( message_error_dripline_deprecated )
 
-    DEFINE_DL_RET_CODE( database_error, 400 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( database_error )
-
-    DEFINE_DL_RET_CODE( client_error, 500 );
+    DEFINE_DL_RET_CODE( client_error, 400 );
 #undef RC_LIST
 #define RC_LIST NEW_RC_LIST( client_error )
-    DEFINE_DL_RET_CODE( client_error_invalid_request, 501 );
+    DEFINE_DL_RET_CODE( client_error_invalid_request, 401 );
 #undef RC_LIST
 #define RC_LIST NEW_RC_LIST( client_error_invalid_request )
-    DEFINE_DL_RET_CODE( client_error_handling_reply, 502 );
+    DEFINE_DL_RET_CODE( client_error_handling_reply, 402 );
 #undef RC_LIST
 #define RC_LIST NEW_RC_LIST( client_error_handling_reply )
-    DEFINE_DL_RET_CODE( client_error_unable_to_send, 503 );
+    DEFINE_DL_RET_CODE( client_error_unable_to_send, 403 );
 #undef RC_LIST
 #define RC_LIST NEW_RC_LIST( client_error_unable_to_send )
-    DEFINE_DL_RET_CODE( client_error_timeout, 504 );
+    DEFINE_DL_RET_CODE( client_error_timeout, 404 );
 #undef RC_LIST
 #define RC_LIST NEW_RC_LIST( client_error_timeout )
 
