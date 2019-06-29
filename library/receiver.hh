@@ -32,15 +32,24 @@ namespace dripline
         std::mutex f_mutex;
         std::condition_variable f_conv;
         std::atomic< bool > f_processing;
+        incoming_message_pack();
+        incoming_message_pack( const incoming_message_pack& ) = delete;
+        incoming_message_pack( incoming_message_pack&& a_orig );
     };
     typedef std::map< std::string, incoming_message_pack > incoming_message_map;
 
 
+    // contains mechanisms for receiving messages synchronously
     class DRIPLINE_API receiver
     {
         public:
             receiver();
+            receiver( const receiver& a_orig ) = delete;
+            receiver( receiver&& a_orig );
             virtual ~receiver();
+
+            receiver& operator=( const receiver& a_orig ) = delete;
+            receiver& operator=( receiver&& a_orig );
 
         public:
             void handle_message_chunk( amqp_envelope_ptr a_envelope );
@@ -71,7 +80,12 @@ namespace dripline
     {
         public:
             concurrent_receiver();
+            concurrent_receiver( const concurrent_receiver& ) = delete;
+            concurrent_receiver( concurrent_receiver&& a_orig );
             virtual ~concurrent_receiver();
+
+            concurrent_receiver& operator=( const concurrent_receiver& ) = delete;
+            concurrent_receiver& operator=( concurrent_receiver&& a_orig );
 
         public:
             virtual void process_message( message_ptr_t a_message );
@@ -83,6 +97,7 @@ namespace dripline
             virtual void submit_message( message_ptr_t a_message ) = 0;
 
             mv_referrable( scarab::concurrent_queue< message_ptr_t >, message_queue );
+            mv_referrable( std::thread, receiver_thread );
     };
 
 } /* namespace dripline */

@@ -91,12 +91,12 @@ namespace dripline
 
     bool service::add_async_child( endpoint_ptr_t a_endpoint_ptr )
     {
-        listener_ptr_t t_listener_ptr = std::dynamic_pointer_cast< listener >( a_endpoint_ptr );
-        if( ! t_listener_ptr )
+        lr_ptr_t t_listener_receiver_ptr = std::dynamic_pointer_cast< listener_receiver >( a_endpoint_ptr );
+        if( ! t_listener_receiver_ptr )
         {
-            t_listener_ptr.reset( new endpoint_listener_receiver( a_endpoint_ptr ) );
+            t_listener_receiver_ptr.reset( new endpoint_listener_receiver( a_endpoint_ptr ) );
         }
-        auto t_inserted = f_async_children.insert( std::make_pair( a_endpoint_ptr->name(), t_listener_ptr ) );
+        auto t_inserted = f_async_children.insert( std::make_pair( a_endpoint_ptr->name(), t_listener_receiver_ptr ) );
         if( t_inserted.second )
         {
             try
@@ -171,7 +171,7 @@ namespace dripline
                     t_child_it != f_async_children.end();
                     ++t_child_it )
             {
-                t_child_it->second->receiver_thread() = std::thread( &concurrent_receiver::execute, static_cast< endpoint_listener_receiver* >(t_child_it->second.get()) );
+                t_child_it->second->receiver_thread() = std::thread( &concurrent_receiver::execute, static_cast< listener_receiver* >(t_child_it->second.get()) );
                 t_child_it->second->listener_thread() = std::thread( &listener::listen_on_queue, t_child_it->second.get() );
             }
 

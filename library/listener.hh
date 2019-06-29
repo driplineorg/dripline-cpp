@@ -39,10 +39,30 @@ namespace dripline
             mv_accessible( unsigned, listen_timeout_ms );
 
             mv_referrable( std::thread, listener_thread );
-            mv_referrable( std::thread, receiver_thread );
     };
 
-    class DRIPLINE_API endpoint_listener_receiver : public listener, public concurrent_receiver
+    // brings together listener and concurrent_reciever
+    class DRIPLINE_API listener_receiver : public listener, public concurrent_receiver
+    {
+        public:
+            listener_receiver() : listener(), concurrent_receiver() {}
+            listener_receiver( const listener_receiver& ) = delete;
+            listener_receiver( listener_receiver&& a_orig ) :
+                listener( std::move(a_orig) ),
+                concurrent_receiver( std::move(a_orig) )
+            {}
+
+            listener_receiver& operator=( const listener_receiver& ) = delete;
+            listener_receiver& operator=( listener_receiver&& a_orig )
+            {
+                listener::operator=( std::move(a_orig) );
+                concurrent_receiver::operator=( std::move(a_orig) );
+                return *this;
+            }
+    };
+
+    // decorator class for a plain endpoint
+    class DRIPLINE_API endpoint_listener_receiver : public listener_receiver
     {
         public:
             endpoint_listener_receiver( endpoint_ptr_t a_endpoint_ptr );

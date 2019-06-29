@@ -25,8 +25,7 @@ namespace dripline
             f_channel(),
             f_consumer_tag(),
             f_listen_timeout_ms( 1000 ),
-            f_listener_thread(),
-            f_receiver_thread()
+            f_listener_thread()
     {}
 
     listener::listener( listener&& a_orig ) :
@@ -34,8 +33,7 @@ namespace dripline
             f_channel( std::move(a_orig.f_channel) ),
             f_consumer_tag( std::move(a_orig.f_consumer_tag) ),
             f_listen_timeout_ms( std::move(a_orig.f_listen_timeout_ms) ),
-            f_listener_thread( std::move(a_orig.f_listener_thread) ),
-            f_receiver_thread( std::move(a_orig.f_receiver_thread) )
+            f_listener_thread( std::move(a_orig.f_listener_thread) )
     {}
 
     listener::~listener()
@@ -48,17 +46,16 @@ namespace dripline
         f_consumer_tag = std::move(a_orig.f_consumer_tag);
         f_consumer_tag = std::move(a_orig.f_listen_timeout_ms);
         f_listener_thread = std::move(a_orig.f_listener_thread);
-        f_receiver_thread = std::move(a_orig.f_receiver_thread);
         return *this;
     }
 
     endpoint_listener_receiver::endpoint_listener_receiver( endpoint_ptr_t a_endpoint_ptr ) :
-            listener(),
+            listener_receiver(),
             f_endpoint( a_endpoint_ptr )
     {}
 
     endpoint_listener_receiver::endpoint_listener_receiver( endpoint_listener_receiver&& a_orig ) :
-            listener( std::move(a_orig) ),
+            listener_receiver( std::move(a_orig) ),
             f_endpoint( std::move(a_orig.f_endpoint) )
     {}
 
@@ -67,7 +64,7 @@ namespace dripline
 
     endpoint_listener_receiver& endpoint_listener_receiver::operator=( endpoint_listener_receiver&& a_orig )
     {
-        listener::operator=( std::move(a_orig) );
+        listener_receiver::operator=( std::move(a_orig) );
         f_endpoint = std::move(a_orig.f_endpoint);
         return *this;
     }

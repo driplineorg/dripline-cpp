@@ -114,7 +114,7 @@ namespace dripline
             typedef std::map< std::string, endpoint_ptr_t > sync_map_t;
             mv_referrable( sync_map_t, sync_children );
 
-            typedef std::map< std::string, listener_ptr_t > async_map_t;
+            typedef std::map< std::string, lr_ptr_t > async_map_t;
             mv_referrable( async_map_t, async_children );
 
             mv_referrable( std::string, broadcast_key );
