@@ -15,7 +15,7 @@ set( dripline_HEADERS
     dripline_error.hh
     dripline_version.hh
     endpoint.hh
-    heartbeat.hh
+    heartbeater.hh
     hub.hh
     listener.hh
     message.hh
@@ -36,7 +36,7 @@ set( dripline_SOURCES
     dripline_error.cc
     dripline_version.cc
     endpoint.cc
-    heartbeat.cc
+    heartbeater.cc
     hub.cc
     listener.cc
     message.cc

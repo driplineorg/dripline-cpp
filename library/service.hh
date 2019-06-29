@@ -8,12 +8,14 @@
 #ifndef DRIPLINE_SERVICE_HH_
 #define DRIPLINE_SERVICE_HH_
 
+#include "core.hh"
 #include "endpoint.hh"
+#include "heartbeater.hh"
 #include "listener.hh"
 #include "receiver.hh"
 
-#include "core.hh"
 #include "dripline_error.hh"
+#include "uuid.hh"
 
 #include <map>
 #include <memory>
@@ -22,12 +24,11 @@
 
 namespace dripline
 {
-    class heartbeat;
-
     class DRIPLINE_API service :
             public core,
             public endpoint,
             public listener,
+            public heartbeater,
             public concurrent_receiver,
             public std::enable_shared_from_this< service >
     {
@@ -93,18 +94,11 @@ namespace dripline
 
             bool bind_keys();
 
-            bool start_heartbeat();
-
             bool start_consuming();
 
             bool stop_consuming();
 
-            bool stop_heartbeat();
-
             bool remove_queue();
-
-            std::thread f_heartbeat_thread;
-            std::unique_ptr< heartbeat > f_heartbeat_ptr;
 
         public:
 
@@ -115,8 +109,6 @@ namespace dripline
             virtual void send_reply( reply_ptr_t a_reply ) const;
 
             mv_accessible( uuid_t, id );
-
-            mv_accessible( unsigned, heartbeat_interval_s );
 
         public:
             typedef std::map< std::string, endpoint_ptr_t > sync_map_t;

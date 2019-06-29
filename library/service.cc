@@ -9,6 +9,8 @@
 
 #include "service.hh"
 
+#include "dripline_error.hh"
+
 #include "authentication.hh"
 #include "logger.hh"
 
@@ -32,13 +34,11 @@ namespace dripline
             //   otherwise "dlcpp_service"
             endpoint( a_queue_name.empty() ? a_config.get_value( "queue", "dlcpp_service" ) : a_queue_name ),
             listener(),
+            heartbeater(),
             concurrent_receiver(),
             std::enable_shared_from_this< service >(),
-            f_heartbeat_thread(),
-            f_heartbeat_ptr(),
-            f_id( generate_random_uuid() ),
-            f_heartbeat_interval_s( 60 ),
             f_status( status::nothing ),
+            f_id( generate_random_uuid() ),
             f_sync_children(),
             f_async_children(),
             f_broadcast_key( "broadcast" )
@@ -46,6 +46,7 @@ namespace dripline
         // get values from the config
         f_listen_timeout_ms = a_config.get_value( "listen-timeout-ms", f_listen_timeout_ms );
         f_single_message_wait_ms = a_config.get_value( "message-wait-ms", f_single_message_wait_ms );
+        f_heartbeat_interval_s = a_config.get_value( "heartbeat-interval-ms", f_heartbeat_interval_s );
 
         // override if specified as a separate argument
         if( ! a_queue_name.empty() ) f_name = a_queue_name;
@@ -55,13 +56,11 @@ namespace dripline
             core( a_make_connection, a_config ),
             endpoint( "" ),
             listener(),
+            heartbeater(),
             concurrent_receiver(),
             std::enable_shared_from_this< service >(),
-            f_heartbeat_thread(),
-            f_heartbeat_ptr(),
-            f_id( generate_random_uuid() ),
-            f_heartbeat_interval_s( 60 ),
             f_status( status::nothing ),
+            f_id( generate_random_uuid() ),
             f_sync_children(),
             f_async_children(),
             f_broadcast_key()
@@ -127,6 +126,7 @@ namespace dripline
 
         // fill in the link to this in endpoint because we couldn't do it in the constructor
         endpoint::f_service = this->shared_from_this();
+        heartbeater::f_service = this->shared_from_this();
 
         LINFO( dlog, "Connecting to <" << f_address << ":" << f_port << ">" );
 
@@ -161,27 +161,49 @@ namespace dripline
 
         f_status = status::listening;
 
-        f_receiver_thread = std::thread( &concurrent_receiver::execute, this );
-
-        for( async_map_t::iterator t_child_it = f_async_children.begin();
-                t_child_it != f_async_children.end();
-                ++t_child_it )
+        try
         {
-            t_child_it->second->receiver_thread() = std::thread( &concurrent_receiver::execute, static_cast< endpoint_listener_receiver* >(t_child_it->second.get()) );
-            t_child_it->second->listener_thread() = std::thread( &listener::listen_on_queue, t_child_it->second.get() );
+            f_heartbeat_thread = std::thread( &heartbeater::execute, this, f_name, f_id, f_heartbeat_interval_s, f_heartbeat_routing_key );
+
+            f_receiver_thread = std::thread( &concurrent_receiver::execute, this );
+
+            for( async_map_t::iterator t_child_it = f_async_children.begin();
+                    t_child_it != f_async_children.end();
+                    ++t_child_it )
+            {
+                t_child_it->second->receiver_thread() = std::thread( &concurrent_receiver::execute, static_cast< endpoint_listener_receiver* >(t_child_it->second.get()) );
+                t_child_it->second->listener_thread() = std::thread( &listener::listen_on_queue, t_child_it->second.get() );
+            }
+
+            listen_on_queue();
+
+            for( async_map_t::iterator t_child_it = f_async_children.begin();
+                    t_child_it != f_async_children.end();
+                    ++t_child_it )
+            {
+                t_child_it->second->listener_thread().join();
+                t_child_it->second->receiver_thread().join();
+            }
+
+            f_receiver_thread.join();
+
+            f_heartbeat_thread.join();
         }
-
-        listen_on_queue();
-
-        for( async_map_t::iterator t_child_it = f_async_children.begin();
-                t_child_it != f_async_children.end();
-                ++t_child_it )
+        catch( std::system_error& e )
         {
-            t_child_it->second->listener_thread().join();
-            t_child_it->second->receiver_thread().join();
+            LERROR( dlog, "Could not start the a thread due to a system error: " << e.what() );
+            return false;
         }
-
-        f_receiver_thread.join();
+        catch( dripline_error& e )
+        {
+            LERROR( dlog, "Dripline error while running service: " << e.what() );
+            return false;
+        }
+        catch( std::exception& e )
+        {
+            LERROR( dlog, "Error while running service: " << e.what() );
+            return false;
+        }
 
         return true;
     }
@@ -295,20 +317,6 @@ namespace dripline
         }
     }
 
-    bool service::start_heartbeat()
-    {
-        try
-        {
-            f_heartbeat_ptr.reset( new heartbeat(this) );
-            f_heartbeat_thread = std::thread( &heartbeat::execute, *f_heartbeat_ptr, f_name, f_id, f_heartbeat_interval_s, #routing key for heartbeat# );
-        }
-        catch( std::system_error& e )
-        {
-            LERROR( dlog, "Could not start the heartbeat thread: " << e.what() );
-            return false;
-        }
-    }
-
     bool service::start_consuming()
     {
 #ifdef DL_OFFLINE
@@ -393,11 +401,6 @@ namespace dripline
             LERROR( dlog, "Unknown exception caught" );
             return false;
         }
-    }
-
-    bool service::stop_heartbeat()
-    {
-
     }
 
     bool service::remove_queue()

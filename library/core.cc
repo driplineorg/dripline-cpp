@@ -48,6 +48,7 @@ namespace dripline
             f_password( "guest" ),
             f_requests_exchange( "requests" ),
             f_alerts_exchange( "alerts" ),
+            f_heartbeat_routing_key( "heartbeat" ),
             f_max_payload_size( DL_MAX_PAYLOAD_SIZE ),
             f_make_connection( a_make_connection )
     {
@@ -92,6 +93,7 @@ namespace dripline
             f_port = a_config.get_value( "broker-port", f_port );
             f_requests_exchange = a_config.get_value( "requests-exchange", f_requests_exchange );
             f_alerts_exchange = a_config.get_value( "alerts-exchange", f_alerts_exchange );
+            f_heartbeat_routing_key = a_config.get_value( "heartbeat-routing-key", f_heartbeat_routing_key );
             f_max_payload_size = a_config.get_value( "max-payload-size", f_max_payload_size );
             f_make_connection = a_config.get_value( "make-connection", f_make_connection );
         }
@@ -115,6 +117,7 @@ namespace dripline
             f_password( a_orig.f_password ),
             f_requests_exchange( a_orig.f_requests_exchange ),
             f_alerts_exchange( a_orig.f_alerts_exchange ),
+            f_heartbeat_routing_key( a_orig.f_heartbeat_routing_key ),
             f_max_payload_size( a_orig.f_max_payload_size ),
             f_make_connection( a_orig.f_make_connection )
     {}
@@ -126,6 +129,7 @@ namespace dripline
             f_password( std::move(a_orig.f_password) ),
             f_requests_exchange( std::move(a_orig.f_requests_exchange) ),
             f_alerts_exchange( std::move(a_orig.f_alerts_exchange) ),
+            f_heartbeat_routing_key( std::move(a_orig.f_heartbeat_routing_key) ),
             f_max_payload_size( a_orig.f_max_payload_size ),
             f_make_connection( std::move(a_orig.f_make_connection) )
     {
@@ -144,6 +148,7 @@ namespace dripline
         f_password = a_orig.f_password;
         f_requests_exchange = a_orig.f_requests_exchange;
         f_alerts_exchange = a_orig.f_alerts_exchange;
+        f_heartbeat_routing_key = a_orig.f_heartbeat_routing_key;
         f_max_payload_size = a_orig.f_max_payload_size;
         f_make_connection = a_orig.f_make_connection;
         return *this;
@@ -158,6 +163,7 @@ namespace dripline
         f_password = std::move( a_orig.f_password );
         f_requests_exchange = std::move( a_orig.f_requests_exchange );
         f_alerts_exchange = std::move( a_orig.f_alerts_exchange );
+        f_heartbeat_routing_key = std::move( a_orig.f_heartbeat_routing_key );
         f_max_payload_size = a_orig.f_max_payload_size;
         a_orig.f_max_payload_size = DL_MAX_PAYLOAD_SIZE;
         f_make_connection = std::move( a_orig.f_make_connection );
