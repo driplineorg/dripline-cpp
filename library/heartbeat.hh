@@ -5,8 +5,8 @@
  *      Author: N.S. Oblath
  */
 
-#ifndef LIBRARY_HEARTBEAT_HH_
-#define LIBRARY_HEARTBEAT_HH_
+#ifndef DRIPLINE_HEARTBEATER_HH_
+#define DRIPLINE_HEARTBEATER_HH_
 
 #include "service.hh"
 
@@ -29,4 +29,4 @@ namespace dripline
 
 } /* namespace dripline */
 
-#endif /* LIBRARY_HEARTBEAT_HH_ */
+#endif /* DRIPLINE_HEARTBEATER_HH_ */

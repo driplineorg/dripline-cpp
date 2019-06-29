@@ -5,6 +5,8 @@
  *      Author: N.S. Oblath
  */
 
+#define DRIPLINE_API_EXPORTS
+
 #include "endpoint.hh"
 
 #include "dripline_error.hh"
@@ -17,17 +19,49 @@ LOGGER( dlog, "endpoint" );
 namespace dripline
 {
 
-    endpoint::endpoint( const std::string& a_name, service& a_service ) :
+    endpoint::endpoint( const std::string& a_name ) :
             f_name( a_name ),
-            f_service( a_service )
-    {
-    }
+            f_service(),
+            f_lockout_tag(),
+            f_lockout_key( generate_nil_uuid() )
+    {}
+
+    endpoint::endpoint( const endpoint& a_orig ) :
+            f_name( a_orig.f_name ),
+            f_service( a_orig.f_service ),
+            f_lockout_tag( a_orig.f_lockout_tag ),
+            f_lockout_key( a_orig.f_lockout_key )
+    {}
+
+    endpoint::endpoint( endpoint&& a_orig ) :
+            f_name( std::move(a_orig.f_name) ),
+            f_service( std::move(a_orig.f_service) ),
+            f_lockout_tag( std::move(a_orig.f_lockout_tag) ),
+            f_lockout_key( std::move(a_orig.f_lockout_key) )
+    {}
 
     endpoint::~endpoint()
+    {}
+
+    endpoint& endpoint::operator=( const endpoint& a_orig )
     {
+        f_name = a_orig.f_name;
+        f_service = a_orig.f_service;
+        f_lockout_tag = a_orig.f_lockout_tag;
+        f_lockout_key = a_orig.f_lockout_key;
+        return *this;
     }
 
-    void endpoint::submit_request_message( const request_ptr_t a_request_ptr)
+    endpoint& endpoint::operator=( endpoint&& a_orig )
+    {
+        f_name = std::move(a_orig.f_name);
+        f_service = std::move(a_orig.f_service);
+        f_lockout_tag = std::move(a_orig.f_lockout_tag);
+        f_lockout_key = std::move(a_orig.f_lockout_key);
+        return *this;
+    }
+
+    reply_ptr_t endpoint::submit_request_message( const request_ptr_t a_request_ptr)
     {
         return this->on_request_message( a_request_ptr );;
     }
@@ -42,13 +76,31 @@ namespace dripline
         return this->on_reply_message( a_reply_ptr );
     }
 
-    void endpoint::on_request_message( const request_ptr_t a_request )
+    reply_ptr_t endpoint::on_request_message( const request_ptr_t a_request )
     {
+        if( ! a_request->get_is_valid() )
+        {
+            LWARN( dlog, "Request message is not valid" );
+            std::string t_message( "Request message was not valid" );
+            // check in the payload for error information
+            if( a_request->payload().is_node() )
+            {
+                const scarab::param_node& t_payload = a_request->payload().as_node();
+                if( t_payload.has("error") ) t_message += "; " + t_payload["error"]().as_string();
+            }
+            reply_ptr_t t_reply = a_request->reply( dl_message_error_decoding_fail(), "Request message was not valid" );
+            t_reply->payload() = a_request->payload();
+            send_reply( t_reply );
+            return t_reply;
+        }
+
         // the lockout key must be valid
         if( ! a_request->get_lockout_key_valid() )
         {
             LWARN( dlog, "Message had an invalid lockout key" );
-            send_reply( a_request->reply( dl_message_error_invalid_key(), "Lockout key could not be parsed" ) );
+            reply_ptr_t t_reply = a_request->reply( dl_message_error_invalid_key(), "Lockout key could not be parsed" );
+            send_reply( t_reply );
+            return t_reply;
         }
 
         reply_ptr_t t_reply;
@@ -95,17 +147,43 @@ namespace dripline
             send_reply( t_reply );
         }
 
-        return;
+        return t_reply;
+    }
+
+    void endpoint::sort_message( message_ptr_t a_message )
+    {
+        if( a_message->is_request() )
+        {
+            on_request_message( std::static_pointer_cast< msg_request >( a_message ) );
+        }
+        else if( a_message->is_alert() )
+        {
+            on_alert_message( std::static_pointer_cast< msg_alert >( a_message ) );
+        }
+        else if( a_message->is_reply() )
+        {
+            on_reply_message( std::static_pointer_cast< msg_reply >( a_message ) );
+        }
+        else
+        {
+            throw dripline_error() << "Unknown message type";
+        }
     }
 
     void endpoint::send_reply( reply_ptr_t a_reply ) const
     {
+        if( ! f_service )
+        {
+            LWARN( dlog, "Cannot send reply because the service pointer is not set" );
+            return;
+        }
+
         LDEBUG( dlog, "Sending reply message to <" << a_reply->routing_key() << ">:\n" <<
                  "    Return code: " << a_reply->get_return_code() << '\n' <<
-                 "    Return message: " << a_reply->return_msg() <<
+                 "    Return message: " << a_reply->return_msg() << '\n' <<
                  "    Payload:\n" << a_reply->payload() );
 
-        if( ! f_service.send( a_reply ) )
+        if( ! f_service->send( a_reply ) )
         {
             LWARN( dlog, "Something went wrong while sending the reply" );
         }
@@ -126,7 +204,7 @@ namespace dripline
     {
         LDEBUG( dlog, "Run operation request received" );
 
-        if( ! f_service.authenticate( a_request->lockout_key() ) )
+        if( ! authenticate( a_request->lockout_key() ) )
         {
             std::stringstream t_conv;
             t_conv << a_request->lockout_key();
@@ -151,7 +229,7 @@ namespace dripline
         if( t_query_type == "is-locked" )
         {
             a_request->parsed_specifier().pop_front();
-            return f_service.handle_is_locked_request( a_request );
+            return handle_is_locked_request( a_request );
         }
 
         return do_get_request( a_request );
@@ -161,7 +239,7 @@ namespace dripline
     {
         LDEBUG( dlog, "Set request received" );
 
-        if( ! f_service.authenticate( a_request->lockout_key() ) )
+        if( ! authenticate( a_request->lockout_key() ) )
         {
             std::stringstream t_conv;
             t_conv << a_request->lockout_key();
@@ -186,7 +264,7 @@ namespace dripline
         //LWARN( mtlog, "uuid string: " << a_request->get_payload().get_value( "key", "") << ", uuid: " << uuid_from_string( a_request->get_payload().get_value( "key", "") ) );
         // this condition includes the exception for the unlock instruction that allows us to force the unlock regardless of the key.
         // disable_key() checks the lockout key if it's not forced, so it's okay that we bypass this call to authenticate() for the unlock instruction.
-        if( ! f_service.authenticate( a_request->lockout_key() ) && t_instruction != "unlock" && t_instruction != "ping" && t_instruction != "set_condition" )
+        if( ! authenticate( a_request->lockout_key() ) && t_instruction != "unlock" && t_instruction != "ping" && t_instruction != "set_condition" )
         {
             std::stringstream t_conv;
             t_conv << a_request->lockout_key();
@@ -198,12 +276,12 @@ namespace dripline
         if( t_instruction == "lock" )
         {
             a_request->parsed_specifier().pop_front();
-            return f_service.handle_lock_request( a_request );
+            return handle_lock_request( a_request );
         }
         else if( t_instruction == "unlock" )
         {
             a_request->parsed_specifier().pop_front();
-            return f_service.handle_unlock_request( a_request );
+            return handle_unlock_request( a_request );
         }
         else if( t_instruction == "ping" )
         {
@@ -213,25 +291,80 @@ namespace dripline
         else if( t_instruction == "set_condition" )
         {
             a_request->parsed_specifier().pop_front();
-            return f_service.handle_set_condition_request( a_request );
+            return handle_set_condition_request( a_request );
         }
 
         return do_cmd_request( a_request );
     }
 
-    bool endpoint::is_locked() const
+    uuid_t endpoint::enable_lockout( const scarab::param_node& a_tag, uuid_t a_key )
     {
-        return ! f_service.f_lockout_key.is_nil();
+        if( is_locked() ) return generate_nil_uuid();
+        if( a_key.is_nil() ) f_lockout_key = generate_random_uuid();
+        else f_lockout_key = a_key;
+        f_lockout_tag = a_tag;
+        return f_lockout_key;
     }
 
-    const scarab::param_node& endpoint::get_lockout_tag() const
+    bool endpoint::disable_lockout( const uuid_t& a_key, bool a_force )
     {
-        return f_service.f_lockout_tag;
+        if( ! is_locked() ) return true;
+        if( ! a_force && a_key != f_lockout_key ) return false;
+        f_lockout_key = generate_nil_uuid();
+        f_lockout_tag.clear();
+        return true;
     }
 
-    bool endpoint::check_key( const uuid_t& a_key ) const
+    bool endpoint::authenticate( const uuid_t& a_key ) const
     {
-        return f_service.f_lockout_key == a_key;
+        LDEBUG( dlog, "Authenticating with key <" << a_key << ">" );
+        if( is_locked() ) return check_key( a_key );
+        return true;
+    }
+
+    reply_ptr_t endpoint::handle_lock_request( const request_ptr_t a_request )
+    {
+        uuid_t t_new_key = enable_lockout( a_request->get_sender_info(), a_request->lockout_key() );
+        if( t_new_key.is_nil() )
+        {
+            return a_request->reply( dl_device_error(), "Unable to lock server" );;
+        }
+
+        scarab::param_ptr_t t_payload_ptr( new scarab::param_node() );
+        scarab::param_node& t_payload_node = t_payload_ptr->as_node();
+        t_payload_node.add( "key", string_from_uuid( t_new_key ) );
+        return a_request->reply( dl_success(), "Server is now locked", std::move(t_payload_ptr) );
+    }
+
+    reply_ptr_t endpoint::handle_unlock_request( const request_ptr_t a_request )
+    {
+        if( ! is_locked() )
+        {
+            return a_request->reply( dl_warning_no_action_taken(), "Already unlocked" );
+        }
+
+        bool t_force = a_request->payload().get_value( "force", false );
+
+        if( disable_lockout( a_request->lockout_key(), t_force ) )
+        {
+            return a_request->reply( dl_success(), "Server unlocked" );
+        }
+        return a_request->reply( dl_device_error(), "Failed to unlock server" );;
+    }
+
+    reply_ptr_t endpoint::handle_set_condition_request( const request_ptr_t a_request )
+    {
+        return this->__do_handle_set_condition_request( a_request );
+    }
+
+    reply_ptr_t endpoint::handle_is_locked_request( const request_ptr_t a_request )
+    {
+        bool t_is_locked = is_locked();
+        scarab::param_ptr_t t_reply_payload( new scarab::param_node() );
+        scarab::param_node& t_reply_node = t_reply_payload->as_node();
+        t_reply_node.add( "is_locked", t_is_locked );
+        if( t_is_locked ) t_reply_node.add( "tag", f_lockout_tag );
+        return a_request->reply( dl_success(), "Checked lock status", std::move(t_reply_payload) );
     }
 
     reply_ptr_t endpoint::handle_ping_request( const request_ptr_t a_request )

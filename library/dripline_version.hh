@@ -19,14 +19,9 @@
 #include <string>
 
 
-
-//#define set_version( version_namespace, version_class ) \
-//    static dripline::version_setter s_vsetter_##version_namespace##_##version_class( new version_namespace::version_class() );
-
-
 namespace dripline
 {
-    
+
     class DRIPLINE_API version : public scarab::version_semantic
     {
         public:
@@ -50,7 +45,7 @@ namespace dripline
                 f_imp = a_imp;
                 return;
             }
-    
+
         public:
             virtual unsigned major_version() const
             {

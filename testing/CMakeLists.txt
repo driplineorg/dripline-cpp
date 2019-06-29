@@ -9,8 +9,10 @@ set( testing_HEADERS
 
 set( testing_SOURCES
     test_agent.cc
+    test_core.cc
     test_endpoint.cc
     test_lockout.cc
+    test_messages.cc
     test_return_codes.cc
     test_specifier.cc
     use_catch.cc
@@ -20,6 +22,18 @@ set( lib_dependencies
     Dripline
     Catch
 )
+
+if( Dripline_BUILD_EXAMPLES )
+    set( testing_SOURCES
+        ${testing_SOURCES}
+        test_examples_oscillator.cc
+    )
+
+    set( lib_dependencies
+        ${lib_dependencies}
+        DriplineExamples
+    )
+endif()
 
 # Interface library was recommended for Catch:
 # https://stackoverflow.com/questions/34896891/catch-lib-unit-testing-and-ctest-cmake-integration/34900012#34900012

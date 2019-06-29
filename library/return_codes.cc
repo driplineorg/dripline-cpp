@@ -5,6 +5,8 @@
  *      Author: N.S. Oblath
  */
 
+#define DRIPLINE_API_EXPORTS
+
 #include "return_codes.hh"
 
 namespace dripline
@@ -32,6 +34,7 @@ namespace dripline
     IMPL_DL_RET_CODE( message_error_access_denied, 307 );
     IMPL_DL_RET_CODE( message_error_invalid_key, 308 );
     IMPL_DL_RET_CODE( message_error_dripline_deprecated, 309 );
+    IMPL_DL_RET_CODE( message_error_invalid_specifier, 310 );
 
     IMPL_DL_RET_CODE( database_error, 400 );
 

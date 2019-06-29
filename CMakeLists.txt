@@ -6,7 +6,7 @@ cmake_minimum_required (VERSION 3.1)
 #########
 
 cmake_policy( SET CMP0048 NEW ) # version in project()
-project( Dripline VERSION 1.7.0 )
+project( Dripline VERSION 1.10.0 )
 
 list( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/scarab/cmake )
 
@@ -20,6 +20,9 @@ pbuilder_prepare_project()
 ####################
 
 option( Dripline_BUILD_EXAMPLES "Flag to enable building the examples" FALSE )
+option( Dripline_OFFLINE "Flag to enable offline use (primarily for testing)" FALSE )
+
+set( Dripline_MAX_PAYLOAD_SIZE "10000" CACHE STRING "Maximum payload size (bytes)" )
 
 # always use C++11
 set_option( USE_CPP11 TRUE )
@@ -52,6 +55,14 @@ set( Scarab_BUILD_CODEC_MSGPACK TRUE CACHE BOOL "" FORCE )
 ##################
 # Build Dripline #
 ##################
+
+if( Dripline_OFFLINE )
+    add_definitions( -DDL_OFFLINE )
+else()
+    remove_definitions( -DDL_OFFLINE )
+endif()
+
+add_definitions( -DDL_MAX_PAYLOAD_SIZE=${Dripline_MAX_PAYLOAD_SIZE} )
 
 include_directories( BEFORE
     ${PROJECT_SOURCE_DIR}/library

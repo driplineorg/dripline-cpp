@@ -8,6 +8,7 @@ set( dripline_HEADERS
     agent.hh
     agent_config.hh
     amqp.hh
+    amqp_config.hh
     core.hh
     dripline_api.hh
     dripline_constants.hh
@@ -16,7 +17,9 @@ set( dripline_HEADERS
     endpoint.hh
     heartbeat.hh
     hub.hh
+    listener.hh
     message.hh
+    receiver.hh
     relayer.hh
     return_codes.hh
     service.hh
@@ -27,6 +30,7 @@ set( dripline_HEADERS
 set( dripline_SOURCES
     agent.cc
     agent_config.cc
+    amqp_config.cc
     core.cc
     dripline_constants.cc
     dripline_error.cc
@@ -34,7 +38,9 @@ set( dripline_SOURCES
     endpoint.cc
     heartbeat.cc
     hub.cc
+    listener.cc
     message.cc
+    receiver.cc
     relayer.cc
     return_codes.cc
     service.cc

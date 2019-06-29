@@ -5,39 +5,79 @@
  *      Author: N.S. Oblath
  */
 
-#include "agent_config.hh"
-#include "dripline_constants.hh"
-#include "dripline_version.hh"
-#include "run_simple_service.hh"
+#define DRIPLINE_EXAMPLES_API_EXPORTS
 
-#include "application.hh"
+#include "simple_service.hh"
+
+#include "dripline_error.hh"
+
 #include "logger.hh"
+#include "param.hh"
+#include "signal_handler.hh"
 
-using namespace dripline;
+#include <chrono>
+#include <thread>
 
-LOGGER( dlog, "simple_service" );
+LOGGER( dlog, "simple_service" )
 
-int main( int argc, char** argv )
+namespace dripline
 {
-    scarab::main_app the_main;
 
-    the_main.set_version( new dripline::version() );
+    simple_service::simple_service( const scarab::param_node& a_config ) :
+            service( a_config, "simple" ),
+            f_return( RETURN_SUCCESS )
+    {
+    }
 
-    the_main.default_config() = agent_config();
+    simple_service::~simple_service()
+    {
+    }
 
-    // options
-    //std::string t_broker;
-    //the_main.add_option( "-b,--broker", , "RabbitMQ broker" );
+    void simple_service::execute()
+    {
+        scarab::signal_handler t_sig_hand;
+        t_sig_hand.add_cancelable( this );
 
-    run_simple_service the_service;
+        try
+        {
+            if( ! start() ) throw dripline_error() << "Unable to start service";
 
-    auto t_service_callback = [&](){
-        the_service.execute();
-    };
+            if( ! listen() ) throw dripline_error() << "Unable to start listening";
 
-    the_main.callback( t_service_callback );
+            if( ! stop() ) throw dripline_error() << "Unable to stop service";
+        }
+        catch( std::exception& e )
+        {
+            LERROR( dlog, "Exception caught: " << e.what() );
+            f_return = RETURN_ERROR;
+        }
 
-    CLI11_PARSE( the_main, argc, argv );
+        return;
+    }
 
-    return the_service.get_return();
-}
+    reply_ptr_t simple_service::do_cmd_request( const request_ptr_t a_request )
+    {
+        if( a_request->parsed_specifier().empty() )
+        {
+            return a_request->reply( dl_message_error_invalid_specifier(), "No specifier provided" );
+        }
+
+        std::string t_specifier = a_request->parsed_specifier().front();
+        a_request->parsed_specifier().pop_front();
+
+        if( t_specifier == "echo" )
+        {
+            reply_ptr_t t_reply = a_request->reply( dl_success(), "Echoed payload" );
+            LDEBUG( dlog, "Echoing payload: \n" << a_request->payload() );
+            t_reply->set_payload( a_request->payload().clone() );
+            return t_reply;
+        }
+        else
+        {
+            return a_request->reply( dl_message_error_invalid_specifier(), "Unknown specifier: " + t_specifier );
+        }
+    }
+
+
+
+} /* namespace dripline */
