@@ -34,6 +34,9 @@ namespace dripline
     class DRIPLINE_API core
     {
         public:
+            static bool s_offline;
+
+        public:
             /// Parameters specified in a_config will override the default values.
             /// Parameters specified as individual parameters will override a_config.
             /// If the broker address is not specified, it will be requested from the authentication file.
@@ -67,6 +70,8 @@ namespace dripline
 
             mv_referrable( std::string, requests_exchange );
             mv_referrable( std::string, alerts_exchange );
+
+            mv_referrable( std::string, heartbeat_routing_key );
 
             mv_accessible( unsigned, max_payload_size );
 

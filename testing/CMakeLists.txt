@@ -11,6 +11,7 @@ set( testing_SOURCES
     test_agent.cc
     test_core.cc
     test_endpoint.cc
+    test_heartbeat.cc
     test_lockout.cc
     test_messages.cc
     test_return_codes.cc

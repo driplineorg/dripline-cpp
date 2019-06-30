@@ -16,17 +16,17 @@ LOGGER( dlog, "specifier" );
 namespace dripline
 {
 
-    routing_key_specifier::routing_key_specifier( const std::string& a_rk ) :
+    routing_key::routing_key( const std::string& a_rk ) :
             deque()
     {
-        add_next( a_rk );
+        if( ! a_rk.empty() ) add_next( a_rk );
     }
 
-    routing_key_specifier::~routing_key_specifier()
+    routing_key::~routing_key()
     {
     }
 
-    void routing_key_specifier::parse( const std::string& a_rk )
+    void routing_key::parse( const std::string& a_rk )
     {
         while( ! empty() ) pop_front();
 
@@ -34,7 +34,7 @@ namespace dripline
         return;
     }
 
-    std::string routing_key_specifier::to_string() const
+    std::string routing_key::to_string() const
     {
         std::string t_return;
         for( container_type::const_iterator t_it = this->begin(); t_it != this->end(); ++t_it )
@@ -45,7 +45,7 @@ namespace dripline
         return t_return;
     }
 
-    void routing_key_specifier::add_next( const std::string& a_addr )
+    void routing_key::add_next( const std::string& a_addr )
     {
         size_t t_div_pos = a_addr.find( f_node_separator );
         if( t_div_pos == a_addr.npos )

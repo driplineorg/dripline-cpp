@@ -40,6 +40,9 @@ namespace dripline
         }
 #endif
         add( "max-payload-size", DL_MAX_PAYLOAD_SIZE );
+        add( "listen-timeout-ms", 1000 );
+        add( "message-wait-ms", 1000 );
+        add( "heartbeat-interval-s", 60 );
     }
 
     amqp_config::~amqp_config()

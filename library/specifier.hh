@@ -18,14 +18,14 @@
 namespace dripline
 {
 
-    class DRIPLINE_API routing_key_specifier : public std::deque< std::string >
+    class DRIPLINE_API routing_key : public std::deque< std::string >
     {
         public:
             typedef std::deque< std::string > container_type;
 
         public:
-            routing_key_specifier( const std::string& a_rk = "" );
-            virtual ~routing_key_specifier();
+            routing_key( const std::string& a_rk = "" );
+            virtual ~routing_key();
 
             void parse( const std::string& a_rk );
             std::string to_string() const;

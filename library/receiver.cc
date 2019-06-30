@@ -19,15 +19,51 @@ LOGGER( dlog, "receiver" );
 
 namespace dripline
 {
+    incoming_message_pack::incoming_message_pack() :
+            f_messages(),
+            f_chunks_received(),
+            f_routing_key(),
+            f_thread(),
+            f_mutex(),
+            f_conv(),
+            f_processing( false )
+    {}
+
+    incoming_message_pack::incoming_message_pack( incoming_message_pack&& a_orig ) :
+            f_messages( std::move(a_orig.f_messages) ),
+            f_chunks_received( a_orig.f_chunks_received ),
+            f_routing_key( std::move(a_orig.f_routing_key) ),
+            f_thread( std::move(a_orig.f_thread) ),
+            f_mutex(),
+            f_conv(),
+            f_processing( a_orig.f_processing.load() )
+    {
+        a_orig.f_chunks_received = 0;
+        a_orig.f_processing.store( false );
+    }
+
 
     receiver::receiver() :
             f_incoming_messages(),
             f_single_message_wait_ms( 1000 )
+    {}
+
+    receiver::receiver( receiver&& a_orig ) :
+            f_incoming_messages( std::move(a_orig.f_incoming_messages) ),
+            f_single_message_wait_ms( a_orig.f_single_message_wait_ms )
     {
+        a_orig.f_single_message_wait_ms = 1000;
     }
 
     receiver::~receiver()
+    {}
+
+    receiver& receiver::operator=( receiver&& a_orig )
     {
+        f_incoming_messages = std::move(a_orig.f_incoming_messages);
+        f_single_message_wait_ms = a_orig.f_single_message_wait_ms;
+        a_orig.f_single_message_wait_ms = 1000;
+        return *this;
     }
 
     void receiver::handle_message_chunk( amqp_envelope_ptr a_envelope )
@@ -318,11 +354,23 @@ namespace dripline
             scarab::cancelable(),
             receiver(),
             f_message_queue()
-    {
-    }
+    {}
+
+    concurrent_receiver::concurrent_receiver( concurrent_receiver&& a_orig ) :
+            scarab::cancelable( std::move(a_orig) ),
+            receiver( std::move(a_orig) ),
+            f_message_queue()
+    {}
 
     concurrent_receiver::~concurrent_receiver()
+    {}
+
+    concurrent_receiver& concurrent_receiver::operator=( concurrent_receiver&& a_orig )
     {
+        scarab::cancelable::operator=( std::move(a_orig) );
+        receiver::operator=( std::move(a_orig) );
+        // nothing to do with message queue
+        return *this;
     }
 
     void concurrent_receiver::process_message( message_ptr_t a_message )

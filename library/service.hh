@@ -8,12 +8,14 @@
 #ifndef DRIPLINE_SERVICE_HH_
 #define DRIPLINE_SERVICE_HH_
 
+#include "core.hh"
 #include "endpoint.hh"
+#include "heartbeater.hh"
 #include "listener.hh"
 #include "receiver.hh"
 
-#include "core.hh"
 #include "dripline_error.hh"
+#include "uuid.hh"
 
 #include <map>
 #include <memory>
@@ -26,6 +28,7 @@ namespace dripline
             public core,
             public endpoint,
             public listener,
+            public heartbeater,
             public concurrent_receiver,
             public std::enable_shared_from_this< service >
     {
@@ -105,11 +108,13 @@ namespace dripline
 
             virtual void send_reply( reply_ptr_t a_reply ) const;
 
+            mv_accessible( uuid_t, id );
+
         public:
             typedef std::map< std::string, endpoint_ptr_t > sync_map_t;
             mv_referrable( sync_map_t, sync_children );
 
-            typedef std::map< std::string, listener_ptr_t > async_map_t;
+            typedef std::map< std::string, lr_ptr_t > async_map_t;
             mv_referrable( async_map_t, async_children );
 
             mv_referrable( std::string, broadcast_key );
