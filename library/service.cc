@@ -46,7 +46,7 @@ namespace dripline
         // get values from the config
         f_listen_timeout_ms = a_config.get_value( "listen-timeout-ms", f_listen_timeout_ms );
         f_single_message_wait_ms = a_config.get_value( "message-wait-ms", f_single_message_wait_ms );
-        f_heartbeat_interval_s = a_config.get_value( "heartbeat-interval-ms", f_heartbeat_interval_s );
+        f_heartbeat_interval_s = a_config.get_value( "heartbeat-interval-s", f_heartbeat_interval_s );
 
         // override if specified as a separate argument
         if( ! a_queue_name.empty() ) f_name = a_queue_name;
