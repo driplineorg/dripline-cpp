@@ -12,11 +12,12 @@
 
 #include "catch.hpp"
 
-#ifdef DL_OFFLINE
 TEST_CASE( "send_offline", "[core]" )
 {
     using scarab::param_ptr_t;
     using scarab::param;
+
+    dripline::core::s_offline = true;
 
     dripline::core t_core( true );
 
@@ -32,5 +33,3 @@ TEST_CASE( "send_offline", "[core]" )
 
     REQUIRE_THROWS_AS( t_core.send( t_reply_ptr ), dripline::message_ptr_t );
 }
-#endif
-

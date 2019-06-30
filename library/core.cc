@@ -41,6 +41,8 @@ namespace dripline
         }
     }
 
+    bool core::s_offline = false;
+
     core::core( const scarab::param_node& a_config, const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file, const bool a_make_connection ) :
             f_address( "localhost" ),
             f_port( 5672 ),
@@ -172,33 +174,18 @@ namespace dripline
 
     sent_msg_pkg_ptr core::send( request_ptr_t a_request ) const
     {
-        if ( ! f_make_connection )
-        {
-            LWARN( dlog, "send called but make_connection is false, returning nullptr" );
-            return nullptr;
-        }
         LDEBUG( dlog, "Sending request with routing key <" << a_request->routing_key() << ">" );
         return do_send( std::static_pointer_cast< message >( a_request ), f_requests_exchange, true );
     }
 
     sent_msg_pkg_ptr core::send( reply_ptr_t a_reply ) const
     {
-        if ( ! f_make_connection )
-        {
-            LWARN( dlog, "send called but make_connection is false, returning nullptr" );
-            return nullptr;
-        }
         LDEBUG( dlog, "Sending reply with routing key <" << a_reply->routing_key() << ">" );
         return do_send( std::static_pointer_cast< message >( a_reply ), f_requests_exchange, false );
     }
 
     sent_msg_pkg_ptr core::send( alert_ptr_t a_alert ) const
     {
-        if ( ! f_make_connection )
-        {
-            LWARN( dlog, "send called but make_connection is false, returning nullptr" );
-            return nullptr;
-        }
         LDEBUG( dlog, "Sending alert with routing key <" << a_alert->routing_key() << ">" );
         return do_send( std::static_pointer_cast< message >( a_alert ), f_alerts_exchange, false );
     }
@@ -210,10 +197,10 @@ namespace dripline
         // the f_successful_send flag will be set accordingly: true if completely sent; false if partially sent
         // if there was an error, that will be returned in f_send_error_message, which will be empty otherwise
 
-#ifndef DL_OFFLINE
-        if ( ! f_make_connection )
+        if ( ! f_make_connection || core::s_offline )
         {
-            throw dripline_error() << "cannot send reply when make_connection is false";
+            throw a_message;
+            //throw dripline_error() << "cannot send reply when make_connection is false";
         }
 
         amqp_channel_ptr t_channel = open_channel();
@@ -278,20 +265,14 @@ namespace dripline
         }
 
         return t_receive_reply;
-#else
-        throw a_message;
-#endif
     }
 
     amqp_channel_ptr core::open_channel() const
     {
-#ifdef DL_OFFLINE
-        return amqp_channel_ptr();
-#endif
-
-        if ( ! f_make_connection )
+        if ( ! f_make_connection || core::s_offline )
         {
-            throw dripline_error() << "Should not call open_channel when f_make_connection is false";
+            return amqp_channel_ptr();
+            //throw dripline_error() << "Should not call open_channel when offline";
         }
         try
         {
@@ -318,9 +299,10 @@ namespace dripline
 
     bool core::setup_exchange( amqp_channel_ptr a_channel, const std::string& a_exchange )
     {
-#ifdef DL_OFFLINE
-        return false;
-#endif
+        if( s_offline || ! a_channel )
+        {
+            return false;
+        }
 
         try
         {
@@ -342,9 +324,10 @@ namespace dripline
 
     bool core::setup_queue( amqp_channel_ptr a_channel, const std::string& a_queue_name )
     {
-#ifdef DL_OFFLINE
-        return false;
-#endif
+        if( s_offline || ! a_channel )
+        {
+            return false;
+        }
 
         try
         {
@@ -367,9 +350,10 @@ namespace dripline
 
     bool core::listen_for_message( amqp_envelope_ptr& a_envelope, amqp_channel_ptr a_channel, const std::string& a_consumer_tag, int a_timeout_ms, bool a_do_ack )
     {
-#ifdef DL_OFFLINE
-        return false;
-#endif
+        if( s_offline || ! a_channel )
+        {
+            return false;
+        }
 
         while( true )
         {

@@ -20,7 +20,6 @@ pbuilder_prepare_project()
 ####################
 
 option( Dripline_BUILD_EXAMPLES "Flag to enable building the examples" FALSE )
-option( Dripline_OFFLINE "Flag to enable offline use (primarily for testing)" FALSE )
 
 set( Dripline_MAX_PAYLOAD_SIZE "10000" CACHE STRING "Maximum payload size (bytes)" )
 

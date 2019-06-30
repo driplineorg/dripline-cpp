@@ -235,10 +235,6 @@ namespace dripline
 
     bool service::open_channels()
     {
-#ifdef DL_OFFLINE
-        return false;
-#endif
-
         LDEBUG( dlog, "Opening channel for service <" << f_name << ">" );
         f_channel = open_channel();
         if( ! f_channel ) return false;
@@ -256,10 +252,6 @@ namespace dripline
 
     bool service::setup_queues()
     {
-#ifdef DL_OFFLINE
-        return false;
-#endif
-
         LDEBUG( dlog, "Setting up queue for service <" << f_name << ">" );
         if( ! setup_queue( f_channel, f_name ) ) return false;
 
@@ -276,10 +268,6 @@ namespace dripline
 
     bool service::bind_keys()
     {
-#ifdef DL_OFFLINE
-        return false;
-#endif
-
         try
         {
             LDEBUG( dlog, "Binding key <" << f_name << ".#> to queue " << f_name );
@@ -319,10 +307,6 @@ namespace dripline
 
     bool service::start_consuming()
     {
-#ifdef DL_OFFLINE
-        return false;
-#endif
-
         try
         {
             LDEBUG( dlog, "Starting to consume messages on <" << f_name << ">" );
@@ -352,11 +336,7 @@ namespace dripline
 
     bool service::stop_consuming()
     {
-#ifdef DL_OFFLINE
-        return false;
-#endif
-
-        if ( ! f_make_connection )
+        if ( ! f_make_connection || core::s_offline )
         {
             LDEBUG( dlog, "no consuming to start because connections disabled" );
             return true;
@@ -405,10 +385,7 @@ namespace dripline
 
     bool service::remove_queue()
     {
-#ifdef DL_OFFLINE
-        return false;
-#endif
-        if ( ! f_make_connection )
+        if ( ! f_make_connection || core::s_offline )
         {
             LDEBUG( dlog, "no queue to remove because make_connection is false" );
             return true;
