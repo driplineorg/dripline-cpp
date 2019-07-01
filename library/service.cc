@@ -44,7 +44,8 @@ namespace dripline
             f_broadcast_key( "broadcast" )
     {
         // get values from the config
-        f_listen_timeout_ms = a_config.get_value( "listen-timeout-ms", f_listen_timeout_ms );
+        f_listen_timeout_ms = a_config.get_value( "loop-timeout-ms", f_listen_timeout_ms );
+        heartbeater::f_check_timeout_ms = f_listen_timeout_ms;
         f_single_message_wait_ms = a_config.get_value( "message-wait-ms", f_single_message_wait_ms );
         f_heartbeat_interval_s = a_config.get_value( "heartbeat-interval-s", f_heartbeat_interval_s );
 
@@ -163,7 +164,7 @@ namespace dripline
 
         try
         {
-            f_heartbeat_thread = std::thread( &heartbeater::execute, this, f_name, f_id, f_heartbeat_interval_s, f_heartbeat_routing_key );
+            f_heartbeat_thread = std::thread( &heartbeater::execute, this, f_name, f_id, f_heartbeat_routing_key );
 
             f_receiver_thread = std::thread( &concurrent_receiver::execute, this );
 

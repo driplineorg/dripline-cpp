@@ -8,7 +8,7 @@
  *
  *  {
  *      "[operation: run, get, set, or cmd] : "",
- *      "amqp" : {
+ *      "dripline" : {
  *          "broker" : "[address]",
  *          "broker-port" : [port],
  *          "exchange" : "[exchange]",

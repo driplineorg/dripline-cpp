@@ -28,9 +28,10 @@ namespace dripline
             heartbeater( heartbeater&& );
             virtual ~heartbeater();
 
-            void execute( const std::string& a_name, uuid_t a_id, unsigned an_interval, const std::string& a_routing_key );
+            void execute( const std::string& a_name, uuid_t a_id, const std::string& a_routing_key );
 
             mv_accessible( unsigned, heartbeat_interval_s );
+            mv_accessible( unsigned, check_timeout_ms );
 
             mv_referrable( service_ptr_t, service );
 

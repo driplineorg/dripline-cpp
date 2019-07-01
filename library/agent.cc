@@ -66,27 +66,18 @@ namespace dripline
         param_node t_config( a_config ); //f_agent->config();
         //t_config = a_node;
 
-        param_node t_amqp_node;
-        unsigned t_timeout = 0;
-        if( t_config.has( "amqp" ) )
+        param_node t_dripline_node;
+        if( t_config.has( "dripline" ) )
         {
-            t_amqp_node = std::move(t_config.remove( "amqp" )->as_node());
-            t_timeout = t_amqp_node.get_value( "timeout", 10U ) * 1000; // convert seconds (dripline agent user interface) to milliseconds (expected by SimpleAmqpClient)
+            t_dripline_node = std::move(t_config.remove( "dripline" )->as_node());
         }
 
-        core t_core( t_amqp_node );
+        core t_core( t_dripline_node );
 
-        // pull the special CL arguments out of the configuration
-
-        param_node t_agent_node;
-        bool t_json_print = false, t_pretty_print = false, t_suppress_output = false;
-        if( t_config.has( "agent" ) )
-        {
-            t_agent_node = std::move(t_config.remove( "agent" )->as_node());
-            t_json_print = t_agent_node.get_value( "json-print", t_json_print );
-            t_pretty_print = t_agent_node.get_value( "pretty-print", t_pretty_print );
-            t_suppress_output = t_agent_node.get_value( "suppress-output", t_suppress_output );
-        }
+        unsigned t_timeout = t_dripline_node.get_value( "timeout", 10U ) * 1000; // convert seconds (dripline agent user interface) to milliseconds (expected by SimpleAmqpClient)
+        bool t_json_print = t_config.get_value( "json-print", false );
+        bool t_pretty_print = t_config.get_value( "pretty-print", false );
+        bool t_suppress_output = t_config.get_value( "suppress-output", false );
 
         f_agent->routing_key() = t_config.get_value( "rk", f_agent->routing_key() );
         t_config.erase( "rk" );
@@ -158,7 +149,7 @@ namespace dripline
 
         LINFO( dlog, "Connecting to AMQP broker" );
 
-        //const param_node& t_broker_node = t_config["amqp"].as_node();
+        //const param_node& t_broker_node = t_config["dripline"].as_node();
 
         LDEBUG( dlog, "Sending message w/ msgop = " << t_request->get_message_op() << " to " << t_request->routing_key() );
 

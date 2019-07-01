@@ -22,10 +22,9 @@ namespace dripline
     {
         // default agent configuration
 
-        add( "amqp", amqp_config() );
+        add( "dripline", dripline_config() );
 
-        (*this)["amqp"].as_node().add( "timeout", 10 );
-        (*this)["amqp"].as_node().add( "exchange", "requests" );
+        add( "timeout", 10 ); // seconds
     }
 
     agent_config::~agent_config()
