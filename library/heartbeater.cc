@@ -15,6 +15,8 @@
 #include "logger.hh"
 #include "param_node.hh"
 
+#include <iomanip>
+
 LOGGER( dlog, "heartbeater" );
 
 namespace dripline
@@ -23,6 +25,7 @@ namespace dripline
     heartbeater::heartbeater( service_ptr_t a_service ) :
             cancelable(),
             f_heartbeat_interval_s( 60 ),
+            f_check_timeout_ms( 1000 ),
             f_service( a_service ),
             f_heartbeat_thread()
     {}
@@ -30,6 +33,7 @@ namespace dripline
     heartbeater::heartbeater( heartbeater&& a_orig ) :
             cancelable( std::move(a_orig) ),
             f_heartbeat_interval_s( a_orig.f_heartbeat_interval_s ),
+            f_check_timeout_ms( a_orig.f_check_timeout_ms ),
             f_service( std::move(a_orig.f_service) ),
             f_heartbeat_thread( std::move(a_orig.f_heartbeat_thread) )
     {}
@@ -37,7 +41,7 @@ namespace dripline
     heartbeater::~heartbeater()
     {}
 
-    void heartbeater::execute( const std::string& a_name, uuid_t a_id, unsigned an_interval, const std::string& a_routing_key )
+    void heartbeater::execute( const std::string& a_name, uuid_t a_id, const std::string& a_routing_key )
     {
         if( ! f_service )
         {
@@ -56,16 +60,19 @@ namespace dripline
         alert_ptr_t t_alert_ptr = msg_alert::create( std::move(t_payload_ptr), t_key.to_string() );
 
         LINFO( dlog, "Starting heartbeat loop" );
+
+        auto t_next_heartbeat_at = std::chrono::steady_clock().now() + std::chrono::seconds( f_heartbeat_interval_s );
         while( ! f_canceled.load() )
         {
             // wait the interval
-            std::this_thread::sleep_for( std::chrono::seconds( an_interval ) );
+            std::this_thread::sleep_for( std::chrono::milliseconds( f_check_timeout_ms ) );
 
             // send the message
-            if( ! f_canceled.load() )
+            if( std::chrono::steady_clock().now() >= t_next_heartbeat_at && ! f_canceled.load() )
             {
                 LDEBUG( dlog, "Sending heartbeat" );
                 f_service->send( t_alert_ptr );
+                t_next_heartbeat_at = std::chrono::steady_clock().now() + std::chrono::seconds( f_heartbeat_interval_s );
             }
         }
 

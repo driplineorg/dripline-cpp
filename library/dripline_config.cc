@@ -42,7 +42,7 @@ namespace dripline
         add( "requests-exchange", "requests" );
         add( "alerts-exchange", "alerts" );
         add( "max-payload-size", DL_MAX_PAYLOAD_SIZE );
-        add( "listen-timeout-ms", 1000 );
+        add( "loop-timeout-ms", 1000 );
         add( "message-wait-ms", 1000 );
         add( "heartbeat-routing-key", "heartbeat" );
         add( "heartbeat-interval-s", 60 );
