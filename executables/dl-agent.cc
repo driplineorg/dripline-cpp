@@ -6,7 +6,7 @@
  *  Dripline agent
  *
  *  Usage:
- *  $> dl_agent [operation] [options]
+ *  $> dl-agent [options] [operation] [routing key] [values]
  *
  */
 
@@ -41,26 +41,27 @@ int main( int argc, char** argv )
             "  The key portion of a keyword argument is an address that can specify\n" +
             "  both node and array locations (e.g. my.value.0)." );
 
-    // Routing key
-    the_main.add_config_option< std::string >( "routing_key", "rk", "Set the routing key" )->required();
-
     // Application subcommands
     scarab::config_decorator* t_agent_run = the_main.add_config_subcommand( "run", "Send an OP_RUN request" );
+    t_agent_run->add_config_option< std::string >( "routing_key", "rk", "Set the routing key" )->required();
     t_agent_run->this_app()->callback(
             [&]() { the_agent.execute< agent::sub_agent_run >( the_main.master_config(), the_main.nonoption_ord_args() ); }
     );
 
     scarab::config_decorator* t_agent_get = the_main.add_config_subcommand( "get", "Send an OP_GET request" );
+    t_agent_get->add_config_option< std::string >( "routing_key", "rk", "Set the routing key" )->required();
     t_agent_get->this_app()->callback(
             [&]() { the_agent.execute< agent::sub_agent_get >( the_main.master_config(), the_main.nonoption_ord_args() ); }
     );
 
     scarab::config_decorator* t_agent_set = the_main.add_config_subcommand( "set", "Send an OP_SET request" );
+    t_agent_set->add_config_option< std::string >( "routing_key", "rk", "Set the routing key" )->required();
     t_agent_set->this_app()->callback(
             [&]() { the_agent.execute< agent::sub_agent_set >( the_main.master_config(), the_main.nonoption_ord_args() ); }
     );
 
     scarab::config_decorator* t_agent_cmd = the_main.add_config_subcommand( "cmd", "Send an OP_CMD request" );
+    t_agent_cmd->add_config_option< std::string >( "routing_key", "rk", "Set the routing key" )->required();
     t_agent_cmd->this_app()->callback(
             [&]() { the_agent.execute< agent::sub_agent_cmd>( the_main.master_config(), the_main.nonoption_ord_args() ); }
     );
@@ -69,13 +70,13 @@ int main( int argc, char** argv )
     the_main.default_config() = agent_config();
 
     // Command line options
-    add_amqp_options( the_main );
+    add_dripline_options( the_main );
     the_main.add_config_option< std::string >( "-s,--specifier", "specifier", "Set the specifier" );
-    the_main.add_config_option< unsigned >( "-t,--timeout", "amqp.timeout", "Set the timeout for waiting for a reply (seconds)" );
+    the_main.add_config_option< unsigned >( "-t,--timeout", "timeout", "Set the timeout for waiting for a reply (seconds)" );
     the_main.add_config_option< std::string >( "-k,--lockout-key", "lockout-key", "Set the lockout key to send with the message" );
-    the_main.add_config_flag< bool >( "--suppress-output", "agent.suppress-output", "Suppress the output of the returned reply" );
-    the_main.add_config_flag< bool >( "--json-print", "agent.json-print", "Output the returned reply in JSON; default is white-space suppressed (see --pretty-print)" );
-    the_main.add_config_flag< bool >( "--pretty-print", "agent.pretty-print", "Output the returned reply in nicely formatted JSON" );
+    the_main.add_config_flag< bool >( "--suppress-output", "suppress-output", "Suppress the output of the returned reply" );
+    the_main.add_config_flag< bool >( "--json-print", "json-print", "Output the returned reply in JSON; default is white-space suppressed (see --pretty-print)" );
+    the_main.add_config_flag< bool >( "--pretty-print", "pretty-print", "Output the returned reply in nicely formatted JSON" );
     the_main.add_config_multi_option< std::string >( "-P,--payload", "payload", "Add values to the payload" );
     the_main.add_config_multi_option< std::string >( "-v,--values", "option-values", "Add ordered values" ); // stored in the config as "option-values" so they can be merged in later in the proper order
     the_main.add_config_flag< bool >( "--dry-run-msg", "dry-run-msg", "Print the message contents and exit" );

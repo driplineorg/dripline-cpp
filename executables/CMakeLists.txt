@@ -8,6 +8,6 @@ set( lib_dependencies
     Dripline
 )
 set( programs
-    dl_agent
+    dl-agent
 )
 pbuilder_executables( programs lib_dependencies )

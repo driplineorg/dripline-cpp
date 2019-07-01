@@ -1,5 +1,5 @@
 /*
- * amqp_config.cc
+ * dripline_config.cc
  *
  *  Created on: Jun 26, 2019
  *      Author: N.S. Oblath
@@ -7,7 +7,7 @@
 
 #define DRIPLINE_API_EXPORTS
 
-#include "amqp_config.hh"
+#include "dripline_config.hh"
 
 #include "application.hh"
 
@@ -20,9 +20,9 @@ LOGGER( dlog, "agent_config" );
 namespace dripline
 {
 
-    amqp_config::amqp_config()
+    dripline_config::dripline_config()
     {
-        // default amqp configuration
+        // default dripline configuration
 
         add( "broker-port", 5672 );
         add( "broker", "localhost" );
@@ -39,22 +39,25 @@ namespace dripline
             LDEBUG( dlog, "default auth file <" << t_auth_default_path.string() << "> does not exist, not setting" );
         }
 #endif
+        add( "requests-exchange", "requests" );
+        add( "alerts-exchange", "alerts" );
         add( "max-payload-size", DL_MAX_PAYLOAD_SIZE );
         add( "listen-timeout-ms", 1000 );
         add( "message-wait-ms", 1000 );
+        add( "heartbeat-routing-key", "heartbeat" );
         add( "heartbeat-interval-s", 60 );
     }
 
-    amqp_config::~amqp_config()
+    dripline_config::~dripline_config()
     {
     }
 
-    void add_amqp_options( scarab::main_app& an_app )
+    void add_dripline_options( scarab::main_app& an_app )
     {
-        an_app.add_config_option< std::string >( "-b,--broker", "amqp.broker", "Set the dripline broker address" );
-        an_app.add_config_option< unsigned >( "-p,--port", "amqp.broker-port", "Set the port for communication with the dripline broker" );
-        an_app.add_config_option< std::string >( "-a,--auth-file", "amqp.auth-file", "Set the authentication file path" );
-        an_app.add_config_option< unsigned >( "--max-payload", "amqp.max-payload-size", "Set the maximum payload size (in bytes)" );
+        an_app.add_config_option< std::string >( "-b,--broker", "dripline.broker", "Set the dripline broker address" );
+        an_app.add_config_option< unsigned >( "-p,--port", "dripline.broker-port", "Set the port for communication with the dripline broker" );
+        an_app.add_config_option< std::string >( "-a,--auth-file", "dripline.auth-file", "Set the authentication file path" );
+        an_app.add_config_option< unsigned >( "--max-payload", "dripline.max-payload-size", "Set the maximum payload size (in bytes)" );
         return;
     }
 
