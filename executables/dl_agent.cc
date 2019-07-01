@@ -44,9 +44,6 @@ int main( int argc, char** argv )
     // Routing key
     the_main.add_config_option< std::string >( "routing_key", "rk", "Set the routing key" )->required();
 
-    // Specifier
-    the_main.add_config_option< std::string >( "specifier", "specifier", "Set the specifier" );
-
     // Application subcommands
     scarab::config_decorator* t_agent_run = the_main.add_config_subcommand( "run", "Send an OP_RUN request" );
     t_agent_run->this_app()->callback(
@@ -73,8 +70,8 @@ int main( int argc, char** argv )
 
     // Command line options
     add_amqp_options( the_main );
+    the_main.add_config_option< std::string >( "-s,--specifier", "specifier", "Set the specifier" );
     the_main.add_config_option< unsigned >( "-t,--timeout", "amqp.timeout", "Set the timeout for waiting for a reply (seconds)" );
-    the_main.add_config_option< std::string >( "-e,--exchange", "amqp.exchange", "Set the exchange to send message on" );
     the_main.add_config_option< std::string >( "-k,--lockout-key", "lockout-key", "Set the lockout key to send with the message" );
     the_main.add_config_flag< bool >( "--suppress-output", "agent.suppress-output", "Suppress the output of the returned reply" );
     the_main.add_config_flag< bool >( "--json-print", "agent.json-print", "Output the returned reply in JSON; default is white-space suppressed (see --pretty-print)" );
