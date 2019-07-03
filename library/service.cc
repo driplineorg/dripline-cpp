@@ -147,8 +147,6 @@ namespace dripline
         if( ! start_consuming() ) return false;
         f_status = status::consuming;
 
-        f_canceled.store( false );
-
         return true;
     }
 

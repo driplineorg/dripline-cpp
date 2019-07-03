@@ -92,6 +92,14 @@ namespace dripline
 
             static bool setup_queue( amqp_channel_ptr a_channel, const std::string& a_queue_name );
 
+            static bool bind_key( amqp_channel_ptr a_channel, const std::string& a_exchange, const std::string& a_queue_name, const std::string& a_routing_key );
+
+            static std::string start_consuming( amqp_channel_ptr a_channel, const std::string& a_queue_name );
+
+            static bool stop_consuming( amqp_channel_ptr a_channel, std::string& a_consumer_tag );
+
+            static bool remove_queue( amqp_channel_ptr a_channel, const std::string& a_queue_name );
+
         public:
             /// return: if false, channel is no longer useable; if true, may be reused
             static bool listen_for_message( amqp_envelope_ptr& a_envelope, amqp_channel_ptr a_channel, const std::string& a_consumer_tag, int a_timeout_ms = 0, bool a_do_ack = true );

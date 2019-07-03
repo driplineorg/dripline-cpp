@@ -101,7 +101,6 @@ namespace dripline
             bool remove_queue();
 
         public:
-
             virtual bool listen_on_queue();
 
             virtual void submit_message( message_ptr_t a_message );

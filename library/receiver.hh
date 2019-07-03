@@ -93,7 +93,7 @@ namespace dripline
             void execute();
 
         protected:
-            // to be overridden by the thing inheriting from receiver_parallel
+            // to be overridden by the thing inheriting from concurrent_receiver
             virtual void submit_message( message_ptr_t a_message ) = 0;
 
             mv_referrable( scarab::concurrent_queue< message_ptr_t >, message_queue );
