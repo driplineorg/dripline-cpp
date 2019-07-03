@@ -348,6 +348,123 @@ namespace dripline
 
     }
 
+    bool core::bind_key( amqp_channel_ptr a_channel, const std::string& a_exchange, const std::string& a_queue_name, const std::string& a_routing_key )
+    {
+        if( s_offline || ! a_channel )
+        {
+            return false;
+        }
+
+        try
+        {
+            LDEBUG( dlog, "Binding key <" << a_routing_key << "> to queue <" << a_queue_name << "> over exchange <" << a_exchange << ">" );
+            a_channel->BindQueue( a_queue_name, a_exchange, a_routing_key );
+
+            return true;
+        }
+        catch( amqp_exception& e )
+        {
+            LERROR( dlog, "AMQP exception caught while declaring binding key <" << a_routing_key << ">: (" << e.reply_code() << ") " << e.reply_text() );
+            return false;
+        }
+        catch( amqp_lib_exception& e )
+        {
+            LERROR( dlog, "AMQP library exception caught while binding key <" << a_routing_key << ">: (" << e.ErrorCode() << ") " << e.what() );
+            return false;
+        }
+    }
+
+    std::string core::start_consuming( amqp_channel_ptr a_channel, const std::string& a_queue_name )
+    {
+        if( s_offline || ! a_channel )
+        {
+            return std::string();
+        }
+
+        try
+        {
+            LDEBUG( dlog, "Starting to consume messages on queue <" << a_queue_name << ">" );
+            // second bool is setting no_ack to false
+            return a_channel->BasicConsume( a_queue_name, "", true, false );
+        }
+        catch( amqp_exception& e )
+        {
+            LERROR( dlog, "AMQP exception caught while starting consuming messages on <" << a_queue_name << ">: (" << e.reply_code() << ") " << e.reply_text() );
+            return std::string();
+        }
+        catch( amqp_lib_exception& e )
+        {
+            LERROR( dlog, "AMQP library exception caught while starting consuming messages on <" << a_queue_name << ">: (" << e.ErrorCode() << ") " << e.what() );
+            return std::string();
+        }
+    }
+
+    bool core::stop_consuming( amqp_channel_ptr a_channel, std::string& a_consumer_tag )
+    {
+        if( s_offline || ! a_channel )
+        {
+            return false;
+        }
+
+        try
+        {
+            LDEBUG( dlog, "Stopping consuming messages for consumer <" << a_consumer_tag << ">" );
+            a_channel->BasicCancel( a_consumer_tag );
+            a_consumer_tag.clear();
+            return true;
+        }
+        catch( amqp_exception& e )
+        {
+            LERROR( dlog, "AMQP exception caught while stopping consuming messages on <" << a_consumer_tag << ">: (" << e.reply_code() << ") " << e.reply_text() );
+            return false;
+        }
+        catch( amqp_lib_exception& e )
+        {
+            LERROR( dlog, "AMQP library exception caught while stopping consuming messages on <" << a_consumer_tag << ">: (" << e.ErrorCode() << ") " << e.what() );
+            return false;
+        }
+        catch( AmqpClient::ConsumerTagNotFoundException& e )
+        {
+            LERROR( dlog, "Fatal AMQP exception encountered while stopping consuming messages on <" << a_consumer_tag << ">: " << e.what() );
+            return false;
+        }
+        catch( std::exception& e )
+        {
+            LERROR( dlog, "Standard exception caught while stopping consuming messages on <" << a_consumer_tag << ">: " << e.what() );
+            return false;
+        }
+    }
+
+    bool core::remove_queue( amqp_channel_ptr a_channel, const std::string& a_queue_name )
+    {
+        if( s_offline || ! a_channel )
+        {
+            return false;
+        }
+
+        try
+        {
+            LDEBUG( dlog, "Deleting queue <" << a_queue_name << ">" );
+            a_channel->DeleteQueue( a_queue_name, false );
+            return true;
+        }
+        catch( AmqpClient::ConnectionClosedException& e )
+        {
+            LERROR( dlog, "Fatal AMQP exception encountered removing queue <" << a_queue_name << ">: " << e.what() );
+            return false;
+        }
+        catch( amqp_lib_exception& e )
+        {
+            LERROR( dlog, "AMQP library exception caught while removing queue <" << a_queue_name << ">: (" << e.ErrorCode() << ") " << e.what() );
+            return false;
+        }
+        catch( std::exception& e )
+        {
+            LERROR( dlog, "Standard exception caught while removing queue <" << a_queue_name << ">: " << e.what() );
+            return false;
+        }
+    }
+
     bool core::listen_for_message( amqp_envelope_ptr& a_envelope, amqp_channel_ptr a_channel, const std::string& a_consumer_tag, int a_timeout_ms, bool a_do_ack )
     {
         if( s_offline || ! a_channel )
