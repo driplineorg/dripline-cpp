@@ -70,6 +70,11 @@ namespace dripline
 
     service::~service()
     {
+        if( f_status >= status::listening )
+        {
+            this->cancel( dl_success().rc_value() );
+            std::this_thread::sleep_for( std::chrono::milliseconds(1100) );
+        }
         if( f_status > status::exchange_declared ) stop();
     }
 
