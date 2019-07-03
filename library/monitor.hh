@@ -12,7 +12,7 @@
 #include "listener.hh"
 #include "receiver.hh"
 
-namespace dripline
+namespace DRIPLINE_API dripline
 {
 
     class monitor :
@@ -48,7 +48,6 @@ namespace dripline
             mv_accessible( bool, json_print );
             mv_accessible( bool, pretty_print );
 
-        public:
             typedef std::vector< std::string > keys_t;
             mv_referrable( keys_t, requests_keys );
             mv_referrable( keys_t, alerts_keys );

@@ -5,12 +5,15 @@
  *      Author: N.S. Oblath
  */
 
+#define DRIPLINE_API_EXPORTS
+
 #include "monitor.hh"
 
 #include "dripline_error.hh"
 #include "uuid.hh"
 
 #include "logger.hh"
+#include "signal_handler.hh"
 
 LOGGER( dlog, "monitor" );
 
@@ -139,6 +142,9 @@ namespace dripline
 
     bool monitor::listen()
     {
+        scarab::signal_handler t_sig_hand;
+        t_sig_hand.add_cancelable( this );
+
         if( f_status != status::consuming )
         {
             LERROR( dlog, "Monitor is not in the right status to listen" );
