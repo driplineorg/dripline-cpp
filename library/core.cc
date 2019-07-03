@@ -246,7 +246,10 @@ namespace dripline
             LDEBUG( dlog, "Sending message to <" << a_message->routing_key() << ">" );
             for( amqp_message_ptr& t_amqp_message : t_amqp_messages )
             {
-                t_channel->BasicPublish( a_exchange, a_message->routing_key(), t_amqp_message, true, false );
+                // send the message
+                // the first boolean argument is whether it's mandatory that the message be delivered to a queue.
+                // this is only the case for requests, where we expect something to be listening.
+                t_channel->BasicPublish( a_exchange, a_message->routing_key(), t_amqp_message, a_message->is_request(), false );
             }
             LDEBUG( dlog, "Message sent in " << t_amqp_messages.size() << " chunks" );
             t_receive_reply->f_successful_send = true;
