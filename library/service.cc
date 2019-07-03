@@ -267,163 +267,70 @@ namespace dripline
 
     bool service::bind_keys()
     {
-        try
-        {
-            LDEBUG( dlog, "Binding key <" << f_name << ".#> to queue " << f_name );
-            f_channel->BindQueue( f_name, f_requests_exchange, f_name + ".#" );
-            LDEBUG( dlog, "Binding key <" << f_broadcast_key << ".#> to queue " << f_name );
-            f_channel->BindQueue( f_name, f_requests_exchange, f_broadcast_key + ".#" );
-            LDEBUG( dlog, "Binding keys for synchronous children" );
-            for( sync_map_t::const_iterator t_child_it = f_sync_children.begin();
-                    t_child_it != f_sync_children.end();
-                    ++t_child_it )
-            {
-                LDEBUG( dlog, "Binding key <" << t_child_it->first << ".#> to queue " << f_name );
-                f_channel->BindQueue( f_name, f_requests_exchange, t_child_it->first + ".#" );
-            }
+        LDEBUG( dlog, "Binding primary service keys" );
+        if( ! bind_key( f_channel, f_requests_exchange, f_name, f_name + ".#" ) ) return false;
+        if( ! bind_key( f_channel, f_requests_exchange, f_name, f_broadcast_key + ".#" ) ) return false;
 
-            LDEBUG( dlog, "Binding keys for asynchronous children" );
-            for( async_map_t::iterator t_child_it = f_async_children.begin();
-                    t_child_it != f_async_children.end();
-                    ++t_child_it )
-            {
-                LDEBUG( dlog, "Binding key <" << t_child_it->first << ".#> to queue " << t_child_it->first );
-                t_child_it->second->channel()->BindQueue( t_child_it->first, f_requests_exchange, t_child_it->first + ".#" );
-            }
-            return true;
-        }
-        catch( amqp_exception& e )
+        LDEBUG( dlog, "Binding keys for synchronous children" );
+        for( sync_map_t::const_iterator t_child_it = f_sync_children.begin();
+                t_child_it != f_sync_children.end();
+                ++t_child_it )
         {
-            LERROR( dlog, "AMQP exception caught while declaring binding keys: (" << e.reply_code() << ") " << e.reply_text() );
-            return false;
+            if( ! bind_key( f_channel, f_requests_exchange, f_name, t_child_it->first + ".#" ) ) return false;
         }
-        catch( amqp_lib_exception& e )
+
+        LDEBUG( dlog, "Binding keys for asynchronous children" );
+        for( async_map_t::iterator t_child_it = f_async_children.begin();
+                t_child_it != f_async_children.end();
+                ++t_child_it )
         {
-            LERROR( dlog, "AMQP library exception caught while binding keys: (" << e.ErrorCode() << ") " << e.what() );
-            return false;
+            if( ! bind_key( t_child_it->second->channel(), f_requests_exchange, t_child_it->first, t_child_it->first + ".#" ) ) return false;
         }
+
+        return true;
     }
 
     bool service::start_consuming()
     {
-        try
-        {
-            LDEBUG( dlog, "Starting to consume messages on <" << f_name << ">" );
-            // second bool is setting no_ack to false
-            f_consumer_tag = f_channel->BasicConsume( f_name, "", true, false );
+        f_consumer_tag = core::start_consuming( f_channel, f_name );
+        if( f_consumer_tag.empty() ) return false;
 
-            for( async_map_t::iterator t_child_it = f_async_children.begin();
-                    t_child_it != f_async_children.end();
-                    ++t_child_it )
-            {
-                LDEBUG( dlog, "Starting to consume messages on <" << t_child_it->first << ".#> to queue " << t_child_it->first );
-                t_child_it->second->consumer_tag() = t_child_it->second->channel()->BasicConsume( t_child_it->first, "", true, false );
-            }
-            return true;
-        }
-        catch( amqp_exception& e )
+        for( async_map_t::iterator t_child_it = f_async_children.begin();
+                t_child_it != f_async_children.end();
+                ++t_child_it )
         {
-            LERROR( dlog, "AMQP exception caught while starting consuming messages: (" << e.reply_code() << ") " << e.reply_text() );
-            return false;
+            t_child_it->second->consumer_tag() = core::start_consuming( t_child_it->second->channel(), t_child_it->first );
+            if( t_child_it->second->consumer_tag().empty() ) return false;
         }
-        catch( amqp_lib_exception& e )
-        {
-            LERROR( dlog, "AMQP library exception caught while starting consuming messages: (" << e.ErrorCode() << ") " << e.what() );
-            return false;
-        }
+        return true;
     }
 
     bool service::stop_consuming()
     {
-        if ( ! f_make_connection || core::s_offline )
+        // doesn't stop on failure; continues trying to stop consuming
+        bool t_success = true;
+        t_success = core::stop_consuming( f_channel, f_consumer_tag );
+        for( async_map_t::iterator t_child_it = f_async_children.begin();
+                t_child_it != f_async_children.end();
+                ++t_child_it )
         {
-            LDEBUG( dlog, "no consuming to start because connections disabled" );
-            return true;
+            t_success = core::stop_consuming( t_child_it->second->channel(), t_child_it->second->consumer_tag() );
         }
-        try
-        {
-            LDEBUG( dlog, "Stopping consuming messages for <" << f_name << "> (consumer " << f_consumer_tag << ")" );
-            f_channel->BasicCancel( f_consumer_tag );
-            f_consumer_tag.clear();
-
-            for( async_map_t::iterator t_child_it = f_async_children.begin();
-                    t_child_it != f_async_children.end();
-                    ++t_child_it )
-            {
-                LDEBUG( dlog, "Stopping consuming messages for <" << t_child_it->first << "> (consumer " << t_child_it->second->consumer_tag() << ")" );
-                t_child_it->second->channel()->BasicCancel( t_child_it->second->consumer_tag() );
-            }
-            return true;
-        }
-        catch( amqp_exception& e )
-        {
-            LERROR( dlog, "AMQP exception caught while stopping consuming messages: (" << e.reply_code() << ") " << e.reply_text() );
-            return false;
-        }
-        catch( amqp_lib_exception& e )
-        {
-            LERROR( dlog, "AMQP library exception caught while stopping consuming messages: (" << e.ErrorCode() << ") " << e.what() );
-            return false;
-        }
-        catch( AmqpClient::ConsumerTagNotFoundException& e )
-        {
-            LERROR( dlog, "Fatal AMQP exception encountered: " << e.what() );
-            return false;
-        }
-        catch( std::exception& e )
-        {
-            LERROR( dlog, "Standard exception caught: " << e.what() );
-            return false;
-        }
-        catch(...)
-        {
-            LERROR( dlog, "Unknown exception caught" );
-            return false;
-        }
+        return t_success;
     }
 
     bool service::remove_queue()
     {
-        if ( ! f_make_connection || core::s_offline )
+        // doesn't stop on failure; continues trying to remove queues
+        bool t_success = true;
+        t_success = core::remove_queue( f_channel, f_name );
+        for( async_map_t::iterator t_child_it = f_async_children.begin();
+                t_child_it != f_async_children.end();
+                ++t_child_it )
         {
-            LDEBUG( dlog, "no queue to remove because make_connection is false" );
-            return true;
+            t_success = core::remove_queue( t_child_it->second->channel(), t_child_it->first );
         }
-        try
-        {
-            LDEBUG( dlog, "Deleting queue <" << f_name << ">" );
-            f_channel->DeleteQueue( f_name, false );
-
-            for( async_map_t::iterator t_child_it = f_async_children.begin();
-                    t_child_it != f_async_children.end();
-                    ++t_child_it )
-            {
-                LDEBUG( dlog, "Deleting queue <" << t_child_it->first << ">" );
-                t_child_it->second->channel()->DeleteQueue( t_child_it->first, false );
-            }
-        }
-        catch( AmqpClient::ConnectionClosedException& e )
-        {
-            LERROR( dlog, "Fatal AMQP exception encountered: " << e.what() );
-            return false;
-        }
-        catch( amqp_lib_exception& e )
-        {
-            LERROR( dlog, "AMQP library exception caught while removing queue: (" << e.ErrorCode() << ") " << e.what() );
-            return false;
-        }
-        catch( std::exception& e )
-        {
-            LERROR( dlog, "Standard exception caught: " << e.what() );
-            return false;
-        }
-        catch(...)
-        {
-            LERROR( dlog, "Unknown exception caught" );
-            return false;
-        }
-
-        return true;
+        return t_success;
     }
 
     bool service::listen_on_queue()
