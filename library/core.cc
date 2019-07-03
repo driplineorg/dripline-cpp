@@ -288,6 +288,11 @@ namespace dripline
         catch( amqp_lib_exception& e )
         {
             LERROR( dlog, "AMQP Library Exception caught while creating channel: (" << e.ErrorCode() << ") " << e.what() );
+            if( e.ErrorCode() == -9 )
+            {
+                LERROR( dlog, "This error means the client could not connect to the broker.\n\t" <<
+                        "Check that you have the address and port correct, and that the broker is running.")
+            }
             return amqp_channel_ptr();
         }
         catch( std::exception& e )

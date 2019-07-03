@@ -74,10 +74,14 @@ namespace dripline
 
         core t_core( t_dripline_node );
 
-        unsigned t_timeout = t_dripline_node.get_value( "timeout", 10U ) * 1000; // convert seconds (dripline agent user interface) to milliseconds (expected by SimpleAmqpClient)
+        unsigned t_timeout = t_config.get_value( "timeout", 10U ) * 1000; // convert seconds (dripline agent user interface) to milliseconds (expected by SimpleAmqpClient)
+        t_config.erase( "timeout" );
         bool t_json_print = t_config.get_value( "json-print", false );
+        t_config.erase( "json-print" );
         bool t_pretty_print = t_config.get_value( "pretty-print", false );
+        t_config.erase( "pretty-print" );
         bool t_suppress_output = t_config.get_value( "suppress-output", false );
+        t_config.erase( "suppress-output" );
 
         f_agent->routing_key() = t_config.get_value( "rk", f_agent->routing_key() );
         t_config.erase( "rk" );
