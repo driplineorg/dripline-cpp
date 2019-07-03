@@ -56,7 +56,7 @@ namespace dripline
     {
         an_app.add_config_option< std::string >( "-b,--broker", "dripline.broker", "Set the dripline broker address" );
         an_app.add_config_option< unsigned >( "-p,--port", "dripline.broker-port", "Set the port for communication with the dripline broker" );
-        an_app.add_config_option< std::string >( "-a,--auth-file", "dripline.auth-file", "Set the authentication file path" );
+        an_app.add_config_option< std::string >( "--auth-file", "dripline.auth-file", "Set the authentication file path" );
         an_app.add_config_option< unsigned >( "--max-payload", "dripline.max-payload-size", "Set the maximum payload size (in bytes)" );
         return;
     }

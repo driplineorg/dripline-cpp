@@ -20,6 +20,7 @@ set( dripline_HEADERS
     listener.hh
     message.hh
     monitor.hh
+    monitor_config.hh
     receiver.hh
     relayer.hh
     return_codes.hh
@@ -42,6 +43,7 @@ set( dripline_SOURCES
     listener.cc
     message.cc
     monitor.cc
+    monitor_config.cc
     receiver.cc
     relayer.cc
     return_codes.cc

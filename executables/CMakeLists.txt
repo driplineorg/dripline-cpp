@@ -9,5 +9,6 @@ set( lib_dependencies
 )
 set( programs
     dl-agent
+    dl-mon
 )
 pbuilder_executables( programs lib_dependencies )
