@@ -29,8 +29,40 @@ namespace dripline
             f_alerts_keys()
     {
         // get requests keys
+        if( a_config.has( "request-keys" ) && a_config["request-keys"].is_array() )
+        {
+            const scarab::param_array& t_req_keys = a_config["request-keys"].as_array();
+            f_requests_keys.reserve( t_req_keys.size() );
+            for( auto t_it = t_req_keys.begin(); t_it != t_req_keys.end(); ++t_it )
+            {
+                LPROG( dlog, "Monitor <" << f_name << "> will monitor key <" << (*t_it)().as_string() << "> on the requests exchange" );
+                f_requests_keys.push_back( (*t_it)().as_string() );
+            }
+        }
+
+        if( a_config.has( "request-key" ) && a_config["request-key"].is_value() )
+        {
+            LPROG( dlog, "Monitor <" << f_name << "> will monitor key <" << a_config["request-key"]().as_string() << "> on the requests exchange" );
+            f_requests_keys.push_back( a_config["request-key"]().as_string() );
+        }
 
         // get alerts keys
+        if( a_config.has( "alert-keys" ) && a_config["alert-keys"].is_array() )
+        {
+            const scarab::param_array& t_req_keys = a_config["alert-keys"].as_array();
+            f_requests_keys.reserve( t_req_keys.size() );
+            for( auto t_it = t_req_keys.begin(); t_it != t_req_keys.end(); ++t_it )
+            {
+                LPROG( dlog, "Monitor <" << f_name << "> will monitor key <" << (*t_it)().as_string() << "> on the requests exchange" );
+                f_alerts_keys.push_back( (*t_it)().as_string() );
+            }
+        }
+
+        if( a_config.has( "alert-key" ) && a_config["alert-key"].is_value() )
+        {
+            LPROG( dlog, "Monitor <" << f_name << "> will monitor key <" << a_config["alert-key"]().as_string() << "> on the alerts exchange" );
+            f_alerts_keys.push_back( a_config["alert-key"]().as_string() );
+        }
     }
 
     monitor::monitor( monitor&& a_orig ) :
@@ -71,6 +103,12 @@ namespace dripline
         if( f_status != status::nothing )
         {
             LERROR( dlog, "Monitor is not in the right status to start" );
+            return false;
+        }
+
+        if( f_requests_keys.empty() && f_alerts_keys.empty() )
+        {
+            LERROR( dlog, "No keys provided to monitor" );
             return false;
         }
 
