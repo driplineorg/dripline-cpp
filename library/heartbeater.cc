@@ -71,6 +71,8 @@ namespace dripline
             if( std::chrono::steady_clock().now() >= t_next_heartbeat_at && ! f_canceled.load() )
             {
                 LDEBUG( dlog, "Sending heartbeat" );
+                // reset message ID so it's different for each heartbeat
+                t_alert_ptr->message_id() = string_from_uuid( generate_random_uuid() );
                 f_service->send( t_alert_ptr );
                 t_next_heartbeat_at = std::chrono::steady_clock().now() + std::chrono::seconds( f_heartbeat_interval_s );
             }
