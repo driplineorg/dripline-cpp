@@ -41,6 +41,11 @@ namespace dripline
             f_routing_key(),
             f_specifier(),
             f_lockout_key( generate_nil_uuid() ),
+            f_is_dry_run( false ),
+            f_timeout( 0 ),
+            f_suppress_output( false ),
+            f_pretty_print( false ),
+            f_save_filename(),
             f_reply(),
             f_return( dl_client_error().rc_value() )
     {
@@ -61,15 +66,13 @@ namespace dripline
         LINFO( dlog, "Creating request" );
 
         // create a copy of the config that will be pared down by removing expected elements
-        param_node t_config( a_config ); //f_agent->config();
-        //t_config = a_node;
+        param_node t_config( a_config );
 
         param_node t_amqp_node;
-        unsigned t_timeout = 0;
         if( t_config.has( "amqp" ) )
         {
             t_amqp_node = std::move(t_config.remove( "amqp" )->as_node());
-            t_timeout = t_amqp_node.get_value( "timeout", 10U ) * 1000; // convert seconds (dripline agent user interface) to milliseconds (expected by SimpleAmqpClient)
+            f_agent->set_timeout( t_amqp_node.get_value( "timeout", 10U ) * 1000 ); // convert seconds (dripline agent user interface) to milliseconds (expected by SimpleAmqpClient)
         }
 
         core t_core( t_amqp_node );
@@ -77,12 +80,11 @@ namespace dripline
         // pull the special CL arguments out of the configuration
 
         param_node t_agent_node;
-        bool t_pretty_print = false, t_suppress_output = false;
         if( t_config.has( "agent" ) )
         {
             t_agent_node = std::move(t_config.remove( "agent" )->as_node());
-            t_pretty_print = t_agent_node.get_value( "pretty-print", t_pretty_print );
-            t_suppress_output = t_agent_node.get_value( "suppress-output", t_suppress_output );
+            f_agent->set_pretty_print( t_agent_node.get_value( "pretty-print", f_agent->get_pretty_print() ) );
+            f_agent->set_suppress_output( t_agent_node.get_value( "suppress-output", f_agent->get_suppress_output() ) );
         }
 
         f_agent->routing_key() = t_config.get_value( "rk", f_agent->routing_key() );
@@ -104,7 +106,7 @@ namespace dripline
             }
         }
 
-        std::string t_save_filename( t_config.get_value( "save", "" ) );
+        f_agent->save_filename() = t_config.get_value( "save", "" );
         t_config.erase( "save" );
 
         // load the values array, merged in the proper order
@@ -130,8 +132,15 @@ namespace dripline
             t_is_dry_run = true;
         }
 
+        this->create_and_send_message( t_config, t_core, t_is_dry_run );
+
+        return;
+    }
+
+    void agent::sub_agent_request::create_and_send_message( scarab::param_node& a_config, const core& a_core )
+    {
         // create the request
-        request_ptr_t t_request = this->create_request( t_config );
+        request_ptr_t t_request = this->create_request( a_config );
         LDEBUG( dlog, "message payload to send is: " << t_request->payload() );
 
         if( ! t_request )
@@ -142,24 +151,18 @@ namespace dripline
         }
 
         // if this is a dry run, we print the message and stop here
-        if( t_is_dry_run )
+        if( f_agent->get_is_dry_run() )
         {
             LPROG( dlog, "Request:\n" << *t_request );
             f_agent->set_return( dl_warning_no_action_taken().rc_value() );
             return;
         }
 
-        // now all that remains in f_config should be values to pass to the server as arguments to the request
-
         t_request->lockout_key() = f_agent->lockout_key();
-
-        LINFO( dlog, "Connecting to AMQP broker" );
-
-        //const param_node& t_broker_node = t_config["amqp"].as_node();
 
         LDEBUG( dlog, "Sending message w/ msgop = " << t_request->get_message_op() << " to " << t_request->routing_key() );
 
-        rr_pkg_ptr t_receive_reply = t_core.send( t_request );
+        rr_pkg_ptr t_receive_reply = a_core.send( t_request );
 
         if( ! t_receive_reply->f_successful_send )
         {
@@ -173,7 +176,7 @@ namespace dripline
             LINFO( dlog, "Waiting for a reply from the server; use ctrl-c to cancel" );
 
             // timed blocking call to wait for incoming message
-            dripline::reply_ptr_t t_reply = t_core.wait_for_reply( t_receive_reply, t_timeout );
+            dripline::reply_ptr_t t_reply = t_core.wait_for_reply( t_receive_reply, f_agent->get_timeout() );
 
             if( t_reply )
             {
@@ -186,10 +189,10 @@ namespace dripline
                         "Return code: " << t_reply->get_return_code() << '\n' <<
                         "Return message: " << t_reply->return_msg() << '\n' <<
                         t_payload );
-                if( ! t_suppress_output )
+                if( ! f_agent->get_suppress_output() )
                 {
                     scarab::param_node t_encoding_options;
-                    if( t_pretty_print )
+                    if( f_agent->get_pretty_print() )
                     {
                         t_encoding_options.add( "style", "pretty" );
                     }
@@ -198,10 +201,10 @@ namespace dripline
                     std::cout << t_encoded_body << std::endl;
                 }
 
-                if( ! t_save_filename.empty() && ! t_payload.is_null() )
+                if( ! f_agent->save_filename().empty() && ! t_payload.is_null() )
                 {
                     scarab::param_translator t_translator;
-                    if( ! t_translator.write_file( t_payload, t_save_filename ) )
+                    if( ! t_translator.write_file( t_payload, f_agent->save_filename() ) )
                     {
                         LERROR( dlog, "Unable to write out payload" );
                         f_agent->set_return( dl_client_error_handling_reply().rc_value() );
@@ -221,6 +224,16 @@ namespace dripline
         }
 
         return;
+    }
+
+    void agent::sub_agent_reply::create_and_send_message( scarab::param_node& a_config, const core& a_core )
+    {
+
+    }
+
+    void agent::sub_agent_alert::create_and_send_message( scarab::param_node& a_config, const core& a_core )
+    {
+
     }
 
     request_ptr_t agent::sub_agent_run::create_request( scarab::param_node& a_config )
