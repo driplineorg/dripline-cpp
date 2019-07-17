@@ -129,11 +129,20 @@ namespace dripline
 
             //mv_referrable( scarab::param_node, config );
 
+            mv_accessible( bool, is_dry_run );
+
+            // all message types
             mv_referrable( std::string, routing_key );
             mv_referrable( std::string, specifier );
+
+            // requests only
             mv_referrable( uuid_t, lockout_key );
 
-            mv_accessible( bool, is_dry_run );
+            // alerts only
+            mv_accessible( unsigned, return_code );
+            mv_referrable( std::string, return_msg );
+
+            // use only for requests
             mv_accessible( unsigned, timeout );
             mv_accessible( bool, suppress_output );
             mv_accessible( bool, pretty_print );
