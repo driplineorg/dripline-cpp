@@ -7,7 +7,8 @@
  *  Expected configuration supplied to the constructor:
  *
  *  {
- *      "[operation: run, get, set, or cmd] : "",
+ *      "[operation: run, get, set, cmd, alert, reply] : "",
+ *      "rk" : "[routing key]",
  *      "amqp" : {
  *          "broker" : "[address]",
  *          "broker-port" : [port],
@@ -15,10 +16,16 @@
  *          "auth-file" : "[authentication file]",  // optional; must live in the user's home directory
  *          "reply-timeout-ms": [ms] // optional; default is 10000
  *      },
- *      "rk" : "[routing key]",
  *      "lockout-key" : "[uuid]",  // optional
  *      "save" : "[filename]"  // optional
  *      "load" : "[filename]"  // optional; only used for cmd
+ *      "return" : { // used only for replies
+ *          "code" : [return code],
+ *          "message" : "[return message]"
+ *      }
+ *      "pretty-print" : null // optional; if present sets output to nicely formatted JSON
+ *      "suppress-output" : null // optional; if present suppresses the normal agent output
+ *      "dry-run-agent" : null // optional; if present prints the message to be sent and exits
  *  }
  */
 
@@ -32,6 +39,8 @@
 
 namespace dripline
 {
+    class core;
+
     class DRIPLINE_API agent
     {
         public:
@@ -44,44 +53,73 @@ namespace dripline
                     void execute( const scarab::param_node& a_config );
                     void execute( const scarab::param_node& a_config, const scarab::param_array& a_ord_args );
 
-                    virtual request_ptr_t create_request( scarab::param_node& a_config ) = 0;
-                    virtual request_ptr_t create_request();
+                    virtual void create_and_send_message( scarab::param_node& a_config, const core& a_core ) = 0;
+                    virtual void create_and_send_message( const core& a_core );
 
                 protected:
                     agent* f_agent;
             };
 
-            class DRIPLINE_API sub_agent_run : public sub_agent
+            class DRIPLINE_API sub_agent_request : public sub_agent
             {
                 public:
-                    sub_agent_run( agent* an_agent ) : sub_agent( an_agent ) {}
+                    sub_agent_request( agent* an_agent ) : sub_agent( an_agent ) {}
+                    virtual ~sub_agent_request() {}
+
+                    virtual void create_and_send_message( scarab::param_node& a_config, const core& a_core );
+
+                    virtual request_ptr_t create_request( scarab::param_node& a_config ) = 0;
+            };
+
+            class DRIPLINE_API sub_agent_reply : public sub_agent
+            {
+                public:
+                    sub_agent_reply( agent* an_agent ) : sub_agent( an_agent ) {}
+                    virtual ~sub_agent_reply() {}
+
+                    virtual void create_and_send_message( scarab::param_node& a_config, const core& a_core );
+            };
+
+            class DRIPLINE_API sub_agent_alert : public sub_agent
+            {
+                public:
+                    sub_agent_alert( agent* an_agent ) : sub_agent( an_agent ) {}
+                    virtual ~sub_agent_alert() {}
+
+                    virtual void create_and_send_message( scarab::param_node& a_config, const core& a_core );
+            };
+
+            class DRIPLINE_API sub_agent_run : public sub_agent_request
+            {
+                public:
+                    sub_agent_run( agent* an_agent ) : sub_agent_request( an_agent ) {}
                     virtual ~sub_agent_run() {}
 
                     virtual request_ptr_t create_request( scarab::param_node& a_config );
             };
 
-            class DRIPLINE_API sub_agent_get : public sub_agent
+            class DRIPLINE_API sub_agent_get : public sub_agent_request
             {
                 public:
-                    sub_agent_get( agent* an_agent ) : sub_agent( an_agent ) {}
+                    sub_agent_get( agent* an_agent ) : sub_agent_request( an_agent ) {}
                     virtual ~sub_agent_get() {}
 
                     virtual request_ptr_t create_request( scarab::param_node& a_config );
             };
 
-            class DRIPLINE_API sub_agent_set : public sub_agent
+            class DRIPLINE_API sub_agent_set : public sub_agent_request
             {
                 public:
-                    sub_agent_set( agent* an_agent ) : sub_agent( an_agent ) {}
+                    sub_agent_set( agent* an_agent ) : sub_agent_request( an_agent ) {}
                     virtual ~sub_agent_set() {}
 
                     virtual request_ptr_t create_request( scarab::param_node& a_config );
             };
 
-            class DRIPLINE_API sub_agent_cmd : public sub_agent
+            class DRIPLINE_API sub_agent_cmd : public sub_agent_request
             {
                 public:
-                    sub_agent_cmd( agent* an_agent ) : sub_agent( an_agent ) {}
+                    sub_agent_cmd( agent* an_agent ) : sub_agent_request( an_agent ) {}
                     virtual ~sub_agent_cmd() {}
 
                     virtual request_ptr_t create_request( scarab::param_node& a_config );
@@ -98,9 +136,24 @@ namespace dripline
 
             //mv_referrable( scarab::param_node, config );
 
+            mv_accessible( bool, is_dry_run );
+
+            // all message types
             mv_referrable( std::string, routing_key );
             mv_referrable( std::string, specifier );
+
+            // requests only
             mv_referrable( uuid_t, lockout_key );
+
+            // alerts only
+            mv_accessible( unsigned, return_code );
+            mv_referrable( std::string, return_msg );
+
+            // use only for requests
+            mv_accessible( unsigned, timeout );
+            mv_accessible( bool, suppress_output );
+            mv_accessible( bool, pretty_print );
+            mv_referrable( std::string, save_filename );
 
             mv_accessible( reply_ptr_t, reply );
 
@@ -125,10 +178,11 @@ namespace dripline
         return;
     }
 
-    inline request_ptr_t agent::sub_agent::create_request()
+    inline void agent::sub_agent::create_and_send_message( const core& a_core )
     {
         scarab::param_node t_config;
-        return create_request( t_config );
+        create_and_send_message( t_config, a_core );
+        return;
     }
 
 } /* namespace dripline */

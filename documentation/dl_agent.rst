@@ -2,7 +2,7 @@
 Dripline Agent
 ==============
 
-Dripline includes an executable for sending dripline commands: ``dl_agent``.
+Dripline includes an executable for sending dripline messages: ``dl_agent``.
 
 Use
 ===
@@ -22,12 +22,14 @@ Provide the dripline specifier to further direct your message (optional).
 Subcommands
 -----------
 
-The four dripline subcommands are available as:
+The six dripline subcommands are available as:
 
 * ``run``    Send an OP_RUN request
 * ``get``    Send an OP_GET request
 * ``set``    Send an OP_SET request
 * ``cmd``    Send an OP_CMD request
+* ``reply``  Send a reply
+* ``alert``  Send an alert
 
 Values and Keyword Arguments
 ----------------------------
@@ -65,6 +67,22 @@ Options
 --payload TEXT ...          Add values to the payload
 -v,--values TEXT ...        Add ordered values
 --dry-run-msg               Print the message contents and do not send
+--pretty-print              Outputs nicely-formatted JSON to the terminal
+--suppress-output           Normal message output is suppressed
+--return-code               Set the return code to send (replies only)
+--return-message            Set the return message to send (replies only)
+
+
+Output
+======
+
+The ``stdout`` output of the agent will be the reply, if any, that is received from the sent message.
+
+All other terminal output (e.g. logging messages of all types) are sent to ``stderr``.
+
+The return code will be the integer-truncated return code of the reply (if any) divided by 100.  
+If there is no reply message (by design or error), a successfully-sent message will return 0 and 
+an error will return the integer-truncated client error code divided by 100.
 
 
 Build Options

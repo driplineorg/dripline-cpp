@@ -68,6 +68,16 @@ int main( int argc, char** argv )
             [&]() { the_agent.execute< agent::sub_agent_cmd>( the_main.master_config(), the_main.nonoption_ord_args() ); }
     );
 
+    scarab::config_decorator* t_agent_reply = the_main.add_config_subcommand( "reply", "Send a reply message" );
+    t_agent_reply->this_app()->callback(
+            [&]() { the_agent.execute< agent::sub_agent_reply>( the_main.master_config(), the_main.nonoption_ord_args() ); }
+    );
+
+    scarab::config_decorator* t_agent_alert = the_main.add_config_subcommand( "alert", "Send an alert message" );
+    t_agent_alert->this_app()->callback(
+            [&]() { the_agent.execute< agent::sub_agent_alert>( the_main.master_config(), the_main.nonoption_ord_args() ); }
+    );
+
     // Default configuration
     the_main.default_config() = agent_config();
 
@@ -77,7 +87,9 @@ int main( int argc, char** argv )
     the_main.add_config_option< std::string >( "-e,--exchange", "amqp.exchange", "Set the exchange to send message on" );
     the_main.add_config_option< std::string >( "-a,--auth-file", "amqp.auth-file", "Set the authentication file path" );
     the_main.add_config_option< unsigned >( "-t,--timeout", "amqp.timeout", "Set the timeout for waiting for a reply (seconds)" );
-    the_main.add_config_option< std::string >( "-k,--lockout-key", "lockout-key", "Set the lockout key to send with the message" );
+    the_main.add_config_option< std::string >( "-k,--lockout-key", "lockout-key", "Set the lockout key to send with the message (for sending requests only)" );
+    the_main.add_config_option< unsigned >( "--return-code", "return.code", "Set the return code sent (for sending replies only)" );
+    the_main.add_config_option< std::string >( "--return-msg", "return.message", "Set the return message sent (for sending replies only)" );
     the_main.add_config_flag< bool >( "--suppress-output", "agent.suppress-output", "Suppress the output of the returned reply" );
     the_main.add_config_flag< bool >( "--pretty-print", "agent.pretty-print", "Output the returned reply in nicely formatted JSON" );
     the_main.add_config_multi_option< std::string >( "-P,--payload", "payload", "Add values to the payload" );
