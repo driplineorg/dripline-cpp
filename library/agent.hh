@@ -7,7 +7,8 @@
  *  Expected configuration supplied to the constructor:
  *
  *  {
- *      "[operation: run, get, set, or cmd] : "",
+ *      "[operation: run, get, set, cmd, alert, reply] : "",
+ *      "rk" : "[routing key]",
  *      "amqp" : {
  *          "broker" : "[address]",
  *          "broker-port" : [port],
@@ -15,10 +16,16 @@
  *          "auth-file" : "[authentication file]",  // optional; must live in the user's home directory
  *          "reply-timeout-ms": [ms] // optional; default is 10000
  *      },
- *      "rk" : "[routing key]",
  *      "lockout-key" : "[uuid]",  // optional
  *      "save" : "[filename]"  // optional
  *      "load" : "[filename]"  // optional; only used for cmd
+ *      "return" : { // used only for replies
+ *          "code" : [return code],
+ *          "message" : "[return message]"
+ *      }
+ *      "pretty-print" : null // optional; if present sets output to nicely formatted JSON
+ *      "suppress-output" : null // optional; if present suppresses the normal agent output
+ *      "dry-run-agent" : null // optional; if present prints the message to be sent and exits
  *  }
  */
 
