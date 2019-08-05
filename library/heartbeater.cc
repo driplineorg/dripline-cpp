@@ -48,6 +48,12 @@ namespace dripline
             throw dripline_error() << "Unable to start heartbeater because service pointer is not set";
         }
 
+        if( f_heartbeat_interval_s == 0 )
+        {
+            LINFO( dlog, "Heartbeat disabled" );
+            return;
+        }
+
         scarab::param_ptr_t t_payload_ptr( new scarab::param_node() );
         scarab::param_node& t_payload = t_payload_ptr->as_node();
         t_payload.add( "name", a_name );
