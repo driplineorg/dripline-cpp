@@ -167,7 +167,14 @@ namespace dripline
 
         try
         {
-            f_heartbeat_thread = std::thread( &heartbeater::execute, this, f_name, f_id, f_heartbeat_routing_key );
+            if( f_heartbeat_interval_s != 0 )
+            {
+                f_heartbeat_thread = std::thread( &heartbeater::execute, this, f_name, f_id, f_heartbeat_routing_key );
+            }
+            else
+            {
+                LINFO( dlog, "Heartbeat disabled" );
+            }
 
             f_receiver_thread = std::thread( &concurrent_receiver::execute, this );
 
@@ -191,7 +198,10 @@ namespace dripline
 
             f_receiver_thread.join();
 
-            f_heartbeat_thread.join();
+            if( f_heartbeat_thread.joinable() )
+            {
+                f_heartbeat_thread.join();
+            }
         }
         catch( std::system_error& e )
         {
