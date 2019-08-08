@@ -40,9 +40,17 @@ namespace dripline
     LOGGER( dlog, "agent" );
 
     agent::agent() :
+            f_is_dry_run( false ),
             f_routing_key(),
             f_specifier(),
             f_lockout_key( generate_nil_uuid() ),
+            f_return_code( dl_success().rc_value() ),
+            f_return_msg(),
+            f_timeout( 0 ),
+            f_suppress_output( false ),
+            f_json_print( false ),
+            f_pretty_print( false ),
+            f_save_filename(),
             f_reply(),
             f_return( dl_client_error().rc_value() )
     {
@@ -60,11 +68,10 @@ namespace dripline
 
     void agent::sub_agent::execute( const scarab::param_node& a_config, const scarab::param_array& a_ord_args )
     {
-        LINFO( dlog, "Creating request" );
+        LINFO( dlog, "Creating message" );
 
         // create a copy of the config that will be pared down by removing expected elements
-        param_node t_config( a_config ); //f_agent->config();
-        //t_config = a_node;
+        param_node t_config( a_config );
 
         param_node t_dripline_node;
         if( t_config.has( "dripline" ) )
@@ -74,13 +81,13 @@ namespace dripline
 
         core t_core( t_dripline_node );
 
-        unsigned t_timeout = t_config.get_value( "timeout", 10U ) * 1000; // convert seconds (dripline agent user interface) to milliseconds (expected by SimpleAmqpClient)
+        f_agent->set_timeout( t_config.get_value( "timeout", 10U ) * 1000 ); // convert seconds (dripline agent user interface) to milliseconds (expected by SimpleAmqpClient)
         t_config.erase( "timeout" );
-        bool t_json_print = t_config.get_value( "json-print", false );
+        f_agent->set_json_print( t_config.get_value( "json-print", f_agent->get_json_print() ) );
         t_config.erase( "json-print" );
-        bool t_pretty_print = t_config.get_value( "pretty-print", false );
+        f_agent->set_pretty_print( t_config.get_value( "pretty-print", f_agent->get_pretty_print() ) );
         t_config.erase( "pretty-print" );
-        bool t_suppress_output = t_config.get_value( "suppress-output", false );
+        f_agent->set_suppress_output( t_config.get_value( "suppress-output", f_agent->get_suppress_output() ) );
         t_config.erase( "suppress-output" );
 
         f_agent->routing_key() = t_config.get_value( "rk", f_agent->routing_key() );
@@ -102,7 +109,14 @@ namespace dripline
             }
         }
 
-        std::string t_save_filename( t_config.get_value( "save", "" ) );
+        if( t_config.has( "return" ) )
+        {
+            f_agent->set_return_code( t_config["return"].as_node().get_value( "code", dl_success().rc_value() ) );
+            f_agent->return_msg() = t_config["return"].as_node().get_value( "message", "" );
+            t_config.erase( "return" );
+        }
+
+        f_agent->save_filename() = t_config.get_value( "save", "" );
         t_config.erase( "save" );
 
         // load the values array, merged in the proper order
@@ -121,15 +135,21 @@ namespace dripline
         t_config.add( "values", t_values );
 
         // check if this is meant to be a dry run message
-        bool t_is_dry_run = false;
         if( t_config.has( "dry-run-msg" ) )
         {
             t_config.erase( "dry-run-msg" );
-            t_is_dry_run = true;
+            f_agent->set_is_dry_run( true );
         }
 
+        this->create_and_send_message( t_config, t_core );
+
+        return;
+    }
+
+    void agent::sub_agent_request::create_and_send_message( scarab::param_node& a_config, const core& a_core )
+    {
         // create the request
-        request_ptr_t t_request = this->create_request( t_config );
+        request_ptr_t t_request = this->create_request( a_config );
         LDEBUG( dlog, "message payload to send is: " << t_request->payload() );
 
         if( ! t_request )
@@ -140,9 +160,9 @@ namespace dripline
         }
 
         // if this is a dry run, we print the message and stop here
-        if( t_is_dry_run )
+        if( f_agent->get_is_dry_run() )
         {
-            LPROG( dlog, "Request:\n" << *t_request );
+            LPROG( dlog, "Request (routing key = " << f_agent->routing_key() << ";  specifier = " << f_agent->specifier() << "):\n" << *t_request );
             f_agent->set_return( dl_warning_no_action_taken().rc_value() );
             return;
         }
@@ -151,16 +171,12 @@ namespace dripline
 
         t_request->lockout_key() = f_agent->lockout_key();
 
-        LINFO( dlog, "Connecting to AMQP broker" );
-
-        //const param_node& t_broker_node = t_config["dripline"].as_node();
-
         LDEBUG( dlog, "Sending message w/ msgop = " << t_request->get_message_op() << " to " << t_request->routing_key() );
 
         sent_msg_pkg_ptr t_receive_reply;
         try
         {
-            t_receive_reply = t_core.send( t_request );
+            t_receive_reply = a_core.send( t_request );
         }
         catch( dripline_error& e )
         {
@@ -181,7 +197,7 @@ namespace dripline
 
             // timed blocking call to wait for incoming message
             receiver t_msg_receiver;
-            dripline::reply_ptr_t t_reply = t_msg_receiver.wait_for_reply( t_receive_reply, t_timeout );
+            dripline::reply_ptr_t t_reply = t_msg_receiver.wait_for_reply( t_receive_reply, f_agent->get_timeout() );
 
             if( t_reply )
             {
@@ -195,16 +211,16 @@ namespace dripline
                         "Return message: " << t_reply->return_msg() << '\n' <<
                         t_payload );
 
-                if( ! t_suppress_output )
+                if( ! f_agent->get_suppress_output() )
                 {
-                    if( ! t_json_print && ! t_pretty_print )
+                    if( ! f_agent->get_json_print() && ! f_agent->get_pretty_print() )
                     {
                         std::cout << *t_reply << std::endl;
                     }
                     else
                     {
                         param_node t_encoding_options;
-                        if( t_pretty_print )
+                        if( f_agent->get_pretty_print() )
                         {
                             t_encoding_options.add( "style", "pretty" );
                         }
@@ -213,10 +229,10 @@ namespace dripline
                     }
                 }
 
-                if( ! t_save_filename.empty() && ! t_payload.is_null() )
+                if( ! f_agent->save_filename().empty() && ! t_payload.is_null() )
                 {
                     scarab::param_translator t_translator;
-                    if( ! t_translator.write_file( t_payload, t_save_filename ) )
+                    if( ! t_translator.write_file( t_payload, f_agent->save_filename() ) )
                     {
                         LERROR( dlog, "Unable to write out payload" );
                         f_agent->set_return( dl_client_error_handling_reply().rc_value() );
@@ -229,6 +245,110 @@ namespace dripline
                 f_agent->set_return( dl_client_error_timeout().rc_value() );
             }
             f_agent->set_reply( t_reply );
+        }
+        else
+        {
+            f_agent->set_return( dl_success().rc_value() );
+        }
+
+        return;
+    }
+
+    void agent::sub_agent_reply::create_and_send_message( scarab::param_node& a_config, const core& a_core )
+    {
+        // create the alert
+        param_ptr_t t_payload_ptr( new param_node( a_config ) );
+
+        reply_ptr_t t_reply =  msg_reply::create( f_agent->get_return_code(),
+                                                  f_agent->return_msg(),
+                                                  std::move(t_payload_ptr),
+                                                  f_agent->routing_key(),
+                                                  f_agent->specifier() );
+        LDEBUG( dlog, "reply payload to send is: " << t_reply->payload() );
+
+        if( ! t_reply )
+        {
+            LERROR( dlog, "Unable to create reply" );
+            f_agent->set_return( dl_client_error_invalid_request().rc_value() );
+            return;
+        }
+
+        // if this is a dry run, we print the message and stop here
+        if( f_agent->get_is_dry_run() )
+        {
+            LPROG( dlog, "Reply (routing key = " << f_agent->routing_key() << ";  specifier = " << f_agent->specifier() << "):\n" << *t_reply );
+            f_agent->set_return( dl_warning_no_action_taken().rc_value() );
+            return;
+        }
+
+        LDEBUG( dlog, "Sending reply with return code <" << t_reply->get_return_code() << "> and message <" << t_reply->return_msg() << "> to key " << t_reply->routing_key() );
+
+        sent_msg_pkg_ptr t_msg_sent;
+        try
+        {
+            t_msg_sent = a_core.send( t_reply );
+        }
+        catch( dripline_error& e )
+        {
+            LERROR( dlog, "Unable to send reply:\n" << e.what() );
+            return;
+        }
+
+        if( ! t_msg_sent->f_successful_send )
+        {
+            LERROR( dlog, "Unable to send reply:\n" + t_msg_sent->f_send_error_message );
+            f_agent->set_return( dl_client_error_unable_to_send().rc_value() );
+        }
+        else
+        {
+            f_agent->set_return( dl_success().rc_value() );
+        }
+
+        return;
+    }
+
+    void agent::sub_agent_alert::create_and_send_message( scarab::param_node& a_config, const core& a_core )
+    {
+        // create the alert
+        param_ptr_t t_payload_ptr( new param_node( a_config ) );
+
+        alert_ptr_t t_alert =  msg_alert::create( std::move(t_payload_ptr),
+                                                  f_agent->routing_key(),
+                                                  f_agent->specifier() );
+        LDEBUG( dlog, "alert payload to send is: " << t_alert->payload() );
+
+        if( ! t_alert )
+        {
+            LERROR( dlog, "Unable to create alert" );
+            f_agent->set_return( dl_client_error_invalid_request().rc_value() );
+            return;
+        }
+
+        // if this is a dry run, we print the message and stop here
+        if( f_agent->get_is_dry_run() )
+        {
+            LPROG( dlog, "Alert (routing key = " << f_agent->routing_key() << ";  specifier = " << f_agent->specifier() << "):\n" << *t_alert );
+            f_agent->set_return( dl_warning_no_action_taken().rc_value() );
+            return;
+        }
+
+        LDEBUG( dlog, "Sending alert with key " << t_alert->routing_key() );
+
+        sent_msg_pkg_ptr t_msg_sent;
+        try
+        {
+            t_msg_sent = a_core.send( t_alert );
+        }
+        catch( dripline_error& e )
+        {
+            LERROR( dlog, "Unable to send alert:\n" << e.what() );
+            return;
+        }
+
+        if( ! t_msg_sent->f_successful_send )
+        {
+            LERROR( dlog, "Unable to send alert:\n" + t_msg_sent->f_send_error_message );
+            f_agent->set_return( dl_client_error_unable_to_send().rc_value() );
         }
         else
         {

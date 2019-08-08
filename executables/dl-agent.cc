@@ -66,19 +66,33 @@ int main( int argc, char** argv )
             [&]() { the_agent.execute< agent::sub_agent_cmd>( the_main.master_config(), the_main.nonoption_ord_args() ); }
     );
 
+    scarab::config_decorator* t_agent_reply = the_main.add_config_subcommand( "reply", "Send a reply message" );
+    t_agent_reply->add_config_option< std::string >( "routing_key", "rk", "Set the routing key" )->required();
+    t_agent_reply->this_app()->callback(
+            [&]() { the_agent.execute< agent::sub_agent_reply>( the_main.master_config(), the_main.nonoption_ord_args() ); }
+    );
+
+    scarab::config_decorator* t_agent_alert = the_main.add_config_subcommand( "alert", "Send an alert message" );
+    t_agent_alert->add_config_option< std::string >( "routing_key", "rk", "Set the routing key" )->required();
+    t_agent_alert->this_app()->callback(
+            [&]() { the_agent.execute< agent::sub_agent_alert>( the_main.master_config(), the_main.nonoption_ord_args() ); }
+    );
+
     // Default configuration
     the_main.default_config() = agent_config();
 
     // Command line options
     add_dripline_options( the_main );
     the_main.add_config_option< std::string >( "-s,--specifier", "specifier", "Set the specifier" );
+    the_main.add_config_multi_option< std::string >( "-P,--payload", "payload", "Add values to the payload" );
+    the_main.add_config_multi_option< std::string >( "-v,--values", "option-values", "Add ordered values" ); // stored in the config as "option-values" so they can be merged in later in the proper order
     the_main.add_config_option< unsigned >( "-t,--timeout", "timeout", "Set the timeout for waiting for a reply (seconds)" );
-    the_main.add_config_option< std::string >( "-k,--lockout-key", "lockout-key", "Set the lockout key to send with the message" );
+    the_main.add_config_option< std::string >( "-k,--lockout-key", "lockout-key", "Set the lockout key to send with the message (for sending requests only)" );
     the_main.add_config_flag< bool >( "--suppress-output", "suppress-output", "Suppress the output of the returned reply" );
     the_main.add_config_flag< bool >( "--json-print", "json-print", "Output the returned reply in JSON; default is white-space suppressed (see --pretty-print)" );
     the_main.add_config_flag< bool >( "--pretty-print", "pretty-print", "Output the returned reply in nicely formatted JSON" );
-    the_main.add_config_multi_option< std::string >( "-P,--payload", "payload", "Add values to the payload" );
-    the_main.add_config_multi_option< std::string >( "-v,--values", "option-values", "Add ordered values" ); // stored in the config as "option-values" so they can be merged in later in the proper order
+    the_main.add_config_option< unsigned >( "--return-code", "return.code", "Set the return code sent (for sending replies only)" );
+    the_main.add_config_option< std::string >( "--return-msg", "return.message", "Set the return message sent (for sending replies only)" );
     the_main.add_config_flag< bool >( "--dry-run-msg", "dry-run-msg", "Print the message contents and exit" );
 
     // Package version
