@@ -14,7 +14,8 @@ TEST_CASE( "sub_agent_run", "[agent]" )
     std::unique_ptr< dripline::agent > t_agent( new dripline::agent() );
     dripline::agent::sub_agent_run t_sar( t_agent.get() );
 
-    dripline::request_ptr_t t_request = t_sar.sub_agent::create_request();
+    scarab::param_node t_config;
+    dripline::request_ptr_t t_request = t_sar.create_request( t_config );
 
     REQUIRE( t_request );
     REQUIRE( t_request->get_message_type() == dripline::msg_t::request );
@@ -26,7 +27,8 @@ TEST_CASE( "sub_agent_get", "[agent]" )
     std::unique_ptr< dripline::agent > t_agent( new dripline::agent() );
     dripline::agent::sub_agent_get t_sag( t_agent.get() );
 
-    dripline::request_ptr_t t_request = t_sag.sub_agent::create_request();
+    scarab::param_node t_config;
+    dripline::request_ptr_t t_request = t_sag.create_request( t_config );
 
     REQUIRE( t_request );
     REQUIRE( t_request->get_message_type() == dripline::msg_t::request );
@@ -40,7 +42,8 @@ TEST_CASE( "sub_agent_set", "[agent]" )
 
     SECTION( "No value set" )
     {
-        dripline::request_ptr_t t_request = t_sas.sub_agent::create_request();
+        scarab::param_node t_config;
+        dripline::request_ptr_t t_request = t_sas.create_request( t_config );
 
         REQUIRE( ! t_request );
     }
@@ -69,7 +72,8 @@ TEST_CASE( "sub_agent_cmd", "[agent]" )
     std::unique_ptr< dripline::agent > t_agent( new dripline::agent() );
     dripline::agent::sub_agent_cmd t_sac( t_agent.get() );
 
-    dripline::request_ptr_t t_request = t_sac.sub_agent::create_request();
+    scarab::param_node t_config;
+    dripline::request_ptr_t t_request = t_sac.create_request( t_config );
 
     REQUIRE( t_request );
     REQUIRE( t_request->get_message_type() == dripline::msg_t::request );
@@ -84,7 +88,8 @@ TEST_CASE( "agent", "[agent]" )
 
     dripline::agent::sub_agent_cmd t_sac( t_agent.get() );
 
-    dripline::request_ptr_t t_request = t_sac.sub_agent::create_request();
+    scarab::param_node t_config;
+    dripline::request_ptr_t t_request = t_sac.create_request( t_config );
 
     REQUIRE( t_request );
     REQUIRE( t_request->routing_key() == "my_service" );
