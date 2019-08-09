@@ -27,6 +27,7 @@ namespace dripline
     LOGGER( dlog, "service" );
 
     service::service( const scarab::param_node& a_config, const string& a_queue_name,  const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file, const bool a_make_connection ) :
+            scarab::cancelable(),
             core( a_config, a_broker_address, a_port, a_auth_file, a_make_connection ),
             // logic for setting the name:
             //   a_queue_name if provided
@@ -54,6 +55,7 @@ namespace dripline
     }
 
     service::service( const bool a_make_connection, const scarab::param_node& a_config ) :
+            scarab::cancelable(),
             core( a_make_connection, a_config ),
             endpoint( "" ),
             listener(),

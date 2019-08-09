@@ -21,6 +21,7 @@ namespace dripline
 {
 
     monitor::monitor( const scarab::param_node& a_config ) :
+            scarab::cancelable(),
             core( a_config.has( "dripline" ) ? a_config["dripline"].as_node() : scarab::param_node() ),
             listener(),
             concurrent_receiver(),
@@ -69,6 +70,7 @@ namespace dripline
     }
 
     monitor::monitor( monitor&& a_orig ) :
+            scarab::cancelable( std::move(a_orig) ),
             core( std::move(a_orig) ),
             listener( std::move(a_orig) ),
             concurrent_receiver( std::move(a_orig) ),

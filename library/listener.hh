@@ -45,9 +45,10 @@ namespace dripline
     class DRIPLINE_API listener_receiver : public listener, public concurrent_receiver
     {
         public:
-            listener_receiver() : listener(), concurrent_receiver() {}
+            listener_receiver() : scarab::cancelable(), listener(), concurrent_receiver() {}
             listener_receiver( const listener_receiver& ) = delete;
             listener_receiver( listener_receiver&& a_orig ) :
+                scarab::cancelable( std::move(a_orig) ),
                 listener( std::move(a_orig) ),
                 concurrent_receiver( std::move(a_orig) )
             {}

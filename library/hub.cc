@@ -20,6 +20,7 @@ namespace dripline
 
 
     hub::hub( const scarab::param_node& a_config, const string& a_queue_name,  const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file, const bool a_make_connection) :
+            scarab::cancelable(),
             service( a_config, a_queue_name, a_broker_address, a_port, a_auth_file, a_make_connection ),
             f_run_handler(),
             f_get_handlers(),

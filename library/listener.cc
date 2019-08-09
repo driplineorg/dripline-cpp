@@ -29,7 +29,7 @@ namespace dripline
     {}
 
     listener::listener( listener&& a_orig ) :
-            cancelable( a_orig ),
+            cancelable( std::move(a_orig) ),
             f_channel( std::move(a_orig.f_channel) ),
             f_consumer_tag( std::move(a_orig.f_consumer_tag) ),
             f_listen_timeout_ms( std::move(a_orig.f_listen_timeout_ms) ),
@@ -50,11 +50,13 @@ namespace dripline
     }
 
     endpoint_listener_receiver::endpoint_listener_receiver( endpoint_ptr_t a_endpoint_ptr ) :
+            scarab::cancelable(),
             listener_receiver(),
             f_endpoint( a_endpoint_ptr )
     {}
 
     endpoint_listener_receiver::endpoint_listener_receiver( endpoint_listener_receiver&& a_orig ) :
+            scarab::cancelable( std::move(a_orig) ),
             listener_receiver( std::move(a_orig) ),
             f_endpoint( std::move(a_orig.f_endpoint) )
     {}
