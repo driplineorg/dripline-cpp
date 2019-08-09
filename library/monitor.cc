@@ -23,8 +23,7 @@ namespace dripline
     monitor::monitor( const scarab::param_node& a_config ) :
             scarab::cancelable(),
             core( a_config.has( "dripline" ) ? a_config["dripline"].as_node() : scarab::param_node() ),
-            listener(),
-            concurrent_receiver(),
+            listener_receiver(),
             f_status( status::nothing ),
             f_name( std::string("monitor_") + string_from_uuid(generate_random_uuid()) ),
             f_json_print( false ),
@@ -72,8 +71,7 @@ namespace dripline
     monitor::monitor( monitor&& a_orig ) :
             scarab::cancelable( std::move(a_orig) ),
             core( std::move(a_orig) ),
-            listener( std::move(a_orig) ),
-            concurrent_receiver( std::move(a_orig) ),
+            listener_receiver( std::move(a_orig) ),
             f_status( a_orig.f_status ),
             f_name( std::move(a_orig.f_name) ),
             f_json_print( a_orig.f_json_print ),

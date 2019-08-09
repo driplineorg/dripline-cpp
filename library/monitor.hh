@@ -17,8 +17,7 @@ namespace DRIPLINE_API dripline
 
     class monitor :
             public core,
-            public listener,
-            public concurrent_receiver
+            public listener_receiver
     {
         protected:
             enum class status

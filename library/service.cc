@@ -34,9 +34,8 @@ namespace dripline
             //   otherwise a_config["queue"] if it exists
             //   otherwise "dlcpp_service"
             endpoint( a_queue_name.empty() ? a_config.get_value( "queue", "dlcpp_service" ) : a_queue_name ),
-            listener(),
+            listener_receiver(),
             heartbeater(),
-            concurrent_receiver(),
             std::enable_shared_from_this< service >(),
             f_status( status::nothing ),
             f_id( generate_random_uuid() ),
@@ -58,9 +57,8 @@ namespace dripline
             scarab::cancelable(),
             core( a_make_connection, a_config ),
             endpoint( "" ),
-            listener(),
+            listener_receiver(),
             heartbeater(),
-            concurrent_receiver(),
             std::enable_shared_from_this< service >(),
             f_status( status::nothing ),
             f_id( generate_random_uuid() ),
