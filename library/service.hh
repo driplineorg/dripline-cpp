@@ -27,9 +27,8 @@ namespace dripline
     class DRIPLINE_API service :
             public core,
             public endpoint,
-            public listener,
+            public listener_receiver,
             public heartbeater,
-            public concurrent_receiver,
             public std::enable_shared_from_this< service >
     {
         protected:

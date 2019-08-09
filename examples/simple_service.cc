@@ -24,6 +24,7 @@ namespace dripline
 {
 
     simple_service::simple_service( const scarab::param_node& a_config ) :
+            scarab::cancelable(),
             service( a_config, "simple" ),
             f_return( RETURN_SUCCESS )
     {

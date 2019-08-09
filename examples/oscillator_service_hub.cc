@@ -27,6 +27,7 @@ namespace dripline
 {
 
     oscillator_service_hub::oscillator_service_hub( const scarab::param_node& a_config ) :
+            scarab::cancelable(),
             hub( a_config, "osc_svc_hub" ),
             f_oscillator(),
             f_return( RETURN_SUCCESS )
