@@ -15,6 +15,7 @@ set( testing_SOURCES
     test_lockout.cc
     test_messages.cc
     test_return_codes.cc
+    test_scheduler.cc
     test_specifier.cc
     use_catch.cc
 )
