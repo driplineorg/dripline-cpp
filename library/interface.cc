@@ -19,7 +19,8 @@ namespace dripline
 
     sent_msg_pkg_ptr interface::get( const std::string& a_rk, const std::string& a_specifier )
     {
-
+        request_ptr_t t_request = msg_request::create( scarab::param_ptr_t(new scarab::param()), op_t::get, a_rk, a_specifier );
+        return send( t_request );
     }
 
     sent_msg_pkg_ptr interface::set( const std::string& a_rk, scarab::param_value a_value, const std::string& a_specifier, const std::string& a_lockout_key )
