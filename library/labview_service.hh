@@ -12,7 +12,7 @@
 
 namespace dripline
 {
-    class labview_sys_interface
+    class DRIPLINE_API labview_sys_interface
     {
         protected:
             labview_sys_interface() {}
@@ -26,7 +26,7 @@ namespace dripline
             static std::string perform_get( const std::string& a_thing );
     };
 
-    class labview_service : public service
+    class DRIPLINE_API labview_service : public service
     {
         public:
             labview_service( const scarab::param_node& a_config = scarab::param_node() );
