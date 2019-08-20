@@ -40,6 +40,18 @@ set( dripline_SOURCES
     uuid.cc
 )
 
+if( Dripline_BUILD_FOR_LABVIEW )
+    set( dripline_HEADERS
+        ${dripline_HEADERS}
+        labview_service.hh
+    )
+
+    set( dripline_SOURCES
+        ${dripline_SOURCES}
+        labview_service.cc
+    )
+endif( Dripline_BUILD_FOR_LABVIEW )
+
 configure_file( dripline_version.cc.in ${CMAKE_CURRENT_BINARY_DIR}/dripline_version.cc )
 set( dripline_SOURCES
     ${dripline_SOURCES}

@@ -20,6 +20,7 @@ pbuilder_prepare_project()
 ####################
 
 option( Dripline_BUILD_EXAMPLES "Flag to enable building the examples" FALSE )
+option( Dripline_BUILD_FOR_LABVIEW "Flag to enable the LabVIEW interface" FALSE )
 
 # always use C++11
 set_option( USE_CPP11 TRUE )
