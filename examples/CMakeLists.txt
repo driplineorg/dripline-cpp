@@ -32,6 +32,7 @@ if( Dripline_ENABLE_EXECUTABLES )
         DriplineExamples
     )
     set( programs
+        labview_with_dl
         run_oscillator_service_hub
         simple_service
     )
