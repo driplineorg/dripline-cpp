@@ -130,6 +130,7 @@ namespace dripline
             if( f_events.empty() )
             {
                 // wait for f_cycle_time
+                f_cv.wait_for( t_lock, f_cycle_time );
                 continue;
             }
             else
