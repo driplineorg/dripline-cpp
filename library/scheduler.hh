@@ -10,6 +10,8 @@
 
 #include "cancelable.hh"
 
+#include "dripline_error.hh"
+
 #include "logger.hh"
 #include "member_variables.hh"
 
@@ -50,10 +52,20 @@ namespace dripline
             using duration_t = typename clock::duration;
             using executable_t = std::function< void() >;
 
+            struct event
+            {
+                executable_t f_executable;
+                int f_id;
+            };
+            typedef std::multimap< time_point_t, event > events_map_t;
+
             scheduler();
             virtual ~scheduler();
 
-            void schedule( time_point_t an_exe_time, executable_t an_executable );
+            int schedule( executable_t an_executable, time_point_t an_exe_time );
+            int schedule( executable_t an_executable, duration_t an_interval, time_point_t an_exe_time = clock::now() );
+
+            //void reschedule( const event& an_event, time_point_t an_exe_time, int an_id );
 
             void execute();
 
@@ -62,16 +74,22 @@ namespace dripline
 
             mv_referrable_const( executor, the_executor );
 
-            typedef std::multimap< time_point_t, executable_t > events_map_t;
             mv_referrable_const( events_map_t, events );
 
+            mv_accessible_static( int, curr_id )
+
         protected:
+            void schedule_repeating( executable_t an_executable, duration_t an_interval, int an_id, time_point_t a_rep_start = clock::now() );
+            
             std::mutex f_map_mutex;
 
             std::mutex f_executor_mutex;
 
             std::condition_variable f_cv;
     };
+
+    template< typename executor, typename clock >
+    int scheduler< executor, clock >::s_curr_id = 0;
 
     template< typename executor, typename clock >
     scheduler< executor, clock >::scheduler() :
@@ -89,7 +107,7 @@ namespace dripline
     {}
 
     template< typename executor, typename clock >
-    void scheduler< executor, clock >::schedule( time_point_t an_exe_time, executable_t an_executable )
+    int scheduler< executor, clock >::schedule( executable_t an_executable, time_point_t an_exe_time )
     {
         //time_point_t t_now = clock::now();
         duration_t t_to_submission = an_exe_time - clock::now();
@@ -98,18 +116,94 @@ namespace dripline
             LDEBUG( dlog_sh, "Executing upon submission" );
             std::unique_lock< std::mutex > t_lock( f_executor_mutex );
             f_the_executor( an_executable );
-            return;
+            return -1;
         }
 
         bool t_new_first = false;
         std::unique_lock< std::mutex > t_lock( f_map_mutex );
-        if( ! f_events.empty() && an_exe_time < f_events.begin()->first )
+        if( f_events.empty() || an_exe_time < f_events.begin()->first )
         {
             LDEBUG( dlog_sh, "New first event" );
             t_new_first = true;
         }
         LDEBUG( dlog_sh, "Inserting new event" );
-        f_events.insert( std::make_pair( an_exe_time, an_executable ) );
+        event t_event;
+        t_event.f_executable = an_executable;
+        t_event.f_id = s_curr_id++;
+        f_events.insert( std::make_pair( an_exe_time, t_event ) );
+        if( t_new_first )
+        {
+            // wake the waiting thread
+            LDEBUG( dlog_sh, "That event was first; waking execution thread" );
+            f_cv.notify_one();
+        }
+
+        return t_event.f_id;
+    }
+
+    template< typename executor, typename clock >
+    int scheduler< executor, clock >::schedule( executable_t an_executable, duration_t an_interval, time_point_t an_exe_time )
+    {
+        // if the interval is too short, it's more likely that the execution time will be longer than the interval
+        if( an_interval < 2*f_exe_buffer )
+        {
+            throw dripline_error() << "Cannot schedule executions with an interval of less than " <<  std::chrono::duration_cast<std::chrono::seconds>(2*f_exe_buffer).count() << " seconds";
+        }
+
+        time_point_t t_now = clock::now();
+        duration_t t_to_submission = an_exe_time - t_now; // this will fix whether we need to execute now
+
+        if( an_exe_time < t_now ) an_exe_time = t_now; // avoid problems with things scheduled in the past
+        int t_id = scheduler< executor, clock >::s_curr_id++;
+        schedule_repeating( an_executable, an_interval, t_id, an_exe_time );
+
+        // if executing now
+            // unlock the map mutex
+            // do the execution as above
+        if( t_to_submission < f_exe_buffer )
+        {
+            LDEBUG( dlog_sh, "Executing upon submission (with duration)" );
+            std::unique_lock< std::mutex > t_lock( f_executor_mutex );
+            f_the_executor( an_executable );
+            return -1;
+        }
+
+        // return the id
+        return t_id;
+    }
+
+    template< typename executor, typename clock >
+    void scheduler< executor, clock >::schedule_repeating( executable_t an_executable, duration_t an_interval, int an_id, time_point_t a_rep_start )
+    {
+        // lock the map mutex
+        std::unique_lock< std::mutex > t_lock( f_map_mutex );
+
+        // create the wrapper executable around the event
+        executable_t t_wrapped_executable = [this, &an_executable, an_interval, an_id](){ 
+            // reschedule itself an_interval in the future
+            this->schedule_repeating( an_executable, an_interval, an_id );
+            // execute the event
+            an_executable();
+        };
+
+        // create the event
+        event t_event;
+        t_event.f_executable = t_wrapped_executable;
+        t_event.f_id = an_id;
+
+        // get the future exe time by adding interval to the rep_start
+        time_point_t t_exe_time = a_rep_start + an_interval;
+
+        // check if this'll be a new first event
+        bool t_new_first = false;
+        if( f_events.empty() || t_exe_time < f_events.begin()->first )
+        {
+            LDEBUG( dlog_sh, "New first event" );
+            t_new_first = true;
+        }
+
+        // add the event to the map
+        f_events.insert( std::make_pair( t_exe_time, t_event ) );
         if( t_new_first )
         {
             // wake the waiting thread
@@ -143,7 +237,7 @@ namespace dripline
                     // do event now
                     LDEBUG( dlog_sh, "Executing first event from the map" );
                     std::unique_lock< std::mutex > t_exe_lock( f_executor_mutex );
-                    f_the_executor( t_first_event->second );
+                    f_the_executor( t_first_event->second.f_executable );
                     f_events.erase( t_first_event );
                     continue;
                 }

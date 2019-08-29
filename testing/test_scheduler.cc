@@ -28,14 +28,20 @@ TEST_CASE( "scheduler", "[utility]" )
 
     int t_tester = 0;
 
-    t_scheduler.schedule( clock_t::now() + std::chrono::seconds(3), [&t_tester](){ t_tester = 5; } );
+    t_scheduler.schedule( [&t_tester](){ t_tester = 5; }, clock_t::now() + std::chrono::seconds(3) );
 
     REQUIRE( t_tester == 0 );
 
-    LINFO( testlog, "Waiting for events to execute" );
+    LINFO( testlog, "Waiting 4 seconds for events to execute" );
     std::this_thread::sleep_for( std::chrono::seconds(4) );
 
     REQUIRE( t_tester == 5 );
+
+    t_scheduler.schedule( [&t_tester](){ t_tester += 5; }, std::chrono::seconds(3) );
+    LINFO( testlog, "Waiting 7 seconds for events to execute" );
+    std::this_thread::sleep_for( std::chrono::seconds(7) );
+
+    REQUIRE( t_tester == 15 );
 
     t_scheduler.cancel( 0 );
 
