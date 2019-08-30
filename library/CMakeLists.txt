@@ -24,6 +24,7 @@ set( dripline_HEADERS
     receiver.hh
     relayer.hh
     return_codes.hh
+    scheduler.hh
     service.hh
     specifier.hh
     uuid.hh
