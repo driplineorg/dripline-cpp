@@ -65,7 +65,7 @@ namespace dripline
             int schedule( executable_t an_executable, time_point_t an_exe_time );
             int schedule( executable_t an_executable, duration_t an_interval, time_point_t an_exe_time = clock::now() );
 
-            //void reschedule( const event& an_event, time_point_t an_exe_time, int an_id );
+            void unschedule( int an_id );
 
             void execute();
 
@@ -165,7 +165,6 @@ namespace dripline
             LDEBUG( dlog_sh, "Executing upon submission (with duration)" );
             std::unique_lock< std::mutex > t_lock( f_executor_mutex );
             f_the_executor( an_executable );
-            return -1;
         }
 
         // return the id
@@ -213,6 +212,29 @@ namespace dripline
             f_cv.notify_one();
         }
 
+        return;
+    }
+
+    template< typename executor, typename clock >
+    void scheduler< executor, clock >::unschedule( int an_id )
+    {
+        std::unique_lock< std::recursive_mutex > t_lock( f_scheduler_mutex );
+        auto i_event = f_events.begin();
+        for( ; i_event->second.f_id != an_id && i_event != f_events.end(); ++i_event ) {
+            LDEBUG( dlog_sh, "Looking for event with id <" << an_id << ">; found one with id <" << i_event->second.f_id << ">" );
+        }
+
+        if( i_event->second.f_id == an_id ) 
+        {
+            LDEBUG( dlog_sh, "Found event with id <" << i_event->second.f_id << ">; erasing it now" );
+            f_events.erase( i_event );
+            LDEBUG( dlog_sh, "Removed event <" << an_id << "> from the schedule" );
+        }
+        else
+        {
+            LDEBUG( dlog_sh, "No event with id <" << an_id << "> found" );
+        }
+        
         return;
     }
 
