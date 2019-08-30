@@ -81,11 +81,11 @@ namespace dripline
         protected:
             void schedule_repeating( executable_t an_executable, duration_t an_interval, int an_id, time_point_t a_rep_start = clock::now() );
             
-            std::mutex f_map_mutex;
+            std::recursive_mutex f_scheduler_mutex;  // recursive_mutex is used so that the mutex can be locked twice by the same thread when using a repeating schedule
 
             std::mutex f_executor_mutex;
 
-            std::condition_variable f_cv;
+            std::condition_variable_any f_cv;
     };
 
     template< typename executor, typename clock >
@@ -97,7 +97,7 @@ namespace dripline
             f_cycle_time( std::chrono::milliseconds(500) ),
             f_the_executor(),
             f_events(),
-            f_map_mutex(),
+            f_scheduler_mutex(),
             f_executor_mutex(),
             f_cv()
     {}
@@ -120,7 +120,7 @@ namespace dripline
         }
 
         bool t_new_first = false;
-        std::unique_lock< std::mutex > t_lock( f_map_mutex );
+        std::unique_lock< std::recursive_mutex > t_lock( f_scheduler_mutex );
         if( f_events.empty() || an_exe_time < f_events.begin()->first )
         {
             LDEBUG( dlog_sh, "New first event" );
@@ -175,14 +175,15 @@ namespace dripline
     template< typename executor, typename clock >
     void scheduler< executor, clock >::schedule_repeating( executable_t an_executable, duration_t an_interval, int an_id, time_point_t a_rep_start )
     {
-        // lock the map mutex
-        std::unique_lock< std::mutex > t_lock( f_map_mutex );
+        LDEBUG( dlog_sh, "Scheduling a repeating event" );
 
         // create the wrapper executable around the event
-        executable_t t_wrapped_executable = [this, &an_executable, an_interval, an_id](){ 
+        executable_t t_wrapped_executable = [this, an_executable, an_interval, an_id](){ 
+            LDEBUG( dlog_sh, "wrapped execution" );
             // reschedule itself an_interval in the future
             this->schedule_repeating( an_executable, an_interval, an_id );
             // execute the event
+            LDEBUG( dlog_sh, "executing the wrapped executable" );
             an_executable();
         };
 
@@ -196,6 +197,7 @@ namespace dripline
 
         // check if this'll be a new first event
         bool t_new_first = false;
+        std::unique_lock< std::recursive_mutex > t_lock( f_scheduler_mutex );
         if( f_events.empty() || t_exe_time < f_events.begin()->first )
         {
             LDEBUG( dlog_sh, "New first event" );
@@ -220,7 +222,7 @@ namespace dripline
         LDEBUG( dlog_sh, "Starting scheduler" );
         while( ! is_canceled() )
         {
-            std::unique_lock< std::mutex > t_lock( f_map_mutex );
+            std::unique_lock< std::recursive_mutex > t_lock( f_scheduler_mutex );
             if( f_events.empty() )
             {
                 // wait for f_cycle_time
