@@ -34,7 +34,7 @@ jobs:
         - export CC=gcc-5 && export CXX=g++-5
         - mkdir build
         - cd build
-        - cmake ..
+        - cmake .. -DScarab_BUILD_PYTHON=FALSE
         - make
     - stage: build-test
       os: linux
