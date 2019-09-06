@@ -36,8 +36,10 @@ namespace dripline
             endpoint( a_queue_name.empty() ? a_config.get_value( "queue", "dlcpp_service" ) : a_queue_name ),
             listener_receiver(),
             heartbeater(),
+            scheduler<>(),
             std::enable_shared_from_this< service >(),
             f_status( status::nothing ),
+            f_enable_scheduling( a_config.get_value("enable-scheduling", false ) ),
             f_id( generate_random_uuid() ),
             f_sync_children(),
             f_async_children(),
@@ -59,8 +61,10 @@ namespace dripline
             endpoint( "" ),
             listener_receiver(),
             heartbeater(),
+            scheduler<>(),
             std::enable_shared_from_this< service >(),
             f_status( status::nothing ),
+            f_enable_scheduling( a_config.get_value("enable-scheduling", false ) ),
             f_id( generate_random_uuid() ),
             f_sync_children(),
             f_async_children(),
@@ -176,6 +180,15 @@ namespace dripline
                 LINFO( dlog, "Heartbeat disabled" );
             }
 
+            if( f_enable_scheduling )
+            {
+                f_scheduler_thread = std::thread( &scheduler::execute, this );
+            }
+            else
+            {
+                LINFO( dlog, "scheduler disabled" );
+            }
+
             f_receiver_thread = std::thread( &concurrent_receiver::execute, this );
 
             for( async_map_t::iterator t_child_it = f_async_children.begin();
@@ -201,6 +214,10 @@ namespace dripline
             if( f_heartbeat_thread.joinable() )
             {
                 f_heartbeat_thread.join();
+            }
+            if( f_scheduler_thread.joinable() )
+            {
+                f_scheduler_thread.join();
             }
         }
         catch( std::system_error& e )

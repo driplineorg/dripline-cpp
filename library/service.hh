@@ -11,6 +11,7 @@
 #include "core.hh"
 #include "endpoint.hh"
 #include "heartbeater.hh"
+#include "scheduler.hh"
 #include "listener.hh"
 #include "receiver.hh"
 
@@ -29,6 +30,7 @@ namespace dripline
             public endpoint,
             public listener_receiver,
             public heartbeater,
+            public scheduler<>,
             public std::enable_shared_from_this< service >
     {
         protected:
@@ -55,6 +57,7 @@ namespace dripline
             service& operator=( service&& ) = delete;
 
             mv_accessible( status, status );
+            mv_accessible( bool, enable_scheduling );
 
         public:
             /// Add a synchronous child endpoint
