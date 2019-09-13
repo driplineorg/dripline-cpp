@@ -18,6 +18,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <functional>
+#include <thread>
 #include <map>
 #include <mutex>
 #include <utility>
@@ -44,7 +45,7 @@ namespace dripline
     };
 
     template< typename executor = simple_executor, typename clock = std::chrono::system_clock >
-    class scheduler : public scarab::cancelable
+    class scheduler : virtual public scarab::cancelable
     {
         public:
             using clock_t = clock;
@@ -80,12 +81,13 @@ namespace dripline
 
         protected:
             void schedule_repeating( executable_t an_executable, duration_t an_interval, int an_id, time_point_t a_rep_start = clock::now() );
-            
+
             std::recursive_mutex f_scheduler_mutex;  // recursive_mutex is used so that the mutex can be locked twice by the same thread when using a repeating schedule
 
             std::mutex f_executor_mutex;
 
             std::condition_variable_any f_cv;
+            std::thread f_scheduler_thread;
     };
 
     template< typename executor, typename clock >
@@ -99,7 +101,8 @@ namespace dripline
             f_events(),
             f_scheduler_mutex(),
             f_executor_mutex(),
-            f_cv()
+            f_cv(),
+            f_scheduler_thread()
     {}
 
     template< typename executor, typename clock >
