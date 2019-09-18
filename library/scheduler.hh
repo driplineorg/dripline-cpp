@@ -112,16 +112,6 @@ namespace dripline
     template< typename executor, typename clock >
     int scheduler< executor, clock >::schedule( executable_t an_executable, time_point_t an_exe_time )
     {
-        //time_point_t t_now = clock::now();
-        duration_t t_to_submission = an_exe_time - clock::now();
-        if( t_to_submission < f_exe_buffer )
-        {
-            LDEBUG( dlog_sh, "Executing upon submission" );
-            std::unique_lock< std::mutex > t_lock( f_executor_mutex );
-            f_the_executor( an_executable );
-            return -1;
-        }
-
         bool t_new_first = false;
         std::unique_lock< std::recursive_mutex > t_lock( f_scheduler_mutex );
         if( f_events.empty() || an_exe_time < f_events.begin()->first )
@@ -153,22 +143,9 @@ namespace dripline
             throw dripline_error() << "Cannot schedule executions with an interval of less than " <<  std::chrono::duration_cast<std::chrono::seconds>(2*f_exe_buffer).count() << " seconds";
         }
 
-        time_point_t t_now = clock::now();
-        duration_t t_to_submission = an_exe_time - t_now; // this will fix whether we need to execute now
-
-        if( an_exe_time < t_now ) an_exe_time = t_now; // avoid problems with things scheduled in the past
+        std::unique_lock< std::recursive_mutex > t_lock( f_scheduler_mutex );
         int t_id = scheduler< executor, clock >::s_curr_id++;
         schedule_repeating( an_executable, an_interval, t_id, an_exe_time );
-
-        // if executing now
-            // unlock the map mutex
-            // do the execution as above
-        if( t_to_submission < f_exe_buffer )
-        {
-            LDEBUG( dlog_sh, "Executing upon submission (with duration)" );
-            std::unique_lock< std::mutex > t_lock( f_executor_mutex );
-            f_the_executor( an_executable );
-        }
 
         // return the id
         return t_id;
