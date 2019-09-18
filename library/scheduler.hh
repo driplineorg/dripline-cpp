@@ -157,10 +157,10 @@ namespace dripline
         LDEBUG( dlog_sh, "Scheduling a repeating event" );
 
         // create the wrapper executable around the event
-        executable_t t_wrapped_executable = [this, an_executable, an_interval, an_id](){ 
+        executable_t t_wrapped_executable = [this, an_executable, an_interval, an_id, a_rep_start](){ 
             LDEBUG( dlog_sh, "wrapped execution" );
             // reschedule itself an_interval in the future
-            this->schedule_repeating( an_executable, an_interval, an_id );
+            this->schedule_repeating( an_executable, an_interval, an_id, a_rep_start + an_interval );
             // execute the event
             LDEBUG( dlog_sh, "executing the wrapped executable" );
             an_executable();
@@ -171,20 +171,17 @@ namespace dripline
         t_event.f_executable = t_wrapped_executable;
         t_event.f_id = an_id;
 
-        // get the future exe time by adding interval to the rep_start
-        time_point_t t_exe_time = a_rep_start + an_interval;
-
         // check if this'll be a new first event
         bool t_new_first = false;
         std::unique_lock< std::recursive_mutex > t_lock( f_scheduler_mutex );
-        if( f_events.empty() || t_exe_time < f_events.begin()->first )
+        if( f_events.empty() || a_rep_start < f_events.begin()->first )
         {
             LDEBUG( dlog_sh, "New first event" );
             t_new_first = true;
         }
 
         // add the event to the map
-        f_events.insert( std::make_pair( t_exe_time, t_event ) );
+        f_events.insert( std::make_pair( a_rep_start, t_event ) );
         if( t_new_first )
         {
             // wake the waiting thread
