@@ -28,17 +28,6 @@ namespace dripline
     {
     }
 
-
-    version_wrapper::version_wrapper() :
-        version_ifc(),
-        f_imp( nullptr )
-    {
-    }
-
-    version_wrapper::~version_wrapper()
-    {
-    }
-
 } /* DRIPLINE_VERSION_HH_ */
 
 
