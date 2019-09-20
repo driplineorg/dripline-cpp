@@ -17,6 +17,7 @@ set( testing_SOURCES
     test_return_codes.cc
     test_scheduler.cc
     test_specifier.cc
+    test_version_store.cc
     use_catch.cc
 )
 

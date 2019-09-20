@@ -28,6 +28,7 @@ set( dripline_HEADERS
     service.hh
     specifier.hh
     uuid.hh
+    version_store.hh
 )
 
 set( dripline_SOURCES
@@ -51,6 +52,7 @@ set( dripline_SOURCES
     service.cc
     specifier.cc
     uuid.cc
+    version_store.cc
 )
 
 configure_file( dripline_version.cc.in ${CMAKE_CURRENT_BINARY_DIR}/dripline_version.cc )
