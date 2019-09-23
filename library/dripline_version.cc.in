@@ -16,9 +16,8 @@
 #include "logger.hh"
 
 
-ADD_VERSION( dripline, dripline::version_dripline_protocol );
-ADD_VERSION( driplinecpp, dripline::version );
-
+static dripline::version_store_adder< dripline::version_dripline_protocol > s_version_adder_dripline( "dripline" );
+static dripline::version_store_adder< dripline::version > s_version_adder_dripline_cpp( "dripline-cpp" );
 
 namespace dripline
 {
@@ -47,6 +46,6 @@ namespace dripline
     }
 
 
-} /* DRIPLINE_VERSION_HH_ */
+} /* namespace dripline */
 
 

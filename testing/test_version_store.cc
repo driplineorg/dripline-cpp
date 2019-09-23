@@ -42,20 +42,20 @@ TEST_CASE( "version_store", "[version]" )
 
     REQUIRE( t_store_ptr->versions().size() == 2 );
     REQUIRE( t_store_ptr->versions().count( "dripline" ) == 1 );
-    REQUIRE( t_store_ptr->versions().count( "driplinecpp" ) == 1 );
+    REQUIRE( t_store_ptr->versions().count( "dripline-cpp" ) == 1 );
     REQUIRE( t_store_ptr->versions().at("driplinecpp").package() == "Dripline" );
 
     t_store_ptr->remove_version( "dripline" );
 
     REQUIRE( t_store_ptr->versions().size() == 1 );
     REQUIRE( t_store_ptr->versions().count( "dripline" ) == 0 );
-    REQUIRE( t_store_ptr->versions().count( "driplinecpp" ) == 1 );
+    REQUIRE( t_store_ptr->versions().count( "dripline-cpp" ) == 1 );
 
-    auto t_adder = dripline::add_version< dripline::test_version >( "testversion" );
+    auto t_adder = dripline::add_version< dripline::test_version >( "test-version" );
 
     REQUIRE( t_store_ptr->versions().size() == 2 );
-    REQUIRE( t_store_ptr->versions().count( "testversion" ) == 1 );
-    REQUIRE( t_store_ptr->versions().at("testversion").version_str() == "v1.0.0" );
+    REQUIRE( t_store_ptr->versions().count( "test-version" ) == 1 );
+    REQUIRE( t_store_ptr->versions().at("test-version").version_str() == "v1.0.0" );
 
 }
 
