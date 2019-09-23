@@ -11,7 +11,14 @@
 
 #include "dripline_version.hh"
 
+#include "version_store.hh"
+
 #include "logger.hh"
+
+
+ADD_VERSION( dripline, dripline::version_dripline_protocol );
+ADD_VERSION( driplinecpp, dripline::version );
+
 
 namespace dripline
 {

@@ -16,6 +16,7 @@
 #include "scarab_version.hh"
 
 #include <map>
+#include <memory>
 
 
 namespace dripline
@@ -37,6 +38,29 @@ namespace dripline
             typedef std::map< std::string, scarab::version_semantic > version_map_t;
             mv_referrable_const( version_map_t, versions );
     };
+
+
+    // version adder object to enable adding version classes at static initialization
+    template< typename x_version >
+    struct version_store_adder
+    {
+        version_store_adder( const std::string& a_name )
+        {
+            version_store::get_instance()->add_version< x_version >( a_name );
+        }
+    };
+
+    // function to use to add a version (whenever; adder is created on the heap)
+    template< typename x_version >
+    std::shared_ptr< version_store_adder< x_version > > add_version( const std::string& a_name )
+    {
+        return std::make_shared< version_store_adder<x_version> >( a_name );
+    }
+
+    // macro to use to add a version (usually at static initialization)
+    #define ADD_VERSION( version_name, version_type ) \
+        static ::dripline::version_store_adder< version_type > s_version_adder_##version_name( TOSTRING(version_name) );
+
 
     template< typename x_version >
     inline void version_store::add_version( const std::string& a_name )
