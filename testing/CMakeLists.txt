@@ -9,6 +9,7 @@ set( testing_HEADERS
 
 set( testing_SOURCES
     test_agent.cc
+    test_amqp.cc
     test_core.cc
     test_endpoint.cc
     test_heartbeat.cc

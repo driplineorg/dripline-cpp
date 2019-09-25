@@ -34,6 +34,7 @@ set( dripline_HEADERS
 set( dripline_SOURCES
     agent.cc
     agent_config.cc
+    amqp.cc
     core.cc
     dripline_config.cc
     dripline_constants.cc
