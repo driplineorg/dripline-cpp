@@ -369,7 +369,7 @@ namespace dripline
 
     reply_ptr_t endpoint::handle_ping_request( const request_ptr_t a_request )
     {
-        return a_request->reply( dl_success(), "Hello, " + a_request->sender_package() );
+        return a_request->reply( dl_success(), "Hello, " + a_request->sender_exe() );
     }
 
 } /* namespace dripline */
