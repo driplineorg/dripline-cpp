@@ -43,7 +43,7 @@ TEST_CASE( "version_store", "[version]" )
     REQUIRE( t_store_ptr->versions().size() == 2 );
     REQUIRE( t_store_ptr->versions().count( "dripline" ) == 1 );
     REQUIRE( t_store_ptr->versions().count( "dripline-cpp" ) == 1 );
-    REQUIRE( t_store_ptr->versions().at("driplinecpp").package() == "Dripline" );
+    REQUIRE( t_store_ptr->versions().at("dripline-cpp").package() == "Dripline" );
 
     t_store_ptr->remove_version( "dripline" );
 
