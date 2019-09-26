@@ -7,9 +7,9 @@
 
 #include "agent_config.hh"
 #include "dripline_constants.hh"
-#include "dripline_version.hh"
 #include "application.hh"
 #include "logger.hh"
+#include "version_store.hh"
 #include "simple_service.hh"
 
 using namespace dripline;
@@ -20,7 +20,7 @@ int main( int argc, char** argv )
 {
     scarab::main_app the_main;
 
-    the_main.set_version( new dripline::version() );
+    the_main.set_version( version_store::get_instance()->versions().at( "dripline-cpp" ) );
 
     the_main.default_config().add( "dripline", dripline_config() );
 
