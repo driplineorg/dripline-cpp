@@ -97,7 +97,7 @@ namespace dripline
         auto t_versions = version_store::get_instance()->versions();
         for( auto& i_version : t_versions )
         {
-            f_sender_versions.emplace( std::make_pair( i_version.first, i_version.second ) );
+            f_sender_versions.emplace( std::make_pair( i_version.first, *i_version.second ) );
         }
     }
 

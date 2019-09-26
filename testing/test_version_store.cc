@@ -38,24 +38,34 @@ namespace dripline
 
 TEST_CASE( "version_store", "[version]" )
 {
+    // test the things automatically included in the version_store
+    // this effectively tests using the adder at static initialization
     dripline::version_store* t_store_ptr = dripline::version_store::get_instance();
 
     REQUIRE( t_store_ptr->versions().size() == 2 );
     REQUIRE( t_store_ptr->versions().count( "dripline" ) == 1 );
     REQUIRE( t_store_ptr->versions().count( "dripline-cpp" ) == 1 );
-    REQUIRE( t_store_ptr->versions().at("dripline-cpp").package() == "Dripline" );
+    REQUIRE( t_store_ptr->versions().at("dripline-cpp")->package() == "driplineorg/dripline-cpp" );
 
+    // test removing an item
     t_store_ptr->remove_version( "dripline" );
 
     REQUIRE( t_store_ptr->versions().size() == 1 );
     REQUIRE( t_store_ptr->versions().count( "dripline" ) == 0 );
     REQUIRE( t_store_ptr->versions().count( "dripline-cpp" ) == 1 );
 
+    // test adding via the adder-based add_version function at runtime
     auto t_adder = dripline::add_version< dripline::test_version >( "test-version" );
 
     REQUIRE( t_store_ptr->versions().size() == 2 );
     REQUIRE( t_store_ptr->versions().count( "test-version" ) == 1 );
-    REQUIRE( t_store_ptr->versions().at("test-version").version_str() == "v1.0.0" );
+    REQUIRE( t_store_ptr->versions().at("test-version")->version_str() == "v1.0.0" );
 
+    // test adding via the polymorphic add_version function
+    dripline::version_semantic_ptr_t t_new_ver( new dripline::version_dripline_protocol() );
+    dripline::add_version( "dripline", t_new_ver );
+
+    REQUIRE( t_store_ptr->versions().size() == 3 );
+    REQUIRE( t_store_ptr->versions().count( "dripline" ) == 1 );
 }
 
