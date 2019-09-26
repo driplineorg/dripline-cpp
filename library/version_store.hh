@@ -13,7 +13,7 @@
 #include "dripline_api.hh"
 
 #include "member_variables.hh"
-#include "scarab_version.hh"
+#include "version_semantic.hh"
 
 #include <map>
 #include <memory>
@@ -21,7 +21,6 @@
 
 namespace dripline
 {
-    typedef std::shared_ptr< scarab::version_semantic > version_semantic_ptr_t;
 
     class DRIPLINE_API version_store : public scarab::singleton< version_store >
     {
@@ -34,10 +33,10 @@ namespace dripline
         public:
             template< typename x_version >
             void add_version( const std::string& a_name );
-            void add_version( const std::string& a_name, version_semantic_ptr_t a_version_ptr );
+            void add_version( const std::string& a_name, scarab::version_semantic_ptr_t a_version_ptr );
             void remove_version( const std::string& a_name );
 
-            typedef std::map< std::string, version_semantic_ptr_t > version_map_t;
+            typedef std::map< std::string, scarab::version_semantic_ptr_t > version_map_t;
             mv_referrable_const( version_map_t, versions );
     };
 
@@ -60,7 +59,7 @@ namespace dripline
     }
 
     // function to use to add a version via a base-class pointer to a derived object
-    DRIPLINE_API void add_version( const std::string& a_name, version_semantic_ptr_t a_version_ptr );
+    DRIPLINE_API void add_version( const std::string& a_name, scarab::version_semantic_ptr_t a_version_ptr );
 
     // macro to use to add a version (usually at static initialization)
     #define ADD_VERSION( version_name, version_type ) \
@@ -70,11 +69,11 @@ namespace dripline
     template< typename x_version >
     inline void version_store::add_version( const std::string& a_name )
     {
-        f_versions.insert( std::make_pair( a_name, version_semantic_ptr_t( new x_version() ) ) );
+        f_versions.insert( std::make_pair( a_name, scarab::version_semantic_ptr_t( new x_version() ) ) );
         return;
     }
 
-    inline void version_store::add_version( const std::string& a_name, version_semantic_ptr_t a_version_ptr )
+    inline void version_store::add_version( const std::string& a_name, scarab::version_semantic_ptr_t a_version_ptr )
     {
         f_versions.insert( std::make_pair( a_name, a_version_ptr ) );
         return;

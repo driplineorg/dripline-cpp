@@ -62,7 +62,7 @@ TEST_CASE( "version_store", "[version]" )
     REQUIRE( t_store_ptr->versions().at("test-version")->version_str() == "v1.0.0" );
 
     // test adding via the polymorphic add_version function
-    dripline::version_semantic_ptr_t t_new_ver( new dripline::version_dripline_protocol() );
+    scarab::version_semantic_ptr_t t_new_ver( new dripline::version_dripline_protocol() );
     dripline::add_version( "dripline", t_new_ver );
 
     REQUIRE( t_store_ptr->versions().size() == 3 );
