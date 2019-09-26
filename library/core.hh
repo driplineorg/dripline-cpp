@@ -21,6 +21,19 @@ namespace scarab
 
 namespace dripline
 {
+    /*!
+     @class sent_msg_pkg
+     @author N.S. Oblath
+
+     @brief Contains information about sent messages
+
+     @details
+     `core::send()` will return a `sent_msg_pkg`.
+
+     The result of act of sending the message is given by `f_successful_send` and `f_send_error_message`.
+
+     Replies can be waited for and retried by passing the `sent_msg_pkg` to `receiver::wait_for_reply()`.
+    */
     struct DRIPLINE_API sent_msg_pkg
     {
         std::mutex f_mutex;
@@ -31,6 +44,31 @@ namespace dripline
         ~sent_msg_pkg();
     };
 
+    /*!
+     @class core
+     @author N.S. Oblath
+
+     @brief Basic AMQP interactions, including sending messages and interacting with AMQP channels.
+
+     @details
+     The configuration for a `core` object is supplied via the constructor.  The basic required information can be obtained 
+     from `dripline_config`.  The configuration values have default parameters, and they can be modified with the config 
+     `param_node`, and a few parameters can be specified explicitly as constructor arguments.  The order of precedence for 
+     those values is (items higher in the list override those below them):
+       * Constructor arguments (other than `a_config`)
+       * Config `param_node` object
+       * Defaults
+    
+     If the broker is not specified in either the config object or as a constructor parameter, it will be requested from the 
+     authentication file.
+    
+     A second constructor allows a user to create a `core` object without connecting to a broker.
+
+     The primary user interface is `core::send()`, one of which exists for each type of message (request, reply, and alert).
+
+     `Core` also contains a number of utility functions that wrap the main interactions with AMQP channels.  
+     Classes wishing to take advantage of those functions should inherit from `core`.
+    */
     class DRIPLINE_API core
     {
         public:
