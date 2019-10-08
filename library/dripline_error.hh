@@ -1,10 +1,12 @@
 #ifndef DRIPLINE_ERROR_HH_
 #define DRIPLINE_ERROR_HH_
 
-#include <sstream>
-#include <exception>
+#include "return_codes.hh"
 
-#include "dripline_api.hh"
+#include <exception>
+#include <memory>
+#include <sstream>
+
 
 namespace dripline
 {
@@ -14,7 +16,7 @@ namespace dripline
         public:
             dripline_error();
             dripline_error( const dripline_error& );
-            ~dripline_error() throw ();
+            virtual ~dripline_error() throw ();
 
             template< class x_streamable >
             dripline_error& operator<<( x_streamable a_fragment );
@@ -23,9 +25,28 @@ namespace dripline
 
             virtual const char* what() const throw();
 
-        private:
-            std::string f_error;
+        protected:
+            mutable std::string f_error;
     };
+
+    class DRIPLINE_API throw_reply : public dripline_error
+    {
+        public:
+            throw_reply();
+            throw_reply( const return_code& a_code );
+            throw_reply( const throw_reply& );
+            virtual ~throw_reply() throw();
+
+            virtual const char* what() const throw();
+
+            const return_code& ret_code() const;
+            
+            void set_return_code( const return_code& a_code );
+
+        protected:
+            std::shared_ptr< return_code > f_retcode;
+    };
+
 
     template< class x_streamable >
     dripline_error& dripline_error::operator<<( x_streamable a_fragment )
@@ -46,6 +67,17 @@ namespace dripline
     {
         f_error += std::string( a_fragment );
         return *this;
+    }
+
+    inline const return_code& throw_reply::ret_code() const
+    {
+        return *f_retcode;
+    }
+
+    inline void throw_reply::set_return_code( const return_code& a_code )
+    {
+        f_retcode.reset( new copy_code( a_code ) );
+        return;
     }
 
 }

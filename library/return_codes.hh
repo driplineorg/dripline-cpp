@@ -32,8 +32,6 @@
 
 #include "dripline_api.hh"
 
-#include "dripline_error.hh"
-
 #include "indexed_factory.hh"
 #include "macros.hh"
 
@@ -50,6 +48,15 @@ namespace dripline
         virtual std::string rc_name() const = 0;
     };
 
+    struct DRIPLINE_API copy_code : return_code
+    {
+        copy_code( const return_code& a_code );
+        virtual ~copy_code() {};
+        virtual unsigned rc_value() const { return f_value; }
+        virtual std::string rc_name() const { return f_name; }
+        unsigned f_value;
+        std::string f_name;
+    };
 
     // Macros for defining and implementing new return codes
 

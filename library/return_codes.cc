@@ -15,6 +15,11 @@ LOGGER( rclog, "return_codes" );
 
 namespace dripline
 {
+    copy_code::copy_code( const return_code& a_code ) :
+            f_value( a_code.rc_value() ),
+            f_name( a_code.rc_name() )
+    {}
+
     //****************
     // Return code implementations
     //****************
