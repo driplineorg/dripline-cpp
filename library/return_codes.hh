@@ -32,7 +32,13 @@
 
 #include "dripline_api.hh"
 
-#include "unique_typelist.hh"
+#include "dripline_error.hh"
+
+#include "indexed_factory.hh"
+#include "macros.hh"
+
+#include <set>
+#include <string>
 
 namespace dripline
 {
@@ -41,117 +47,74 @@ namespace dripline
     {
         virtual ~return_code() {};
         virtual unsigned rc_value() const = 0;
+        virtual std::string rc_name() const = 0;
     };
 
-    // Macros for defining new return codes
-#define NEW_RC_LIST( name ) rc_list_##name##_t
 
-#define DEFINE_DL_RET_CODE( name, the_value ) \
-    struct DRIPLINE_API dl_##name : public ::dripline::return_code, public std::integral_constant< unsigned, the_value > \
+    // Macros for defining and implementing new return codes
+
+#define DEFINE_DL_RET_CODE( name, api_macro ) \
+    struct api_macro dl_##name : public ::dripline::return_code \
     { \
+        static unsigned s_value; \
+        static std::string s_name; \
         virtual ~dl_##name() {} \
-        virtual unsigned rc_value() const { return dl_##name::value; } \
-    }; \
-    using NEW_RC_LIST(name) = ::scarab::unique_append< std::integral_constant< unsigned, the_value >, RC_LIST >;
+        virtual unsigned rc_value() const { return dl_##name::s_value; } \
+        virtual std::string rc_name() const {return dl_##name::s_name; } \
+    };
 
-    // Start off the typelist as an empty list
-    using rc_list_void = ::scarab::type_list<>;
-#define RC_LIST rc_list_void
+#define DEFINE_DL_RET_CODE_NOAPI( name ) \
+    struct dl_##name : public ::dripline::return_code \
+    { \
+        static unsigned s_value; \
+        static std::string s_name; \
+        virtual ~dl_##name() {} \
+        virtual unsigned rc_value() const { return dl_##name::s_value; } \
+        virtual std::string rc_name() const {return dl_##name::s_name; } \
+    };
 
+#define IMPLEMENT_DL_RET_CODE( name, the_value ) \
+    unsigned dl_##name::s_value = the_value; \
+    std::string dl_##name::s_name( TOSTRING(name) ); \
+    static scarab::indexed_registrar< unsigned, ::dripline::return_code, dl_##name > t_dl_##name##_rc_reg( the_value );
+
+//    std::string ::dripline::dl_##name::s_name = TOSTRING(name);
 
     //****************
-    // Return codes
+    // Return code definitions
     //****************
 
+    DEFINE_DL_RET_CODE( success, DRIPLINE_API );
 
-    DEFINE_DL_RET_CODE( success, 0 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( success )
+    DEFINE_DL_RET_CODE( warning_no_action_taken, DRIPLINE_API );
 
-    DEFINE_DL_RET_CODE( warning_no_action_taken, 1 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( warning_no_action_taken )
+    DEFINE_DL_RET_CODE( amqp_error, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( amqp_error_broker_connection, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( amqp_error_routingkey_notfound, DRIPLINE_API );
 
-    DEFINE_DL_RET_CODE( amqp_error, 100 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( amqp_error )
-    DEFINE_DL_RET_CODE( amqp_error_broker_connection, 101 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( amqp_error_broker_connection )
-    DEFINE_DL_RET_CODE( amqp_error_routingkey_notfound, 102 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( amqp_error_routingkey_notfound )
+    DEFINE_DL_RET_CODE( device_error, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( device_error_connection, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( device_error_no_resp, DRIPLINE_API );
 
-    DEFINE_DL_RET_CODE( device_error, 200 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( device_error )
-    DEFINE_DL_RET_CODE( device_error_connection, 201 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( device_error_connection )
-    DEFINE_DL_RET_CODE( device_error_no_resp, 202 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( device_error_no_resp )
+    DEFINE_DL_RET_CODE( message_error, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( message_error_no_encoding, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( message_error_decoding_fail, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( message_error_bad_payload, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( message_error_invalid_value, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( message_error_timeout, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( message_error_invalid_method, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( message_error_access_denied, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( message_error_invalid_key, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( message_error_dripline_deprecated, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( message_error_invalid_specifier, DRIPLINE_API );
 
-    DEFINE_DL_RET_CODE( message_error, 300 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( message_error )
-    DEFINE_DL_RET_CODE( message_error_no_encoding, 301 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( message_error_no_encoding )
-    DEFINE_DL_RET_CODE( message_error_decoding_fail, 302 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( message_error_decoding_fail )
-    DEFINE_DL_RET_CODE( message_error_bad_payload, 303 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( message_error_bad_payload )
-    DEFINE_DL_RET_CODE( message_error_invalid_value, 304 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( message_error_invalid_value )
-    DEFINE_DL_RET_CODE( message_error_timeout, 305 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( message_error_timeout )
-    DEFINE_DL_RET_CODE( message_error_invalid_method, 306 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( message_error_invalid_method )
-    DEFINE_DL_RET_CODE( message_error_access_denied, 307 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( message_error_access_denied )
-    DEFINE_DL_RET_CODE( message_error_invalid_key, 308 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( message_error_invalid_key )
-    DEFINE_DL_RET_CODE( message_error_dripline_deprecated, 309 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( message_error_dripline_deprecated )
-    DEFINE_DL_RET_CODE( message_error_invalid_specifier, 310 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( message_error_invalid_specifier )
+    DEFINE_DL_RET_CODE( client_error, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( client_error_invalid_request, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( client_error_handling_reply, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( client_error_unable_to_send, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( client_error_timeout, DRIPLINE_API );
 
-    DEFINE_DL_RET_CODE( client_error, 400 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( client_error )
-    DEFINE_DL_RET_CODE( client_error_invalid_request, 401 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( client_error_invalid_request )
-    DEFINE_DL_RET_CODE( client_error_handling_reply, 402 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( client_error_handling_reply )
-    DEFINE_DL_RET_CODE( client_error_unable_to_send, 403 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( client_error_unable_to_send )
-    DEFINE_DL_RET_CODE( client_error_timeout, 404 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( client_error_timeout )
-
-    DEFINE_DL_RET_CODE( unhandled_exception, 999 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( unhandled_exception )
-
-    // to test a duplicate error code:
-    /*
-    DEFINE_DL_RET_CODE( unhandled_exception_2, 999 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( unhandled_exception_2 )
-    */
+    DEFINE_DL_RET_CODE( unhandled_exception, DRIPLINE_API );
 
 } /* namespace dripline */
 
