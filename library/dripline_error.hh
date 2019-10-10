@@ -3,6 +3,8 @@
 
 #include "return_codes.hh"
 
+#include "param.hh"
+
 #include <exception>
 #include <memory>
 #include <sstream>
@@ -40,11 +42,15 @@ namespace dripline
             virtual const char* what() const throw();
 
             const return_code& ret_code() const;
-            
             void set_return_code( const return_code& a_code );
+
+            const scarab::param& payload() const;
+            scarab::param& payload();
+            void set_payload( scarab::param_ptr_t&& a_payload );
 
         protected:
             std::shared_ptr< return_code > f_retcode;
+            scarab::param_ptr_t f_payload;
     };
 
 
@@ -77,6 +83,22 @@ namespace dripline
     inline void throw_reply::set_return_code( const return_code& a_code )
     {
         f_retcode.reset( new copy_code( a_code ) );
+        return;
+    }
+
+    inline const scarab::param& throw_reply::payload() const
+    {
+        return *f_payload;
+    }
+
+    inline scarab::param& throw_reply::payload()
+    {
+        return *f_payload;
+    }
+
+    inline void throw_reply::set_payload( scarab::param_ptr_t&& a_payload )
+    {
+        f_payload = std::move( a_payload );
         return;
     }
 
