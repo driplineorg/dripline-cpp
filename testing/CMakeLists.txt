@@ -10,6 +10,7 @@ set( testing_HEADERS
 set( testing_SOURCES
     test_agent.cc
     test_core.cc
+    test_dripline_error.cc
     test_endpoint.cc
     test_heartbeat.cc
     test_lockout.cc

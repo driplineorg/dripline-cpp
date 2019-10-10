@@ -12,18 +12,23 @@
 
 namespace dripline
 {
-
-    class DRIPLINE_API dripline_error : public ::std::exception
+    // this class uses the Curiously Recurring Template Pattern (CRTP) to get the 
+    // derived class type to appear in the base class.
+    // In particular, we need to return x_derived& from the various operator<<() 
+    // so that those functions can be used in a throw statement and the user can 
+    // still catch the derived type.
+    template< typename x_derived >
+    class DRIPLINE_API base_exception : public ::std::exception
     {
         public:
-            dripline_error();
-            dripline_error( const dripline_error& );
-            virtual ~dripline_error() throw ();
+            base_exception();
+            base_exception( const base_exception< x_derived >& );
+            virtual ~base_exception() throw ();
 
             template< class x_streamable >
-            dripline_error& operator<<( x_streamable a_fragment );
-            dripline_error& operator<<( const std::string& a_fragment );
-            dripline_error& operator<<( const char* a_fragment );
+            x_derived& operator<<( x_streamable a_fragment );
+            x_derived& operator<<( const std::string& a_fragment );
+            x_derived& operator<<( const char* a_fragment );
 
             virtual const char* what() const throw();
 
@@ -31,7 +36,15 @@ namespace dripline
             mutable std::string f_error;
     };
 
-    class DRIPLINE_API throw_reply : public dripline_error
+    class DRIPLINE_API dripline_error : public base_exception< dripline_error >
+    {
+        public:
+            dripline_error();
+            dripline_error( const dripline_error& );
+            virtual ~dripline_error() throw ();
+    };
+
+    class DRIPLINE_API throw_reply : public base_exception< throw_reply >
     {
         public:
             throw_reply();
@@ -54,25 +67,50 @@ namespace dripline
     };
 
 
+    template< typename x_derived >
+    base_exception< x_derived >::base_exception() :
+            ::std::exception(),
+            f_error()
+    {}
+
+    template< typename x_derived >
+    base_exception< x_derived >::base_exception( const base_exception< x_derived >& an_error ) :
+            std::exception(),
+            f_error( an_error.f_error )
+    {}
+
+    template< typename x_derived >
+    base_exception< x_derived >::~base_exception() throw ()
+    {}
+
+    template< typename x_derived >
+    const char* base_exception< x_derived >::what() const throw ()
+    {
+        return f_error.c_str();
+    }
+
+    template< typename x_derived >
     template< class x_streamable >
-    dripline_error& dripline_error::operator<<( x_streamable a_fragment )
+    x_derived& base_exception< x_derived >::operator<<( x_streamable a_fragment )
     {
         std::stringstream stream;
         stream << a_fragment;
         stream >> f_error;
-        return *this;
+        return *static_cast< x_derived* >(this);
     }
 
-    inline dripline_error& dripline_error::operator<<( const std::string& a_fragment )
+    template< typename x_derived >
+    x_derived& base_exception< x_derived >::operator<<( const std::string& a_fragment )
     {
         f_error += a_fragment;
-        return *this;
+        return *static_cast< x_derived* >(this);
     }
 
-    inline dripline_error& dripline_error::operator<<( const char* a_fragment )
+    template< typename x_derived >
+    x_derived& base_exception< x_derived >::operator<<( const char* a_fragment )
     {
         f_error += std::string( a_fragment );
-        return *this;
+        return *static_cast< x_derived* >(this);
     }
 
     inline const return_code& throw_reply::ret_code() const
