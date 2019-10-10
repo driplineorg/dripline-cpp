@@ -78,63 +78,84 @@ namespace dripline
 
     reply_ptr_t endpoint::on_request_message( const request_ptr_t a_request )
     {
-        if( ! a_request->get_is_valid() )
-        {
-            LWARN( dlog, "Request message is not valid" );
-            std::string t_message( "Request message was not valid" );
-            // check in the payload for error information
-            if( a_request->payload().is_node() )
-            {
-                const scarab::param_node& t_payload = a_request->payload().as_node();
-                if( t_payload.has("error") ) t_message += "; " + t_payload["error"]().as_string();
-            }
-            reply_ptr_t t_reply = a_request->reply( dl_message_error_decoding_fail(), "Request message was not valid" );
-            t_reply->payload() = a_request->payload();
-            send_reply( t_reply );
-            return t_reply;
-        }
-
-        // the lockout key must be valid
-        if( ! a_request->get_lockout_key_valid() )
-        {
-            LWARN( dlog, "Message had an invalid lockout key" );
-            reply_ptr_t t_reply = a_request->reply( dl_message_error_invalid_key(), "Lockout key could not be parsed" );
-            send_reply( t_reply );
-            return t_reply;
-        }
-
         reply_ptr_t t_reply;
-        switch( a_request->get_message_op() )
+        try
         {
-            case op_t::run:
+            if( ! a_request->get_is_valid() )
             {
-                t_reply =  __do_run_request( a_request );
-                break;
+                std::string t_message( "Request message was not valid" );
+                // check in the payload for error information
+                if( a_request->payload().is_node() )
+                {
+                    const scarab::param_node& t_payload = a_request->payload().as_node();
+                    if( t_payload.has("error") ) t_message += "; " + t_payload["error"]().as_string();
+                }
+                throw_reply t_thrower( dl_message_error_decoding_fail{} );
+                t_thrower.payload() = a_request->payload();
+                throw t_thrower << "Request message was not valid";
+                //reply_ptr_t t_reply = a_request->reply( dl_message_error_decoding_fail(), "Request message was not valid" );
+                //t_reply->payload() = a_request->payload();
+                //send_reply( t_reply );
+                //return t_reply;
             }
-            case op_t::get:
-            {
-                t_reply =  __do_get_request( a_request );
-                break;
-            } // end "get" operation
-            case op_t::set:
-            {
-                t_reply =  __do_set_request( a_request );
-                break;
-            } // end "set" operation
-            case op_t::cmd:
-            {
-                t_reply =  __do_cmd_request( a_request );
-                break;
-            }
-            default:
-                std::stringstream t_error_stream;
-                t_error_stream << "Unrecognized message operation: <" << a_request->get_message_type() << ">";
-                std::string t_error_msg( t_error_stream.str() );
-                LWARN( dlog, t_error_msg );
-                t_reply = a_request->reply( dl_message_error_invalid_method(), t_error_msg );
-                break;
-        } // end switch on message type
 
+            // the lockout key must be valid
+            if( ! a_request->get_lockout_key_valid() )
+            {
+                throw throw_reply( dl_message_error_invalid_key{} ) << "Lockout key could not be parsed";
+                //reply_ptr_t t_reply = a_request->reply( dl_message_error_invalid_key(), "Lockout key could not be parsed" );
+                //send_reply( t_reply );
+                //return t_reply;
+            }
+
+            switch( a_request->get_message_op() )
+            {
+                case op_t::run:
+                {
+                    t_reply =  __do_run_request( a_request );
+                    break;
+                }
+                case op_t::get:
+                {
+                    t_reply =  __do_get_request( a_request );
+                    break;
+                } // end "get" operation
+                case op_t::set:
+                {
+                    t_reply =  __do_set_request( a_request );
+                    break;
+                } // end "set" operation
+                case op_t::cmd:
+                {
+                    t_reply =  __do_cmd_request( a_request );
+                    break;
+                }
+                default:
+                    throw throw_reply( dl_message_error_invalid_method() ) << "Unrecognized message operation: <" << a_request->get_message_type() << ">";
+                    //t_reply = a_request->reply( dl_message_error_invalid_method(), t_error_msg );
+                    break;
+            } // end switch on message type
+        }
+        catch( const throw_reply& e )
+        {
+            if( e.ret_code().rc_value() == dl_success::s_value )
+            {
+                LINFO( dlog, "Replying with: " << e.what() );
+            }
+            else
+            {
+                LWARN( dlog, "Replying with: " << e.what() );
+            }
+            t_reply = a_request->reply( e.ret_code(), e.what() );
+            t_reply->payload() = e.payload();
+        }
+        catch( const std::exception& e )
+        {
+            LWARN( dlog, "Caught exception: " << e.what() );
+            t_reply = a_request->reply( dl_unhandled_exception(), e.what() );
+        }
+        
+        // send the reply if the request had a reply-to
         if( a_request->reply_to().empty() )
         {
             LWARN( dlog, "Not sending reply (reply-to empty)\n" <<
