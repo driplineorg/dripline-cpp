@@ -90,9 +90,8 @@ namespace dripline
                     const scarab::param_node& t_payload = a_request->payload().as_node();
                     if( t_payload.has("error") ) t_message += "; " + t_payload["error"]().as_string();
                 }
-                throw_reply t_thrower( dl_message_error_decoding_fail{} );
-                t_thrower.payload() = a_request->payload();
-                throw t_thrower << "Request message was not valid";
+                ;
+                throw throw_reply( dl_message_error_decoding_fail{}, a_request->get_payload_ptr()->clone() ) << "Request message was not valid";
                 //reply_ptr_t t_reply = a_request->reply( dl_message_error_decoding_fail(), "Request message was not valid" );
                 //t_reply->payload() = a_request->payload();
                 //send_reply( t_reply );
@@ -103,9 +102,6 @@ namespace dripline
             if( ! a_request->get_lockout_key_valid() )
             {
                 throw throw_reply( dl_message_error_invalid_key{} ) << "Lockout key could not be parsed";
-                //reply_ptr_t t_reply = a_request->reply( dl_message_error_invalid_key(), "Lockout key could not be parsed" );
-                //send_reply( t_reply );
-                //return t_reply;
             }
 
             switch( a_request->get_message_op() )
@@ -132,7 +128,6 @@ namespace dripline
                 }
                 default:
                     throw throw_reply( dl_message_error_invalid_method() ) << "Unrecognized message operation: <" << a_request->get_message_type() << ">";
-                    //t_reply = a_request->reply( dl_message_error_invalid_method(), t_error_msg );
                     break;
             } // end switch on message type
         }
@@ -147,7 +142,7 @@ namespace dripline
                 LWARN( dlog, "Replying with: " << e.what() );
             }
             t_reply = a_request->reply( e.ret_code(), e.what() );
-            t_reply->payload() = e.payload();
+            t_reply->set_payload( e.get_payload_ptr()->clone() );
         }
         catch( const std::exception& e )
         {

@@ -24,10 +24,10 @@ namespace dripline
             f_payload( new scarab::param() )
     {}
 
-    throw_reply::throw_reply( const return_code& a_code ) :
+    throw_reply::throw_reply( const return_code& a_code, scarab::param_ptr_t&& a_payload_ptr ) :
             base_exception< throw_reply >(),
             f_retcode( new copy_code( a_code ) ),
-            f_payload( new scarab::param() )
+            f_payload( std::move(a_payload_ptr) )
     {}
 
     throw_reply::throw_reply( const throw_reply& a_throw ) :

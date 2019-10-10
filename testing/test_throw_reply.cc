@@ -27,7 +27,8 @@ TEST_CASE( "throw_reply", "[error]" )
         REQUIRE( e.ret_code().rc_value() == dripline::dl_amqp_error::s_value );
     }
 
-    // reply with message and payload
+    // reply with message and payload (payload not in constructor)
+    // also checks the CRTP: throwing a throw_reply that uses operator<<() should return a throw_reply
     try
     {
         dripline::throw_reply t_throw_reply( dripline::dl_success{} );
@@ -43,16 +44,27 @@ TEST_CASE( "throw_reply", "[error]" )
 
         throw t_throw_reply << "Hello";
     }
-    catch( dripline::throw_reply& e )
+    catch( const dripline::throw_reply& e )
     {
         REQUIRE( e.ret_code().rc_value() == dripline::dl_success::s_value );
         REQUIRE( e.what() == std::string("Hello") );
         REQUIRE( e.payload().as_value().as_uint() == 10 );
-
     }
     catch( std::exception& e )
     {
         LERROR( testlog, "Caught standard exception: " << e.what() );
         REQUIRE( false ); // we should never get here
+    }
+
+    // check putting the payload in the constructor
+    try
+    {
+        throw dripline::throw_reply( dripline::dl_success(), scarab::param_ptr_t( new scarab::param_value(5) ) ) << "Hello";
+    }
+    catch( const dripline::throw_reply& e )
+    {
+        REQUIRE( e.ret_code().rc_value() == dripline::dl_success::s_value );
+        REQUIRE( e.what() == std::string("Hello") );
+        REQUIRE( e.payload().as_value().as_uint() == 5 );
     }
 }
