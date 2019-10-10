@@ -46,8 +46,8 @@ TEST_CASE( "throw_reply", "[error]" )
     catch( dripline::throw_reply& e )
     {
         REQUIRE( e.ret_code().rc_value() == dripline::dl_success::s_value );
-        REQUIRE( std::string(e.what()) == std::string("Return code: success (0) -- Hello") );
-        REQUIRE( e.payload().as_value().as_uint() == 5 );
+        REQUIRE( e.what() == std::string("Hello") );
+        REQUIRE( e.payload().as_value().as_uint() == 10 );
 
     }
     catch( std::exception& e )

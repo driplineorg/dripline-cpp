@@ -42,7 +42,7 @@ namespace dripline
     const char* throw_reply::what() const throw ()
     {
         std::stringstream t_stream;
-        t_stream << "Return code: " << f_retcode->rc_name() << " (" << f_retcode->rc_value() << ") -- " << f_error;
+        t_stream << f_error;
         f_error = t_stream.str();
         return base_exception< throw_reply >::what();
     }
