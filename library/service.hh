@@ -15,7 +15,7 @@
 #include "listener.hh"
 #include "receiver.hh"
 
-#include "dripline_error.hh"
+#include "dripline_exceptions.hh"
 #include "uuid.hh"
 
 #include <map>

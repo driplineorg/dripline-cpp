@@ -9,7 +9,7 @@
 
 #include "monitor.hh"
 
-#include "dripline_error.hh"
+#include "dripline_exceptions.hh"
 #include "uuid.hh"
 
 #include "logger.hh"

@@ -5,7 +5,7 @@
  *      Author: N.S. Oblath
  */
 
-#include "dripline_error.hh"
+#include "dripline_exceptions.hh"
 
 #include "logger.hh"
 
@@ -33,13 +33,14 @@ TEST_CASE( "throw_reply", "[error]" )
         dripline::throw_reply t_throw_reply( dripline::dl_success{} );
         scarab::param_ptr_t t_payload( new scarab::param_value( 5 ) );
         t_throw_reply.set_payload( std::move( t_payload ) );
-        REQUIRE( t_throw_reply.payload().as_value().as_uint() == 5 );
+        REQUIRE( t_throw_reply.payload()().as_uint() == 5 );
 
-        // setting the payload with operator=, as you might if you had a reply object you were setting the payload into
+        // setting the payload with throw_reply::payload(), as you might if you had a reply object you were setting the payload into
         dripline::throw_reply t_payload_from;
         t_payload_from.set_payload( scarab::param_ptr_t(new scarab::param_value( 10 )) );
-        t_throw_reply.payload() = std::move(t_payload_from.payload());
-        REQUIRE( t_throw_reply.payload().as_value().as_uint() == 10 );
+        REQUIRE( t_payload_from.payload()().as_uint() == 10 );
+        t_throw_reply.payload().reset(t_payload_from.payload());
+        REQUIRE( t_throw_reply.payload()().as_uint() == 10 );
 
         throw t_throw_reply << "Hello";
     }

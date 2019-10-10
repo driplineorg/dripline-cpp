@@ -10,7 +10,7 @@
 #include "message.hh"
 
 #include "dripline_constants.hh"
-#include "dripline_error.hh"
+#include "dripline_exceptions.hh"
 #include "dripline_version.hh"
 
 #include "logger.hh"

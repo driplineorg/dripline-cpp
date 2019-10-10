@@ -1,7 +1,7 @@
 
 #define DRIPLINE_API_EXPORTS
 
-#include "dripline_error.hh"
+#include "dripline_exceptions.hh"
 
 namespace dripline
 {

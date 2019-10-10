@@ -7,7 +7,7 @@
 
 #include "return_codes.hh"
 
-#include "dripline_error.hh"
+#include "dripline_exceptions.hh"
 
 #include "logger.hh"
 

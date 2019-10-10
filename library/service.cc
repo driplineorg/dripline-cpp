@@ -9,7 +9,7 @@
 
 #include "service.hh"
 
-#include "dripline_error.hh"
+#include "dripline_exceptions.hh"
 
 #include "authentication.hh"
 #include "logger.hh"

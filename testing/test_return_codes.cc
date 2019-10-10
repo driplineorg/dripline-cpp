@@ -7,7 +7,7 @@
 
 #include "return_codes.hh"
 
-#include "dripline_error.hh"
+#include "dripline_exceptions.hh"
 
 #include "logger.hh"
 
@@ -15,7 +15,7 @@
 
 LOGGER( testlog, "test_return_codes" );
 
-TEST_CASE( "return_codes", "[core]" )
+TEST_CASE( "return_codes", "[exceptions]" )
 {
     dripline::dl_success t_rc;
     REQUIRE( t_rc.rc_value() == 0 );
