@@ -60,6 +60,7 @@ namespace dripline
             const scarab::param& payload() const;
             scarab::param& payload();
             void set_payload( scarab::param_ptr_t&& a_payload );
+            const scarab::param_ptr_t& get_payload_ptr() const;
 
         protected:
             std::shared_ptr< return_code > f_retcode;
@@ -138,6 +139,11 @@ namespace dripline
     {
         f_payload = std::move( a_payload );
         return;
+    }
+
+    inline const scarab::param_ptr_t& throw_reply::get_payload_ptr() const
+    {
+        return f_payload;
     }
 
 }

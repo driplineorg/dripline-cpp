@@ -38,8 +38,7 @@ TEST_CASE( "throw_reply", "[error]" )
         // setting the payload with throw_reply::payload(), as you might if you had a reply object you were setting the payload into
         dripline::throw_reply t_payload_from;
         t_payload_from.set_payload( scarab::param_ptr_t(new scarab::param_value( 10 )) );
-        REQUIRE( t_payload_from.payload()().as_uint() == 10 );
-        t_throw_reply.payload().reset(t_payload_from.payload());
+        t_throw_reply.set_payload( t_payload_from.get_payload_ptr()->clone() );
         REQUIRE( t_throw_reply.payload()().as_uint() == 10 );
 
         throw t_throw_reply << "Hello";
