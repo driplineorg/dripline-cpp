@@ -1,5 +1,5 @@
 /*
- * return_codes.hh
+ * @file return_codes.hh
  *
  *  Created on: Aug 25, 2018
  *      Author: N.S. Oblath
@@ -7,24 +7,12 @@
  *  This file contains the basis for the extensible return code system.
  *  Return codes have a name and a value (unsigned integer).
  *  The class name corresponding to your return code will be dl_[name].
- *  The integer values must be unique, and that uniqueness is enforced in dripline-cpp at compile time.
+ *  The integer values must be unique, and that uniqueness is enforced in dripline-cpp at run time.
  *
- *  New return codes are created using a macro, DEFINE_DL_RET_CODE, plus a two other simple lines.
- *  Place the follwoing in your header file for each return code you want to add:
- *
- *      DEFINE_DL_RET_CODE( [name], [value] );
- *  #undef RC_LIST
- *  #define RC_LIST NEW_RC_LIST( [name] )
- *
- *  New return codes can be defined in client code by including this header, and using the 3-line sequence above.
- *  Note that this must be done in the `dripline` namespace.  Resulting return codes will be in that namespace.
- *
- *  Technical details:
- *
- *  - All return code classes inherit from the class return_code and std::integral_constant< unsigned, [value] >.
- *  - Uniqueness of the values is enforced by a type list on which a compile-time algorithm is run to ensure the values are unique
- *    when they're added to the list (see scarab/library/utility/unique_typelist.hh).
- *  - The redefinitions of RC_LIST are necessary to use the append function and continuously add types to the list.
+ *  New return codes are created using the macro DEFINE_DL_RET_CODE or DEFINE_DL_RET_CODE_NOAPI in a header file,
+ *  and the macro IMPLEMENT_DL_RET_CODE in a source file.
+ * 
+ *  This file includes the definitions for all Dripline-standard return codes.  They are implemented in return_codes.cc.
  */
 
 #ifndef DRIPLINE_RETURN_CODES_HH_
@@ -40,15 +28,24 @@
 
 namespace dripline
 {
-    // Base class
-    struct DRIPLINE_API return_code
+    /*!
+     @class return_code
+     @author N.S. Oblath
+     @brief Base class for return codes
+    */
+     struct DRIPLINE_API return_code
     {
         virtual ~return_code() {};
         virtual unsigned rc_value() const = 0;
         virtual std::string rc_name() const = 0;
     };
 
-    struct DRIPLINE_API copy_code : return_code
+    /*!
+     @class copy_code
+     @author N.S. Oblath
+     @brief Stores a copy of the return-code value and name from any return_code-derived class
+    */
+     struct DRIPLINE_API copy_code : return_code
     {
         copy_code( const return_code& a_code );
         virtual ~copy_code() {};
@@ -60,6 +57,11 @@ namespace dripline
 
     // Macros for defining and implementing new return codes
 
+    /*!
+     \def DEFINE_DL_RET_CODE( name, api_macro )
+     Defines a return_code object with class name `dl_[name]`, using an API macro (e.g. for going in a Window DLL).
+     This macro should go in a header file.
+    */
 #define DEFINE_DL_RET_CODE( name, api_macro ) \
     struct api_macro dl_##name : public ::dripline::return_code \
     { \
@@ -70,6 +72,11 @@ namespace dripline
         virtual std::string rc_name() const {return dl_##name::s_name; } \
     };
 
+    /*!
+     \def DEFINE_DL_RET_CODE_NOAPI( name )
+     Defines a return_code object with class name `dl_[name]`, with no API macro.
+     This macro should go in a header file.
+    */
 #define DEFINE_DL_RET_CODE_NOAPI( name ) \
     struct dl_##name : public ::dripline::return_code \
     { \
@@ -80,6 +87,12 @@ namespace dripline
         virtual std::string rc_name() const {return dl_##name::s_name; } \
     };
 
+    /*!
+     \def IMPLEMENT_DL_RET_CODE( name, the_value )
+     Implement the return_code object with class name `dl_[name]`, and give it the value `the_value`.
+     `the_value` should be an unsigned integer.
+     This macro should go in a source file.
+    */
 #define IMPLEMENT_DL_RET_CODE( name, the_value ) \
     unsigned dl_##name::s_value = the_value; \
     std::string dl_##name::s_name( TOSTRING(name) ); \
