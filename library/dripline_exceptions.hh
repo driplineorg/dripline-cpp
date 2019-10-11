@@ -12,12 +12,22 @@
 
 namespace dripline
 {
-    // this class uses the Curiously Recurring Template Pattern (CRTP) to get the 
-    // derived class type to appear in the base class.
-    // In particular, we need to return x_derived& from the various operator<<() 
-    // so that those functions can be used in a throw statement and the user can 
-    // still catch the derived type.
-    template< typename x_derived >
+    /*!
+     @class base_exception
+     @author N.S. Oblath
+     @brief Base class for dripline exceptions
+
+     @details
+     This class provides streaming operators for building up the `what()` message.
+     It's meant to be the base class for all dripline-cpp exceptions.
+
+     This class uses the Curiously Recurring Template Pattern (CRTP) to get the 
+     derived class type to appear in the base class.
+     In particular, we need to return x_derived& from the various operator<<() 
+     so that those functions can be used in a throw statement and the user can 
+     still catch the derived type.
+    */
+   template< typename x_derived >
     class DRIPLINE_API base_exception : public ::std::exception
     {
         public:
@@ -36,6 +46,17 @@ namespace dripline
             mutable std::string f_error;
     };
 
+    /*!
+     @class dripline_error
+     @author N.S. Oblath
+     @brief Dripline-specific errors
+
+     @details
+     This is meant to be thrown for Dripline-specific errors.
+
+     It should be used in the manner of any typical C++ exception, whenever the current
+     function doesn't know how to handle a problem it encounters.
+    */
     class DRIPLINE_API dripline_error : public base_exception< dripline_error >
     {
         public:
@@ -44,6 +65,23 @@ namespace dripline
             virtual ~dripline_error() throw ();
     };
 
+    /*!
+     @class throw_reply
+     @author N.S. Oblath
+     @brief Object that can be thrown while processing a request to send a reply.
+
+     @details
+     The throw_reply is intended to be thrown during message processing. 
+     It's caught in endpoint::on_request_message() to translate the information into a reply message.
+
+     Three pieces of information can be transmitted:
+        1. (required) The return code is provided by an object derived from return_code. 
+          It's passed to the throw_reply in the constructor.
+        2. (optional) The return message explains the reply in human-readable terms.  It's passed 
+          to the throw_reply using operator<<().
+        3. (optional) The payload can contain further information to reply to the requstor.  
+           It's passed to the throw_reply in the constructor.  The default is a null (scarab::param) object. 
+    */
     class DRIPLINE_API throw_reply : public base_exception< throw_reply >
     {
         public:

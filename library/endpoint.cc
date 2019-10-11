@@ -90,12 +90,7 @@ namespace dripline
                     const scarab::param_node& t_payload = a_request->payload().as_node();
                     if( t_payload.has("error") ) t_message += "; " + t_payload["error"]().as_string();
                 }
-                ;
                 throw throw_reply( dl_message_error_decoding_fail{}, a_request->get_payload_ptr()->clone() ) << "Request message was not valid";
-                //reply_ptr_t t_reply = a_request->reply( dl_message_error_decoding_fail(), "Request message was not valid" );
-                //t_reply->payload() = a_request->payload();
-                //send_reply( t_reply );
-                //return t_reply;
             }
 
             // the lockout key must be valid
