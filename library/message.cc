@@ -12,6 +12,7 @@
 #include "dripline_constants.hh"
 #include "dripline_error.hh"
 #include "dripline_version.hh"
+#include "version_store.hh"
 
 #include "logger.hh"
 #include "map_at_default.hh"
@@ -41,9 +42,35 @@ namespace dripline
 
     LOGGER( dlog, "message" );
 
+
     //***********
     // Message
     //***********
+
+    message::sender_package_version::sender_package_version() :
+            f_version(),
+            f_commit(),
+            f_package()
+    {}
+    
+    message::sender_package_version::sender_package_version( const scarab::version_semantic& a_version ) :
+            f_version( a_version.version_str() ),
+            f_commit( a_version.commit() ),
+            f_package( a_version.package() )
+    {}
+
+    message::sender_package_version::sender_package_version( const std::string& a_version, const std::string& a_commit, const std::string& a_package ) :
+            f_version( a_version ),
+            f_commit( a_commit ),
+            f_package( a_package )
+    {}
+
+    bool message::sender_package_version::operator==( const sender_package_version& a_rhs ) const
+    {
+        return f_version == a_rhs.f_version &&
+               f_commit == a_rhs.f_commit &&
+               f_package == a_rhs.f_package;
+    }
 
     message::message() :
             f_is_valid( true ),
@@ -53,24 +80,25 @@ namespace dripline
             f_reply_to(),
             f_encoding( encoding::json ),
             f_timestamp(),
-            f_sender_package( "N/A" ),
             f_sender_exe( "N/A" ),
-            f_sender_version( "N/A" ),
-            f_sender_commit( "N/A" ),
             f_sender_hostname( "N/A" ),
             f_sender_username( "N/A" ),
+            f_sender_versions(),
             f_specifier(),
             f_payload( new param() )
     {
         // set the sender_info correctly for the server software
         scarab::version_wrapper* t_version = scarab::version_wrapper::get_instance();
-        f_sender_commit = t_version->commit();
-        f_sender_version = t_version->version_str();
-        f_sender_package = t_version->package();
         f_sender_exe = t_version->exe_name();
         f_sender_hostname = t_version->hostname();
         f_sender_username = t_version->username();
         f_sender_service_name = "unknown";
+
+        auto t_versions = version_store::get_instance()->versions();
+        for( auto& i_version : t_versions )
+        {
+            f_sender_versions.emplace( std::make_pair( i_version.first, *i_version.second ) );
+        }
     }
 
     message::~message()
@@ -260,15 +288,8 @@ namespace dripline
         t_message->timestamp() = at( t_properties, std::string("timestamp"), TableValue("") ).GetString();
 
         Table t_sender_info = at( t_properties, std::string("sender_info"), TableValue(Table()) ).GetTable();
-        scarab::param_node t_sender_info_node;
-        t_sender_info_node.add( "package", at( t_sender_info, std::string("package"), TableValue("N/A") ).GetString() );
-        t_sender_info_node.add( "exe", at( t_sender_info, std::string("exe"), TableValue("N/A") ).GetString() );
-        t_sender_info_node.add( "version", at( t_sender_info, std::string("version"), TableValue("N/A") ).GetString() );
-        t_sender_info_node.add( "commit", at( t_sender_info, std::string("commit"), TableValue("N/A") ).GetString() );
-        t_sender_info_node.add( "hostname", at( t_sender_info, std::string("hostname"), TableValue("N/A") ).GetString() );
-        t_sender_info_node.add( "username", at( t_sender_info, std::string("username"), TableValue("N/A") ).GetString() );
-        t_sender_info_node.add( "service_name", at( t_sender_info, std::string("service_name"), TableValue("N/A") ).GetString() );
-        t_message->set_sender_info( t_sender_info_node );
+        scarab::param_ptr_t t_sender_info_param = table_to_param( t_sender_info );
+        t_message->set_sender_info( t_sender_info_param->as_node() );
 
         t_message->payload() = *t_payload;
 
@@ -304,24 +325,11 @@ namespace dripline
                 t_message->MessageId( t_base_message_id + std::to_string(i_chunk) + t_total_chunks_str );
                 t_message->ReplyTo( f_reply_to );
 
-                using AmqpClient::Table;
-                using AmqpClient::TableEntry;
-                using AmqpClient::TableValue;
-
-                Table t_sender_info;
-                t_sender_info.insert( TableEntry( "package", f_sender_package ) );
-                t_sender_info.insert( TableEntry( "exe", f_sender_exe ) );
-                t_sender_info.insert( TableEntry( "version", f_sender_version ) );
-                t_sender_info.insert( TableEntry( "commit", f_sender_commit ) );
-                t_sender_info.insert( TableEntry( "hostname", f_sender_hostname ) );
-                t_sender_info.insert( TableEntry( "username", f_sender_username ) );
-                t_sender_info.insert( TableEntry( "service_name", f_sender_service_name ) );
-
-                Table t_properties;
-                t_properties.insert( TableEntry( "msgtype", to_uint(message_type()) ) );
-                t_properties.insert( TableEntry( "specifier", f_specifier.to_string() ) );
-                t_properties.insert( TableEntry( "timestamp", f_timestamp ) );
-                t_properties.insert( TableEntry( "sender_info", t_sender_info ) );
+                AmqpClient::Table t_properties;
+                t_properties.insert( AmqpClient::TableEntry( "msgtype", to_uint(message_type()) ) );
+                t_properties.insert( AmqpClient::TableEntry( "specifier", f_specifier.to_string() ) );
+                t_properties.insert( AmqpClient::TableEntry( "timestamp", f_timestamp ) );
+                t_properties.insert( AmqpClient::TableEntry( "sender_info", param_to_table( get_sender_info() ) ) );
 
                 this->derived_modify_amqp_message( t_message, t_properties );
 
@@ -408,10 +416,17 @@ namespace dripline
     param_node message::get_sender_info() const
     {
         param_node t_sender_info;
-        t_sender_info.add( "package", f_sender_package );
         t_sender_info.add( "exe", f_sender_exe );
-        t_sender_info.add( "version", f_sender_version );
-        t_sender_info.add( "commit", f_sender_commit );
+        param_node t_versions;
+        for( auto& i_version : f_sender_versions )
+        {
+            param_node t_version_info;
+            t_version_info.add( "version", i_version.second.f_version );
+            if( ! i_version.second.f_commit.empty() ) t_version_info.add( "commit", i_version.second.f_commit );
+            if( ! i_version.second.f_package.empty() ) t_version_info.add( "package", i_version.second.f_package );
+            t_versions.add( i_version.first, std::move(t_version_info) );
+        }
+        t_sender_info.add( "versions", std::move(t_versions) );
         t_sender_info.add( "hostname", f_sender_hostname );
         t_sender_info.add( "username", f_sender_username );
         t_sender_info.add( "service_name", f_sender_service_name );
@@ -420,21 +435,20 @@ namespace dripline
 
     void message::set_sender_info( const param_node& a_sender_info )
     {
-        //f_sender_info = a_sender_info;
-        //f_sender_info.add( "package", "N/A" ); // sets default if not present
-        f_sender_package = a_sender_info["package"]().as_string();
-        //f_sender_info.add( "exe", "N/A" ); // sets default if not present
         f_sender_exe = a_sender_info["exe"]().as_string();
-        //f_sender_info.add( "version", "N/A" ); // sets default if not present
-        f_sender_version = a_sender_info["version"]().as_string();
-        //f_sender_info.add( "commit", "N/A" ); // sets default if not present
-        f_sender_commit = a_sender_info["commit"]().as_string();
-        //f_sender_info.add( "hostname", "N/A" ); // sets default if not present
+        const param_node& t_versions = a_sender_info["versions"].as_node();
+        f_sender_versions.clear();
+        for( auto i_version = t_versions.begin(); i_version != t_versions.end(); ++i_version )
+        {
+            f_sender_versions.insert( std::make_pair(i_version.name(), sender_package_version(
+                    (*i_version)["version"]().as_string(),
+                    i_version->get_value("commit", ""),
+                    i_version->get_value("package", "") ) ) );
+        }
         f_sender_hostname = a_sender_info["hostname"]().as_string();
-        //f_sender_info.add( "username", "N/A" ); // sets default if not present
         f_sender_username = a_sender_info["username"]().as_string();
-        //f_sender_info.add( "service_name", "N/A" ); // sets default if not present
         f_sender_service_name = a_sender_info["service_name"]().as_string();
+        return;
     }
 
     param_node message::get_message_param() const
@@ -571,14 +585,23 @@ namespace dripline
 
     DRIPLINE_API bool operator==(  const message& a_lhs, const message& a_rhs )
     {
+        if( a_lhs.sender_versions().size() != a_rhs.sender_versions().size() ) return false;
+        bool t_versions_are_equal = true;
+        for( auto i_version = std::make_pair(a_lhs.sender_versions().begin(), a_rhs.sender_versions().begin());
+             i_version.first != a_lhs.sender_versions().end(); 
+             ++i_version.first, 
+             ++i_version.second 
+             )
+        {
+            t_versions_are_equal = t_versions_are_equal && i_version.first->second == i_version.second->second;
+        }
+
         return  a_lhs.routing_key() == a_rhs.routing_key() &&
                 a_lhs.correlation_id() == a_rhs.correlation_id() &&
                 a_lhs.reply_to() == a_rhs.reply_to() &&
                 a_lhs.get_encoding() == a_rhs.get_encoding() &&
                 a_lhs.timestamp() == a_rhs.timestamp() &&
-                a_lhs.sender_commit() == a_rhs.sender_commit() &&
-                a_lhs.sender_version() == a_rhs.sender_version() &&
-                a_lhs.sender_package() == a_rhs.sender_package() &&
+                t_versions_are_equal &&
                 a_lhs.sender_exe() == a_rhs.sender_exe() &&
                 a_lhs.sender_hostname() == a_rhs.sender_hostname() &&
                 a_lhs.sender_username() == a_rhs.sender_username() &&
@@ -622,13 +645,18 @@ namespace dripline
         a_os << "Encoding: " << a_message.get_encoding() << '\n';
         a_os << "Timestamp: " << a_message.timestamp() << '\n';
         a_os << "Sender Info:\n";
-        a_os << "\tPackage: " << a_message.sender_package() << '\n';
         a_os << "\tExecutable: " << a_message.sender_exe() << '\n';
-        a_os << "\tVersion: " << a_message.sender_version() << '\n';
-        a_os << "\tCommit: " << a_message.sender_commit() << '\n';
         a_os << "\tHostname: " << a_message.sender_hostname() << '\n';
         a_os << "\tUsername: " << a_message.sender_username() << '\n';
         a_os << "\tService: " << a_message.sender_service_name() << '\n';
+        a_os << "\tVersions:\n";
+        for( const auto& i_version : a_message.sender_versions() )
+        {
+            a_os << "\t\t" << i_version.first << ":\n";
+            a_os << "\t\t\tVersion: " << i_version.second.f_version << '\n';
+            a_os << "\t\t\tCommit: " << i_version.second.f_commit << '\n';
+            a_os << "\t\t\tPackage: " << i_version.second.f_package << '\n';
+        }
         a_os << "Specifier: " << a_message.parsed_specifier().unparsed() << '\n';
         if( a_message.payload().is_node() ) a_os << "Payload: " << a_message.payload().as_node() << '\n';
         else if( a_message.payload().is_array() ) a_os << "Payload: " << a_message.payload().as_array() << '\n';

@@ -14,6 +14,13 @@ include( PackageBuilder )
 
 pbuilder_prepare_project()
 
+# Get the dripline version
+file( STRINGS "dripline_shield.json" JSON_STRINGS )
+list( FILTER JSON_STRINGS INCLUDE REGEX "message" )
+list( GET JSON_STRINGS 0 JSON_STRING )
+string( REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" DRIPLINE_PROTOCOL_VERSION ${JSON_STRING})
+message( STATUS "Dripline protocol version: ${DRIPLINE_PROTOCOL_VERSION}" )
+
 
 ####################
 # dripline options #

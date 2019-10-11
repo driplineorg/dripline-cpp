@@ -6,9 +6,9 @@
  */
 
 #include "dripline_constants.hh"
-#include "dripline_version.hh"
 #include "monitor.hh"
 #include "monitor_config.hh"
+#include "version_store.hh"
 
 #include "application.hh"
 #include "logger.hh"
@@ -43,7 +43,7 @@ int main( int argc, char** argv )
     }
 
     // Package version
-    the_main.set_version( new dripline::version() );
+    the_main.set_version( version_store::get_instance()->versions().at("dripline-cpp") );
 
     // main callback function and return code extraction
     int the_return = -1;
