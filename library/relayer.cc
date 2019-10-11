@@ -2,7 +2,7 @@
 
 #include "relayer.hh"
 
-#include "dripline_error.hh"
+#include "dripline_exceptions.hh"
 
 #include "logger.hh"
 #include "param.hh"

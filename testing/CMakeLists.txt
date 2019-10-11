@@ -11,6 +11,7 @@ set( testing_SOURCES
     test_agent.cc
     test_amqp.cc
     test_core.cc
+    test_dripline_error.cc
     test_endpoint.cc
     test_heartbeat.cc
     test_lockout.cc
@@ -18,6 +19,7 @@ set( testing_SOURCES
     test_return_codes.cc
     test_scheduler.cc
     test_specifier.cc
+    test_throw_reply.cc
     test_version_store.cc
     use_catch.cc
 )

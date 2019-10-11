@@ -126,6 +126,7 @@ namespace dripline
             const scarab::param& payload() const;
 
             void set_payload( scarab::param_ptr_t a_payload );
+            const scarab::param_ptr_t& get_payload_ptr() const;
 
         private:
             scarab::param_ptr_t f_payload;
@@ -279,6 +280,11 @@ namespace dripline
         f_payload = std::move(a_payload);
     }
 
+    inline const scarab::param_ptr_t& message::get_payload_ptr() const
+    {
+        return f_payload;
+    }
+
 
     //***********
     // Request
@@ -364,6 +370,7 @@ namespace dripline
         a_message_node.add( "return_message", f_return_msg );
         return;
     }
+
 
     //*********
     // Alert

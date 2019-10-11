@@ -12,7 +12,7 @@ set( dripline_HEADERS
     dripline_api.hh
     dripline_config.hh
     dripline_constants.hh
-    dripline_error.hh
+    dripline_exceptions.hh
     dripline_version.hh
     endpoint.hh
     heartbeater.hh
@@ -38,7 +38,7 @@ set( dripline_SOURCES
     core.cc
     dripline_config.cc
     dripline_constants.cc
-    dripline_error.cc
+    dripline_exceptions.cc
     dripline_version.cc
     endpoint.cc
     heartbeater.cc

@@ -1,5 +1,5 @@
 /*
- * return_codes.hh
+ * @file return_codes.hh
  *
  *  Created on: Aug 25, 2018
  *      Author: N.S. Oblath
@@ -7,24 +7,12 @@
  *  This file contains the basis for the extensible return code system.
  *  Return codes have a name and a value (unsigned integer).
  *  The class name corresponding to your return code will be dl_[name].
- *  The integer values must be unique, and that uniqueness is enforced in dripline-cpp at compile time.
+ *  The integer values must be unique, and that uniqueness is enforced in dripline-cpp at run time.
  *
- *  New return codes are created using a macro, DEFINE_DL_RET_CODE, plus a two other simple lines.
- *  Place the follwoing in your header file for each return code you want to add:
- *
- *      DEFINE_DL_RET_CODE( [name], [value] );
- *  #undef RC_LIST
- *  #define RC_LIST NEW_RC_LIST( [name] )
- *
- *  New return codes can be defined in client code by including this header, and using the 3-line sequence above.
- *  Note that this must be done in the `dripline` namespace.  Resulting return codes will be in that namespace.
- *
- *  Technical details:
- *
- *  - All return code classes inherit from the class return_code and std::integral_constant< unsigned, [value] >.
- *  - Uniqueness of the values is enforced by a type list on which a compile-time algorithm is run to ensure the values are unique
- *    when they're added to the list (see scarab/library/utility/unique_typelist.hh).
- *  - The redefinitions of RC_LIST are necessary to use the append function and continuously add types to the list.
+ *  New return codes are created using the macro DEFINE_DL_RET_CODE or DEFINE_DL_RET_CODE_NOAPI in a header file,
+ *  and the macro IMPLEMENT_DL_RET_CODE in a source file.
+ * 
+ *  This file includes the definitions for all Dripline-standard return codes.  They are implemented in return_codes.cc.
  */
 
 #ifndef DRIPLINE_RETURN_CODES_HH_
@@ -32,126 +20,121 @@
 
 #include "dripline_api.hh"
 
-#include "unique_typelist.hh"
+#include "indexed_factory.hh"
+#include "macros.hh"
+
+#include <set>
+#include <string>
 
 namespace dripline
 {
-    // Base class
-    struct DRIPLINE_API return_code
+    /*!
+     @class return_code
+     @author N.S. Oblath
+     @brief Base class for return codes
+    */
+     struct DRIPLINE_API return_code
     {
         virtual ~return_code() {};
         virtual unsigned rc_value() const = 0;
+        virtual std::string rc_name() const = 0;
     };
 
-    // Macros for defining new return codes
-#define NEW_RC_LIST( name ) rc_list_##name##_t
-
-#define DEFINE_DL_RET_CODE( name, the_value ) \
-    struct DRIPLINE_API dl_##name : public ::dripline::return_code, public std::integral_constant< unsigned, the_value > \
-    { \
-        virtual ~dl_##name() {} \
-        virtual unsigned rc_value() const { return dl_##name::value; } \
-    }; \
-    using NEW_RC_LIST(name) = ::scarab::unique_append< std::integral_constant< unsigned, the_value >, RC_LIST >;
-
-    // Start off the typelist as an empty list
-    using rc_list_void = ::scarab::type_list<>;
-#define RC_LIST rc_list_void
-
-
-    //****************
-    // Return codes
-    //****************
-
-
-    DEFINE_DL_RET_CODE( success, 0 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( success )
-
-    DEFINE_DL_RET_CODE( warning_no_action_taken, 1 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( warning_no_action_taken )
-
-    DEFINE_DL_RET_CODE( amqp_error, 100 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( amqp_error )
-    DEFINE_DL_RET_CODE( amqp_error_broker_connection, 101 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( amqp_error_broker_connection )
-    DEFINE_DL_RET_CODE( amqp_error_routingkey_notfound, 102 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( amqp_error_routingkey_notfound )
-
-    DEFINE_DL_RET_CODE( device_error, 200 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( device_error )
-    DEFINE_DL_RET_CODE( device_error_connection, 201 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( device_error_connection )
-    DEFINE_DL_RET_CODE( device_error_no_resp, 202 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( device_error_no_resp )
-
-    DEFINE_DL_RET_CODE( message_error, 300 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( message_error )
-    DEFINE_DL_RET_CODE( message_error_no_encoding, 301 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( message_error_no_encoding )
-    DEFINE_DL_RET_CODE( message_error_decoding_fail, 302 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( message_error_decoding_fail )
-    DEFINE_DL_RET_CODE( message_error_bad_payload, 303 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( message_error_bad_payload )
-    DEFINE_DL_RET_CODE( message_error_invalid_value, 304 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( message_error_invalid_value )
-    DEFINE_DL_RET_CODE( message_error_timeout, 305 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( message_error_timeout )
-    DEFINE_DL_RET_CODE( message_error_invalid_method, 306 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( message_error_invalid_method )
-    DEFINE_DL_RET_CODE( message_error_access_denied, 307 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( message_error_access_denied )
-    DEFINE_DL_RET_CODE( message_error_invalid_key, 308 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( message_error_invalid_key )
-    DEFINE_DL_RET_CODE( message_error_dripline_deprecated, 309 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( message_error_dripline_deprecated )
-    DEFINE_DL_RET_CODE( message_error_invalid_specifier, 310 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( message_error_invalid_specifier )
-
-    DEFINE_DL_RET_CODE( client_error, 400 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( client_error )
-    DEFINE_DL_RET_CODE( client_error_invalid_request, 401 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( client_error_invalid_request )
-    DEFINE_DL_RET_CODE( client_error_handling_reply, 402 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( client_error_handling_reply )
-    DEFINE_DL_RET_CODE( client_error_unable_to_send, 403 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( client_error_unable_to_send )
-    DEFINE_DL_RET_CODE( client_error_timeout, 404 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( client_error_timeout )
-
-    DEFINE_DL_RET_CODE( unhandled_exception, 999 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( unhandled_exception )
-
-    // to test a duplicate error code:
-    /*
-    DEFINE_DL_RET_CODE( unhandled_exception_2, 999 );
-#undef RC_LIST
-#define RC_LIST NEW_RC_LIST( unhandled_exception_2 )
+    /*!
+     @class copy_code
+     @author N.S. Oblath
+     @brief Stores a copy of the return-code value and name from any return_code-derived class
     */
+     struct DRIPLINE_API copy_code : return_code
+    {
+        copy_code( const return_code& a_code );
+        virtual ~copy_code() {};
+        virtual unsigned rc_value() const { return f_value; }
+        virtual std::string rc_name() const { return f_name; }
+        unsigned f_value;
+        std::string f_name;
+    };
+
+    // Macros for defining and implementing new return codes
+
+    /*!
+     \def DEFINE_DL_RET_CODE( name, api_macro )
+     Defines a return_code object with class name `dl_[name]`, using an API macro (e.g. for going in a Window DLL).
+     This macro should go in a header file.
+    */
+#define DEFINE_DL_RET_CODE( name, api_macro ) \
+    struct api_macro dl_##name : public ::dripline::return_code \
+    { \
+        static unsigned s_value; \
+        static std::string s_name; \
+        virtual ~dl_##name() {} \
+        virtual unsigned rc_value() const { return dl_##name::s_value; } \
+        virtual std::string rc_name() const {return dl_##name::s_name; } \
+    };
+
+    /*!
+     \def DEFINE_DL_RET_CODE_NOAPI( name )
+     Defines a return_code object with class name `dl_[name]`, with no API macro.
+     This macro should go in a header file.
+    */
+#define DEFINE_DL_RET_CODE_NOAPI( name ) \
+    struct dl_##name : public ::dripline::return_code \
+    { \
+        static unsigned s_value; \
+        static std::string s_name; \
+        virtual ~dl_##name() {} \
+        virtual unsigned rc_value() const { return dl_##name::s_value; } \
+        virtual std::string rc_name() const {return dl_##name::s_name; } \
+    };
+
+    /*!
+     \def IMPLEMENT_DL_RET_CODE( name, the_value )
+     Implement the return_code object with class name `dl_[name]`, and give it the value `the_value`.
+     `the_value` should be an unsigned integer.
+     This macro should go in a source file.
+    */
+#define IMPLEMENT_DL_RET_CODE( name, the_value ) \
+    unsigned dl_##name::s_value = the_value; \
+    std::string dl_##name::s_name( TOSTRING(name) ); \
+    static scarab::indexed_registrar< unsigned, ::dripline::return_code, dl_##name > t_dl_##name##_rc_reg( the_value );
+
+//    std::string ::dripline::dl_##name::s_name = TOSTRING(name);
+
+    //****************
+    // Return code definitions
+    //****************
+
+    DEFINE_DL_RET_CODE( success, DRIPLINE_API );
+
+    DEFINE_DL_RET_CODE( warning_no_action_taken, DRIPLINE_API );
+
+    DEFINE_DL_RET_CODE( amqp_error, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( amqp_error_broker_connection, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( amqp_error_routingkey_notfound, DRIPLINE_API );
+
+    DEFINE_DL_RET_CODE( device_error, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( device_error_connection, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( device_error_no_resp, DRIPLINE_API );
+
+    DEFINE_DL_RET_CODE( message_error, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( message_error_no_encoding, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( message_error_decoding_fail, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( message_error_bad_payload, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( message_error_invalid_value, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( message_error_timeout, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( message_error_invalid_method, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( message_error_access_denied, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( message_error_invalid_key, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( message_error_dripline_deprecated, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( message_error_invalid_specifier, DRIPLINE_API );
+
+    DEFINE_DL_RET_CODE( client_error, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( client_error_invalid_request, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( client_error_handling_reply, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( client_error_unable_to_send, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( client_error_timeout, DRIPLINE_API );
+
+    DEFINE_DL_RET_CODE( unhandled_exception, DRIPLINE_API );
 
 } /* namespace dripline */
 
