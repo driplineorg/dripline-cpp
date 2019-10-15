@@ -305,14 +305,14 @@ namespace dripline
 
     inline void msg_request::derived_modify_amqp_message( amqp_message_ptr /*a_amqp_msg*/, AmqpClient::Table& a_properties ) const
     {
-        a_properties.insert( AmqpClient::TableEntry( "msgop", AmqpClient::TableValue(to_uint(f_message_op)) ) );
+        a_properties.insert( AmqpClient::TableEntry( "message_operation", AmqpClient::TableValue(to_uint(f_message_op)) ) );
         a_properties.insert( AmqpClient::TableEntry( "lockout_key", AmqpClient::TableValue(string_from_uuid(lockout_key())) ) );
         return;
     }
 
     inline void msg_request::derived_modify_message_param( scarab::param_node& a_message_node ) const
     {
-        a_message_node.add( "msg_op", to_uint(f_message_op) );
+        a_message_node.add( "message_operation", to_uint(f_message_op) );
         a_message_node.add( "lockout_key", string_from_uuid(lockout_key()) );
         return;
     }
@@ -359,8 +359,8 @@ namespace dripline
 
     inline void msg_reply::derived_modify_amqp_message( amqp_message_ptr, AmqpClient::Table& a_properties ) const
     {
-        a_properties.insert( AmqpClient::TableEntry( "retcode", AmqpClient::TableValue(f_return_code) ) );
-        a_properties.insert( AmqpClient::TableEntry( "return_msg", AmqpClient::TableValue(f_return_msg) ) );
+        a_properties.insert( AmqpClient::TableEntry( "return_code", AmqpClient::TableValue(f_return_code) ) );
+        a_properties.insert( AmqpClient::TableEntry( "return_message", AmqpClient::TableValue(f_return_msg) ) );
         return;
     }
 

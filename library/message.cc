@@ -224,14 +224,14 @@ namespace dripline
 
         // Create the message, of whichever type
         message_ptr_t t_message;
-        msg_t t_msg_type = to_msg_t( at( t_properties, std::string("msgtype"), TableValue(to_uint(msg_t::unknown)) ).GetUint32() );
+        msg_t t_msg_type = to_msg_t( at( t_properties, std::string("message_type"), TableValue(to_uint(msg_t::unknown)) ).GetUint32() );
         switch( t_msg_type )
         {
             case msg_t::request:
             {
                 request_ptr_t t_request = msg_request::create(
                         std::move(t_payload),
-                        to_op_t( at( t_properties, std::string("msgop"), TableValue(to_uint(op_t::unknown)) ).GetUint32() ),
+                        to_op_t( at( t_properties, std::string("message_operation"), TableValue(to_uint(op_t::unknown)) ).GetUint32() ),
                         a_routing_key,
                         at( t_properties, std::string("specifier"), TableValue("") ).GetString(),
                         t_first_valid_message->ReplyTo(),
@@ -247,8 +247,8 @@ namespace dripline
             case msg_t::reply:
             {
                 reply_ptr_t t_reply = msg_reply::create(
-                        at( t_properties, std::string("retcode"), TableValue(999U) ).GetUint32(),
-                        at( t_properties, std::string("return_msg"), TableValue("") ).GetString(),
+                        at( t_properties, std::string("return_code"), TableValue(999U) ).GetUint32(),
+                        at( t_properties, std::string("return_message"), TableValue("") ).GetString(),
                         std::move(t_payload),
                         a_routing_key,
                         at( t_properties, std::string("specifier"), TableValue("") ).GetString(),
@@ -326,7 +326,7 @@ namespace dripline
                 t_message->ReplyTo( f_reply_to );
 
                 AmqpClient::Table t_properties;
-                t_properties.insert( AmqpClient::TableEntry( "msgtype", to_uint(message_type()) ) );
+                t_properties.insert( AmqpClient::TableEntry( "message_type", to_uint(message_type()) ) );
                 t_properties.insert( AmqpClient::TableEntry( "specifier", f_specifier.to_string() ) );
                 t_properties.insert( AmqpClient::TableEntry( "timestamp", f_timestamp ) );
                 t_properties.insert( AmqpClient::TableEntry( "sender_info", param_to_table( get_sender_info() ) ) );
@@ -670,7 +670,7 @@ namespace dripline
         a_os << static_cast< const message& >( a_message );
         a_os << "Lockout Key: " << a_message.lockout_key() << '\n';
         a_os << "Lockout Key Valid: " << a_message.get_lockout_key_valid() << '\n';
-        a_os << "Message Op: " << a_message.get_message_op() << '\n';
+        a_os << "Message Operation: " << a_message.get_message_op() << '\n';
         return a_os;
     }
 
