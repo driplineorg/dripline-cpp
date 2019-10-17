@@ -23,6 +23,11 @@
 #include <tuple>
 #include <string>
 
+namespace scarab
+{
+    class version_semantic;
+}
+
 namespace dripline
 {
     class dripline_error;
@@ -82,13 +87,23 @@ namespace dripline
             mv_accessible( encoding, encoding );
             mv_referrable( std::string, timestamp );
 
-            mv_referrable( std::string, sender_package );
             mv_referrable( std::string, sender_exe );
-            mv_referrable( std::string, sender_version );
-            mv_referrable( std::string, sender_commit );
             mv_referrable( std::string, sender_hostname );
             mv_referrable( std::string, sender_username );
             mv_referrable( std::string, sender_service_name );
+
+            struct sender_package_version
+            {
+                std::string f_version;
+                std::string f_commit;
+                std::string f_package;
+                sender_package_version();
+                sender_package_version( const scarab::version_semantic& a_version );
+                sender_package_version( const std::string& a_version, const std::string& a_commit, const std::string& a_package );
+                bool operator==( const sender_package_version& a_rhs ) const;
+            };
+            typedef std::map< std::string, sender_package_version > sender_version_map_t;
+            mv_referrable( sender_version_map_t, sender_versions );
 
         protected:
             mutable specifier f_specifier;
@@ -99,23 +114,19 @@ namespace dripline
 
             virtual msg_t message_type() const = 0;
 
-            //void set_sender_package( const std::string& a_pkg );
-            //void set_sender_exe( const std::string& a_exe );
-            //void set_sender_version( const std::string& a_vsn );
-            //void set_sender_commit( const std::string& a_cmt );
-            //void set_sender_hostname( const std::string& a_host );
-            //void set_sender_username( const std::string& a_user );
-            //void set_sender_service_name( const std::string& a_service );
-
+            /// creates and returns a new param_node object to contain the sender info
             scarab::param_node get_sender_info() const;
+            /// copies the sender info out of a param_node
             void set_sender_info( const scarab::param_node& a_sender_info );
 
+            /// creates and returns a new param_node object to contain the full message
             scarab::param_node get_message_param() const;
         public:
             scarab::param& payload();
             const scarab::param& payload() const;
 
             void set_payload( scarab::param_ptr_t a_payload );
+            const scarab::param_ptr_t& get_payload_ptr() const;
 
         private:
             scarab::param_ptr_t f_payload;
@@ -244,56 +255,6 @@ namespace dripline
     // Message
     //***********
 
-/*
-    inline void message::set_sender_package( const std::string& a_pkg )
-    {
-        //f_sender_info["package"]().set( a_pkg );
-        f_sender_package = a_pkg;
-        return;
-    }
-
-    inline void message::set_sender_exe( const std::string& a_exe )
-    {
-        //f_sender_info["exe"]().set( a_exe );
-        f_sender_exe = a_exe;
-        return;
-    }
-
-    inline void message::set_sender_version( const std::string& a_vsn )
-    {
-        //f_sender_info["version"]().set( a_vsn );
-        f_sender_version = a_vsn;
-        return;
-    }
-
-    inline void message::set_sender_commit( const std::string& a_cmt )
-    {
-        //f_sender_info["commit"]().set( a_cmt );
-        f_sender_commit = a_cmt;
-        return;
-    }
-
-    inline void message::set_sender_hostname( const std::string& a_host )
-    {
-        //f_sender_info["hostname"]().set( a_host );
-        f_sender_hostname = a_host;
-        return;
-    }
-
-    inline void message::set_sender_username( const std::string& a_user )
-    {
-        //f_sender_info["username"]().set( a_user );
-        f_sender_username = a_user;
-        return;
-    }
-
-    inline void message::set_sender_service_name( const std::string& a_service )
-    {
-        //f_sender_info["service_name"]().set( a_service );
-        f_sender_service_name = a_service;
-        return;
-    }
-*/
     inline specifier& message::parsed_specifier()
     {
         return f_specifier;
@@ -317,6 +278,11 @@ namespace dripline
     inline void message::set_payload( scarab::param_ptr_t a_payload )
     {
         f_payload = std::move(a_payload);
+    }
+
+    inline const scarab::param_ptr_t& message::get_payload_ptr() const
+    {
+        return f_payload;
     }
 
 
@@ -404,6 +370,7 @@ namespace dripline
         a_message_node.add( "return_message", f_return_msg );
         return;
     }
+
 
     //*********
     // Alert

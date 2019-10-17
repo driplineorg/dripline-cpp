@@ -13,7 +13,7 @@
 #include "agent.hh"
 #include "agent_config.hh"
 #include "dripline_constants.hh"
-#include "dripline_version.hh"
+#include "version_store.hh"
 
 #include "application.hh"
 #include "logger.hh"
@@ -96,7 +96,7 @@ int main( int argc, char** argv )
     the_main.add_config_flag< bool >( "--dry-run-msg", "dry-run-msg", "Print the message contents and exit" );
 
     // Package version
-    the_main.set_version( new dripline::version() );
+    the_main.set_version( version_store::get_instance()->versions().at("dripline-cpp") );
 
     // Parse CL options and run the application
     CLI11_PARSE( the_main, argc, argv );

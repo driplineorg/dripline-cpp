@@ -5,7 +5,7 @@
  *      Author: N.S. Oblath
  */
 
-#include "dripline_error.hh"
+#include "dripline_exceptions.hh"
 #include "endpoint.hh"
 
 #include "catch.hpp"

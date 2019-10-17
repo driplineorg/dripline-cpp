@@ -12,7 +12,7 @@
 #include "agent_config.hh"
 #include "core.hh"
 #include "dripline_constants.hh"
-#include "dripline_error.hh"
+#include "dripline_exceptions.hh"
 #include "dripline_version.hh"
 #include "receiver.hh"
 #include "uuid.hh"

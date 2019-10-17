@@ -6,7 +6,7 @@
  */
 
 
-#include "dripline_error.hh"
+#include "dripline_exceptions.hh"
 #include "core.hh"
 #include "return_codes.hh"
 
