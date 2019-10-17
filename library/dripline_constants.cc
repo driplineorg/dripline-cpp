@@ -1,8 +1,8 @@
 /*
- * constants.cc
+ * dripline_constants.cc
  *
  *  Created on: Jan 5, 2016
- *      Author: nsoblath
+ *      Author: N.S. Oblath
  */
 
 #define DRIPLINE_API_EXPORTS
