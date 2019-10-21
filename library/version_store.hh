@@ -22,6 +22,19 @@
 namespace dripline
 {
 
+    /*!
+     @class version_store
+     @author N.S. Oblath
+
+     @brief Singleton class to store all version information relevant in any particular context.
+
+     @details
+     This class is used to provide all of the relevant version information to a dripline message object.
+     A library/executable will add the version information to this singleton object, and when 
+     a message is created, it automatically access that information.
+
+
+    */
     class DRIPLINE_API version_store : public scarab::singleton< version_store >
     {
         protected:
@@ -41,7 +54,16 @@ namespace dripline
     };
 
 
-    // version adder object to enable adding version classes at static initialization
+    /*!
+     @struct version_store_adder
+     @author N.S. Oblath
+
+     @brief Version adder struct to enable adding version classes at static initialization.  See ADD_VERSION.
+
+     @note This method for adding a version object requires a derived version class that has been 
+     registered with the factory already.  It's intended to be used at static initialization time, 
+     but could be used during runtime as well.
+    */
     template< typename x_version >
     struct DRIPLINE_API version_store_adder
     {
@@ -51,7 +73,17 @@ namespace dripline
         }
     };
 
-    // function to use to add a version (whenever; adder is created on the heap)
+    /*!
+     @fn add_version
+     @author N.S. Oblath
+
+     @brief Templated function for adding a version object.
+
+     @note This method for adding a version object requires a derived version class that has been 
+     registered with the factory already.  This could be used at static initialization, though 
+     it's mainly intended for use during runtime.  The adder object is created on the heap using a 
+     shared_ptr, so memory management should be simple.
+    */
     template< typename x_version >
     DRIPLINE_API std::shared_ptr< version_store_adder< x_version > > add_version( const std::string& a_name )
     {
@@ -59,9 +91,24 @@ namespace dripline
     }
 
     // function to use to add a version via a base-class pointer to a derived object
+    /*!
+     @fn add_version
+     @author N.S. Oblath
+
+     @brief Function for adding a version object using polymorphism.
+
+     @note This method for adding a version object requires an instance of a version_semantic class.  
+     This is intended for use at runtime, and in particular for the Python binding.  The instance could 
+     be a base-class instance or a generic derived object containing unique version information.
+    */
     DRIPLINE_API void add_version( const std::string& a_name, scarab::version_semantic_ptr_t a_version_ptr );
 
-    // macro to use to add a version (usually at static initialization)
+    /*!
+     @def ADD_VERSION( version_name, version_type )
+     @author N.S. Oblath
+
+     @brief Macro for adding version classes at static initialization.
+    */
     #define ADD_VERSION( version_name, version_type ) \
         static ::dripline::version_store_adder< version_type > s_version_adder_##version_name( TOSTRING(version_name) );
 
