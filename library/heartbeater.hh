@@ -24,7 +24,7 @@ namespace dripline
      @class heartbeater
      @author N.S. Oblath
 
-     @brief Adds heartbeat capabilities: repeatedly sends an alert on a particular time interval
+     @brief A heartbeater repeatedly sends an alert on a particular time interval.
 
      @details
      This class is intended to be used as a mix-in to add heartbeat capabilities to another class 

@@ -27,10 +27,17 @@ namespace dripline
      basic framework for doing that.
 
      @details
-     The listener class provides the interface for listening for messages: the pure virtual function `listen_on_queue()`.
+     The listener class is a mix-in class that provides the interface for listening for messages: 
+     the pure virtual function `listen_on_queue()`.
      This function should be run in the thread provided by this class.
      However, it needs to be implemented by the inheriting class.
 
+     The typical use case involves at least two threads:
+     1. A listener gets messages from the AMQP channel (using `listen_on_queue(), e.g. @ref service or @ref endpoint_listener_receiver) and 
+        calls `receiver::handle_message_chunk()`
+     2. A receiver has a timing thread waiting for multiple message chunks (if relevant); 
+        when the message is complete, `receiver::process_message()` is called.
+    
      This class also provides the objects and information needed for listening on a queue:
      * The AMQP channel
      * A consumer tag
@@ -85,7 +92,6 @@ namespace dripline
             }
     };
 
-    // decorator class for a plain endpoint
     /*!
      @class endpoint_listener_receiver
      @author N.S. Oblath
