@@ -64,6 +64,7 @@ namespace dripline
              @param a_name The name for the heartbeater (e.g. the service)
              @param a_id UUID for the heartbeater
              @param a_routing_key The base of the routing key for heartbeat alerts; will be postpended with \ref a_name
+            */
             void execute( const std::string& a_name, uuid_t a_id, const std::string& a_routing_key );
 
             /// Interval between heartbeat alerts (default: 60 s)
