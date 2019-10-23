@@ -19,6 +19,23 @@
 
 namespace dripline
 {
+    /*!
+     @class listener
+     @author N.S. Oblath
+
+     @brief Provides the framework for listener capabilities, listening for AMQP messages from a particular channel
+
+     @details
+     The listener class provides the interface for listening for messages: the pure virtual function `listen_on_queue()`.
+     This function should be run in the thread provided by this class.
+     However, it needs to be implemented by the inheriting class.
+
+     This class also provides the objects and information needed for listening on a queue:
+     * The AMQP channel
+     * A consumer tag
+     * A timeout (in ms)
+     * The thread object for listening
+    */
     class DRIPLINE_API listener : public virtual scarab::cancelable
     {
         public:
@@ -41,7 +58,12 @@ namespace dripline
             mv_referrable( std::thread, listener_thread );
     };
 
-    // brings together listener and concurrent_reciever
+    /*!
+     @class listener_receiver
+     @author N.S. Oblath
+
+     @brief Convenience class to bring together @ref listener and @ref concurrent_receiver
+    */
     class DRIPLINE_API listener_receiver : public listener, public concurrent_receiver
     {
         public:
@@ -63,6 +85,15 @@ namespace dripline
     };
 
     // decorator class for a plain endpoint
+    /*!
+     @class endpoint_listener_receiver
+     @author N.S. Oblath
+
+     @brief Decorator class for a plain endpoint: adds listener_receiver capabilities.
+
+     @details
+     The endpoint_listener_receiver is used by @ref service to wrap an endpoint that is to listen for messages asynchronously.
+    */
     class DRIPLINE_API endpoint_listener_receiver : public listener_receiver
     {
         public:
@@ -74,11 +105,14 @@ namespace dripline
             endpoint_listener_receiver& operator=( const endpoint_listener_receiver& ) = delete;
             endpoint_listener_receiver& operator=( endpoint_listener_receiver&& a_orig );
 
+            /// Listens for AMQP messages and then passes them to be handled as Dripline message chunks
             virtual bool listen_on_queue();
 
         protected:
+            /// Direct submission of messages to the endpoint
             virtual void submit_message( message_ptr_t a_message );
 
+            /// Pointer to the decorated endpoint
             mv_referrable( endpoint_ptr_t,  endpoint );
     };
 
