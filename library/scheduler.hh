@@ -36,7 +36,7 @@ namespace dripline
      @details
      Executors execute the actions that are scheduled in @ref scheduler.
     */
-    struct base_executor
+    struct DRIPLINE_API base_executor
     {
         virtual ~base_executor() {}
         virtual void operator()( std::function< void() > ) = 0;
@@ -48,7 +48,7 @@ namespace dripline
 
      @brief Given an executable function object, uses `operator()` to execute it.
     */
-    struct simple_executor : base_executor
+    struct DRIPLINE_API simple_executor : base_executor
     {
         virtual ~simple_executor() {}
         virtual void operator()( std::function< void() > an_executable )
@@ -90,7 +90,7 @@ namespace dripline
      That ID can be used to unschedule an event (repeating or one-off).
     */
     template< typename executor = simple_executor, typename clock = std::chrono::system_clock >
-    class scheduler : virtual public scarab::cancelable
+    class DRIPLINE_API scheduler : virtual public scarab::cancelable
     {
         public:
             using clock_t = clock;
