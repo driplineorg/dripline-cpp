@@ -23,7 +23,8 @@ namespace dripline
      @class listener
      @author N.S. Oblath
 
-     @brief Provides the framework for listener capabilities, listening for AMQP messages from a particular channel
+     @brief A listener is a class capable of listening for AMQP messages on an AMQP channel.  This class provides the 
+     basic framework for doing that.
 
      @details
      The listener class provides the interface for listening for messages: the pure virtual function `listen_on_queue()`.
