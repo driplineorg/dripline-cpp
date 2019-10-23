@@ -28,7 +28,7 @@ LOGGER( dlog_sh, "scheduler" )
 namespace dripline
 {
     /*!
-     @struct executor
+     @struct base_executor
      @author N.S. Oblath
 
      @brief Base class for executors
@@ -36,9 +36,9 @@ namespace dripline
      @details
      Executors execute the actions that are scheduled in @ref scheduler.
     */
-    struct executor
+    struct base_executor
     {
-        virtual ~executor() {}
+        virtual ~base_executor() {}
         virtual void operator()( std::function< void() > ) = 0;
     };
 
@@ -48,7 +48,7 @@ namespace dripline
 
      @brief Given an executable function object, uses `operator()` to execute it.
     */
-    struct simple_executor : executor
+    struct simple_executor : base_executor
     {
         virtual ~simple_executor() {}
         virtual void operator()( std::function< void() > an_executable )
@@ -137,7 +137,7 @@ namespace dripline
 
             /// The time difference from "now" that determines whether an event is executed
             mv_accessible( duration_t, exe_buffer );
-            
+
             /// Main thread cycle time
             mv_accessible( duration_t, cycle_time );
 
