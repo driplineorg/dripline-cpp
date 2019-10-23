@@ -27,12 +27,27 @@ LOGGER( dlog_sh, "scheduler" )
 
 namespace dripline
 {
+    /*!
+     @struct executor
+     @author N.S. Oblath
+
+     @brief Base class for executors
+
+     @details
+     Executors execute the actions that are scheduled in @ref scheduler.
+    */
     struct executor
     {
         virtual ~executor() {}
         virtual void operator()( std::function< void() > ) = 0;
     };
 
+    /*!
+     @struct simple_executor
+     @author N.S. Oblath
+
+     @brief Given an executable function object, uses `operator()` to execute it.
+    */
     struct simple_executor : executor
     {
         virtual ~simple_executor() {}
@@ -44,6 +59,36 @@ namespace dripline
         }
     };
 
+    /*!
+     @class scheduler
+     @author N.S. Oblath
+
+     @brief Executes scheduled events.
+
+     @details
+     An event is an executable object (e.g. a std::function object, or a lambda) 
+     with the signature `void ()`.
+
+     Events can be one-off, scheduled for a particular time, or they can be repeating, 
+     scheduled with an interval starting at a particular time.  The default start time for 
+     repeating events is "now."
+
+     This class is thread safe.  Execution is meant to occur in one thread, with events 
+     being scheduled from different threads.
+
+     In general an event will be executed when it is within one "execution buffer" of now 
+     (where "now" is the time at which the scheduler is considering the next event).  The default 
+     execution buffer time is 50 ms.
+
+     There are a variety of factors that can make execution of an event late.  For instance, 
+     if the execution time of events is long compared to the time between them, then events 
+     will start to get delayed.  This could potentially be allayed by implementing a more complex 
+     @ref executor class that uses a pool of threaded workers, but that is not supplied in the 
+     current implementation.
+
+     Each scheduled thread is assigned a unique ID, which is returned when the event is scheduled. 
+     That ID can be used to unschedule an event (repeating or one-off).
+    */
     template< typename executor = simple_executor, typename clock = std::chrono::system_clock >
     class scheduler : virtual public scarab::cancelable
     {
@@ -53,6 +98,10 @@ namespace dripline
             using duration_t = typename clock::duration;
             using executable_t = std::function< void() >;
 
+            /*!
+             @struct event
+             @brief Definition of an event, including the executable object and the scheduler ID.
+            */
             struct event
             {
                 executable_t f_executable;
@@ -63,20 +112,42 @@ namespace dripline
             scheduler();
             virtual ~scheduler();
 
+            /*!
+             Schedule a one-off event
+             @param an_executable The executable to be used for the event
+             @param an_exe_time The time at which to execute the event
+             @return The ID for the scheduled event.
+            */
             int schedule( executable_t an_executable, time_point_t an_exe_time );
+
+            /*!
+             Schedule a repeating event
+             @param an_executable The executable to be used for the event
+             @param an_interval The repetition interval
+             @param an_exe_time The first execution time; default: now.
+             @return The ID for the scheduled event.
+            */
             int schedule( executable_t an_executable, duration_t an_interval, time_point_t an_exe_time = clock::now() );
 
+            /// Unschedule an event using the event's ID
             void unschedule( int an_id );
 
+            /// Main execution loop for the scheduler
             void execute();
 
+            /// The time difference from "now" that determines whether an event is executed
             mv_accessible( duration_t, exe_buffer );
+            
+            /// Main thread cycle time
             mv_accessible( duration_t, cycle_time );
 
+            /// The executor used to execute events.  
             mv_referrable_const( executor, the_executor );
 
+            /// The scheduled events, stored in a map sorted by execution time
             mv_referrable_const( events_map_t, events );
 
+            /// The ID to be used for the next scheduled event
             mv_accessible_static( int, curr_id )
 
         protected:
