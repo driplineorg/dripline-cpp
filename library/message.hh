@@ -2,7 +2,7 @@
  * mt_message.hh
  *
  *  Created on: Jul 9, 2015
- *      Author: nsoblath
+ *      Author: N.S. Oblath
  */
 
 #ifndef DRIPLINE_MESSAGE_HH_
@@ -37,6 +37,19 @@ namespace dripline
     // Message
     //***********
 
+    /*!
+     @class message
+     @author N.S. Oblath
+
+     @brief Contains all of the information common to all types of Dripline messages
+
+     @details
+     This is the base class for messages.  It contains all of the data members that are 
+     common to the different Dripline message types.
+
+     This class also contains the interface for converting between AMQP messages (Dripline 
+     message chunks) and Dripline messages.
+    */
     class DRIPLINE_API message
     {
         public:
@@ -121,6 +134,7 @@ namespace dripline
 
             /// creates and returns a new param_node object to contain the full message
             scarab::param_node get_message_param() const;
+
         public:
             scarab::param& payload();
             const scarab::param& payload() const;
@@ -146,6 +160,17 @@ namespace dripline
     // Request
     //***********
 
+    /*!
+     @class msg_request
+     @author N.S. Oblath
+
+     @brief Request message class
+
+     @details
+     Adds the lockout information and the message operation.
+
+     Requests can be created using the static function `create()`.
+    */
     class DRIPLINE_API msg_request : public message
     {
         public:
@@ -184,6 +209,20 @@ namespace dripline
     // Reply
     //*********
 
+    /*!
+     @class msg_reply
+     @author N.S. Oblath
+
+     @brief Reply message class
+
+     @details
+     Adds the return code and return message.
+
+     Reply messages can be created with the `create()` functions.  A variety of `create()` function 
+     overloads are available, depending on whether the return code is specified with a `return_code` 
+     object or as an int, and depending on whether a request message is used to fill out some of the 
+     header information or if it's done manually.
+    */
     class DRIPLINE_API msg_reply : public message
     {
         public:
@@ -224,6 +263,17 @@ namespace dripline
     // Alert
     //*********
 
+    /*!
+     @class msg_alert
+     @author N.S. Oblath
+
+     @brief Alert message class
+
+     @details
+     Nothing is added.
+
+     Alert message can be created with the static `create()` function.
+    */
     class DRIPLINE_API msg_alert : public message
     {
         public:
