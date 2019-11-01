@@ -524,15 +524,15 @@ namespace dripline
 
     }
 
-    reply_ptr_t msg_reply::create( const return_code& a_retcode, const std::string& a_ret_msg, param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier, message::encoding a_encoding )
+    reply_ptr_t msg_reply::create( const return_code& a_return_code, const std::string& a_ret_msg, param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier, message::encoding a_encoding )
     {
-        return msg_reply::create( a_retcode.rc_value(), a_ret_msg, std::move(a_payload), a_routing_key, a_specifier, a_encoding );
+        return msg_reply::create( a_return_code.rc_value(), a_ret_msg, std::move(a_payload), a_routing_key, a_specifier, a_encoding );
     }
 
-    reply_ptr_t msg_reply::create( unsigned a_retcode_value, const std::string& a_ret_msg, param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier, message::encoding a_encoding )
+    reply_ptr_t msg_reply::create( unsigned a_return_code_value, const std::string& a_ret_msg, param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier, message::encoding a_encoding )
     {
         reply_ptr_t t_reply = make_shared< msg_reply >();
-        t_reply->set_return_code( a_retcode_value );
+        t_reply->set_return_code( a_return_code_value );
         t_reply->return_msg() = a_ret_msg;
         t_reply->set_payload( std::move(a_payload) );
         t_reply->routing_key() = a_routing_key;

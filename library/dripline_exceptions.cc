@@ -20,19 +20,19 @@ namespace dripline
 
     throw_reply::throw_reply() :
             base_exception< throw_reply >(),
-            f_retcode( new dl_unhandled_exception() ),
+            f_return_code( new dl_unhandled_exception() ),
             f_payload( new scarab::param() )
     {}
 
     throw_reply::throw_reply( const return_code& a_code, scarab::param_ptr_t&& a_payload_ptr ) :
             base_exception< throw_reply >(),
-            f_retcode( new copy_code( a_code ) ),
+            f_return_code( new copy_code( a_code ) ),
             f_payload( std::move(a_payload_ptr) )
     {}
 
     throw_reply::throw_reply( const throw_reply& a_throw ) :
             base_exception< throw_reply >( a_throw ),
-            f_retcode( a_throw.f_retcode ),
+            f_return_code( a_throw.f_return_code ),
             f_payload( a_throw.f_payload->clone() )
     {}
 
