@@ -30,8 +30,6 @@ namespace dripline
     enum class DRIPLINE_API op_t:uint32_t {
             set = 0,
             get = 1,
-            config = 6, // deprecated as of v2.0.0
-            send = 7,
             run = 8,
             cmd = 9,
             unknown = UINT32_MAX
