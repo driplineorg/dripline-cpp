@@ -224,14 +224,14 @@ namespace dripline
 
         // Create the message, of whichever type
         message_ptr_t t_message;
-        msg_t t_msg_type = to_msg_t( at( t_properties, std::string("msgtype"), TableValue(to_uint(msg_t::unknown)) ).GetUint32() );
+        msg_t t_msg_type = to_msg_t( at( t_properties, std::string("message_type"), TableValue(to_uint(msg_t::unknown)) ).GetUint32() );
         switch( t_msg_type )
         {
             case msg_t::request:
             {
                 request_ptr_t t_request = msg_request::create(
                         std::move(t_payload),
-                        to_op_t( at( t_properties, std::string("msgop"), TableValue(to_uint(op_t::unknown)) ).GetUint32() ),
+                        to_op_t( at( t_properties, std::string("message_operationeration"), TableValue(to_uint(op_t::unknown)) ).GetUint32() ),
                         a_routing_key,
                         at( t_properties, std::string("specifier"), TableValue("") ).GetString(),
                         t_first_valid_message->ReplyTo(),
@@ -247,8 +247,8 @@ namespace dripline
             case msg_t::reply:
             {
                 reply_ptr_t t_reply = msg_reply::create(
-                        at( t_properties, std::string("retcode"), TableValue(999U) ).GetUint32(),
-                        at( t_properties, std::string("return_msg"), TableValue("") ).GetString(),
+                        at( t_properties, std::string("return_code"), TableValue(999U) ).GetUint32(),
+                        at( t_properties, std::string("return_message"), TableValue("") ).GetString(),
                         std::move(t_payload),
                         a_routing_key,
                         at( t_properties, std::string("specifier"), TableValue("") ).GetString(),
@@ -326,7 +326,7 @@ namespace dripline
                 t_message->ReplyTo( f_reply_to );
 
                 AmqpClient::Table t_properties;
-                t_properties.insert( AmqpClient::TableEntry( "msgtype", to_uint(message_type()) ) );
+                t_properties.insert( AmqpClient::TableEntry( "message_type", to_uint(message_type()) ) );
                 t_properties.insert( AmqpClient::TableEntry( "specifier", f_specifier.to_string() ) );
                 t_properties.insert( AmqpClient::TableEntry( "timestamp", f_timestamp ) );
                 t_properties.insert( AmqpClient::TableEntry( "sender_info", param_to_table( get_sender_info() ) ) );
@@ -477,7 +477,7 @@ namespace dripline
             message(),
             f_lockout_key( generate_nil_uuid() ),
             f_lockout_key_valid( true ),
-            f_message_op( op_t::unknown )
+            f_message_operation( op_t::unknown )
     {
         f_correlation_id = string_from_uuid( generate_random_uuid() );
     }
@@ -491,7 +491,7 @@ namespace dripline
     {
         request_ptr_t t_request = make_shared< msg_request >();
         t_request->set_payload( std::move(a_payload) );
-        t_request->set_message_op( a_msg_op );
+        t_request->set_message_operation( a_msg_op );
         t_request->routing_key() = a_routing_key;
         t_request->parsed_specifier() = a_specifier;
         t_request->reply_to() = a_reply_to;
@@ -514,7 +514,7 @@ namespace dripline
     msg_reply::msg_reply() :
             message(),
             f_return_code( dl_success::s_value ),
-            f_return_msg(),
+            f_return_message(),
             f_return_buffer()
     {
     }
@@ -524,16 +524,16 @@ namespace dripline
 
     }
 
-    reply_ptr_t msg_reply::create( const return_code& a_retcode, const std::string& a_ret_msg, param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier, message::encoding a_encoding )
+    reply_ptr_t msg_reply::create( const return_code& a_return_code, const std::string& a_ret_msg, param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier, message::encoding a_encoding )
     {
-        return msg_reply::create( a_retcode.rc_value(), a_ret_msg, std::move(a_payload), a_routing_key, a_specifier, a_encoding );
+        return msg_reply::create( a_return_code.rc_value(), a_ret_msg, std::move(a_payload), a_routing_key, a_specifier, a_encoding );
     }
 
-    reply_ptr_t msg_reply::create( unsigned a_retcode_value, const std::string& a_ret_msg, param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier, message::encoding a_encoding )
+    reply_ptr_t msg_reply::create( unsigned a_return_code_value, const std::string& a_ret_msg, param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier, message::encoding a_encoding )
     {
         reply_ptr_t t_reply = make_shared< msg_reply >();
-        t_reply->set_return_code( a_retcode_value );
-        t_reply->return_msg() = a_ret_msg;
+        t_reply->set_return_code( a_return_code_value );
+        t_reply->return_message() = a_ret_msg;
         t_reply->set_payload( std::move(a_payload) );
         t_reply->routing_key() = a_routing_key;
         t_reply->parsed_specifier() = a_specifier;
@@ -615,14 +615,14 @@ namespace dripline
         return operator==( static_cast< const message& >(a_lhs), static_cast< const message& >(a_rhs) ) &&
                 a_lhs.lockout_key() == a_rhs.lockout_key() &&
                 a_lhs.get_lockout_key_valid() == a_rhs.get_lockout_key_valid() &&
-                a_lhs.get_message_op() == a_rhs.get_message_op();
+                a_lhs.get_message_operation() == a_rhs.get_message_operation();
     }
 
     DRIPLINE_API bool operator==( const msg_reply& a_lhs, const msg_reply& a_rhs )
     {
         return operator==( static_cast< const message& >(a_lhs), static_cast< const message& >(a_rhs) ) &&
                 a_lhs.get_return_code() == a_rhs.get_return_code() &&
-                a_lhs.return_msg() == a_rhs.return_msg();
+                a_lhs.return_message() == a_rhs.return_message();
     }
 
     DRIPLINE_API bool operator==( const msg_alert& a_lhs, const msg_alert& a_rhs )
@@ -670,7 +670,7 @@ namespace dripline
         a_os << static_cast< const message& >( a_message );
         a_os << "Lockout Key: " << a_message.lockout_key() << '\n';
         a_os << "Lockout Key Valid: " << a_message.get_lockout_key_valid() << '\n';
-        a_os << "Message Op: " << a_message.get_message_op() << '\n';
+        a_os << "Message Operation: " << a_message.get_message_operation() << '\n';
         return a_os;
     }
 
@@ -678,7 +678,7 @@ namespace dripline
     {
         a_os << static_cast< const message& >( a_message );
         a_os << "Return Code: " << a_message.get_return_code() << '\n';
-        a_os << "Return Message: " << a_message.return_msg() << '\n';
+        a_os << "Return Message: " << a_message.return_message() << '\n';
         return a_os;
     }
 

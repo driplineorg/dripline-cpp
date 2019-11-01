@@ -183,8 +183,8 @@ namespace dripline
             bool is_reply() const;
             bool is_alert() const;
 
-            reply_ptr_t reply( const return_code& a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload = scarab::param_ptr_t( new scarab::param() ) ) const;
-            reply_ptr_t reply( const unsigned a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload = scarab::param_ptr_t( new scarab::param() ) ) const;
+            reply_ptr_t reply( const return_code& a_return_code, const std::string& a_ret_msg, scarab::param_ptr_t a_payload = scarab::param_ptr_t( new scarab::param() ) ) const;
+            reply_ptr_t reply( const unsigned a_return_code, const std::string& a_ret_msg, scarab::param_ptr_t a_payload = scarab::param_ptr_t( new scarab::param() ) ) const;
 
         private:
             void derived_modify_amqp_message( amqp_message_ptr a_amqp_msg, AmqpClient::Table& a_properties ) const;
@@ -196,7 +196,7 @@ namespace dripline
 
             mv_referrable( uuid_t, lockout_key );
             mv_accessible( bool, lockout_key_valid );
-            mv_accessible( op_t, message_op );
+            mv_accessible( op_t, message_operation );
 
     };
 
@@ -229,10 +229,10 @@ namespace dripline
             msg_reply();
             virtual ~msg_reply();
 
-            static reply_ptr_t create( const return_code& a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier = "", message::encoding a_encoding = encoding::json );
-            static reply_ptr_t create( unsigned a_retcode_value, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier = "", message::encoding a_encoding = encoding::json );
-            static reply_ptr_t create( const return_code& a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const msg_request& a_request );
-            static reply_ptr_t create( unsigned a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const msg_request& a_request );
+            static reply_ptr_t create( const return_code& a_return_code, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier = "", message::encoding a_encoding = encoding::json );
+            static reply_ptr_t create( unsigned a_return_code_value, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier = "", message::encoding a_encoding = encoding::json );
+            static reply_ptr_t create( const return_code& a_return_code, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const msg_request& a_request );
+            static reply_ptr_t create( unsigned a_return_code, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const msg_request& a_request );
 
             bool is_request() const;
             bool is_reply() const;
@@ -247,7 +247,7 @@ namespace dripline
             mv_accessible_static_noset( msg_t, message_type );
 
             mv_accessible( unsigned, return_code );
-            mv_referrable( std::string, return_msg );
+            mv_referrable( std::string, return_message );
 
         private:
             mutable std::string f_return_buffer;
@@ -355,26 +355,26 @@ namespace dripline
 
     inline void msg_request::derived_modify_amqp_message( amqp_message_ptr /*a_amqp_msg*/, AmqpClient::Table& a_properties ) const
     {
-        a_properties.insert( AmqpClient::TableEntry( "msgop", AmqpClient::TableValue(to_uint(f_message_op)) ) );
+        a_properties.insert( AmqpClient::TableEntry( "message_operationeration", AmqpClient::TableValue(to_uint(f_message_operation)) ) );
         a_properties.insert( AmqpClient::TableEntry( "lockout_key", AmqpClient::TableValue(string_from_uuid(lockout_key())) ) );
         return;
     }
 
     inline void msg_request::derived_modify_message_param( scarab::param_node& a_message_node ) const
     {
-        a_message_node.add( "msg_op", to_uint(f_message_op) );
+        a_message_node.add( "message_operationeration", to_uint(f_message_operation) );
         a_message_node.add( "lockout_key", string_from_uuid(lockout_key()) );
         return;
     }
 
-    inline reply_ptr_t msg_request::reply( const return_code& a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload ) const
+    inline reply_ptr_t msg_request::reply( const return_code& a_return_code, const std::string& a_ret_msg, scarab::param_ptr_t a_payload ) const
     {
-        return msg_reply::create( a_retcode, a_ret_msg, std::move(a_payload), *this );
+        return msg_reply::create( a_return_code, a_ret_msg, std::move(a_payload), *this );
     }
 
-    inline reply_ptr_t msg_request::reply( unsigned a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload ) const
+    inline reply_ptr_t msg_request::reply( unsigned a_return_code, const std::string& a_ret_msg, scarab::param_ptr_t a_payload ) const
     {
-        return msg_reply::create( a_retcode, a_ret_msg, std::move(a_payload), *this );
+        return msg_reply::create( a_return_code, a_ret_msg, std::move(a_payload), *this );
     }
 
 
@@ -382,14 +382,14 @@ namespace dripline
     // Reply
     //*********
 
-    inline reply_ptr_t msg_reply::create( const return_code& a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const msg_request& a_request )
+    inline reply_ptr_t msg_reply::create( const return_code& a_return_code, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const msg_request& a_request )
     {
-        return msg_reply::create( a_retcode.rc_value(), a_ret_msg, std::move(a_payload), a_request );
+        return msg_reply::create( a_return_code.rc_value(), a_ret_msg, std::move(a_payload), a_request );
     }
 
-    inline reply_ptr_t msg_reply::create( unsigned a_retcode, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const msg_request& a_request )
+    inline reply_ptr_t msg_reply::create( unsigned a_return_code, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const msg_request& a_request )
     {
-        reply_ptr_t t_reply = msg_reply::create( a_retcode, a_ret_msg, std::move(a_payload), a_request.reply_to(), "", a_request.get_encoding() );
+        reply_ptr_t t_reply = msg_reply::create( a_return_code, a_ret_msg, std::move(a_payload), a_request.reply_to(), "", a_request.get_encoding() );
         t_reply->correlation_id() = a_request.correlation_id();
         return t_reply;
     }
@@ -409,15 +409,15 @@ namespace dripline
 
     inline void msg_reply::derived_modify_amqp_message( amqp_message_ptr, AmqpClient::Table& a_properties ) const
     {
-        a_properties.insert( AmqpClient::TableEntry( "retcode", AmqpClient::TableValue(f_return_code) ) );
-        a_properties.insert( AmqpClient::TableEntry( "return_msg", AmqpClient::TableValue(f_return_msg) ) );
+        a_properties.insert( AmqpClient::TableEntry( "return_code", AmqpClient::TableValue(f_return_code) ) );
+        a_properties.insert( AmqpClient::TableEntry( "return_message", AmqpClient::TableValue(f_return_message) ) );
         return;
     }
 
     inline void msg_reply::derived_modify_message_param( scarab::param_node& a_message_node ) const
     {
         a_message_node.add( "return_code", f_return_code );
-        a_message_node.add( "return_message", f_return_msg );
+        a_message_node.add( "return_message", f_return_message );
         return;
     }
 

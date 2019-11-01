@@ -99,7 +99,7 @@ namespace dripline
                 throw throw_reply( dl_message_error_invalid_key{} ) << "Lockout key could not be parsed";
             }
 
-            switch( a_request->get_message_op() )
+            switch( a_request->get_message_operation() )
             {
                 case op_t::run:
                 {
@@ -150,7 +150,7 @@ namespace dripline
         {
             LWARN( dlog, "Not sending reply (reply-to empty)\n" <<
                          "    Return code: " << t_reply->get_return_code() << '\n' <<
-                         "    Return message: " << t_reply->return_msg() << '\n' <<
+                         "    Return message: " << t_reply->return_message() << '\n' <<
                          "    Payload:\n" << t_reply->payload() );
         }
         else
@@ -191,7 +191,7 @@ namespace dripline
 
         LDEBUG( dlog, "Sending reply message to <" << a_reply->routing_key() << ">:\n" <<
                  "    Return code: " << a_reply->get_return_code() << '\n' <<
-                 "    Return message: " << a_reply->return_msg() << '\n' <<
+                 "    Return message: " << a_reply->return_message() << '\n' <<
                  "    Payload:\n" << a_reply->payload() );
 
         if( ! f_service->send( a_reply ) )

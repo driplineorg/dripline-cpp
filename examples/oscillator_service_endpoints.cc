@@ -7,7 +7,7 @@
 
 #include "oscillator_service_endpoints.hh"
 
-#include "dripline_error.hh"
+#include "dripline_exceptions.hh"
 
 #include "logger.hh"
 #include "signal_handler.hh"
@@ -172,7 +172,7 @@ namespace dripline
         catch( std::exception& e )
         {
             LERROR( dlog, "Exception caught: " << e.what() );
-            f_return = RETURN_ERROR;
+            f_return = dl_client_error().rc_value() / 100;
         }
 
         return;
