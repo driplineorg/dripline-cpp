@@ -31,7 +31,7 @@ TEST_CASE( "message", "[message]" )
     REQUIRE( t_req_ptr->get_is_valid() );
     REQUIRE( t_req_ptr->routing_key() == t_routing_key );
     REQUIRE_FALSE( t_req_ptr->correlation_id().empty() );
-    REQUIRE( t_req_ptr->get_message_op() == dripline::op_t::cmd );
+    REQUIRE( t_req_ptr->get_message_operation() == dripline::op_t::cmd );
     REQUIRE( t_req_ptr->sender_versions().count("dripline") == 1 );
     REQUIRE( t_req_ptr->sender_versions().count("dripline-cpp") == 1 );
     REQUIRE( t_req_ptr->sender_versions().at("dripline-cpp").f_package == "driplineorg/dripline-cpp" );

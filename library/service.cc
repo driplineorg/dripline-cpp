@@ -460,7 +460,7 @@ namespace dripline
     {
         LDEBUG( dlog, "Sending reply message to <" << a_reply->routing_key() << ">:\n" <<
                  "    Return code: " << a_reply->get_return_code() << '\n' <<
-                 "    Return message: " << a_reply->return_msg() << '\n' <<
+                 "    Return message: " << a_reply->return_message() << '\n' <<
                  "    Payload:\n" << a_reply->payload() );
 
         if( ! send( a_reply ) )

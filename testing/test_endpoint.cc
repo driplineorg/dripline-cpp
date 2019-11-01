@@ -22,15 +22,15 @@ TEST_CASE( "submit_msg", "[endpoint]" )
 
     REQUIRE_NOTHROW( t_endpoint.submit_request_message( t_request_ptr ) );
 
-    t_request_ptr->set_message_op( dripline::op_t::get );
+    t_request_ptr->set_message_operation( dripline::op_t::get );
 
     REQUIRE_NOTHROW( t_endpoint.submit_request_message( t_request_ptr ) );
 
-    t_request_ptr->set_message_op( dripline::op_t::set );
+    t_request_ptr->set_message_operation( dripline::op_t::set );
 
     REQUIRE_NOTHROW( t_endpoint.submit_request_message( t_request_ptr ) );
 
-    t_request_ptr->set_message_op( dripline::op_t::cmd );
+    t_request_ptr->set_message_operation( dripline::op_t::cmd );
 
     REQUIRE_NOTHROW( t_endpoint.submit_request_message( t_request_ptr ) );
 

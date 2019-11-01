@@ -145,7 +145,7 @@ namespace dripline
 
             // alerts only
             mv_accessible( unsigned, return_code );
-            mv_referrable( std::string, return_msg );
+            mv_referrable( std::string, return_message );
 
             // use only for requests
             mv_accessible( unsigned, timeout );

@@ -101,7 +101,7 @@ namespace dripline
             const scarab::param_ptr_t& get_payload_ptr() const;
 
         protected:
-            std::shared_ptr< return_code > f_retcode;
+            std::shared_ptr< return_code > f_return_code;
             scarab::param_ptr_t f_payload;
     };
 
@@ -154,12 +154,12 @@ namespace dripline
 
     inline const return_code& throw_reply::ret_code() const
     {
-        return *f_retcode;
+        return *f_return_code;
     }
 
     inline void throw_reply::set_return_code( const return_code& a_code )
     {
-        f_retcode.reset( new copy_code( a_code ) );
+        f_return_code.reset( new copy_code( a_code ) );
         return;
     }
 
