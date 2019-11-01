@@ -208,7 +208,7 @@ namespace dripline
             mv_accessible_static_noset( msg_t, message_type );
 
             mv_accessible( unsigned, return_code );
-            mv_referrable( std::string, return_msg );
+            mv_referrable( std::string, return_message );
 
         private:
             mutable std::string f_return_buffer;
@@ -360,14 +360,14 @@ namespace dripline
     inline void msg_reply::derived_modify_amqp_message( amqp_message_ptr, AmqpClient::Table& a_properties ) const
     {
         a_properties.insert( AmqpClient::TableEntry( "return_code", AmqpClient::TableValue(f_return_code) ) );
-        a_properties.insert( AmqpClient::TableEntry( "return_message", AmqpClient::TableValue(f_return_msg) ) );
+        a_properties.insert( AmqpClient::TableEntry( "return_message", AmqpClient::TableValue(f_return_message) ) );
         return;
     }
 
     inline void msg_reply::derived_modify_message_param( scarab::param_node& a_message_node ) const
     {
         a_message_node.add( "return_code", f_return_code );
-        a_message_node.add( "return_message", f_return_msg );
+        a_message_node.add( "return_message", f_return_message );
         return;
     }
 

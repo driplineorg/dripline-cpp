@@ -45,7 +45,7 @@ namespace dripline
             f_specifier(),
             f_lockout_key( generate_nil_uuid() ),
             f_return_code( dl_success().rc_value() ),
-            f_return_msg(),
+            f_return_message(),
             f_timeout( 0 ),
             f_suppress_output( false ),
             f_json_print( false ),
@@ -112,7 +112,7 @@ namespace dripline
         if( t_config.has( "return" ) )
         {
             f_agent->set_return_code( t_config["return"].as_node().get_value( "code", dl_success().rc_value() ) );
-            f_agent->return_msg() = t_config["return"].as_node().get_value( "message", "" );
+            f_agent->return_message() = t_config["return"].as_node().get_value( "message", "" );
             t_config.erase( "return" );
         }
 
@@ -208,7 +208,7 @@ namespace dripline
 
                 LPROG( dlog, "Response:\n" <<
                         "Return code: " << t_reply->get_return_code() << '\n' <<
-                        "Return message: " << t_reply->return_msg() << '\n' <<
+                        "Return message: " << t_reply->return_message() << '\n' <<
                         t_payload );
 
                 if( ! f_agent->get_suppress_output() )
@@ -260,7 +260,7 @@ namespace dripline
         param_ptr_t t_payload_ptr( new param_node( a_config ) );
 
         reply_ptr_t t_reply =  msg_reply::create( f_agent->get_return_code(),
-                                                  f_agent->return_msg(),
+                                                  f_agent->return_message(),
                                                   std::move(t_payload_ptr),
                                                   f_agent->routing_key(),
                                                   f_agent->specifier() );
@@ -281,7 +281,7 @@ namespace dripline
             return;
         }
 
-        LDEBUG( dlog, "Sending reply with return code <" << t_reply->get_return_code() << "> and message <" << t_reply->return_msg() << "> to key " << t_reply->routing_key() );
+        LDEBUG( dlog, "Sending reply with return code <" << t_reply->get_return_code() << "> and message <" << t_reply->return_message() << "> to key " << t_reply->routing_key() );
 
         sent_msg_pkg_ptr t_msg_sent;
         try

@@ -514,7 +514,7 @@ namespace dripline
     msg_reply::msg_reply() :
             message(),
             f_return_code( dl_success::s_value ),
-            f_return_msg(),
+            f_return_message(),
             f_return_buffer()
     {
     }
@@ -533,7 +533,7 @@ namespace dripline
     {
         reply_ptr_t t_reply = make_shared< msg_reply >();
         t_reply->set_return_code( a_return_code_value );
-        t_reply->return_msg() = a_ret_msg;
+        t_reply->return_message() = a_ret_msg;
         t_reply->set_payload( std::move(a_payload) );
         t_reply->routing_key() = a_routing_key;
         t_reply->parsed_specifier() = a_specifier;
@@ -622,7 +622,7 @@ namespace dripline
     {
         return operator==( static_cast< const message& >(a_lhs), static_cast< const message& >(a_rhs) ) &&
                 a_lhs.get_return_code() == a_rhs.get_return_code() &&
-                a_lhs.return_msg() == a_rhs.return_msg();
+                a_lhs.return_message() == a_rhs.return_message();
     }
 
     DRIPLINE_API bool operator==( const msg_alert& a_lhs, const msg_alert& a_rhs )
@@ -678,7 +678,7 @@ namespace dripline
     {
         a_os << static_cast< const message& >( a_message );
         a_os << "Return Code: " << a_message.get_return_code() << '\n';
-        a_os << "Return Message: " << a_message.return_msg() << '\n';
+        a_os << "Return Message: " << a_message.return_message() << '\n';
         return a_os;
     }
 
