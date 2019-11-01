@@ -19,7 +19,7 @@ TEST_CASE( "sub_agent_run", "[agent]" )
 
     REQUIRE( t_request );
     REQUIRE( t_request->get_message_type() == dripline::msg_t::request );
-    REQUIRE( t_request->get_message_op() == dripline::op_t::run );
+    REQUIRE( t_request->get_message_operation() == dripline::op_t::run );
 }
 
 TEST_CASE( "sub_agent_get", "[agent]" )
@@ -32,7 +32,7 @@ TEST_CASE( "sub_agent_get", "[agent]" )
 
     REQUIRE( t_request );
     REQUIRE( t_request->get_message_type() == dripline::msg_t::request );
-    REQUIRE( t_request->get_message_op() == dripline::op_t::get );
+    REQUIRE( t_request->get_message_operation() == dripline::op_t::get );
 }
 
 TEST_CASE( "sub_agent_set", "[agent]" )
@@ -59,7 +59,7 @@ TEST_CASE( "sub_agent_set", "[agent]" )
 
         REQUIRE( t_request );
         REQUIRE( t_request->get_message_type() == dripline::msg_t::request );
-        REQUIRE( t_request->get_message_op() == dripline::op_t::set );
+        REQUIRE( t_request->get_message_operation() == dripline::op_t::set );
         REQUIRE( t_request->payload().is_node() );
         REQUIRE( ! t_request->payload().as_node().empty() );
         REQUIRE( t_request->payload().as_node().has( "values" ) );
@@ -77,7 +77,7 @@ TEST_CASE( "sub_agent_cmd", "[agent]" )
 
     REQUIRE( t_request );
     REQUIRE( t_request->get_message_type() == dripline::msg_t::request );
-    REQUIRE( t_request->get_message_op() == dripline::op_t::cmd );
+    REQUIRE( t_request->get_message_operation() == dripline::op_t::cmd );
 }
 
 TEST_CASE( "agent", "[agent]" )

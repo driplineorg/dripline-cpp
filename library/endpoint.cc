@@ -99,7 +99,7 @@ namespace dripline
                 throw throw_reply( dl_message_error_invalid_key{} ) << "Lockout key could not be parsed";
             }
 
-            switch( a_request->get_message_op() )
+            switch( a_request->get_message_operation() )
             {
                 case op_t::run:
                 {

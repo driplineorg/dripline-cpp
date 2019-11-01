@@ -171,7 +171,7 @@ namespace dripline
 
         t_request->lockout_key() = f_agent->lockout_key();
 
-        LDEBUG( dlog, "Sending message w/ msgop = " << t_request->get_message_op() << " to " << t_request->routing_key() );
+        LDEBUG( dlog, "Sending message w/ msgop = " << t_request->get_message_operation() << " to " << t_request->routing_key() );
 
         sent_msg_pkg_ptr t_receive_reply;
         try

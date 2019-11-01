@@ -231,7 +231,7 @@ namespace dripline
             {
                 request_ptr_t t_request = msg_request::create(
                         std::move(t_payload),
-                        to_op_t( at( t_properties, std::string("message_operation"), TableValue(to_uint(op_t::unknown)) ).GetUint32() ),
+                        to_op_t( at( t_properties, std::string("message_operationeration"), TableValue(to_uint(op_t::unknown)) ).GetUint32() ),
                         a_routing_key,
                         at( t_properties, std::string("specifier"), TableValue("") ).GetString(),
                         t_first_valid_message->ReplyTo(),
@@ -477,7 +477,7 @@ namespace dripline
             message(),
             f_lockout_key( generate_nil_uuid() ),
             f_lockout_key_valid( true ),
-            f_message_op( op_t::unknown )
+            f_message_operation( op_t::unknown )
     {
         f_correlation_id = string_from_uuid( generate_random_uuid() );
     }
@@ -491,7 +491,7 @@ namespace dripline
     {
         request_ptr_t t_request = make_shared< msg_request >();
         t_request->set_payload( std::move(a_payload) );
-        t_request->set_message_op( a_msg_op );
+        t_request->set_message_operation( a_msg_op );
         t_request->routing_key() = a_routing_key;
         t_request->parsed_specifier() = a_specifier;
         t_request->reply_to() = a_reply_to;
@@ -615,7 +615,7 @@ namespace dripline
         return operator==( static_cast< const message& >(a_lhs), static_cast< const message& >(a_rhs) ) &&
                 a_lhs.lockout_key() == a_rhs.lockout_key() &&
                 a_lhs.get_lockout_key_valid() == a_rhs.get_lockout_key_valid() &&
-                a_lhs.get_message_op() == a_rhs.get_message_op();
+                a_lhs.get_message_operation() == a_rhs.get_message_operation();
     }
 
     DRIPLINE_API bool operator==( const msg_reply& a_lhs, const msg_reply& a_rhs )
@@ -670,7 +670,7 @@ namespace dripline
         a_os << static_cast< const message& >( a_message );
         a_os << "Lockout Key: " << a_message.lockout_key() << '\n';
         a_os << "Lockout Key Valid: " << a_message.get_lockout_key_valid() << '\n';
-        a_os << "Message Operation: " << a_message.get_message_op() << '\n';
+        a_os << "Message Operation: " << a_message.get_message_operation() << '\n';
         return a_os;
     }
 
