@@ -9,7 +9,7 @@
 
 #include "simple_service.hh"
 
-#include "dripline_error.hh"
+#include "dripline_exceptions.hh"
 
 #include "logger.hh"
 #include "param.hh"
@@ -26,7 +26,7 @@ namespace dripline
     simple_service::simple_service( const scarab::param_node& a_config ) :
             scarab::cancelable(),
             service( a_config, "simple" ),
-            f_return( RETURN_SUCCESS )
+            f_return( dl_success().rc_value() )
     {
     }
 
@@ -50,7 +50,7 @@ namespace dripline
         catch( std::exception& e )
         {
             LERROR( dlog, "Exception caught: " << e.what() );
-            f_return = RETURN_ERROR;
+            f_return = dl_device_error().rc_value();
         }
 
         return;
