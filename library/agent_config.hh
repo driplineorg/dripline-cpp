@@ -13,6 +13,12 @@
 namespace dripline
 {
 
+    /*!
+     @class agent_config
+     @author N.S. Oblath
+
+     @brief Sets the default agent configuration
+    */
     class DRIPLINE_API agent_config : public scarab::param_node
     {
         public:

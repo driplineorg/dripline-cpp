@@ -18,6 +18,12 @@
 namespace dripline
 {
 
+    /*!
+     @class routing_key
+     @author N.S. Oblath
+
+     @brief Parses routing keys and stores the tokenized information
+    */
     class DRIPLINE_API routing_key : public std::deque< std::string >
     {
         public:
@@ -27,7 +33,9 @@ namespace dripline
             routing_key( const std::string& a_rk = "" );
             virtual ~routing_key();
 
+            /// Parses a routing key
             void parse( const std::string& a_rk );
+            /// Converts the routing-key tokens into a single string
             std::string to_string() const;
 
         private:
@@ -38,6 +46,12 @@ namespace dripline
 
     };
 
+    /*!
+     @class specifier
+     @author N.S. Oblath
+
+     @brief Parses specifiers and stores the tokenized information
+    */
     class DRIPLINE_API specifier : public std::deque< std::string >
     {
         public:
@@ -52,10 +66,14 @@ namespace dripline
             const specifier& operator=( const specifier& a_orig );
             const specifier& operator=( specifier&& a_orig );
 
+            /// Parse a new specifier
             void parse( const std::string& a_unparsed );
+            /// Parses the contents of `f_unparsed`.
             void reparse();
+            /// Converts specifier tokens into a single string
             std::string to_string() const;
 
+            /// Unparsed specifier string; if modified, `reparse()` should be called.
             mv_referrable( std::string, unparsed );
 
         private:

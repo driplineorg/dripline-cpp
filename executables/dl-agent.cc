@@ -1,14 +1,17 @@
-/*
- * dl-agent.cc
- *
- *      Author: Noah Oblath
- *
- *  Dripline agent
- *
- *  Usage:
- *  $> dl-agent [options] [operation] [routing key] [values]
- *
- */
+/*!
+   @file dl-agent.cc
+   @author N.S. Oblath
+  
+   @brief Dripline agent: send messages and receive replies from the command line
+  
+   @details
+   Usage:
+   ~~~~
+   $> dl-agent [options] [operation] [routing key] [values]
+   ~~~~
+  
+   Use `dl-agent -h` to get the full help information.
+*/
 
 #include "agent.hh"
 #include "agent_config.hh"

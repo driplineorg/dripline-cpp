@@ -13,6 +13,12 @@
 namespace dripline
 {
 
+    /*!
+     @class monitor_config
+     @author N.S. Oblath
+
+     @brief Sets the default message-monitor configuration
+    */
     class DRIPLINE_API monitor_config : public scarab::param_node
     {
         public:

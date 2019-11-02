@@ -20,6 +20,12 @@
 namespace dripline
 {
 
+    /*!
+     @class version
+     @author N.S. Oblath
+
+     @brief Semantic version class to store dripline-cpp version and package information.
+    */
     class DRIPLINE_API version : public scarab::version_semantic
     {
         public:
@@ -27,6 +33,12 @@ namespace dripline
             ~version();
     };
 
+    /*!
+     @class version_dripline_protocol
+     @author N.S. Oblath
+
+     @brief Semantic version class to store dripline protocol version information.
+    */
     class DRIPLINE_API version_dripline_protocol : public scarab::version_semantic
     {
         public:

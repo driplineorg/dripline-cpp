@@ -2,7 +2,7 @@
  * service.hh
  *
  *  Created on: Jan 5, 2016
- *      Author: nsoblath
+ *      Author: N.S. Oblath
  */
 
 #ifndef DRIPLINE_SERVICE_HH_
@@ -25,6 +25,50 @@
 
 namespace dripline
 {
+
+    /*!
+     @class service
+     @author N.S. Oblath
+
+     @brief Consumer of Dripline messages on a particular queue
+
+     @details
+     The service class is the implementation of the "service" concept in Dripline.
+     It's the primary component that makes up a Dripline mesh.
+
+     The lifetime of a service is defined by the three main functions:
+       1. `start()` -- create the AMQP channel, create the AMQP queue, bind the routing keys, and start consuming AMQP messages
+       2. `listen()` -- starts the heartbeat and scheduler threads (optional), starts the receiver thread, and waits for and handles messages on the queue
+       3. `stop()` -- (called asynchronously) cancels the listening service
+
+     The ability to handle and respond to Dripline messages is embodied in the `endpoint` class.  
+     Service uses `endoint` in three ways:
+       1. Service is an endpoint.  A service can be setup to handle messages directed to it.
+       2. Service has basic child endpoints.  These are also called "synchronous" endpoints.  
+          These endpoints use the same AMQP queue as the service itself.  Messages send to the 
+          service and to the synchronous endpoints are all handled serially.
+       3. Service has asynchronous child endpoints.  These endpoints each have their own AMQP 
+          queue and thread responsible for receiving and handling their messages.
+
+     A service has a number of key characteristics (most of which come from its parent classes):
+       * `core` -- Has all of the basic AMQP capabilities, sending messages, and making and manipulating connections
+       * `endpoint` -- Handles Dripline messages
+       * `listener_receiver` -- Asynchronously recieves AMQP messages and turns them into Dripline messages
+       * `heartbeater` -- Sends periodic heartbeat messages
+       * `scheduler` -- Can schedule events
+    
+     As is apparent from the above descriptions, a service is responsible for a number of threads 
+     when it executes:
+       * Listening -- grabs AMQP messages off the channel when they arrive
+       * Message-wait -- any incomplete multi-part Dripline message will setup a thread to wait 
+       *                 until the message is complete, and then submits it for handling
+       * Receiver -- grabs completed Dripline messages and handles it
+       * Async endpoint listening -- same as abovefor each asynchronous endpoint
+       * Async endpoint message-wait -- same as above for each asynchronous endpoint
+       * Async endpoint receiver -- same as above for each asynchronous endpoint
+       * Heatbeater -- sends regular heartbeat messages
+       * Scheduler -- executes scheduled events
+    */
     class DRIPLINE_API service :
             public core,
             public endpoint,
@@ -103,10 +147,13 @@ namespace dripline
             bool remove_queue();
 
         public:
+            /// Waits for AMQP messages arriving on the channel
             virtual bool listen_on_queue();
 
+            /// Submit a message for direct processing
             virtual void submit_message( message_ptr_t a_message );
 
+            /// Sends a reply message
             virtual void send_reply( reply_ptr_t a_reply ) const;
 
             mv_accessible( uuid_t, id );

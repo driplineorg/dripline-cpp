@@ -4,29 +4,6 @@
  *  Created on: Jun 2, 2016
  *      Author: nsoblath
  *
- *  Expected configuration supplied to the constructor:
- *
-  *  {
- *      "[operation: run, get, set, cmd, alert, reply] : "",
- *      "rk" : "[routing key]",
- *      "amqp" : {
- *          "broker" : "[address]",
- *          "broker-port" : [port],
- *          "exchange" : "[exchange]",
- *          "auth-file" : "[authentication file]",  // optional; must live in the user's home directory
- *          "reply-timeout-ms": [ms] // optional; default is 10000
- *      },
- *      "lockout-key" : "[uuid]",  // optional
- *      "save" : "[filename]"  // optional
- *      "load" : "[filename]"  // optional; only used for cmd
- *      "return" : { // used only for replies
- *          "code" : [return code],
- *          "message" : "[return message]"
- *      }
- *      "pretty-print" : null // optional; if present sets output to nicely formatted JSON
- *      "suppress-output" : null // optional; if present suppresses the normal agent output
- *      "dry-run-agent" : null // optional; if present prints the message to be sent and exits
- *  }
  */
 
 #ifndef DRIPLINE_AGENT_HH_
@@ -41,6 +18,48 @@ namespace dripline
 {
     class core;
 
+    /*!
+     @class agent
+     @author N.S. Oblath
+
+     @brief Takes command-line arguments and sends messages
+
+     @details
+     The primary purpose of this class is to send messages.  It can send requests, alerts, or replies.
+     It is optimized for taking command-line arguments and translating them into a message to send.
+
+     It uses the subcommand approach to the command-line interface.  Each type of message to send is 
+     encapsulated in a particular subclass of the internal class `sub_agent`.  Each type of `sub_agent` 
+     has an `execute()` function that performs the subcommand.
+
+     CL arguments are translated to messages to send via the configuration param_node that is passed to 
+     the subcommand.  The expected configuration is:
+
+     ~~~
+     {
+         "[operation: run, get, set, cmd, alert, reply] : "",
+         "rk" : "[routing key]",
+         "amqp" : {
+             "broker" : "[address]",
+             "broker-port" : [port],
+             "exchange" : "[exchange]",
+             "auth-file" : "[authentication file]",  // optional; must live in the user's home directory
+             "reply-timeout-ms": [ms] // optional; default is 10000
+         },
+         "lockout-key" : "[uuid]",  // optional
+         "save" : "[filename]"  // optional
+         "load" : "[filename]"  // optional; only used for cmd
+         "return" : { // used only for replies
+             "code" : [return code],
+             "message" : "[return message]"
+         }
+         "pretty-print" : null // optional; if present sets output to nicely formatted JSON
+         "suppress-output" : null // optional; if present suppresses the normal agent output
+         "dry-run-agent" : null // optional; if present prints the message to be sent and exits
+     }
+     ~~~
+
+    */
     class DRIPLINE_API agent
     {
         public:

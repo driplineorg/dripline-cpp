@@ -20,6 +20,12 @@ namespace scarab
 namespace dripline
 {
 
+    /*!
+     @class dripline_config
+     @author N.S. Oblath
+
+     @brief Sets the default configuration used by `core`.
+    */
     class DRIPLINE_API dripline_config : public scarab::param_node
     {
         public:

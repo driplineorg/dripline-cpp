@@ -1,9 +1,17 @@
-/*
- * dl-mon.cc
- *
- *  Created on: Jul 3, 2019
- *      Author: N.S. Oblath
- */
+/*!
+   @file dl-mon.cc
+   @author N.S. Oblath
+  
+   @brief Dripline agent: send messages and receive replies from the command line
+  
+   @details
+   Usage:
+   ~~~~
+   $> dl-mon [options] [-r [request keys]] [-a [alert keys]]
+   ~~~~
+  
+   Use `dl-mon -h` to get the full help information.
+*/
 
 #include "dripline_constants.hh"
 #include "monitor.hh"

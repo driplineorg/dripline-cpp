@@ -13,6 +13,85 @@
 
 namespace dripline
 {
+
+    /*!
+     @class endpoint
+     @author N.S. Oblath
+
+     @brief Basic Dripline object capable of receiving and acting on messages.
+
+     @details
+     This class encapsulates the basic behavior of a Dripline endpoint.  It can receive and handle messages, and 
+     in particular can act on the different request message operations.
+
+     An implementation of a particular endpoint should be a class that inherits from `endpoint`.
+
+     An endpoint typically operates as part of a service, and it maintains a link to that service that is primarily 
+     used to send messages.
+
+     The main behaviors of the endpoint will be broken down by section:
+
+     # Direct message submission
+
+     Messages can be submitted directly to an endpoint using `submit_request_message()`, `submit_reply_message()`, 
+     and `submit_alert_message()`.  `submit_request_message()` will return a `reply_package_ptr` to be used to 
+     get the endpoint's reply.
+
+     # Message handling
+
+     ## Requests
+
+     Basic request handling is performed by the `on_request_message()` function.  This can be overridden, but in most 
+     cases should not need to be.  This function performs the following tasks:
+
+     1. Checks that the request message and the lockout key it contains are valid (does not authenticate the lockout key).
+     2. Passes the reqest to the `__do_[OP]_request()` function according to the request's operation type.
+     3. Receives a reply object from the `__do_[OP]_request()` function
+     4. If a valid reply was received (i.e. it has a reply-to address), sends the reply. Otherwise prints a message to the terminal with the results.
+
+     Each message operation is handled in two functions: `__do_[OP]_request()` and `do_[OP]_request()`.  The former takes care 
+     of built-in Dripline-standard behavior and should not be overridden.  Endpoint-specific behavior should be implemented by 
+     overriding the latter.
+
+     ### OP_GET
+
+     * `__do_get_request()`: handles get-is-locked if relevant; otherwise calls `do_get_request().
+     * `do_get_request()`: override this to add get-handling behavior.  Default sends an error reply.
+
+     ### OP_SET
+
+     * `__do_set_request()`: authenticates the lockout key, then calls `do_set_request().
+     * `do_set_request()`: override this to add set-handling behavior.  Default sends an error reply.
+
+     ### OP_CMD
+
+     * `__do_cmd_request()`: authenticates the lockout key.  If relevant, handles cmd-lock, cmd-unlock, cmd-set-condition, and cmd-ping; otherwise calls `do_cmd_request()`. 
+     * `do_cmd_request()`: override this to add get-handling behavior.  Default sends an error reply.
+
+     ## Alerts
+
+     Alert handling can be enabled by overridding the function `on_alert_message()`.  By default these are not handled.
+
+     ## Replies
+
+     Reply handling can be enabled by overriding the function `on_reply_message()`. By default these are not handled.
+
+     # Lockout
+
+     These functions implement the basic lockout functionality that's part of the Dripline standard: enabling and disabling 
+     the lock, checking the lock, and validating a key.
+
+     # Specific request handlers
+
+     There are a few types of requests that are built into the Dripline standard, and these are handled by `endpoint`:
+
+     * Type: `OP_CMD`; Specifier: `lock` -- set the lockout for this endpoint using the provided lockout key
+     * Type: `OP_CMD`; Specifier: `unlock` --  disables the lockout for this endpoint
+     * Type: `OP_GET`; Specifier: `is-locked` -- checks whether this endpoint is locked out
+     * Type: `OP_CMD`; Specifier: `set-condition` -- set a particular "condition" for the endpoint.  The default behavior is to do nothing, which can be overridden with the function `__do_handle_set_condition_request()`.
+     * Type: `OP_CMD`; Specifier: `ping` -- send a simple acknowledgement of receipt of the request
+
+    */
     class DRIPLINE_API endpoint
     {
         public:
