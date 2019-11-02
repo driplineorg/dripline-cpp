@@ -70,17 +70,16 @@ namespace dripline
             /// Parses the message ID, which should be of the form [UUID]/[chunk]/[total chunks]
             static std::tuple< std::string, unsigned, unsigned > parse_message_id( const std::string& a_message_id );
 
-            /// from AMQP to message object
-            //static message_ptr_t process_envelope( amqp_envelope_ptr a_envelope );
+            /// Converts a set of AMQP messages to a Dripline message object
             static message_ptr_t process_message( amqp_split_message_ptrs a_message_ptrs, const std::string& a_routing_key );
 
-            /// from message object to AMQP
+            /// Converts a Dripline message object to a set of AMQP messages
             amqp_split_message_ptrs create_amqp_messages( unsigned a_max_size = DL_MAX_PAYLOAD_SIZE );
 
-            /// converts the message-body to a strings (default encoding is JSON) for creating AMQP messages
+            /// Converts the message-body to a strings (default encoding is JSON) for creating AMQP messages
             void encode_message_body( std::vector< std::string >& a_body_vec, unsigned a_max_size, const scarab::param_node& a_options = scarab::param_node() ) const;
 
-            /// convert the entire message into a single string (default encoding is JSON)
+            /// Converts the entire message into a single string (default encoding is JSON)
             std::string encode_full_message( unsigned a_max_size, const scarab::param_node& a_options = scarab::param_node() ) const;
 
         protected:
@@ -91,6 +90,7 @@ namespace dripline
             std::string interpret_encoding() const;
 
         public:
+            /// Flag indicating whether the message was correctly converted from one or more AMQP messages
             mv_accessible( bool, is_valid );
 
             mv_referrable( std::string, routing_key );
@@ -127,12 +127,12 @@ namespace dripline
 
             virtual msg_t message_type() const = 0;
 
-            /// creates and returns a new param_node object to contain the sender info
+            /// Creates and returns a new param_node object to contain the sender info
             scarab::param_node get_sender_info() const;
-            /// copies the sender info out of a param_node
+            /// Copies the sender info out of a param_node
             void set_sender_info( const scarab::param_node& a_sender_info );
 
-            /// creates and returns a new param_node object to contain the full message
+            /// Creates and returns a new param_node object to contain the full message
             scarab::param_node get_message_param() const;
 
         public:
@@ -177,13 +177,16 @@ namespace dripline
             msg_request();
             virtual ~msg_request();
 
+            /// Create a request message
             static request_ptr_t create( scarab::param_ptr_t a_payload, op_t a_msg_op, const std::string& a_routing_key, const std::string& a_specifier = "", const std::string& a_reply_to = "", message::encoding a_encoding = encoding::json );
 
             bool is_request() const;
             bool is_reply() const;
             bool is_alert() const;
 
+            /// Creates a reply message using the reply-to and correlation ID information in this message
             reply_ptr_t reply( const return_code& a_return_code, const std::string& a_ret_msg, scarab::param_ptr_t a_payload = scarab::param_ptr_t( new scarab::param() ) ) const;
+            /// Creates a reply message using the reply-to and correlation ID information in this message
             reply_ptr_t reply( const unsigned a_return_code, const std::string& a_ret_msg, scarab::param_ptr_t a_payload = scarab::param_ptr_t( new scarab::param() ) ) const;
 
         private:
@@ -229,9 +232,13 @@ namespace dripline
             msg_reply();
             virtual ~msg_reply();
 
+            /// Create a reply message using a return_code object and manually specifying the destination
             static reply_ptr_t create( const return_code& a_return_code, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier = "", message::encoding a_encoding = encoding::json );
+            /// Create a reply message using an integer return code and manually specifying the destination
             static reply_ptr_t create( unsigned a_return_code_value, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier = "", message::encoding a_encoding = encoding::json );
+            /// Create a reply message using a return_code object and a request message for the destination and correlation ID
             static reply_ptr_t create( const return_code& a_return_code, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const msg_request& a_request );
+            /// Create a reply message using an integer return code and a request message for the destination and correlation ID
             static reply_ptr_t create( unsigned a_return_code, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const msg_request& a_request );
 
             bool is_request() const;
@@ -270,7 +277,7 @@ namespace dripline
      @brief Alert message class
 
      @details
-     Nothing is added.
+     No additional fields are added.
 
      Alert message can be created with the static `create()` function.
     */
@@ -280,6 +287,7 @@ namespace dripline
             msg_alert();
             virtual ~msg_alert();
 
+            /// Creates an alert message
             static alert_ptr_t create( scarab::param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier = "", message::encoding a_encoding = encoding::json );
 
             bool is_request() const;
