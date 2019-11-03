@@ -13,6 +13,8 @@
 
 #include "catch.hpp"
 
+#include <sstream>
+
 LOGGER( testlog, "test_return_codes" );
 
 TEST_CASE( "return_codes", "[exceptions]" )
@@ -58,5 +60,17 @@ TEST_CASE( "return_codes", "[exceptions]" )
 
     REQUIRE_THROWS_AS( (scarab::indexed_registrar< unsigned, dripline::return_code, test_nonunique_error >( 100 )), scarab::error );
 
+    // test operator==
+    dripline::dl_success t_rc2;
+    REQUIRE( t_rc == t_rc2 );
+
+    // test copy_code
+    dripline::copy_code t_copy( t_rc );
+    REQUIRE( t_rc == t_copy );
+
+    // test streaming
+    std::stringstream t_stream;
+    t_stream << t_rc;
+    REQUIRE( t_stream.str() == dripline::dl_success::s_description + "(" + std::to_string(dripline::dl_success::s_value) + ")");
 }
 

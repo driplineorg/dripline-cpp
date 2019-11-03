@@ -108,6 +108,10 @@ namespace dripline
 
 //    std::string ::dripline::dl_##name::s_name = TOSTRING(name);
 
+    DRIPLINE_API bool operator==( const return_code& a_lhs, const return_code& a_rhs );
+
+    DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, const return_code& a_rc );
+
     //****************
     // Return code definitions
     //****************

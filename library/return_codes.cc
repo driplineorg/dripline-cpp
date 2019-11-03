@@ -21,6 +21,19 @@ namespace dripline
             f_description( a_code.rc_description() )
     {}
 
+    bool operator==( const return_code& a_lhs, const return_code& a_rhs )
+    {
+        return a_lhs.rc_name() == a_rhs.rc_name() &&
+               a_lhs.rc_value() == a_rhs.rc_value() &&
+               a_lhs.rc_description() == a_rhs.rc_description();
+    }
+
+    DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, const return_code& a_rc )
+    {
+        a_os << a_rc.rc_description() << "(" << a_rc.rc_value() << ")";
+        return a_os;
+    }
+
     //****************
     // Return code implementations
     //****************
