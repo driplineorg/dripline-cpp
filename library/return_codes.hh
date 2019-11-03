@@ -38,12 +38,13 @@ namespace dripline
         virtual ~return_code() {};
         virtual unsigned rc_value() const = 0;
         virtual std::string rc_name() const = 0;
+        virtual std::string rc_description() const = 0;
     };
 
     /*!
      @class copy_code
      @author N.S. Oblath
-     @brief Stores a copy of the return-code value and name from any return_code-derived class
+     @brief Stores a copy of the return-code value, name, and description from any return_code-derived class
     */
      struct DRIPLINE_API copy_code : return_code
     {
@@ -51,8 +52,10 @@ namespace dripline
         virtual ~copy_code() {};
         virtual unsigned rc_value() const { return f_value; }
         virtual std::string rc_name() const { return f_name; }
+        virtual std::string rc_description() const { return f_description; }
         unsigned f_value;
         std::string f_name;
+        std::string f_description;
     };
 
     // Macros for defining and implementing new return codes
@@ -67,9 +70,11 @@ namespace dripline
     { \
         static unsigned s_value; \
         static std::string s_name; \
+        static std::string s_description; \
         virtual ~dl_##name() {} \
         virtual unsigned rc_value() const { return dl_##name::s_value; } \
         virtual std::string rc_name() const {return dl_##name::s_name; } \
+        virtual std::string rc_description() const {return dl_##name::s_description; } \
     };
 
     /*!
@@ -82,9 +87,11 @@ namespace dripline
     { \
         static unsigned s_value; \
         static std::string s_name; \
+        static std::string s_description; \
         virtual ~dl_##name() {} \
         virtual unsigned rc_value() const { return dl_##name::s_value; } \
         virtual std::string rc_name() const {return dl_##name::s_name; } \
+        virtual std::string rc_description() const {return dl_##name::s_description; } \
     };
 
     /*!
@@ -93,9 +100,10 @@ namespace dripline
      `the_value` should be an unsigned integer.
      This macro should go in a source file.
     */
-#define IMPLEMENT_DL_RET_CODE( name, the_value ) \
+#define IMPLEMENT_DL_RET_CODE( name, the_value, description ) \
     unsigned dl_##name::s_value = the_value; \
     std::string dl_##name::s_name( TOSTRING(name) ); \
+    std::string dl_##name::s_description( description );\
     static scarab::indexed_registrar< unsigned, ::dripline::return_code, dl_##name > t_dl_##name##_rc_reg( the_value );
 
 //    std::string ::dripline::dl_##name::s_name = TOSTRING(name);

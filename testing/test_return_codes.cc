@@ -21,12 +21,14 @@ TEST_CASE( "return_codes", "[exceptions]" )
     REQUIRE( t_rc.rc_value() == 0 );
     REQUIRE( t_rc.rc_value() == dripline::dl_success::s_value );
     REQUIRE( t_rc.rc_name() == dripline::dl_success::s_name );
+    REQUIRE( t_rc.rc_description() == dripline::dl_success::s_description );
 
     struct test_unique_error : public ::dripline::return_code
     {
         virtual ~test_unique_error() {}
         virtual unsigned rc_value() const { return 1000; }
         virtual std::string rc_name() const { return "test_unique_error"; }
+        virtual std::string rc_description() const {return "Unique Error"; }
     };
 
     struct test_unique_error_2 : public ::dripline::return_code
@@ -34,6 +36,7 @@ TEST_CASE( "return_codes", "[exceptions]" )
         virtual ~test_unique_error_2() {}
         virtual unsigned rc_value() const { return 1001; }
         virtual std::string rc_name() const { return "test_unique_error_2"; }
+        virtual std::string rc_description() const { return "Unique Error 2"; }
     };
 
     struct test_nonunique_error : public ::dripline::return_code
@@ -41,6 +44,7 @@ TEST_CASE( "return_codes", "[exceptions]" )
         virtual ~test_nonunique_error() {}
         virtual unsigned rc_value() const { return 100; }
         virtual std::string rc_name() const { return "test_nonunique_error"; }
+        virtual std::string rc_description() const { return "Nonunique Error"; }
     };
 
     REQUIRE_NOTHROW( (scarab::indexed_registrar< unsigned, dripline::return_code, test_unique_error >( 1000 )) );
