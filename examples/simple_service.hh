@@ -37,7 +37,6 @@ namespace dripline
     inline reply_ptr_t simple_service::do_get_request( const request_ptr_t a_request )
     {
         return a_request->reply( dl_success(), "Congrats, you performed an OP_GET" );
-
     }
 
     inline reply_ptr_t simple_service::do_set_request( const request_ptr_t a_request )
