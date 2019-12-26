@@ -143,6 +143,7 @@ namespace dripline
         {
             LWARN( dlog, "Caught exception: " << e.what() );
             t_reply = a_request->reply( dl_unhandled_exception(), e.what() );
+            throw; // unhandled exceptions should rethrow because they're by definition unhandled
         }
         
         // send the reply if the request had a reply-to
