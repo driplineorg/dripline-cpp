@@ -122,11 +122,7 @@ namespace dripline
             /// Directly submit an alert message to this endpoint
             void submit_alert_message( const alert_ptr_t a_alert );
 
-            /// Submit a message to be sorted; note that you cannot get the reply_ptr_t using this method if you submit a request
-            /// This is really intended for use when handling messages received by a (parent) service.
-            void sort_message( const message_ptr_t a_request );
-
-        protected:
+        public:
             //*************************
             // Default message handlers
             //*************************
@@ -142,7 +138,7 @@ namespace dripline
             /// Override this to enable handling of alerts.
             virtual void on_alert_message( const alert_ptr_t a_alert );
 
-        protected:
+        public:
             //*************************
             // Default request handlers
             //*************************
@@ -153,6 +149,12 @@ namespace dripline
             virtual reply_ptr_t do_get_request( const request_ptr_t a_request );
             virtual reply_ptr_t do_set_request( const request_ptr_t a_request );
             virtual reply_ptr_t do_cmd_request( const request_ptr_t a_request );
+
+            /// Calls the appropriate request handler on a message object.
+            /// Message type is explicitly checked within this function.
+            /// Note that you cannot get the reply_ptr_t using this method if you submit a request.
+            /// This is really intended for use when handling messages received by a parent object.
+            void sort_message( const message_ptr_t a_request );
 
         private:
             //**************************

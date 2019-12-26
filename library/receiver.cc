@@ -14,6 +14,7 @@
 #include "message.hh"
 
 #include "logger.hh"
+#include "signal_handler.hh"
 
 LOGGER( dlog, "receiver" );
 
@@ -381,13 +382,22 @@ namespace dripline
 
     void concurrent_receiver::execute()
     {
-        while( ! is_canceled() )
+        try
         {
-            message_ptr_t t_message;
-            if( f_message_queue.timed_wait_and_pop( t_message ) )
+            while( ! is_canceled() )
             {
-                this->submit_message( t_message );
+                message_ptr_t t_message;
+                if( f_message_queue.timed_wait_and_pop( t_message ) )
+                {
+                    this->submit_message( t_message );
+                }
             }
+        }
+        catch( const std::exception& e )
+        {
+            // shutdown gracefully on an exception
+            LERROR( dlog, "Exception caught; shutting down.\n" << "\t" << e.what() );
+            scarab::signal_handler::cancel_all( 1 );
         }
     }
 

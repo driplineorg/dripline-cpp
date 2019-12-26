@@ -167,6 +167,9 @@ namespace dripline
 
             mv_referrable( std::string, broadcast_key );
 
+        protected:
+            virtual reply_ptr_t on_request_message( const request_ptr_t a_request );
+
         private:
             virtual void do_cancellation( int a_code );
     };

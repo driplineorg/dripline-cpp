@@ -78,7 +78,25 @@ namespace dripline
 
     reply_ptr_t endpoint::on_request_message( const request_ptr_t a_request )
     {
+        // reply object to store whatever reply we end up with
         reply_ptr_t t_reply;
+
+        // lambda to send the reply.  this local function is defined so we can send from within the catch block if needed before rethrowing.
+        auto t_replier = [&t_reply, &a_request, this](){
+            // send the reply if the request had a reply-to
+            if( a_request->reply_to().empty() )
+            {
+                LWARN( dlog, "Not sending reply (reply-to empty)\n" <<
+                            "    Return code: " << t_reply->get_return_code() << '\n' <<
+                            "    Return message: " << t_reply->return_message() << '\n' <<
+                            "    Payload:\n" << t_reply->payload() );
+            }
+            else
+            {
+                send_reply( t_reply );
+            }
+        };
+
         try
         {
             if( ! a_request->get_is_valid() )
@@ -125,6 +143,7 @@ namespace dripline
                     throw throw_reply( dl_message_error_invalid_method() ) << "Unrecognized message operation: <" << a_request->get_message_type() << ">";
                     break;
             } // end switch on message type
+            // reply to be sent outside the try block
         }
         catch( const throw_reply& e )
         {
@@ -138,26 +157,19 @@ namespace dripline
             }
             t_reply = a_request->reply( e.ret_code(), e.what() );
             t_reply->set_payload( e.get_payload_ptr()->clone() );
+            // don't rethrow a throw_reply
+            // reply to be sent outside the catch block
         }
         catch( const std::exception& e )
         {
-            LWARN( dlog, "Caught exception: " << e.what() );
+            LERROR( dlog, "Caught exception: " << e.what() );
             t_reply = a_request->reply( dl_unhandled_exception(), e.what() );
+            t_replier(); // send the reply before rethrowing
             throw; // unhandled exceptions should rethrow because they're by definition unhandled
         }
         
-        // send the reply if the request had a reply-to
-        if( a_request->reply_to().empty() )
-        {
-            LWARN( dlog, "Not sending reply (reply-to empty)\n" <<
-                         "    Return code: " << t_reply->get_return_code() << '\n' <<
-                         "    Return message: " << t_reply->return_message() << '\n' <<
-                         "    Payload:\n" << t_reply->payload() );
-        }
-        else
-        {
-            send_reply( t_reply );
-        }
+        // send the reply
+        t_replier();
 
         return t_reply;
     }

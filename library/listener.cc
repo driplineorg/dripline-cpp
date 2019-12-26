@@ -115,28 +115,28 @@ namespace dripline
         try
         {
             f_endpoint->sort_message( a_message );
-
-            // by this point we assume a reply has been sent
             return;
         }
         catch( dripline_error& e )
         {
             LERROR( dlog, "<" << f_endpoint->name() << ">: Dripline exception caught while handling message: " << e.what() );
+            throw;
         }
         catch( amqp_exception& e )
         {
-            LERROR( dlog, "<" << f_endpoint->name() << ">: AMQP exception caught while sending reply: (" << e.reply_code() << ") " << e.reply_text() );
+            LERROR( dlog, "<" << f_endpoint->name() << ">: AMQP exception caught while handling message: (" << e.reply_code() << ") " << e.reply_text() );
+            throw;
         }
         catch( amqp_lib_exception& e )
         {
-            LERROR( dlog, "<" << f_endpoint->name() << ">: AMQP Library Exception caught while sending reply: (" << e.ErrorCode() << ") " << e.what() );
+            LERROR( dlog, "<" << f_endpoint->name() << ">: AMQP Library Exception caught while handling message: (" << e.ErrorCode() << ") " << e.what() );
+            throw;
         }
         catch( std::exception& e )
         {
-            LERROR( dlog, "<" << f_endpoint->name() << ">: Standard exception caught while sending reply: " << e.what() );
+            LERROR( dlog, "<" << f_endpoint->name() << ">: Standard exception caught while handling message: " << e.what() );
+            throw;
         }
-
-        // TODO: each of the above catch sections can generate a reply if the message is a request
 
         return;
     }

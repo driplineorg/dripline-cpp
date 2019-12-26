@@ -411,47 +411,29 @@ namespace dripline
     {
         try
         {
-            std::string t_first_token( a_message->routing_key() );
-            t_first_token = t_first_token.substr( 0, t_first_token.find_first_of('.') );
-            LDEBUG( dlog, "First token in routing key: <" << t_first_token << ">" );
-
-            if( t_first_token == f_name || t_first_token == f_broadcast_key )
-            {
-                sort_message( a_message );
-            }
-            else
-            {
-                auto t_endpoint_itr = f_sync_children.find( t_first_token );
-                if( t_endpoint_itr == f_sync_children.end() )
-                {
-                    LERROR( dlog, "Did not find child endpoint called <" << t_first_token << ">" );
-                    throw dripline_error() << "Did not find child endpoint <" << t_first_token << ">";
-                }
-
-                t_endpoint_itr->second->sort_message( a_message );
-            }
-
-            // by this point we assume a reply has been sent
+            sort_message( a_message );
             return;
         }
         catch( dripline_error& e )
         {
             LERROR( dlog, "<" << f_name << "> Dripline exception caught while handling message: " << e.what() );
+            throw;
         }
         catch( amqp_exception& e )
         {
-            LERROR( dlog, "<" << f_name << "> AMQP exception caught while sending reply: (" << e.reply_code() << ") " << e.reply_text() );
+            LERROR( dlog, "<" << f_name << "> AMQP exception caught while handling message: (" << e.reply_code() << ") " << e.reply_text() );
+            throw;
         }
         catch( amqp_lib_exception& e )
         {
-            LERROR( dlog, "<" << f_name << "> AMQP Library Exception caught while sending reply: (" << e.ErrorCode() << ") " << e.what() );
+            LERROR( dlog, "<" << f_name << "> AMQP Library Exception caught while handling message: (" << e.ErrorCode() << ") " << e.what() );
+            throw;
         }
         catch( std::exception& e )
         {
-            LERROR( dlog, "<" << f_name << "> Standard exception caught while sending reply: " << e.what() );
+            LERROR( dlog, "<" << f_name << "> Standard exception caught while handling message: " << e.what() );
+            throw;
         }
-
-        // TODO: each of the above catch sections can generate a reply if the message is a request
 
         return;
     }
@@ -468,6 +450,31 @@ namespace dripline
             LWARN( dlog, "Something went wrong while sending the reply" );
         }
         return;
+    }
+
+    reply_ptr_t service::on_request_message( request_ptr_t a_request )
+    {
+        std::string t_first_token( a_request->routing_key() );
+        t_first_token = t_first_token.substr( 0, t_first_token.find_first_of('.') );
+        LDEBUG( dlog, "First token in routing key: <" << t_first_token << ">" );
+
+        if( t_first_token == f_name || t_first_token == f_broadcast_key )
+        {
+            // reply will be sent by endpoint::on_request_message
+            return this->endpoint::on_request_message( a_request );
+        }
+        else
+        {
+            auto t_endpoint_itr = f_sync_children.find( t_first_token );
+            if( t_endpoint_itr == f_sync_children.end() )
+            {
+                LERROR( dlog, "Did not find child endpoint called <" << t_first_token << ">" );
+                throw dripline_error() << "Did not find child endpoint <" << t_first_token << ">";
+            }
+
+            // reply will be sent by endpoint::on_request_message or derived
+            return t_endpoint_itr->second->on_request_message( a_request );
+        }
     }
 
     void service::do_cancellation( int a_code )
