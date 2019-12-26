@@ -134,17 +134,17 @@ namespace dripline
             bool stop();
 
         protected:
-            bool open_channels();
+            virtual bool open_channels();
 
-            bool setup_queues();
+            virtual bool setup_queues();
 
-            bool bind_keys();
+            virtual bool bind_keys();
 
-            bool start_consuming();
+            virtual bool start_consuming();
 
-            bool stop_consuming();
+            virtual bool stop_consuming();
 
-            bool remove_queue();
+            virtual bool remove_queue();
 
         public:
             /// Waits for AMQP messages arriving on the channel
