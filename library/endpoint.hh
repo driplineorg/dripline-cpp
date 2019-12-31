@@ -138,6 +138,10 @@ namespace dripline
             /// Override this to enable handling of alerts.
             virtual void on_alert_message( const alert_ptr_t a_alert );
 
+#ifdef DL_PYTHON
+            mv_referrable( std::string, py_throw_reply_keyword );
+#endif
+
         public:
             //*************************
             // Default request handlers
