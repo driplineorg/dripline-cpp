@@ -73,6 +73,10 @@ namespace dripline
             t_reply->set_payload( a_request->payload().clone() );
             return t_reply;
         }
+        else if( t_specifier == "error" )
+        {
+            throw std::runtime_error( "An error occurred in the endpoint!  (Note: this is a test, this is only a test)" );
+        }
         else
         {
             return a_request->reply( dl_message_error_invalid_specifier(), "Unknown specifier: " + t_specifier );

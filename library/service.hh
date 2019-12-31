@@ -134,17 +134,17 @@ namespace dripline
             bool stop();
 
         protected:
-            bool open_channels();
+            virtual bool open_channels();
 
-            bool setup_queues();
+            virtual bool setup_queues();
 
-            bool bind_keys();
+            virtual bool bind_keys();
 
-            bool start_consuming();
+            virtual bool start_consuming();
 
-            bool stop_consuming();
+            virtual bool stop_consuming();
 
-            bool remove_queue();
+            virtual bool remove_queue();
 
         public:
             /// Waits for AMQP messages arriving on the channel
@@ -166,6 +166,9 @@ namespace dripline
             mv_referrable( async_map_t, async_children );
 
             mv_referrable( std::string, broadcast_key );
+
+        protected:
+            virtual reply_ptr_t on_request_message( const request_ptr_t a_request );
 
         private:
             virtual void do_cancellation( int a_code );
