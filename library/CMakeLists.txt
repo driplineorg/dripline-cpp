@@ -56,6 +56,19 @@ set( dripline_SOURCES
     version_store.cc
 )
 
+if( Scarab_BUILD_PYTHON )
+    set( dripline_HEADERS 
+        $dripline_HEADERS
+        reply_cache.hh
+    )
+
+    set( dripline_SOURCES
+        $dripline_SOURCES
+        reply_cache.cc
+    )
+endif( Scarab_BUILD_PYTHON )
+
+
 configure_file( dripline_version.cc.in ${CMAKE_CURRENT_BINARY_DIR}/dripline_version.cc )
 set( dripline_SOURCES
     ${dripline_SOURCES}
