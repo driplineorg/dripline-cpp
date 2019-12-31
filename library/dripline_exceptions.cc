@@ -1,3 +1,9 @@
+/*
+ * dripline_exceptions.cc
+ *
+ *  Created on: Aug 14, 2018
+ *      Author: N.S. Oblath
+ */
 
 #define DRIPLINE_API_EXPORTS
 
@@ -6,15 +12,15 @@
 namespace dripline
 {
 
-    dripline_error::dripline_error() :
+    dripline_error::dripline_error() noexcept :
             base_exception< dripline_error >()
     {}
 
-    dripline_error::dripline_error( const dripline_error& an_error ) :
+    dripline_error::dripline_error( const dripline_error& an_error ) noexcept :
             base_exception< dripline_error >( an_error )
     {}
 
-    dripline_error::~dripline_error() throw ()
+    dripline_error::~dripline_error() noexcept
     {}
 
 
@@ -30,16 +36,24 @@ namespace dripline
             f_payload( std::move(a_payload_ptr) )
     {}
 
-    throw_reply::throw_reply( const throw_reply& a_throw ) :
-            base_exception< throw_reply >( a_throw ),
-            f_return_code( a_throw.f_return_code ),
-            f_payload( a_throw.f_payload->clone() )
+    throw_reply::throw_reply( const throw_reply& a_orig ) :
+            base_exception< throw_reply >( a_orig ),
+            f_return_code( a_orig.f_return_code ),
+            f_payload( a_orig.f_payload->clone() )
     {}
 
-    throw_reply::~throw_reply() throw ()
+    throw_reply::~throw_reply() noexcept
     {}
 
-    const char* throw_reply::what() const throw ()
+    throw_reply& throw_reply::operator=( const throw_reply& a_orig )
+    {
+        base_exception< throw_reply >::operator=( a_orig );
+        f_return_code = a_orig.f_return_code;
+        f_payload = a_orig.f_payload->clone();
+        return *this;
+    }
+
+    const char* throw_reply::what() const noexcept
     {
         std::stringstream t_stream;
         t_stream << f_error;

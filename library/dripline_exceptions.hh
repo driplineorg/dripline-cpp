@@ -1,5 +1,12 @@
-#ifndef DRIPLINE_ERROR_HH_
-#define DRIPLINE_ERROR_HH_
+/*
+ * dripline_exceptions.hh
+ *
+ *  Created on: Aug 14, 2018
+ *      Author: N.S. Oblath
+ */
+
+#ifndef DRIPLINE_EXCEPTIONS_HH_
+#define DRIPLINE_EXCEPTIONS_HH_
 
 #include "return_codes.hh"
 
@@ -31,16 +38,18 @@ namespace dripline
     class DRIPLINE_API base_exception : public ::std::exception
     {
         public:
-            base_exception();
-            base_exception( const base_exception< x_derived >& );
-            virtual ~base_exception() throw ();
+            base_exception() noexcept;
+            base_exception( const base_exception< x_derived >& a_orig ) noexcept;
+            virtual ~base_exception() noexcept;
+
+            base_exception< x_derived >& operator=( const base_exception< x_derived >& a_orig ) noexcept;
 
             template< class x_streamable >
-            x_derived& operator<<( x_streamable a_fragment );
-            x_derived& operator<<( const std::string& a_fragment );
-            x_derived& operator<<( const char* a_fragment );
+            x_derived& operator<<( x_streamable a_fragment ) noexcept;
+            x_derived& operator<<( const std::string& a_fragment ) noexcept;
+            x_derived& operator<<( const char* a_fragment ) noexcept;
 
-            virtual const char* what() const throw();
+            virtual const char* what() const noexcept;
 
         protected:
             mutable std::string f_error;
@@ -60,9 +69,9 @@ namespace dripline
     class DRIPLINE_API dripline_error : public base_exception< dripline_error >
     {
         public:
-            dripline_error();
-            dripline_error( const dripline_error& );
-            virtual ~dripline_error() throw ();
+            dripline_error() noexcept;
+            dripline_error( const dripline_error& ) noexcept;
+            virtual ~dripline_error() noexcept;
     };
 
     /*!
@@ -87,10 +96,12 @@ namespace dripline
         public:
             throw_reply();
             throw_reply( const return_code& a_code, scarab::param_ptr_t&& a_payload_ptr = scarab::param_ptr_t(new scarab::param()) );
-            throw_reply( const throw_reply& );
-            virtual ~throw_reply() throw();
+            throw_reply( const throw_reply& a_orig );
+            virtual ~throw_reply() noexcept;
 
-            virtual const char* what() const throw();
+            throw_reply& operator=( const throw_reply& a_orig );
+
+            virtual const char* what() const noexcept;
 
             const return_code& ret_code() const;
             void set_return_code( const return_code& a_code );
@@ -107,48 +118,72 @@ namespace dripline
 
 
     template< typename x_derived >
-    base_exception< x_derived >::base_exception() :
+    base_exception< x_derived >::base_exception()  noexcept :
             ::std::exception(),
             f_error()
     {}
 
     template< typename x_derived >
-    base_exception< x_derived >::base_exception( const base_exception< x_derived >& an_error ) :
-            std::exception(),
-            f_error( an_error.f_error )
+    base_exception< x_derived >::base_exception( const base_exception< x_derived >& a_orig )  noexcept :
+            std::exception( a_orig ),
+            f_error( a_orig.f_error )
     {}
 
     template< typename x_derived >
-    base_exception< x_derived >::~base_exception() throw ()
+    base_exception< x_derived >::~base_exception() noexcept
     {}
 
     template< typename x_derived >
-    const char* base_exception< x_derived >::what() const throw ()
+    base_exception< x_derived >& base_exception< x_derived >::operator=( const base_exception< x_derived >& a_orig ) noexcept
+    {
+        f_error = a_orig.f_error;
+        return *this;
+    }
+
+    template< typename x_derived >
+    const char* base_exception< x_derived >::what() const noexcept
     {
         return f_error.c_str();
     }
 
     template< typename x_derived >
     template< class x_streamable >
-    x_derived& base_exception< x_derived >::operator<<( x_streamable a_fragment )
+    x_derived& base_exception< x_derived >::operator<<( x_streamable a_fragment ) noexcept
     {
-        std::stringstream stream;
-        stream << a_fragment;
-        stream >> f_error;
+        try
+        {
+            std::stringstream stream;
+            stream << a_fragment;
+            stream >> f_error;
+        }
+        catch(...)
+        {}
+
         return *static_cast< x_derived* >(this);
     }
 
     template< typename x_derived >
-    x_derived& base_exception< x_derived >::operator<<( const std::string& a_fragment )
+    x_derived& base_exception< x_derived >::operator<<( const std::string& a_fragment ) noexcept
     {
-        f_error += a_fragment;
+        try
+        {
+            f_error += a_fragment;
+        }
+        catch(...)
+        {}
+
         return *static_cast< x_derived* >(this);
     }
 
     template< typename x_derived >
-    x_derived& base_exception< x_derived >::operator<<( const char* a_fragment )
+    x_derived& base_exception< x_derived >::operator<<( const char* a_fragment ) noexcept
     {
-        f_error += std::string( a_fragment );
+        try
+        {
+            f_error += std::string( a_fragment );
+        }
+        catch(...)
+        {}
         return *static_cast< x_derived* >(this);
     }
 
@@ -186,4 +221,4 @@ namespace dripline
 
 }
 
-#endif /* DRIPLINE_ERROR_HH_ */
+#endif /* DRIPLINE_EXCEPTIONS_HH_ */
