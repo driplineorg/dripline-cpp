@@ -11,10 +11,18 @@
 
 #include "logger.hh"
 
+#include <vector>
+
 LOGGER( rclog, "return_codes" );
 
 namespace dripline
 {
+    copy_code::copy_code( unsigned a_value, const std::string& a_name, const std::string& a_description ) :
+            f_value( a_value ),
+            f_name( a_name ),
+            f_description( a_description )
+    {}
+
     copy_code::copy_code( const return_code& a_code ) :
             f_value( a_code.rc_value() ),
             f_name( a_code.rc_name() ),

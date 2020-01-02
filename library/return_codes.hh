@@ -48,6 +48,7 @@ namespace dripline
     */
      struct DRIPLINE_API copy_code : return_code
     {
+        copy_code( unsigned a_value, const std::string& a_name, const std::string& a_description );
         copy_code( const return_code& a_code );
         virtual ~copy_code() {};
         virtual unsigned rc_value() const { return f_value; }
