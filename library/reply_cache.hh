@@ -17,7 +17,7 @@ namespace dripline
 
     void set_reply_cache( const throw_reply& a_orig );
 
-    class reply_cache : public throw_reply, scarab::thread_singleton< reply_cache >
+    class reply_cache : public throw_reply, public scarab::thread_singleton< reply_cache >
     {
         public:
             reply_cache& operator=( const throw_reply& a_orig );

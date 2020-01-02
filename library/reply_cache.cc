@@ -21,12 +21,12 @@ namespace dripline
         throw_reply()
     {}
 
-    reply_cache::~reply_cache()
+    reply_cache::~reply_cache() noexcept
     {}
 
     reply_cache& reply_cache::operator=( const throw_reply& a_orig )
     {
-        std::unique_lock< std::mutex >( f_mutex );
+        std::unique_lock< std::mutex > t_lock( f_mutex );
         throw_reply::operator=( a_orig );
         return *this;
     }
