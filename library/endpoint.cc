@@ -17,8 +17,9 @@
 #ifdef DL_PYTHON
 #include "reply_cache.hh"
 
-#include "pytypes.h"
-#endif DL_PYTHON
+#include "pybind11/pybind11.h"
+#include "pybind11/pytypes.h"
+#endif
 
 LOGGER( dlog, "endpoint" );
 
@@ -29,7 +30,7 @@ namespace dripline
             f_name( a_name ),
             f_service(),
 #ifdef DL_PYTHON
-            f_py_throw_reply_keyword( PYTHON_THROW_REPLY_KEYWORD ),
+            f_py_throw_reply_keyword( STRINGIFY(PYTHON_THROW_REPLY_KEYWORD) ),
 #endif
             f_lockout_tag(),
             f_lockout_key( generate_nil_uuid() )
