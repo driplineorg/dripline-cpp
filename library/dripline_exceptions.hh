@@ -10,6 +10,7 @@
 
 #include "return_codes.hh"
 
+#include "member_variables.hh"
 #include "param.hh"
 
 #include <exception>
@@ -110,6 +111,10 @@ namespace dripline
             scarab::param& payload();
             void set_payload( scarab::param_ptr_t&& a_payload );
             const scarab::param_ptr_t& get_payload_ptr() const;
+
+#ifdef DL_PYTHON
+            mv_referrable( std::string, py_throw_reply_keyword );
+#endif
 
         protected:
             std::shared_ptr< return_code > f_return_code;
