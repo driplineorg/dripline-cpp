@@ -44,10 +44,11 @@ namespace dripline
     /*!
      @class copy_code
      @author N.S. Oblath
-     @brief Stores a copy of the return-code value, name, and description from any return_code-derived class
+     @brief Stores a copy of the return-code value, name, and description, either as a custom return-code or copying from any return_code-derived class
     */
      struct DRIPLINE_API copy_code : return_code
     {
+        copy_code( unsigned a_value, const std::string& a_name, const std::string& a_description );
         copy_code( const return_code& a_code );
         virtual ~copy_code() {};
         virtual unsigned rc_value() const { return f_value; }
@@ -147,6 +148,29 @@ namespace dripline
     DEFINE_DL_RET_CODE( client_error_timeout, DRIPLINE_API );
 
     DEFINE_DL_RET_CODE( unhandled_exception, DRIPLINE_API );
+
+    //****************
+    // Custom return codes
+    //****************
+
+    void add_return_code( unsigned a_value, const std::string& a_name, const std::string& a_description );
+
+    class custom_return_code_registrar : public scarab::base_registrar< return_code >
+    {
+        public:
+            custom_return_code_registrar( const unsigned& a_value, const std::string& a_name, const std::string& a_description );
+            virtual ~custom_return_code_registrar();
+
+            void register_class() const;
+
+            return_code* create() const;
+
+        protected:
+            unsigned f_value;
+            std::string f_name;
+            std::string f_description;
+    };
+
 
 } /* namespace dripline */
 
