@@ -78,4 +78,41 @@ namespace dripline
 
     IMPLEMENT_DL_RET_CODE( unhandled_exception, 999, "Unhandled Exception" );
 
+    //****************
+    // Custom return codes
+    //****************
+
+    void add_return_code( unsigned a_value, const std::string& a_name, const std::string& a_description )
+    {
+        static std::vector< custom_return_code_registrar > f_rc_registrars;
+        f_rc_registrars.emplace_back( a_value, a_name, a_description );
+        return;
+    }
+
+    custom_return_code_registrar::custom_return_code_registrar( const unsigned& a_value, const std::string& a_name, const std::string& a_description ) :
+            scarab::base_registrar< return_code >(),
+            f_value( a_value ),
+            f_name( a_name ),
+            f_description( a_description)
+    {
+        register_class();
+    }
+
+    custom_return_code_registrar::~custom_return_code_registrar()
+    {
+        scarab::indexed_factory< unsigned, return_code >::get_instance()->remove_class( f_value );
+    }
+
+    void custom_return_code_registrar::register_class() const
+    {
+        scarab::indexed_factory< unsigned, return_code >::get_instance()->register_class( f_value, this );
+        return;
+    }
+
+    return_code* custom_return_code_registrar::create() const
+    {
+        return dynamic_cast< return_code* >( new copy_code( f_value, f_name, f_description ) );
+    }
+
+
 } /* namespace dripline */

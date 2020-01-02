@@ -51,9 +51,10 @@ TEST_CASE( "return_codes", "[exceptions]" )
 
     REQUIRE_NOTHROW( (scarab::indexed_registrar< unsigned, dripline::return_code, test_unique_error >( 1000 )) );
 
-    // redo the registration, since it doesn't stick around when wrapped in REQUIRE_NOTHROW
+    // redo the registration, since the registrar doesn't stick around when wrapped in REQUIRE_NOTHROW
     scarab::indexed_registrar< unsigned, dripline::return_code, test_unique_error > t_ue_reg( 1000 );
 
+    // test creating a return-code
     dripline::return_code* t_rc_ue = scarab::indexed_factory< unsigned, dripline::return_code >::get_instance()->create( 1000 );
     REQUIRE( t_rc_ue != nullptr );
     REQUIRE( t_rc_ue->rc_value() == 1000 );
@@ -72,5 +73,17 @@ TEST_CASE( "return_codes", "[exceptions]" )
     std::stringstream t_stream;
     t_stream << t_rc;
     REQUIRE( t_stream.str() == dripline::dl_success::s_description + "(" + std::to_string(dripline::dl_success::s_value) + ")");
+
+    // test creating a custom code
+    REQUIRE_NOTHROW( (dripline::add_return_code( 2000, "test_custom_code", "Custom Error" )) );
+
+    // test creating the custom code
+    dripline::return_code* t_rc_cc = scarab::indexed_factory< unsigned, dripline::return_code >::get_instance()->create( 2000 );
+    REQUIRE( t_rc_cc != nullptr );
+    REQUIRE( t_rc_cc->rc_value() == 2000 );
+
+    // test adding a duplicate custom code
+    REQUIRE_THROWS_AS( (dripline::add_return_code( 2000, "another_custom_code", "Duplicate Error" )), scarab::error );
+
 }
 

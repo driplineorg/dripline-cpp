@@ -149,6 +149,29 @@ namespace dripline
 
     DEFINE_DL_RET_CODE( unhandled_exception, DRIPLINE_API );
 
+    //****************
+    // Custom return codes
+    //****************
+
+    void add_return_code( unsigned a_value, const std::string& a_name, const std::string& a_description );
+
+    class custom_return_code_registrar : public scarab::base_registrar< return_code >
+    {
+        public:
+            custom_return_code_registrar( const unsigned& a_value, const std::string& a_name, const std::string& a_description );
+            virtual ~custom_return_code_registrar();
+
+            void register_class() const;
+
+            return_code* create() const;
+
+        protected:
+            unsigned f_value;
+            std::string f_name;
+            std::string f_description;
+    };
+
+
 } /* namespace dripline */
 
 #endif /* DRIPLINE_RETURN_CODES_HH_ */
