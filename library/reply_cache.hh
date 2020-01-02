@@ -15,10 +15,12 @@
 namespace dripline
 {
 
+    void set_reply_cache( const throw_reply& a_orig );
+
     class reply_cache : public throw_reply, scarab::thread_singleton< reply_cache >
     {
         public:
-            reply_cache& operator=( const reply_cache& a_orig );
+            reply_cache& operator=( const throw_reply& a_orig );
 
         protected:
             allow_thread_singleton_access( reply_cache );
