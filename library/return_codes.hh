@@ -44,7 +44,7 @@ namespace dripline
     /*!
      @class copy_code
      @author N.S. Oblath
-     @brief Stores a copy of the return-code value, name, and description from any return_code-derived class
+     @brief Stores a copy of the return-code value, name, and description, either as a custom return-code or copying from any return_code-derived class
     */
      struct DRIPLINE_API copy_code : return_code
     {
