@@ -58,12 +58,12 @@ set( dripline_SOURCES
 
 if( Scarab_BUILD_PYTHON )
     set( dripline_HEADERS 
-        $dripline_HEADERS
+        ${dripline_HEADERS}
         reply_cache.hh
     )
 
     set( dripline_SOURCES
-        $dripline_SOURCES
+        ${dripline_SOURCES}
         reply_cache.cc
     )
 endif( Scarab_BUILD_PYTHON )
