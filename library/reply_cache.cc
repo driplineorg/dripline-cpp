@@ -11,7 +11,7 @@
 
 namespace dripline
 {
-    void set_reply_cache( const throw_reply& a_throw )
+    void DRIPLINE_API set_reply_cache( const throw_reply& a_throw )
     {
         reply_cache::get_instance()->operator=( a_throw );
         return;
