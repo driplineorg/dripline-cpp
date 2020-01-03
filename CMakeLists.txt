@@ -53,18 +53,17 @@ set_option( Scarab_BUILD_AUTHENTICATION TRUE )
 pbuilder_add_submodule( Scarab scarab/library )
 
 if( Dripline_BUILD_PYTHON )
-    message( STATUS "##### building python" )
-    message( STATUS "Python include dirs: ${PYTHON_INCLUDE_DIRS}" )
+    message( STATUS "Dripline-cpp is being built with Python" )
     set( Scarab_BUILD_PYTHON TRUE )
     add_definitions( -DDL_PYTHON )
     add_definitions( -DPYTHON_THROW_REPLY_KEYWORD=${Dripline_PYTHON_THROW_REPLY_KEYWORD} )
     include_directories( ${PYTHON_INCLUDE_DIRS} )    
 else( Dripline_BUILD_PYTHON )
-    message( STATUS "$$$$$ not building python" )
+    message( STATUS "Dripline-cpp is being built without Python" )
     set( Scarab_BUILD_PYTHON FALSE )
     remove_definitions( -DDL_PYTHON )
     remove_definitions( -DPYTHON_THROW_REPLY_KEYWORD=${Dripline_PYTHON_THROW_REPLY_KEYWORD} )
-endif( Scarab_BUILD_PYTHON )
+endif( Dripline_BUILD_PYTHON )
 
 ##################
 # SimpleAmqpClient
