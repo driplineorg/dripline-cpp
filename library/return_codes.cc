@@ -89,6 +89,20 @@ namespace dripline
         return;
     }
 
+    std::vector< unsigned > get_return_code_values()
+    {
+        std::vector< unsigned > return_codes;
+        scarab::indexed_factory< unsigned, return_code >* the_factory = scarab::indexed_factory< unsigned, return_code >::get_instance();
+        LDEBUG( rclog, "factory is at: " << the_factory );
+        auto code_entry = the_factory->begin();
+        while (code_entry != the_factory->end() )
+        {
+            return_codes.push_back( code_entry->first );
+            code_entry++;
+        }
+        return return_codes;
+    }
+
     custom_return_code_registrar::custom_return_code_registrar( const unsigned& a_value, const std::string& a_name, const std::string& a_description ) :
             scarab::base_registrar< return_code >(),
             f_value( a_value ),
