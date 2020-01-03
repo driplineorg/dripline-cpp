@@ -27,6 +27,7 @@ set( dripline_HEADERS
     scheduler.hh
     service.hh
     specifier.hh
+    throw_reply.hh
     uuid.hh
     version_store.hh
 )
@@ -52,6 +53,7 @@ set( dripline_SOURCES
     return_codes.cc
     service.cc
     specifier.cc
+    throw_reply.cc
     uuid.cc
     version_store.cc
 )

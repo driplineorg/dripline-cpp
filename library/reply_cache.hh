@@ -8,9 +8,9 @@
 #ifndef DRIPLINE_REPLY_CACHE_HH_
 #define DRIPLINE_REPLY_CACHE_HH_
 
-#include "dripline_exceptions.hh"
+#include "throw_reply.hh"
 
-#include "thread_local_singleton.hh"
+#include "thread_singleton.hh"
 
 namespace dripline
 {
