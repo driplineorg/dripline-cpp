@@ -8,7 +8,6 @@
 #ifndef DRIPLINE_THROW_REPLY_HH_
 #define DRIPLINE_THROW_REPLY_HH_
 
-#include "dripline_exceptions.hh"
 #include "return_codes.hh"
 
 #include "member_variables.hh"
@@ -39,7 +38,7 @@ namespace dripline
         3. (optional) The payload can contain further information to reply to the requstor.  
            It's passed to the throw_reply in the constructor.  The default is a null (scarab::param) object. 
     */
-    class DRIPLINE_API throw_reply : public base_exception< throw_reply >
+    class DRIPLINE_API throw_reply
     {
         public:
             throw_reply();
@@ -49,27 +48,65 @@ namespace dripline
 
             throw_reply& operator=( const throw_reply& a_orig );
 
-            virtual const char* what() const noexcept;
+            template< class x_streamable >
+            throw_reply& operator<<( x_streamable a_fragment );
+            throw_reply& operator<<( const std::string& a_fragment );
+            throw_reply& operator<<( const char* a_fragment );
 
-            const return_code& ret_code() const;
+            const std::string& return_message() const noexcept;
+            std::string& return_message();
+
+            const return_code& ret_code() const noexcept;
             void set_return_code( const return_code& a_code );
 
-            const scarab::param& payload() const;
+            const scarab::param& payload() const noexcept;
             scarab::param& payload();
             void set_payload( scarab::param_ptr_t a_payload );
-            const scarab::param_ptr_t& get_payload_ptr() const;
+            const scarab::param_ptr_t& get_payload_ptr() const noexcept;
 
 #ifdef DL_PYTHON
             mv_referrable( std::string, py_throw_reply_keyword );
 #endif
 
         protected:
+            std::string f_return_message;
             std::shared_ptr< return_code > f_return_code;
             scarab::param_ptr_t f_payload;
     };
 
 
-    inline const return_code& throw_reply::ret_code() const
+    template< class x_streamable >
+    throw_reply& throw_reply::operator<<( x_streamable a_fragment )
+    {
+        std::stringstream stream;
+        stream << a_fragment;
+        stream >> f_return_message;
+        return *this;
+    }
+
+    inline throw_reply& throw_reply::operator<<( const std::string& a_fragment ) 
+    {
+        f_return_message += a_fragment;
+        return *this;
+    }
+
+    inline throw_reply& throw_reply::operator<<( const char* a_fragment ) 
+    {
+        f_return_message += std::string( a_fragment );
+        return *this;
+    }
+
+    inline const std::string& throw_reply::return_message() const noexcept
+    {
+        return f_return_message;
+    }
+
+    inline std::string& throw_reply::return_message()
+    {
+        return f_return_message;
+    }
+
+    inline const return_code& throw_reply::ret_code() const noexcept
     {
         return *f_return_code;
     }
@@ -80,7 +117,7 @@ namespace dripline
         return;
     }
 
-    inline const scarab::param& throw_reply::payload() const
+    inline const scarab::param& throw_reply::payload() const noexcept
     {
         return *f_payload;
     }
@@ -96,7 +133,7 @@ namespace dripline
         return;
     }
 
-    inline const scarab::param_ptr_t& throw_reply::get_payload_ptr() const
+    inline const scarab::param_ptr_t& throw_reply::get_payload_ptr() const noexcept
     {
         return f_payload;
     }

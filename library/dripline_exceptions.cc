@@ -12,11 +12,11 @@
 namespace dripline
 {
 
-    dripline_error::dripline_error() noexcept :
+    dripline_error::dripline_error() :
             base_exception< dripline_error >()
     {}
 
-    dripline_error::dripline_error( const dripline_error& an_error ) noexcept :
+    dripline_error::dripline_error( const dripline_error& an_error ) :
             base_exception< dripline_error >( an_error )
     {}
 

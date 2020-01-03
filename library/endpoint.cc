@@ -172,13 +172,13 @@ namespace dripline
         {
             if( e.ret_code().rc_value() == dl_success::s_value )
             {
-                LINFO( dlog, "Replying with: " << e.what() );
+                LINFO( dlog, "Replying with: " << e.return_message() );
             }
             else
             {
-                LWARN( dlog, "Replying with: " << e.what() );
+                LWARN( dlog, "Replying with: " << e.return_message() );
             }
-            t_reply = a_request->reply( e.ret_code(), e.what() );
+            t_reply = a_request->reply( e.ret_code(), e.return_message() );
             t_reply->set_payload( e.get_payload_ptr()->clone() );
             // don't rethrow a throw_reply
             // reply to be sent outside the catch block
@@ -191,13 +191,13 @@ namespace dripline
                 reply_cache* t_reply_cache = reply_cache::get_instance();
                 if( t_reply_cache->ret_code().rc_value() == dl_success::s_value )
                 {
-                    LINFO( dlog, "Replying with: " << t_reply_cache->what() );
+                    LINFO( dlog, "Replying with: " << t_reply_cache->return_message() );
                 }
                 else
                 {
-                    LWARN( dlog, "Replying with: " << t_reply_cache->what() );
+                    LWARN( dlog, "Replying with: " << t_reply_cache->return_message() );
                 }
-                t_reply = a_request->reply( t_reply_cache->ret_code(),t_reply_cache->what() );
+                t_reply = a_request->reply( t_reply_cache->ret_code(),t_reply_cache->return_message() );
                 t_reply->set_payload( t_reply_cache->get_payload_ptr()->clone() );
                 // don't rethrow a throw_reply
                 // reply to be sent outside the catch block
