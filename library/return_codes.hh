@@ -25,6 +25,7 @@
 
 #include <set>
 #include <string>
+#include <vector>
 
 namespace dripline
 {
@@ -154,6 +155,7 @@ namespace dripline
     //****************
 
     void add_return_code( unsigned a_value, const std::string& a_name, const std::string& a_description );
+    std::vector< unsigned > get_return_code_values();
 
     class custom_return_code_registrar : public scarab::base_registrar< return_code >
     {
