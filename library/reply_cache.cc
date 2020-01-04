@@ -11,9 +11,17 @@
 
 namespace dripline
 {
-    void DRIPLINE_API set_reply_cache( const throw_reply& a_throw )
+    void DRIPLINE_API set_reply_cache1( const throw_reply& a_throw )
     {
         reply_cache::get_instance()->operator=( a_throw );
+        return;
+    }
+
+    void DRIPLINE_API set_reply_cache( const return_code& a_code, const std::string& a_message, scarab::param_ptr_t a_payload_ptr )
+    {
+        reply_cache::get_instance()->set_return_code( a_code );
+        reply_cache::get_instance()->return_message() = a_message;
+        reply_cache::get_instance()->set_payload( std::move(a_payload_ptr) );
         return;
     }
 
