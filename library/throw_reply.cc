@@ -16,6 +16,7 @@ namespace dripline
 #ifdef DL_PYTHON
             f_py_throw_reply_keyword( STRINGIFY(PYTHON_THROW_REPLY_KEYWORD) ),
 #endif
+            f_return_message(),
             f_return_code( new dl_unhandled_exception() ),
             f_payload( new scarab::param() )
     {}
@@ -24,6 +25,7 @@ namespace dripline
 #ifdef DL_PYTHON
             f_py_throw_reply_keyword( STRINGIFY(PYTHON_THROW_REPLY_KEYWORD) ),
 #endif
+            f_return_message(),
             f_return_code( new copy_code( a_code ) ),
             f_payload( std::move(a_payload_ptr) )
     {}
@@ -32,6 +34,7 @@ namespace dripline
 #ifdef DL_PYTHON
             f_py_throw_reply_keyword( a_orig.f_py_throw_reply_keyword ),
 #endif
+            f_return_message( a_orig.f_return_message ),
             f_return_code( a_orig.f_return_code ),
             f_payload( a_orig.f_payload->clone() )
     {}
