@@ -11,6 +11,7 @@
 
 #include "dripline_exceptions.hh"
 #include "service.hh"
+#include "throw_reply.hh"
 
 #include "logger.hh"
 
