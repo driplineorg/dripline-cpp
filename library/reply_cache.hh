@@ -15,7 +15,6 @@
 namespace dripline
 {
 
-    void DRIPLINE_API set_reply_cache1( const throw_reply& a_orig );
     void DRIPLINE_API set_reply_cache( const return_code& a_code, const std::string& a_message, scarab::param_ptr_t a_payload_ptr );
 
     class DRIPLINE_API reply_cache : public throw_reply, public scarab::thread_singleton< reply_cache >
