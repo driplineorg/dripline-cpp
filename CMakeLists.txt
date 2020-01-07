@@ -30,7 +30,7 @@ option( Dripline_BUILD_EXAMPLES "Flag to enable building the examples" FALSE )
 
 option( Dripline_BUILD_PYTHON "Add the Python-dependent components" FALSE )
 
-set ( Dripline_PYTHON_THROW_REPLY_KEYWORD "throw_reply" CACHE STRING "Keyword used to indicate a throw_reply from Python (only used if building with dripline-python)" )
+set ( Dripline_PYTHON_THROW_REPLY_KEYWORD "ThrowReply" CACHE STRING "Keyword used to indicate a throw_reply from Python (only used if building with dripline-python; should match the name of the class used in Python to throw replies)" )
 
 set( Dripline_MAX_PAYLOAD_SIZE "10000" CACHE STRING "Maximum payload size (bytes)" )
 

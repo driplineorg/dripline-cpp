@@ -25,13 +25,19 @@ LOGGER( dlog, "endpoint" );
 
 namespace dripline
 {
+#ifdef DL_PYTHON
+    std::string endpoint::s_py_throw_reply_keyword = STRINGIFY(PYTHON_THROW_REPLY_KEYWORD);
+
+    std::string& endpoint::py_throw_reply_keyword()
+    {
+        return s_py_throw_reply_keyword;
+    }
+
+#endif
 
     endpoint::endpoint( const std::string& a_name ) :
             f_name( a_name ),
             f_service(),
-#ifdef DL_PYTHON
-            f_py_throw_reply_keyword( STRINGIFY(PYTHON_THROW_REPLY_KEYWORD) ),
-#endif
             f_lockout_tag(),
             f_lockout_key( generate_nil_uuid() )
     {
@@ -40,9 +46,6 @@ namespace dripline
     endpoint::endpoint( const endpoint& a_orig ) :
             f_name( a_orig.f_name ),
             f_service( a_orig.f_service ),
-#ifdef DL_PYTHON
-            f_py_throw_reply_keyword( a_orig.f_py_throw_reply_keyword ),
-#endif
             f_lockout_tag( a_orig.f_lockout_tag ),
             f_lockout_key( a_orig.f_lockout_key )
     {}
@@ -50,9 +53,6 @@ namespace dripline
     endpoint::endpoint( endpoint&& a_orig ) :
             f_name( std::move(a_orig.f_name) ),
             f_service( std::move(a_orig.f_service) ),
-#ifdef DL_PYTHON
-            f_py_throw_reply_keyword( std::move(a_orig.f_py_throw_reply_keyword) ),
-#endif
             f_lockout_tag( std::move(a_orig.f_lockout_tag) ),
             f_lockout_key( std::move(a_orig.f_lockout_key) )
     {}
@@ -64,9 +64,6 @@ namespace dripline
     {
         f_name = a_orig.f_name;
         f_service = a_orig.f_service;
-#ifdef DL_PYTHON
-        f_py_throw_reply_keyword = a_orig.f_py_throw_reply_keyword;
-#endif
         f_lockout_tag = a_orig.f_lockout_tag;
         f_lockout_key = a_orig.f_lockout_key;
         return *this;
@@ -76,9 +73,6 @@ namespace dripline
     {
         f_name = std::move(a_orig.f_name);
         f_service = std::move(a_orig.f_service);
-#ifdef DL_PYTHON
-        f_py_throw_reply_keyword = std::move(a_orig.f_py_throw_reply_keyword);
-#endif
         f_lockout_tag = std::move(a_orig.f_lockout_tag);
         f_lockout_key = std::move(a_orig.f_lockout_key);
         return *this;
@@ -186,7 +180,9 @@ namespace dripline
 #ifdef DL_PYTHON
         catch( const pybind11::error_already_set& e )
         {
-            if( e.what() == f_py_throw_reply_keyword )
+            // check whether the error message from python starts with the keyword
+            // the keyword should be the name of the python class
+            if( std::string(e.what()).substr(0, endpoint::s_py_throw_reply_keyword.size()) == endpoint::s_py_throw_reply_keyword )
             {
                 reply_cache* t_reply_cache = reply_cache::get_instance();
                 if( t_reply_cache->ret_code().rc_value() == dl_success::s_value )
