@@ -1,12 +1,16 @@
-#ifndef DRIPLINE_ERROR_HH_
-#define DRIPLINE_ERROR_HH_
+/*
+ * dripline_exceptions.hh
+ *
+ *  Created on: Aug 14, 2018
+ *      Author: N.S. Oblath
+ */
 
-#include "return_codes.hh"
+#ifndef DRIPLINE_EXCEPTIONS_HH_
+#define DRIPLINE_EXCEPTIONS_HH_
 
-#include "param.hh"
+#include "dripline_api.hh"
 
 #include <exception>
-#include <memory>
 #include <sstream>
 
 
@@ -32,15 +36,17 @@ namespace dripline
     {
         public:
             base_exception();
-            base_exception( const base_exception< x_derived >& );
-            virtual ~base_exception() throw ();
+            base_exception( const base_exception< x_derived >& a_orig );
+            virtual ~base_exception() noexcept;
+
+            base_exception< x_derived >& operator=( const base_exception< x_derived >& a_orig );
 
             template< class x_streamable >
             x_derived& operator<<( x_streamable a_fragment );
             x_derived& operator<<( const std::string& a_fragment );
             x_derived& operator<<( const char* a_fragment );
 
-            virtual const char* what() const throw();
+            virtual const char* what() const noexcept;
 
         protected:
             mutable std::string f_error;
@@ -62,47 +68,7 @@ namespace dripline
         public:
             dripline_error();
             dripline_error( const dripline_error& );
-            virtual ~dripline_error() throw ();
-    };
-
-    /*!
-     @class throw_reply
-     @author N.S. Oblath
-     @brief Object that can be thrown while processing a request to send a reply.
-
-     @details
-     The throw_reply is intended to be thrown during message processing. 
-     It's caught in endpoint::on_request_message() to translate the information into a reply message.
-
-     Three pieces of information can be transmitted:
-        1. (required) The return code is provided by an object derived from return_code. 
-          It's passed to the throw_reply in the constructor.
-        2. (optional) The return message explains the reply in human-readable terms.  It's passed 
-          to the throw_reply using operator<<().
-        3. (optional) The payload can contain further information to reply to the requstor.  
-           It's passed to the throw_reply in the constructor.  The default is a null (scarab::param) object. 
-    */
-    class DRIPLINE_API throw_reply : public base_exception< throw_reply >
-    {
-        public:
-            throw_reply();
-            throw_reply( const return_code& a_code, scarab::param_ptr_t&& a_payload_ptr = scarab::param_ptr_t(new scarab::param()) );
-            throw_reply( const throw_reply& );
-            virtual ~throw_reply() throw();
-
-            virtual const char* what() const throw();
-
-            const return_code& ret_code() const;
-            void set_return_code( const return_code& a_code );
-
-            const scarab::param& payload() const;
-            scarab::param& payload();
-            void set_payload( scarab::param_ptr_t&& a_payload );
-            const scarab::param_ptr_t& get_payload_ptr() const;
-
-        protected:
-            std::shared_ptr< return_code > f_return_code;
-            scarab::param_ptr_t f_payload;
+            virtual ~dripline_error() noexcept;
     };
 
 
@@ -113,17 +79,24 @@ namespace dripline
     {}
 
     template< typename x_derived >
-    base_exception< x_derived >::base_exception( const base_exception< x_derived >& an_error ) :
-            std::exception(),
-            f_error( an_error.f_error )
+    base_exception< x_derived >::base_exception( const base_exception< x_derived >& a_orig ) :
+            std::exception( a_orig ),
+            f_error( a_orig.f_error )
     {}
 
     template< typename x_derived >
-    base_exception< x_derived >::~base_exception() throw ()
+    base_exception< x_derived >::~base_exception() noexcept
     {}
 
     template< typename x_derived >
-    const char* base_exception< x_derived >::what() const throw ()
+    base_exception< x_derived >& base_exception< x_derived >::operator=( const base_exception< x_derived >& a_orig )
+    {
+        f_error = a_orig.f_error;
+        return *this;
+    }
+
+    template< typename x_derived >
+    const char* base_exception< x_derived >::what() const noexcept
     {
         return f_error.c_str();
     }
@@ -152,38 +125,6 @@ namespace dripline
         return *static_cast< x_derived* >(this);
     }
 
-    inline const return_code& throw_reply::ret_code() const
-    {
-        return *f_return_code;
-    }
-
-    inline void throw_reply::set_return_code( const return_code& a_code )
-    {
-        f_return_code.reset( new copy_code( a_code ) );
-        return;
-    }
-
-    inline const scarab::param& throw_reply::payload() const
-    {
-        return *f_payload;
-    }
-
-    inline scarab::param& throw_reply::payload()
-    {
-        return *f_payload;
-    }
-
-    inline void throw_reply::set_payload( scarab::param_ptr_t&& a_payload )
-    {
-        f_payload = std::move( a_payload );
-        return;
-    }
-
-    inline const scarab::param_ptr_t& throw_reply::get_payload_ptr() const
-    {
-        return f_payload;
-    }
-
 }
 
-#endif /* DRIPLINE_ERROR_HH_ */
+#endif /* DRIPLINE_EXCEPTIONS_HH_ */

@@ -28,6 +28,10 @@ message( STATUS "Dripline protocol version: ${DRIPLINE_PROTOCOL_VERSION}" )
 
 option( Dripline_BUILD_EXAMPLES "Flag to enable building the examples" FALSE )
 
+option( Dripline_BUILD_PYTHON "Add the Python-dependent components" FALSE )
+
+set ( Dripline_PYTHON_THROW_REPLY_KEYWORD "ThrowReply" CACHE STRING "Keyword used to indicate a throw_reply from Python (only used if building with dripline-python; should match the name of the class used in Python to throw replies)" )
+
 set( Dripline_MAX_PAYLOAD_SIZE "10000" CACHE STRING "Maximum payload size (bytes)" )
 
 # always use C++11
@@ -48,6 +52,18 @@ set_option( Scarab_BUILD_AUTHENTICATION TRUE )
 
 pbuilder_add_submodule( Scarab scarab/library )
 
+if( Dripline_BUILD_PYTHON )
+    message( STATUS "Dripline-cpp is being built with Python" )
+    set( Scarab_BUILD_PYTHON TRUE )
+    add_definitions( -DDL_PYTHON )
+    add_definitions( -DPYTHON_THROW_REPLY_KEYWORD=${Dripline_PYTHON_THROW_REPLY_KEYWORD} )
+    include_directories( ${PYTHON_INCLUDE_DIRS} )    
+else( Dripline_BUILD_PYTHON )
+    message( STATUS "Dripline-cpp is being built without Python" )
+    set( Scarab_BUILD_PYTHON FALSE )
+    remove_definitions( -DDL_PYTHON )
+    remove_definitions( -DPYTHON_THROW_REPLY_KEYWORD=${Dripline_PYTHON_THROW_REPLY_KEYWORD} )
+endif( Dripline_BUILD_PYTHON )
 
 ##################
 # SimpleAmqpClient

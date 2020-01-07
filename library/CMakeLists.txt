@@ -27,6 +27,7 @@ set( dripline_HEADERS
     scheduler.hh
     service.hh
     specifier.hh
+    throw_reply.hh
     uuid.hh
     version_store.hh
 )
@@ -52,9 +53,23 @@ set( dripline_SOURCES
     return_codes.cc
     service.cc
     specifier.cc
+    throw_reply.cc
     uuid.cc
     version_store.cc
 )
+
+if( Scarab_BUILD_PYTHON )
+    set( dripline_HEADERS 
+        ${dripline_HEADERS}
+        reply_cache.hh
+    )
+
+    set( dripline_SOURCES
+        ${dripline_SOURCES}
+        reply_cache.cc
+    )
+endif( Scarab_BUILD_PYTHON )
+
 
 configure_file( dripline_version.cc.in ${CMAKE_CURRENT_BINARY_DIR}/dripline_version.cc )
 set( dripline_SOURCES

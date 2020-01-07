@@ -5,7 +5,7 @@
  *      Author: N.S. Oblath
  */
 
-#include "dripline_exceptions.hh"
+#include "throw_reply.hh"
 
 #include "logger.hh"
 
@@ -47,7 +47,7 @@ TEST_CASE( "throw_reply", "[error]" )
     catch( const dripline::throw_reply& e )
     {
         REQUIRE( e.ret_code().rc_value() == dripline::dl_success::s_value );
-        REQUIRE( e.what() == std::string("Hello") );
+        REQUIRE( e.return_message() == std::string("Hello") );
         REQUIRE( e.payload().as_value().as_uint() == 10 );
     }
     catch( std::exception& e )
@@ -64,7 +64,12 @@ TEST_CASE( "throw_reply", "[error]" )
     catch( const dripline::throw_reply& e )
     {
         REQUIRE( e.ret_code().rc_value() == dripline::dl_success::s_value );
-        REQUIRE( e.what() == std::string("Hello") );
+        REQUIRE( e.return_message() == std::string("Hello") );
         REQUIRE( e.payload().as_value().as_uint() == 5 );
     }
+
+    // check that we can access the python throw-reply keyword
+#ifdef DL_PYTHON
+    REQUIRE( dripline::throw_reply::py_throw_reply_keyword() == TOSTRING(PYTHON_THROW_REPLY_KEYWORD) ); 
+#endif
 }

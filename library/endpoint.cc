@@ -11,8 +11,16 @@
 
 #include "dripline_exceptions.hh"
 #include "service.hh"
+#include "throw_reply.hh"
 
 #include "logger.hh"
+
+#ifdef DL_PYTHON
+#include "reply_cache.hh"
+
+#include "pybind11/pybind11.h"
+#include "pybind11/pytypes.h"
+#endif
 
 LOGGER( dlog, "endpoint" );
 
@@ -24,7 +32,8 @@ namespace dripline
             f_service(),
             f_lockout_tag(),
             f_lockout_key( generate_nil_uuid() )
-    {}
+    {
+    }
 
     endpoint::endpoint( const endpoint& a_orig ) :
             f_name( a_orig.f_name ),
@@ -149,17 +158,48 @@ namespace dripline
         {
             if( e.ret_code().rc_value() == dl_success::s_value )
             {
-                LINFO( dlog, "Replying with: " << e.what() );
+                LINFO( dlog, "Replying with: " << e.return_message() );
             }
             else
             {
-                LWARN( dlog, "Replying with: " << e.what() );
+                LWARN( dlog, "Replying with: " << e.return_message() );
             }
-            t_reply = a_request->reply( e.ret_code(), e.what() );
+            t_reply = a_request->reply( e.ret_code(), e.return_message() );
             t_reply->set_payload( e.get_payload_ptr()->clone() );
             // don't rethrow a throw_reply
             // reply to be sent outside the catch block
         }
+#ifdef DL_PYTHON
+        catch( const pybind11::error_already_set& e )
+        {
+            // check whether the error message from python starts with the keyword
+            // the keyword should be the name of the python class
+            if( std::string(e.what()).substr(0, throw_reply::py_throw_reply_keyword().size()) == throw_reply::py_throw_reply_keyword() )
+            {
+                reply_cache* t_reply_cache = reply_cache::get_instance();
+                if( t_reply_cache->ret_code().rc_value() == dl_success::s_value )
+                {
+                    LINFO( dlog, "Replying with: " << t_reply_cache->return_message() );
+                }
+                else
+                {
+                    LWARN( dlog, "Replying with: " << t_reply_cache->return_message() );
+                }
+                t_reply = a_request->reply( t_reply_cache->ret_code(),t_reply_cache->return_message() );
+                t_reply->set_payload( t_reply_cache->get_payload_ptr()->clone() );
+                // don't rethrow a throw_reply
+                // reply to be sent outside the catch block
+            }
+            else
+            {
+                // treat the python exception as a standard exception
+                LERROR( dlog, "Caught exception from Python: " << e.what() );
+                t_reply = a_request->reply( dl_unhandled_exception(), e.what() );
+                t_replier(); // send the reply before rethrowing
+                throw; // unhandled exceptions should rethrow because they're by definition unhandled
+            }
+        }
+#endif
         catch( const std::exception& e )
         {
             LERROR( dlog, "Caught exception: " << e.what() );
