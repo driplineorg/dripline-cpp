@@ -26,15 +26,6 @@ LOGGER( dlog, "endpoint" );
 
 namespace dripline
 {
-#ifdef DL_PYTHON
-    std::string endpoint::s_py_throw_reply_keyword = STRINGIFY(PYTHON_THROW_REPLY_KEYWORD);
-
-    std::string& endpoint::py_throw_reply_keyword()
-    {
-        return s_py_throw_reply_keyword;
-    }
-
-#endif
 
     endpoint::endpoint( const std::string& a_name ) :
             f_name( a_name ),
@@ -183,7 +174,7 @@ namespace dripline
         {
             // check whether the error message from python starts with the keyword
             // the keyword should be the name of the python class
-            if( std::string(e.what()).substr(0, endpoint::s_py_throw_reply_keyword.size()) == endpoint::s_py_throw_reply_keyword )
+            if( std::string(e.what()).substr(0, throw_reply::py_throw_reply_keyword().size()) == throw_reply::py_throw_reply_keyword() )
             {
                 reply_cache* t_reply_cache = reply_cache::get_instance();
                 if( t_reply_cache->ret_code().rc_value() == dl_success::s_value )

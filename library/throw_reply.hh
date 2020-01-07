@@ -65,7 +65,7 @@ namespace dripline
             const scarab::param_ptr_t& get_payload_ptr() const noexcept;
 
 #ifdef DL_PYTHON
-            mv_referrable( std::string, py_throw_reply_keyword );
+            mv_referrable_static( std::string, py_throw_reply_keyword );
 #endif
 
         protected:

@@ -67,4 +67,9 @@ TEST_CASE( "throw_reply", "[error]" )
         REQUIRE( e.return_message() == std::string("Hello") );
         REQUIRE( e.payload().as_value().as_uint() == 5 );
     }
+
+    // check that we can access the python throw-reply keyword
+#ifdef DL_PYTHON
+    REQUIRE( dripline::throw_reply::py_throw_reply_keyword() == TOSTRING(PYTHON_THROW_REPLY_KEYWORD) ); 
+#endif
 }

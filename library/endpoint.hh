@@ -138,17 +138,6 @@ namespace dripline
             /// Override this to enable handling of alerts.
             virtual void on_alert_message( const alert_ptr_t a_alert );
 
-#ifdef DL_PYTHON
-            //mv_referrable_static( std::string, py_throw_reply_keyword );
-        protected:
-            static std::string s_py_throw_reply_keyword;
-        public:
-            static std::string& py_throw_reply_keyword();
-//            {
-//                return s_py_throw_reply_keyword;
-//            }
-#endif
-
         public:
             //*************************
             // Default request handlers
