@@ -103,6 +103,19 @@ namespace dripline
         return return_codes;
     }
 
+    std::map< unsigned, return_code* > get_return_codes_value_map()
+    {
+        std::map< unsigned, return_code* > the_return_codes;
+        scarab::indexed_factory< unsigned, return_code >* the_factory = scarab::indexed_factory< unsigned, return_code >::get_instance();
+        auto anIt = the_factory->begin();
+        while (anIt != the_factory->end() )
+        {
+            the_return_codes.insert( std::map< unsigned, return_code*>::value_type(std::make_pair( anIt->first, anIt->second->create() ) ));
+            anIt++;
+        }
+        return the_return_codes;
+    }
+
     custom_return_code_registrar::custom_return_code_registrar( const unsigned& a_value, const std::string& a_name, const std::string& a_description ) :
             scarab::base_registrar< return_code >(),
             f_value( a_value ),
