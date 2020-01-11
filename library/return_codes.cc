@@ -103,7 +103,7 @@ namespace dripline
         return return_codes;
     }
 
-    std::map< unsigned, return_code* > get_return_codes_value_map()
+    std::map< unsigned, return_code* > get_return_codes_map()
     {
         std::map< unsigned, return_code* > the_return_codes;
         scarab::indexed_factory< unsigned, return_code >* the_factory = scarab::indexed_factory< unsigned, return_code >::get_instance();
