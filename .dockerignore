@@ -38,6 +38,3 @@
 
 # Build directories
 build*/
-
-# Git
-.git/
