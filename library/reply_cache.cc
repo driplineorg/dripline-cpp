@@ -14,7 +14,7 @@ namespace dripline
 
     void DRIPLINE_API set_reply_cache( const return_code& a_code, const std::string& a_message, scarab::param_ptr_t a_payload_ptr )
     {
-        reply_cache::get_instance()->set_cache( a_code, a_message, a_payload_ptr );
+        reply_cache::get_instance()->set_cache( a_code, a_message, std::move(a_payload_ptr) );
         return;
     }
 
