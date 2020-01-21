@@ -23,6 +23,7 @@ COPY executables /usr/local/src/executables
 COPY testing /usr/local/src/testing
 COPY examples /usr/local/src/examples
 COPY CMakeLists.txt /usr/local/src/CMakeLists.txt
+COPY dripline_shield.json /usr/local/src/dripline_shield.json
 
 RUN mkdir -p /usr/local/src/build && \
     cd /usr/local/src/build && \
