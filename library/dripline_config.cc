@@ -24,8 +24,6 @@ namespace dripline
     {
         // default dripline configuration
 
-        add( "broker-port", 5672 );
-        add( "broker", "localhost" );
 #ifdef DRIPLINE_AUTH_FILE
         //add logic for default auth file if it exists
         scarab::path t_auth_default_path = scarab::expand_path( TOSTRING( DRIPLINE_AUTH_FILE ) );
@@ -46,6 +44,13 @@ namespace dripline
         add( "message-wait-ms", 1000 );
         add( "heartbeat-routing-key", "heartbeat" );
         add( "heartbeat-interval-s", 60 );
+
+        // broker and broker-port can be specified in the config.
+        // however, we don't give default values so that they can be specified in the auth file.
+        // the dripline config will override the auth file if it's given there.
+        //add( "broker-port", 5672 );
+        //add( "broker", "localhost" );
+
     }
 
     dripline_config::~dripline_config()
