@@ -80,7 +80,7 @@ namespace dripline
     {
         std::stringstream stream;
         stream << a_fragment;
-        stream >> f_return_message;
+        f_return_message += stream.str();
         return *this;
     }
 

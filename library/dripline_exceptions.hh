@@ -107,7 +107,7 @@ namespace dripline
     {
         std::stringstream stream;
         stream << a_fragment;
-        stream >> f_error;
+        f_error += stream.str();
         return *static_cast< x_derived* >(this);
     }
 
