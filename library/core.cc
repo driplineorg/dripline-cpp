@@ -82,13 +82,18 @@ namespace dripline
             f_username = t_amqp_auth["username"]().as_string();
             f_password = t_amqp_auth["password"]().as_string();
 
+            // Override the default values for broker and broker port with those specified in the auth file, if they're there
             if( t_amqp_auth.has( "broker" ) )
             {
                 f_address = t_amqp_auth["broker"]().as_string();
             }
+            if( t_amqp_auth.has( "broker-port" ) )
+            {
+                f_port = t_amqp_auth["broker-port"]().as_uint();
+            }
         }
 
-        // config file overrides auth file and defaults
+        // config file overrides defaults (and auth file, for broker and broker-port)
         if( ! a_config.empty() )
         {
             f_address = a_config.get_value( "broker", f_address );
