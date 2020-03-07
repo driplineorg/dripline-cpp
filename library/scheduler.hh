@@ -110,7 +110,12 @@ namespace dripline
             typedef std::multimap< time_point_t, event > events_map_t;
 
             scheduler();
+            scheduler( const scheduler& ) = delete;
+            scheduler( scheduler&& );
             virtual ~scheduler();
+
+            scheduler& operator=( const scheduler& ) = delete;
+            scheduler& operator=( scheduler&& );
 
             /*!
              Schedule a one-off event
@@ -177,8 +182,34 @@ namespace dripline
     {}
 
     template< typename executor, typename clock >
+    scheduler< executor, clock>::scheduler( scheduler< executor, clock >&& a_orig ) :
+        f_exe_buffer( std::move(a_orig.f_exe_buffer) ),
+        f_cycle_time( std::move(a_orig.f_cycle_time) ),
+        f_the_executor(),
+        f_events( std::move(a_orig.f_events) ),
+        f_scheduler_mutex(),
+        f_executor_mutex(),
+        f_cv(),
+        f_scheduler_thread( std::move(a_orig.f_scheduler_thread) )
+    {}
+
+    template< typename executor, typename clock >
     scheduler< executor, clock >::~scheduler()
     {}
+
+    template< typename executor, typename clock >
+    scheduler< executor, clock>& scheduler< executor, clock >::operator=( scheduler< executor, clock >&& a_orig )
+    {
+        std::unique_lock< std::recursive_mutex >t_this_lock( f_scheduler_mutex );
+        std::unique_lock< std::recursive_mutex >t_orig_lock( a_orig.f_scheduler_mutex );
+
+        f_exe_buffer = std::move(a_orig.f_exe_buffer);
+        f_cycle_time = std::move(a_orig.f_cycle_time);
+        f_events = std::move(a_orig.f_events);
+        f_scheduler_thread = std::move(a_orig.f_scheduler_thread);
+
+        return *this;
+    }
 
     template< typename executor, typename clock >
     int scheduler< executor, clock >::schedule( executable_t an_executable, time_point_t an_exe_time )
