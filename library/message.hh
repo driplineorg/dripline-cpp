@@ -363,14 +363,14 @@ namespace dripline
 
     inline void msg_request::derived_modify_amqp_message( amqp_message_ptr /*a_amqp_msg*/, AmqpClient::Table& a_properties ) const
     {
-        a_properties.insert( AmqpClient::TableEntry( "message_operationeration", AmqpClient::TableValue(to_uint(f_message_operation)) ) );
+        a_properties.insert( AmqpClient::TableEntry( "message_operation", AmqpClient::TableValue(to_uint(f_message_operation)) ) );
         a_properties.insert( AmqpClient::TableEntry( "lockout_key", AmqpClient::TableValue(string_from_uuid(lockout_key())) ) );
         return;
     }
 
     inline void msg_request::derived_modify_message_param( scarab::param_node& a_message_node ) const
     {
-        a_message_node.add( "message_operationeration", to_uint(f_message_operation) );
+        a_message_node.add( "message_operation", to_uint(f_message_operation) );
         a_message_node.add( "lockout_key", string_from_uuid(lockout_key()) );
         return;
     }

@@ -72,6 +72,23 @@ namespace dripline
     {
     }
 
+    service::service( service&& a_orig ) :
+            scarab::cancelable(),
+            core( std::move(a_orig) ),
+            endpoint( std::move(a_orig) ),
+            listener_receiver( std::move(a_orig) ),
+            heartbeater( std::move(a_orig) ),
+            scheduler<>( std::move(a_orig) ),
+            std::enable_shared_from_this< service >(),
+            f_status( std::move(a_orig.f_status) ),
+            f_enable_scheduling( std::move(a_orig.f_enable_scheduling) ),
+            f_id( std::move(a_orig.f_id) ),
+            f_sync_children( std::move(a_orig.f_sync_children) ),
+            f_async_children( std::move(a_orig.f_async_children) ),
+            f_broadcast_key( std::move(a_orig.f_broadcast_key) )
+    {
+    }
+
     service::~service()
     {
         if( f_status >= status::listening )
@@ -80,6 +97,22 @@ namespace dripline
             std::this_thread::sleep_for( std::chrono::milliseconds(1100) );
         }
         if( f_status > status::exchange_declared ) stop();
+    }
+
+    service& service::operator=( service&& a_orig )
+    {
+        core::operator=( std::move(a_orig) );
+        endpoint::operator=( std::move(a_orig) );
+        listener_receiver::operator=( std::move(a_orig) );
+        heartbeater::operator=( std::move(a_orig) );
+        scheduler<>::operator=( std::move(a_orig) );
+        f_status = std::move(a_orig.f_status) ;
+        f_enable_scheduling = std::move(a_orig.f_enable_scheduling);
+        f_id = std::move(a_orig.f_id);
+        f_sync_children = std::move(a_orig.f_sync_children);
+        f_async_children = std::move(a_orig.f_async_children);
+        f_broadcast_key = std::move(a_orig.f_broadcast_key);
+        return *this;
     }
 
     bool service::add_child( endpoint_ptr_t a_endpoint_ptr )

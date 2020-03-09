@@ -41,6 +41,15 @@ namespace dripline
     heartbeater::~heartbeater()
     {}
 
+    heartbeater& heartbeater::operator=( heartbeater&& a_orig )
+    {
+        f_heartbeat_interval_s = std::move(a_orig.f_heartbeat_interval_s);
+        f_check_timeout_ms = std::move(a_orig.f_check_timeout_ms);
+        f_service = std::move(a_orig.f_service);
+        f_heartbeat_thread = std::move(a_orig.f_heartbeat_thread);
+        return *this;
+    }
+
     void heartbeater::execute( const std::string& a_name, uuid_t a_id, const std::string& a_routing_key )
     {
         if( ! f_service )

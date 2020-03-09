@@ -94,11 +94,11 @@ namespace dripline
             service( const scarab::param_node& a_config = scarab::param_node(), const std::string& a_queue_name = "",  const std::string& a_broker_address = "", unsigned a_port = 0, const std::string& a_auth_file = "", const bool a_make_connection = true );
             service( const bool a_make_connection, const scarab::param_node& a_config = scarab::param_node() );
             service( const service& ) = delete;
-            service( service&& ) = delete;
+            service( service&& a_orig );
             virtual ~service();
 
             service& operator=( const service& ) = delete;
-            service& operator=( service&& ) = delete;
+            service& operator=( service&& a_orig );
 
             mv_accessible( status, status );
             mv_accessible( bool, enable_scheduling );

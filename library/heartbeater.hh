@@ -55,8 +55,11 @@ namespace dripline
             ///Primary constructor.  A service pointer is required to be able to send messages.
             heartbeater( service_ptr_t a_service = service_ptr_t() );
             heartbeater( const heartbeater& ) = delete;
-            heartbeater( heartbeater&& );
+            heartbeater( heartbeater&& a_orig );
             virtual ~heartbeater();
+
+            heartbeater& operator=( const heartbeater& ) = delete;
+            heartbeater& operator=( heartbeater&& a_orig );
 
             /*!
              Starts the heartbeat process.  Heartbeat alerts are emitted every `heartbeat_interval_s` seconds.
