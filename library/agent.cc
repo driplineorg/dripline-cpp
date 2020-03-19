@@ -163,7 +163,7 @@ namespace dripline
         if( f_agent->get_is_dry_run() )
         {
             LPROG( dlog, "Request (routing key = " << f_agent->routing_key() << ";  specifier = " << f_agent->specifier() << "):\n" << *t_request );
-            f_agent->set_return( dl_warning_no_action_taken().rc_value() );
+            f_agent->set_return( dl_warning_dry_run().rc_value() );
             return;
         }
 
@@ -277,7 +277,7 @@ namespace dripline
         if( f_agent->get_is_dry_run() )
         {
             LPROG( dlog, "Reply (routing key = " << f_agent->routing_key() << ";  specifier = " << f_agent->specifier() << "):\n" << *t_reply );
-            f_agent->set_return( dl_warning_no_action_taken().rc_value() );
+            f_agent->set_return( dl_warning_dry_run().rc_value() );
             return;
         }
 
@@ -328,7 +328,7 @@ namespace dripline
         if( f_agent->get_is_dry_run() )
         {
             LPROG( dlog, "Alert (routing key = " << f_agent->routing_key() << ";  specifier = " << f_agent->specifier() << "):\n" << *t_alert );
-            f_agent->set_return( dl_warning_no_action_taken().rc_value() );
+            f_agent->set_return( dl_warning_dry_run().rc_value() );
             return;
         }
 
