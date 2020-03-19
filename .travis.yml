@@ -2,6 +2,7 @@ language: cpp
 
 stages:
   - build-test
+    if: branch = master OR branch = develop OR branch =~ /.*\\/(?i:build)$/
   - name: deploy
     if: branch = master OR branch =~ /^v\d+\.\d+\.\d+(-S*)?$/ OR branch = develop
 
