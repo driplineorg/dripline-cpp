@@ -197,10 +197,16 @@ namespace dripline
 
     sent_msg_pkg_ptr core::do_send( message_ptr_t a_message, const std::string& a_exchange, bool a_expect_reply ) const
     {
-        // throws dripline_error if it could not start sending the message
+        // throws connection_error if it could not connect with the broker
+        // throws dripline_error if there's a problem with the exchange or creating the AMQP message object(s)
         // returns the receive_reply package if the message was completely or partially sent
         // the f_successful_send flag will be set accordingly: true if completely sent; false if partially sent
-        // if there was an error, that will be returned in f_send_error_message, which will be empty otherwise
+        // if there was an error sending the message, that will be returned in f_send_error_message, which will be empty otherwise
+
+        // lambda to create a string with the basic information about the send attempt
+        auto t_diagnostic_string_maker = [a_message, this]() -> std::string {
+            return std::string("Broker: ") + f_address +"\nPort: " + std::to_string(f_port) + "\nRouting Key: " + a_message->routing_key();
+        };
 
         if ( ! f_make_connection || core::s_offline )
         {
@@ -211,12 +217,12 @@ namespace dripline
         amqp_channel_ptr t_channel = open_channel();
         if( ! t_channel )
         {
-            throw dripline_error() << "Unable to open channel to send a message to <" << a_message->routing_key() << "> using broker <" << f_address << ":" << f_port << ">";
+            throw connection_error() << "Unable to open channel to send message\n" << t_diagnostic_string_maker();
         }
 
         if( ! setup_exchange( t_channel, a_exchange ) )
         {
-            throw dripline_error() << "Unable to setup the exchange <" << a_exchange << ">";
+            throw dripline_error() << "Unable to setup the exchange <" << a_exchange << "> to send message\n" << t_diagnostic_string_maker();
         }
 
         // create empty receive-reply object
@@ -243,7 +249,7 @@ namespace dripline
         amqp_split_message_ptrs t_amqp_messages = a_message->create_amqp_messages( f_max_payload_size );
         if( t_amqp_messages.empty() )
         {
-            throw dripline_error() << "Unable to convert the dripline::message object to AMQP messages";
+            throw dripline_error() << "Unable to convert the dripline::message object to AMQP message(s) to be sent\n" << t_diagnostic_string_maker();
         }
 
         try
@@ -260,16 +266,28 @@ namespace dripline
             t_receive_reply->f_successful_send = true;
             t_receive_reply->f_send_error_message.clear();
         }
+        catch( AmqpClient::ConnectionClosedException& e )
+        {
+            LERROR( dlog, "Unable to send message because the connection is closed: " << e.what() );
+            throw connection_error() << "Unable to send message because the connection is closed: " << e.what() << '\n' << t_diagnostic_string_maker();
+        }
+        catch( AmqpClient::AmqpLibraryException& e )
+        {
+            LERROR( dlog, "AMQP error while sending message: " << e.what() );
+            t_receive_reply->f_successful_send = false;
+            t_receive_reply->f_send_error_message = std::string("AMQP error while sending message: ") + std::string(e.what()) + '\n' + t_diagnostic_string_maker();
+        }
         catch( AmqpClient::MessageReturnedException& e )
         {
-            LERROR( dlog, "Message could not be sent: " << e.what() );
+            LERROR( dlog, "Message was returned: " << e.what() );
             t_receive_reply->f_successful_send = false;
-            t_receive_reply->f_send_error_message = std::string("AMQP error while sending message: ") + std::string(e.what());
+            t_receive_reply->f_send_error_message = std::string("Message was returned: ") + std::string(e.what()) + '\n' + t_diagnostic_string_maker();
         }
         catch( std::exception& e )
         {
+            LERROR( dlog, "Error while sending message: " << e.what() );
             t_receive_reply->f_successful_send = false;
-            t_receive_reply->f_send_error_message = std::string("Error publishing request to queue: ") + std::string(e.what());
+            t_receive_reply->f_send_error_message = std::string("Error while sending message: ") + std::string(e.what()) + '\n' + t_diagnostic_string_maker();
         }
 
         return t_receive_reply;
