@@ -35,6 +35,18 @@ namespace dripline
             virtual ~dripline_error() noexcept = default;
     };
 
+    /*!
+     @class connection_error
+     @author N.S. Oblath
+     @brief Error indicating a problem with the connection to the broker
+    */
+    class DRIPLINE_API connection_error : public scarab::base_exception< connection_error >
+    {
+        public:
+            connection_error() = default;
+            connection_error( const connection_error& ) = default;
+            virtual ~connection_error() noexcept = default;
+    };
 
 }
 
