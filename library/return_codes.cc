@@ -122,7 +122,7 @@ namespace dripline
         {
             the_return_codes.emplace( std::make_pair( 
                     code_entry->first, 
-                    code_entry->second->create()
+                    std::unique_ptr<return_code>( code_entry->second->create() )
                 ) );
         }
         return the_return_codes;
