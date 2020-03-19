@@ -84,9 +84,22 @@ namespace dripline
 
     void add_return_code( unsigned a_value, const std::string& a_name, const std::string& a_description )
     {
-        static std::vector< custom_return_code_registrar > f_rc_registrars;
-        f_rc_registrars.emplace_back( a_value, a_name, a_description );
+        static std::vector< std::unique_ptr<custom_return_code_registrar> > f_rc_registrars;
+        f_rc_registrars.emplace_back( new custom_return_code_registrar(a_value, a_name, a_description) );
         return;
+    }
+
+    bool check_and_add_return_code( unsigned a_value, const std::string& a_name, const std::string& a_description )
+    {
+        try
+        {
+            add_return_code( a_value, a_name, a_description );
+            return true;
+        }
+        catch( const scarab::error& )
+        {
+            return false;
+        }
     }
 
     std::vector< unsigned > get_return_code_values()
@@ -94,24 +107,23 @@ namespace dripline
         std::vector< unsigned > return_codes;
         scarab::indexed_factory< unsigned, return_code >* the_factory = scarab::indexed_factory< unsigned, return_code >::get_instance();
         LDEBUG( rclog, "factory is at: " << the_factory );
-        auto code_entry = the_factory->begin();
-        while (code_entry != the_factory->end() )
+        for( auto code_entry = the_factory->begin(); code_entry != the_factory->end(); ++code_entry )
         {
             return_codes.push_back( code_entry->first );
-            code_entry++;
         }
         return return_codes;
     }
 
-    std::map< unsigned, return_code* > get_return_codes_map()
+    std::map< unsigned, std::unique_ptr<return_code> > get_return_codes_map()
     {
-        std::map< unsigned, return_code* > the_return_codes;
+        std::map< unsigned, std::unique_ptr<return_code> > the_return_codes;
         scarab::indexed_factory< unsigned, return_code >* the_factory = scarab::indexed_factory< unsigned, return_code >::get_instance();
-        auto anIt = the_factory->begin();
-        while (anIt != the_factory->end() )
+        for( auto code_entry = the_factory->begin(); code_entry != the_factory->end(); ++code_entry )
         {
-            the_return_codes.insert( std::map< unsigned, return_code*>::value_type(std::make_pair( anIt->first, anIt->second->create() ) ));
-            anIt++;
+            the_return_codes.emplace( std::make_pair( 
+                    code_entry->first, 
+                    std::unique_ptr<return_code>( code_entry->second->create() )
+                ) );
         }
         return the_return_codes;
     }
@@ -140,6 +152,5 @@ namespace dripline
     {
         return dynamic_cast< return_code* >( new copy_code( f_value, f_name, f_description ) );
     }
-
 
 } /* namespace dripline */
