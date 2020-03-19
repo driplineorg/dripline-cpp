@@ -24,6 +24,7 @@
 #include "indexed_factory.hh"
 #include "macros.hh"
 
+#include <memory>
 #include <set>
 #include <string>
 #include <vector>

@@ -11,7 +11,6 @@
 
 #include "logger.hh"
 
-#include <memory>
 #include <vector>
 
 LOGGER( rclog, "return_codes" );
