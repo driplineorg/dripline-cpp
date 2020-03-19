@@ -49,6 +49,9 @@ namespace dripline
     IMPLEMENT_DL_RET_CODE( success, 0, "Success" );
 
     IMPLEMENT_DL_RET_CODE( warning_no_action_taken, 1, "No Action Taken" );
+    IMPLEMENT_DL_RET_CODE( warning_deprecated_feature, 2, "Deprecated Feature" );
+    IMPLEMENT_DL_RET_CODE( warning_dry_run, 3, "Dry Run" );
+    IMPLEMENT_DL_RET_CODE( warning_offline, 4, "Offline" );
 
     IMPLEMENT_DL_RET_CODE( amqp_error, 100, "AMQP Error" );
     IMPLEMENT_DL_RET_CODE( amqp_error_broker_connection, 101, "AMQP Connection Error" );
@@ -67,7 +70,7 @@ namespace dripline
     IMPLEMENT_DL_RET_CODE( message_error_invalid_method, 306, "Invalid Method" );
     IMPLEMENT_DL_RET_CODE( message_error_access_denied, 307, "Access Denied" );
     IMPLEMENT_DL_RET_CODE( message_error_invalid_key, 308, "Invalid Key" );
-    IMPLEMENT_DL_RET_CODE( message_error_dripline_deprecated, 309, "Deprecated Feature" );
+    // 309 was formerly "Deprecated Feature"
     IMPLEMENT_DL_RET_CODE( message_error_invalid_specifier, 310, "Invalid Specifier" );
 
     IMPLEMENT_DL_RET_CODE( client_error, 400, "Client Error" );
