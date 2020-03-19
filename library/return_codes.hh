@@ -121,8 +121,8 @@ namespace dripline
     DEFINE_DL_RET_CODE( success, DRIPLINE_API );
 
     DEFINE_DL_RET_CODE( warning_no_action_taken, DRIPLINE_API );
-    DEFINE_DL_RET_CODE( warning_deprecated_feature, DRIPILNE_API );
-    DEFINE_DL_RET_CODE( warning_dry_run, DRIPINE_API );
+    DEFINE_DL_RET_CODE( warning_deprecated_feature, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( warning_dry_run, DRIPLINE_API );
     DEFINE_DL_RET_CODE( warning_offline, DRIPLINE_API );
 
     DEFINE_DL_RET_CODE( amqp_error, DRIPLINE_API );
