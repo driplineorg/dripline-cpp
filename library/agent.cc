@@ -178,9 +178,22 @@ namespace dripline
         {
             t_receive_reply = a_core.send( t_request );
         }
+        catch( message_ptr_t )
+        {
+            LWARN( dlog, "Operating in offline mode; message not sent" );
+            f_agent->set_return( dl_warning_offline().rc_value() );
+            return;
+        }
+        catch( connection_error& e )
+        {
+            LERROR( dlog, "Unable to connect to the broker:\n" << e.what() );
+            f_agent->set_return( dl_amqp_error_broker_connection().rc_value() );
+            return;
+        }
         catch( dripline_error& e )
         {
             LERROR( dlog, "Unable to send request:\n" << e.what() );
+            f_agent->set_return( dl_client_error_unable_to_send().rc_value() );
             return;
         }
 
@@ -288,9 +301,22 @@ namespace dripline
         {
             t_msg_sent = a_core.send( t_reply );
         }
+        catch( message_ptr_t )
+        {
+            LWARN( dlog, "Operating in offline mode; message not sent" );
+            f_agent->set_return( dl_warning_offline().rc_value() );
+            return;
+        }
+        catch( connection_error& e )
+        {
+            LERROR( dlog, "Unable to connect to the broker:\n" << e.what() );
+            f_agent->set_return( dl_amqp_error_broker_connection().rc_value() );
+            return;
+        }
         catch( dripline_error& e )
         {
             LERROR( dlog, "Unable to send reply:\n" << e.what() );
+            f_agent->set_return( dl_client_error_unable_to_send().rc_value() );
             return;
         }
 
@@ -339,9 +365,22 @@ namespace dripline
         {
             t_msg_sent = a_core.send( t_alert );
         }
+        catch( message_ptr_t )
+        {
+            LWARN( dlog, "Operating in offline mode; message not sent" );
+            f_agent->set_return( dl_warning_offline().rc_value() );
+            return;
+        }
+        catch( connection_error& e )
+        {
+            LERROR( dlog, "Unable to connect to the broker:\n" << e.what() );
+            f_agent->set_return( dl_amqp_error_broker_connection().rc_value() );
+            return;
+        }
         catch( dripline_error& e )
         {
             LERROR( dlog, "Unable to send alert:\n" << e.what() );
+            f_agent->set_return( dl_client_error_unable_to_send().rc_value() );
             return;
         }
 
