@@ -2,6 +2,7 @@ language: cpp
 
 stages:
   - build-test
+    if: branch = master OR branch = develop OR branch =~ /.*\\/(?i:build)$/ or type = pull_request
   - name: deploy
     if: branch = master OR branch =~ /^v\d+\.\d+\.\d+(-S*)?$/ OR branch = develop
 
@@ -20,7 +21,7 @@ jobs:
         - make
     - stage: build-test
       os: linux
-      dist: xenial
+      dist: bionic
       compiler: gcc
       addons:
         apt:
@@ -38,7 +39,7 @@ jobs:
         - make
     - stage: build-test
       os: linux
-      dist: xenial
+      dist: bionic
       compiler: clang
       addons:
         apt:
@@ -56,7 +57,7 @@ jobs:
         - make
     - stage: deploy
       os: linux
-      dist: xenial
+      dist: bionic
       services:
         - docker
       addons:
