@@ -247,10 +247,33 @@ namespace dripline
                  "    Return message: " << a_reply->return_message() << '\n' <<
                  "    Payload:\n" << a_reply->payload() );
 
-        if( ! f_service->send( a_reply ) )
+        sent_msg_pkg_ptr t_receive_reply;
+        try
         {
-            LWARN( dlog, "Something went wrong while sending the reply" );
+            t_receive_reply = f_service->send( a_reply );
         }
+        catch( message_ptr_t )
+        {
+            LWARN( dlog, "Operating in offline mode; message not sent" );
+            return;
+        }
+        catch( connection_error& e )
+        {
+            LERROR( dlog, "Unable to connect to the broker:\n" << e.what() );
+            return;
+        }
+        catch( dripline_error& e )
+        {
+            LERROR( dlog, "Dripline error while sending reply:\n" << e.what() );
+            return;
+        }
+
+        if( ! t_receive_reply->f_successful_send )
+        {
+            LERROR( dlog, "Failed to send reply:\n" + t_receive_reply->f_send_error_message );
+            return;
+        }
+
         return;
     }
 
