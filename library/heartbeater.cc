@@ -88,7 +88,30 @@ namespace dripline
                 LDEBUG( dlog, "Sending heartbeat" );
                 // reset message ID so it's different for each heartbeat
                 t_alert_ptr->message_id() = string_from_uuid( generate_random_uuid() );
-                f_service->send( t_alert_ptr );
+
+                sent_msg_pkg_ptr t_receive_reply;
+                try
+                {
+                    t_receive_reply = f_service->send( t_alert_ptr );
+                }
+                catch( message_ptr_t )
+                {
+                    LWARN( dlog, "Operating in offline mode; message not sent" );
+                }
+                catch( connection_error& e )
+                {
+                    LERROR( dlog, "Unable to connect to the broker:\n" << e.what() );
+                }
+                catch( dripline_error& e )
+                {
+                    LERROR( dlog, "Dripline error while sending reply:\n" << e.what() );
+                }
+
+                if( ! t_receive_reply->f_successful_send )
+                {
+                    LERROR( dlog, "Failed to send reply:\n" + t_receive_reply->f_send_error_message );
+                }
+                
                 t_next_heartbeat_at = std::chrono::steady_clock().now() + std::chrono::seconds( f_heartbeat_interval_s );
             }
         }

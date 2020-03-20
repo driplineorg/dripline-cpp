@@ -51,14 +51,22 @@ namespace dripline
                 }
                 if( ! t_mar->f_wait_for_send_pkg->f_sent_msg_pkg_ptr->f_successful_send )
                 {
-                    LWARN( dlog, "Message sending failed: " << t_mar->f_wait_for_send_pkg->f_sent_msg_pkg_ptr->f_send_error_message << '\n' << *t_mar->f_message );
+                    LERROR( dlog, "Message sending failed: " << t_mar->f_wait_for_send_pkg->f_sent_msg_pkg_ptr->f_send_error_message << '\n' << *t_mar->f_message );
                 }
                 t_mar->f_wait_for_send_pkg->f_condition_var.notify_one();
                 continue;
             }
+            catch( message_ptr_t )
+            {
+                LWARN( dlog, "Operating in offline mode; message not sent" );
+            }
+            catch( connection_error& e )
+            {
+                LERROR( dlog, "Unable to connect to the broker:\n" << e.what() << '\n' << *t_mar->f_message );
+            }
             catch( dripline_error& e )
             {
-                LWARN( dlog, "Unable to send message: " << e.what() << '\n' << *t_mar->f_message );
+                LERROR( dlog, "Dripline error while sending reply:\n" << e.what() << '\n' << *t_mar->f_message );
             }
 
         }
