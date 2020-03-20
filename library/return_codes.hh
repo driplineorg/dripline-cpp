@@ -7,7 +7,8 @@
  *  This file contains the basis for the extensible return code system.
  *  Return codes have a name and a value (unsigned integer).
  *  The class name corresponding to your return code will be dl_[name].
- *  The integer values must be unique, and that uniqueness is enforced in dripline-cpp at run time.
+ *  The integer values must be unique, and that uniqueness is enforced in dripline-cpp at run time.  
+ *  If a non-unique return code is added, a scarab::error will be thrown.
  *
  *  New return codes are created using the macro DEFINE_DL_RET_CODE or DEFINE_DL_RET_CODE_NOAPI in a header file,
  *  and the macro IMPLEMENT_DL_RET_CODE in a source file.
@@ -23,6 +24,7 @@
 #include "indexed_factory.hh"
 #include "macros.hh"
 
+#include <memory>
 #include <set>
 #include <string>
 #include <vector>
@@ -156,9 +158,14 @@ namespace dripline
     // Custom return codes
     //****************
 
+    /// Helper function to add a return code (primarily for python binding); scarab::error will be thrown if the value is not unique.
     void add_return_code( unsigned a_value, const std::string& a_name, const std::string& a_description );
+    /// Helper function to add a return code (primarily for python binding)
+    /// A return of `true` means the return code was added.
+    /// A return of `false` means the return code was not added because it already exists.
+    bool check_and_add_return_code( unsigned a_value, const std::string& a_name, const std::string& a_description );
     std::vector< unsigned > get_return_code_values();
-    std::map< unsigned, return_code* > get_return_codes_map();
+    std::map< unsigned, std::unique_ptr<return_code> > get_return_codes_map();
 
     class custom_return_code_registrar : public scarab::base_registrar< return_code >
     {
