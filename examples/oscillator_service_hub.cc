@@ -119,7 +119,7 @@ namespace dripline
             t_reply_node.add( "value", t_time_arr );
             return a_request->reply( dl_success(), "Get request succeeded", std::move(t_reply_payload) );
         }
-        return a_request->reply( dl_device_error(), "Time decoding failed" );
+        return a_request->reply( dl_resource_error(), "Time decoding failed" );
     }
 */
 

@@ -414,7 +414,7 @@ namespace dripline
         uuid_t t_new_key = enable_lockout( a_request->get_sender_info(), a_request->lockout_key() );
         if( t_new_key.is_nil() )
         {
-            return a_request->reply( dl_device_error(), "Unable to lock server" );;
+            return a_request->reply( dl_resource_error(), "Unable to lock server" );;
         }
 
         scarab::param_ptr_t t_payload_ptr( new scarab::param_node() );
@@ -436,7 +436,7 @@ namespace dripline
         {
             return a_request->reply( dl_success(), "Server unlocked" );
         }
-        return a_request->reply( dl_device_error(), "Failed to unlock server" );;
+        return a_request->reply( dl_resource_error(), "Failed to unlock server" );;
     }
 
     reply_ptr_t endpoint::handle_set_condition_request( const request_ptr_t a_request )

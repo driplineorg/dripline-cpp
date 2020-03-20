@@ -126,14 +126,16 @@ namespace dripline
     DEFINE_DL_RET_CODE( warning_deprecated_feature, DRIPLINE_API );
     DEFINE_DL_RET_CODE( warning_dry_run, DRIPLINE_API );
     DEFINE_DL_RET_CODE( warning_offline, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( warning_sub_service, DRIPLINE_API );
 
     DEFINE_DL_RET_CODE( amqp_error, DRIPLINE_API );
     DEFINE_DL_RET_CODE( amqp_error_broker_connection, DRIPLINE_API );
     DEFINE_DL_RET_CODE( amqp_error_routingkey_notfound, DRIPLINE_API );
 
-    DEFINE_DL_RET_CODE( device_error, DRIPLINE_API );
-    DEFINE_DL_RET_CODE( device_error_connection, DRIPLINE_API );
-    DEFINE_DL_RET_CODE( device_error_no_resp, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( resource_error, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( resource_error_connection, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( resource_error_no_resp, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( resource_error_sub_service, DRIPLINE_API );
 
     DEFINE_DL_RET_CODE( service_error, DRIPLINE_API );
     DEFINE_DL_RET_CODE( service_error_no_encoding, DRIPLINE_API );
