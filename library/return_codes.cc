@@ -60,7 +60,7 @@ namespace dripline
 
     IMPLEMENT_DL_RET_CODE( resource_error, 200, "Generic Resource Error" );
     IMPLEMENT_DL_RET_CODE( resource_error_connection, 201, "Resource Connection Error" );
-    IMPLEMENT_DL_RET_CODE( resource_error_no_resp, 202, "No Response Error" );
+    IMPLEMENT_DL_RET_CODE( resource_error_no_response, 202, "No Response Error" );
     IMPLEMENT_DL_RET_CODE( resource_error_sub_service, 203, "Sub-Service Error" );
 
     IMPLEMENT_DL_RET_CODE( service_error, 300, "Generic Service Error" );
