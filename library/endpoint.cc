@@ -117,13 +117,13 @@ namespace dripline
                     const scarab::param_node& t_payload = a_request->payload().as_node();
                     if( t_payload.has("error") ) t_message += "; " + t_payload["error"]().as_string();
                 }
-                throw throw_reply( dl_message_error_decoding_fail{}, a_request->get_payload_ptr()->clone() ) << "Request message was not valid";
+                throw throw_reply( dl_service_error_decoding_fail{}, a_request->get_payload_ptr()->clone() ) << "Request message was not valid";
             }
 
             // the lockout key must be valid
             if( ! a_request->get_lockout_key_valid() )
             {
-                throw throw_reply( dl_message_error_invalid_key{} ) << "Lockout key could not be parsed";
+                throw throw_reply( dl_service_error_invalid_key{} ) << "Lockout key could not be parsed";
             }
 
             switch( a_request->get_message_operation() )
@@ -149,7 +149,7 @@ namespace dripline
                     break;
                 }
                 default:
-                    throw throw_reply( dl_message_error_invalid_method() ) << "Unrecognized message operation: <" << a_request->get_message_type() << ">";
+                    throw throw_reply( dl_service_error_invalid_method() ) << "Unrecognized message operation: <" << a_request->get_message_type() << ">";
                     break;
             } // end switch on message type
             // reply to be sent outside the try block
@@ -297,7 +297,7 @@ namespace dripline
             t_conv << a_request->lockout_key();
             std::string t_message( "Request denied due to lockout (key used: " + t_conv.str() + ")" );
             LINFO( dlog, t_message );
-            return a_request->reply( dl_message_error_access_denied(), t_message );
+            return a_request->reply( dl_service_error_access_denied(), t_message );
         }
 
         return do_run_request( a_request );
@@ -332,7 +332,7 @@ namespace dripline
             t_conv << a_request->lockout_key();
             std::string t_message( "Request denied due to lockout (key used: " + t_conv.str() + ")" );
             LINFO( dlog, t_message );
-            return a_request->reply( dl_message_error_access_denied(), t_message );
+            return a_request->reply( dl_service_error_access_denied(), t_message );
         }
 
         return do_set_request( a_request );
@@ -357,7 +357,7 @@ namespace dripline
             t_conv << a_request->lockout_key();
             std::string t_message( "Request denied due to lockout (key used: " + t_conv.str() + ")" );
             LINFO( dlog, t_message );
-            return a_request->reply( dl_message_error_access_denied(), t_message );
+            return a_request->reply( dl_service_error_access_denied(), t_message );
         }
 
         if( t_instruction == "lock" )

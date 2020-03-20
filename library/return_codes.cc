@@ -61,17 +61,17 @@ namespace dripline
     IMPLEMENT_DL_RET_CODE( device_error_connection, 201, "Connection Error" );
     IMPLEMENT_DL_RET_CODE( device_error_no_resp, 202, "No Response Error" );
 
-    IMPLEMENT_DL_RET_CODE( message_error, 300, "Dripline Message Error" );
-    IMPLEMENT_DL_RET_CODE( message_error_no_encoding, 301, "No Message Encoding" );
-    IMPLEMENT_DL_RET_CODE( message_error_decoding_fail, 302, "Decoding Failed" );
-    IMPLEMENT_DL_RET_CODE( message_error_bad_payload, 303, "Bad Payload" );
-    IMPLEMENT_DL_RET_CODE( message_error_invalid_value, 304, "Invalid Value" );
-    IMPLEMENT_DL_RET_CODE( message_error_timeout, 305, "Timeout Handling Message" );
-    IMPLEMENT_DL_RET_CODE( message_error_invalid_method, 306, "Invalid Method" );
-    IMPLEMENT_DL_RET_CODE( message_error_access_denied, 307, "Access Denied" );
-    IMPLEMENT_DL_RET_CODE( message_error_invalid_key, 308, "Invalid Key" );
+    IMPLEMENT_DL_RET_CODE( service_error, 300, "Dripline Message Error" );
+    IMPLEMENT_DL_RET_CODE( service_error_no_encoding, 301, "No Message Encoding" );
+    IMPLEMENT_DL_RET_CODE( service_error_decoding_fail, 302, "Decoding Failed" );
+    IMPLEMENT_DL_RET_CODE( service_error_bad_payload, 303, "Bad Payload" );
+    IMPLEMENT_DL_RET_CODE( service_error_invalid_value, 304, "Invalid Value" );
+    IMPLEMENT_DL_RET_CODE( service_error_timeout, 305, "Timeout Handling Message" );
+    IMPLEMENT_DL_RET_CODE( service_error_invalid_method, 306, "Invalid Method" );
+    IMPLEMENT_DL_RET_CODE( service_error_access_denied, 307, "Access Denied" );
+    IMPLEMENT_DL_RET_CODE( service_error_invalid_key, 308, "Invalid Key" );
     // 309 was formerly "Deprecated Feature"
-    IMPLEMENT_DL_RET_CODE( message_error_invalid_specifier, 310, "Invalid Specifier" );
+    IMPLEMENT_DL_RET_CODE( service_error_invalid_specifier, 310, "Invalid Specifier" );
 
     IMPLEMENT_DL_RET_CODE( client_error, 400, "Client Error" );
     IMPLEMENT_DL_RET_CODE( client_error_invalid_request, 401, "Invalid Request" );
