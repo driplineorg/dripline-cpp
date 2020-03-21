@@ -123,26 +123,30 @@ namespace dripline
     DEFINE_DL_RET_CODE( success, DRIPLINE_API );
 
     DEFINE_DL_RET_CODE( warning_no_action_taken, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( warning_deprecated_feature, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( warning_dry_run, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( warning_offline, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( warning_sub_service, DRIPLINE_API );
 
     DEFINE_DL_RET_CODE( amqp_error, DRIPLINE_API );
     DEFINE_DL_RET_CODE( amqp_error_broker_connection, DRIPLINE_API );
     DEFINE_DL_RET_CODE( amqp_error_routingkey_notfound, DRIPLINE_API );
 
-    DEFINE_DL_RET_CODE( device_error, DRIPLINE_API );
-    DEFINE_DL_RET_CODE( device_error_connection, DRIPLINE_API );
-    DEFINE_DL_RET_CODE( device_error_no_resp, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( resource_error, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( resource_error_connection, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( resource_error_no_response, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( resource_error_sub_service, DRIPLINE_API );
 
-    DEFINE_DL_RET_CODE( message_error, DRIPLINE_API );
-    DEFINE_DL_RET_CODE( message_error_no_encoding, DRIPLINE_API );
-    DEFINE_DL_RET_CODE( message_error_decoding_fail, DRIPLINE_API );
-    DEFINE_DL_RET_CODE( message_error_bad_payload, DRIPLINE_API );
-    DEFINE_DL_RET_CODE( message_error_invalid_value, DRIPLINE_API );
-    DEFINE_DL_RET_CODE( message_error_timeout, DRIPLINE_API );
-    DEFINE_DL_RET_CODE( message_error_invalid_method, DRIPLINE_API );
-    DEFINE_DL_RET_CODE( message_error_access_denied, DRIPLINE_API );
-    DEFINE_DL_RET_CODE( message_error_invalid_key, DRIPLINE_API );
-    DEFINE_DL_RET_CODE( message_error_dripline_deprecated, DRIPLINE_API );
-    DEFINE_DL_RET_CODE( message_error_invalid_specifier, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( service_error, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( service_error_no_encoding, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( service_error_decoding_fail, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( service_error_bad_payload, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( service_error_invalid_value, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( service_error_timeout, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( service_error_invalid_method, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( service_error_access_denied, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( service_error_invalid_key, DRIPLINE_API );
+    DEFINE_DL_RET_CODE( service_error_invalid_specifier, DRIPLINE_API );
 
     DEFINE_DL_RET_CODE( client_error, DRIPLINE_API );
     DEFINE_DL_RET_CODE( client_error_invalid_request, DRIPLINE_API );

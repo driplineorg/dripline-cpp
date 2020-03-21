@@ -117,13 +117,13 @@ namespace dripline
                     const scarab::param_node& t_payload = a_request->payload().as_node();
                     if( t_payload.has("error") ) t_message += "; " + t_payload["error"]().as_string();
                 }
-                throw throw_reply( dl_message_error_decoding_fail{}, a_request->get_payload_ptr()->clone() ) << "Request message was not valid";
+                throw throw_reply( dl_service_error_decoding_fail{}, a_request->get_payload_ptr()->clone() ) << "Request message was not valid";
             }
 
             // the lockout key must be valid
             if( ! a_request->get_lockout_key_valid() )
             {
-                throw throw_reply( dl_message_error_invalid_key{} ) << "Lockout key could not be parsed";
+                throw throw_reply( dl_service_error_invalid_key{} ) << "Lockout key could not be parsed";
             }
 
             switch( a_request->get_message_operation() )
@@ -149,7 +149,7 @@ namespace dripline
                     break;
                 }
                 default:
-                    throw throw_reply( dl_message_error_invalid_method() ) << "Unrecognized message operation: <" << a_request->get_message_type() << ">";
+                    throw throw_reply( dl_service_error_invalid_method() ) << "Unrecognized message operation: <" << a_request->get_message_type() << ">";
                     break;
             } // end switch on message type
             // reply to be sent outside the try block
@@ -247,10 +247,33 @@ namespace dripline
                  "    Return message: " << a_reply->return_message() << '\n' <<
                  "    Payload:\n" << a_reply->payload() );
 
-        if( ! f_service->send( a_reply ) )
+        sent_msg_pkg_ptr t_receive_reply;
+        try
         {
-            LWARN( dlog, "Something went wrong while sending the reply" );
+            t_receive_reply = f_service->send( a_reply );
         }
+        catch( message_ptr_t )
+        {
+            LWARN( dlog, "Operating in offline mode; message not sent" );
+            return;
+        }
+        catch( connection_error& e )
+        {
+            LERROR( dlog, "Unable to connect to the broker:\n" << e.what() );
+            return;
+        }
+        catch( dripline_error& e )
+        {
+            LERROR( dlog, "Dripline error while sending reply:\n" << e.what() );
+            return;
+        }
+
+        if( ! t_receive_reply->f_successful_send )
+        {
+            LERROR( dlog, "Failed to send reply:\n" + t_receive_reply->f_send_error_message );
+            return;
+        }
+
         return;
     }
 
@@ -274,7 +297,7 @@ namespace dripline
             t_conv << a_request->lockout_key();
             std::string t_message( "Request denied due to lockout (key used: " + t_conv.str() + ")" );
             LINFO( dlog, t_message );
-            return a_request->reply( dl_message_error_access_denied(), t_message );
+            return a_request->reply( dl_service_error_access_denied(), t_message );
         }
 
         return do_run_request( a_request );
@@ -309,7 +332,7 @@ namespace dripline
             t_conv << a_request->lockout_key();
             std::string t_message( "Request denied due to lockout (key used: " + t_conv.str() + ")" );
             LINFO( dlog, t_message );
-            return a_request->reply( dl_message_error_access_denied(), t_message );
+            return a_request->reply( dl_service_error_access_denied(), t_message );
         }
 
         return do_set_request( a_request );
@@ -334,7 +357,7 @@ namespace dripline
             t_conv << a_request->lockout_key();
             std::string t_message( "Request denied due to lockout (key used: " + t_conv.str() + ")" );
             LINFO( dlog, t_message );
-            return a_request->reply( dl_message_error_access_denied(), t_message );
+            return a_request->reply( dl_service_error_access_denied(), t_message );
         }
 
         if( t_instruction == "lock" )
@@ -391,7 +414,7 @@ namespace dripline
         uuid_t t_new_key = enable_lockout( a_request->get_sender_info(), a_request->lockout_key() );
         if( t_new_key.is_nil() )
         {
-            return a_request->reply( dl_device_error(), "Unable to lock server" );;
+            return a_request->reply( dl_resource_error(), "Unable to lock server" );;
         }
 
         scarab::param_ptr_t t_payload_ptr( new scarab::param_node() );
@@ -413,7 +436,7 @@ namespace dripline
         {
             return a_request->reply( dl_success(), "Server unlocked" );
         }
-        return a_request->reply( dl_device_error(), "Failed to unlock server" );;
+        return a_request->reply( dl_resource_error(), "Failed to unlock server" );;
     }
 
     reply_ptr_t endpoint::handle_set_condition_request( const request_ptr_t a_request )
