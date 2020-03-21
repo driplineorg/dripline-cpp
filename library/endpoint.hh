@@ -210,22 +210,22 @@ namespace dripline
 
     inline reply_ptr_t endpoint::do_run_request( const request_ptr_t a_request )
     {
-        return a_request->reply( dl_device_error(), "Unhandled request type: OP_RUN" );
+        return a_request->reply( dl_resource_error(), "Unhandled request type: OP_RUN" );
     }
 
     inline reply_ptr_t endpoint::do_get_request( const request_ptr_t a_request )
     {
-        return a_request->reply( dl_device_error(), "Unhandled request type: OP_GET" );
+        return a_request->reply( dl_resource_error(), "Unhandled request type: OP_GET" );
     }
 
     inline reply_ptr_t endpoint::do_set_request( const request_ptr_t a_request )
     {
-        return a_request->reply( dl_device_error(), "Unhandled request type: OP_SET" );
+        return a_request->reply( dl_resource_error(), "Unhandled request type: OP_SET" );
     }
 
     inline reply_ptr_t endpoint::do_cmd_request( const request_ptr_t a_request )
     {
-        return a_request->reply( dl_device_error(), "Unhandled request type: OP_CMD" );
+        return a_request->reply( dl_resource_error(), "Unhandled request type: OP_CMD" );
     }
 
     inline uuid_t endpoint::enable_lockout( const scarab::param_node& a_tag )

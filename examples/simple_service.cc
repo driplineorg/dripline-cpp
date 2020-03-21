@@ -50,7 +50,7 @@ namespace dripline
         catch( std::exception& e )
         {
             LERROR( dlog, "Exception caught: " << e.what() );
-            f_return = dl_device_error().rc_value();
+            f_return = dl_resource_error().rc_value();
         }
 
         return;
@@ -60,7 +60,7 @@ namespace dripline
     {
         if( a_request->parsed_specifier().empty() )
         {
-            return a_request->reply( dl_message_error_invalid_specifier(), "No specifier provided" );
+            return a_request->reply( dl_service_error_invalid_specifier(), "No specifier provided" );
         }
 
         std::string t_specifier = a_request->parsed_specifier().front();
@@ -79,7 +79,7 @@ namespace dripline
         }
         else
         {
-            return a_request->reply( dl_message_error_invalid_specifier(), "Unknown specifier: " + t_specifier );
+            return a_request->reply( dl_service_error_invalid_specifier(), "Unknown specifier: " + t_specifier );
         }
     }
 

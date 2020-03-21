@@ -19,6 +19,8 @@ LOGGER( testlog, "test_return_codes" );
 
 TEST_CASE( "return_codes", "[exceptions]" )
 {
+    auto t_factory = scarab::indexed_factory< unsigned, dripline::return_code >::get_instance();
+
     dripline::dl_success t_rc;
     REQUIRE( t_rc.rc_value() == 0 );
     REQUIRE( t_rc.rc_value() == dripline::dl_success::s_value );
@@ -55,7 +57,7 @@ TEST_CASE( "return_codes", "[exceptions]" )
     scarab::indexed_registrar< unsigned, dripline::return_code, test_unique_error > t_ue_reg( 1000 );
 
     // test creating a return-code
-    dripline::return_code* t_rc_ue = scarab::indexed_factory< unsigned, dripline::return_code >::get_instance()->create( 1000 );
+    dripline::return_code* t_rc_ue = t_factory->create( 1000 );
     REQUIRE( t_rc_ue != nullptr );
     REQUIRE( t_rc_ue->rc_value() == 1000 );
 
@@ -74,16 +76,36 @@ TEST_CASE( "return_codes", "[exceptions]" )
     t_stream << t_rc;
     REQUIRE( t_stream.str() == dripline::dl_success::s_description + "(" + std::to_string(dripline::dl_success::s_value) + ")");
 
-    // test creating a custom code
+    // test creating a custom code with add_return_code
     REQUIRE_NOTHROW( (dripline::add_return_code( 2000, "test_custom_code", "Custom Error" )) );
+    REQUIRE( t_factory->has_class( 2000 ) );
 
     // test creating the custom code
-    dripline::return_code* t_rc_cc = scarab::indexed_factory< unsigned, dripline::return_code >::get_instance()->create( 2000 );
+    dripline::return_code* t_rc_cc = t_factory->create( 2000 );
     REQUIRE( t_rc_cc != nullptr );
     REQUIRE( t_rc_cc->rc_value() == 2000 );
 
     // test adding a duplicate custom code
     REQUIRE_THROWS_AS( (dripline::add_return_code( 2000, "another_custom_code", "Duplicate Error" )), scarab::error );
 
+    // test check_and_add_return_code()
+    REQUIRE_FALSE( dripline::check_and_add_return_code( 2000, "another_custom_code_2", "Duplicate Error" ) );
+    REQUIRE( dripline::check_and_add_return_code( 2001, "a_space_odyssey", "Fault in the AE-35 unit" ) );
+    REQUIRE( t_factory->has_class( 2001 ) );
+
+    // test custom_return_code_registrar
+    dripline::custom_return_code_registrar t_crcr( 2010, "cake_not_pie", "No no, piece of cake" );
+    REQUIRE( t_factory->has_class( 2010 ) );
+
+    // test get_return_code_values()
+    auto t_rc_values = dripline::get_return_code_values();
+    REQUIRE( t_rc_values[0] == 0 );
+    REQUIRE( t_rc_values.back() == 2010 );
+
+    // test get_return_codes_map()
+    auto t_rc_map = dripline::get_return_codes_map();
+    REQUIRE( t_rc_map[0]->rc_value() == 0 );
+    REQUIRE( t_rc_map[2001]->rc_value() == 2001 );
+    
 }
 

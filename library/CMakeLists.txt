@@ -39,7 +39,6 @@ set( dripline_SOURCES
     core.cc
     dripline_config.cc
     dripline_constants.cc
-    dripline_exceptions.cc
     dripline_version.cc
     endpoint.cc
     heartbeater.cc
