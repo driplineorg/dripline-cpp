@@ -93,6 +93,11 @@ namespace dripline
                 try
                 {
                     t_receive_reply = f_service->send( t_alert_ptr );
+                    
+                    if( ! t_receive_reply->f_successful_send )
+                    {
+                        LERROR( dlog, "Failed to send reply:\n" + t_receive_reply->f_send_error_message );
+                    }
                 }
                 catch( message_ptr_t )
                 {
@@ -107,11 +112,6 @@ namespace dripline
                     LERROR( dlog, "Dripline error while sending reply:\n" << e.what() );
                 }
 
-                if( ! t_receive_reply->f_successful_send )
-                {
-                    LERROR( dlog, "Failed to send reply:\n" + t_receive_reply->f_send_error_message );
-                }
-                
                 t_next_heartbeat_at = std::chrono::steady_clock().now() + std::chrono::seconds( f_heartbeat_interval_s );
             }
         }
