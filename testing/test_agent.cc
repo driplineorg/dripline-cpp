@@ -9,19 +9,6 @@
 
 #include "catch.hpp"
 
-TEST_CASE( "sub_agent_run", "[agent]" )
-{
-    std::unique_ptr< dripline::agent > t_agent( new dripline::agent() );
-    dripline::agent::sub_agent_run t_sar( t_agent.get() );
-
-    scarab::param_node t_config;
-    dripline::request_ptr_t t_request = t_sar.create_request( t_config );
-
-    REQUIRE( t_request );
-    REQUIRE( t_request->get_message_type() == dripline::msg_t::request );
-    REQUIRE( t_request->get_message_operation() == dripline::op_t::run );
-}
-
 TEST_CASE( "sub_agent_get", "[agent]" )
 {
     std::unique_ptr< dripline::agent > t_agent( new dripline::agent() );

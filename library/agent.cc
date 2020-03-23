@@ -397,16 +397,6 @@ namespace dripline
         return;
     }
 
-    request_ptr_t agent::sub_agent_run::create_request( scarab::param_node& a_config )
-    {
-        param_ptr_t t_payload_ptr( new param_node( a_config ) );
-
-        return msg_request::create( std::move(t_payload_ptr),
-                                    op_t::run,
-                                    f_agent->routing_key(),
-                                    f_agent->specifier() );
-    }
-
     request_ptr_t agent::sub_agent_get::create_request( scarab::param_node& a_config )
     {
         param_ptr_t t_payload_ptr( new param_node( a_config ) );

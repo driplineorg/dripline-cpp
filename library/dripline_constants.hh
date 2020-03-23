@@ -33,7 +33,6 @@ namespace dripline
     enum class DRIPLINE_API op_t:uint32_t {
             set = 0,
             get = 1,
-            run = 8,
             cmd = 9,
             unknown = UINT32_MAX
     };
