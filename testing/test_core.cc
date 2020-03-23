@@ -25,7 +25,7 @@ TEST_CASE( "send_offline", "[core]" )
 
     REQUIRE_THROWS_AS( t_core.send( t_alert_ptr ), dripline::message_ptr_t );
 
-    dripline::request_ptr_t t_request_ptr = dripline::msg_request::create( param_ptr_t( new param() ), dripline::op_t::run, "routing.key", "specifier", "" );
+    dripline::request_ptr_t t_request_ptr = dripline::msg_request::create( param_ptr_t( new param() ), dripline::op_t::cmd, "routing.key", "specifier", "" );
 
     REQUIRE_THROWS_AS( t_core.send( t_request_ptr ), dripline::message_ptr_t );
 

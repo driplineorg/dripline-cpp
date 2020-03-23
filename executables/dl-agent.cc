@@ -45,12 +45,6 @@ int main( int argc, char** argv )
             "  both node and array locations (e.g. my.value.0)." );
 
     // Application subcommands
-    scarab::config_decorator* t_agent_run = the_main.add_config_subcommand( "run", "Send an OP_RUN request" );
-    t_agent_run->add_config_option< std::string >( "routing_key", "rk", "Set the routing key" )->required();
-    t_agent_run->this_app()->callback(
-            [&]() { the_agent.execute< agent::sub_agent_run >( the_main.master_config(), the_main.nonoption_ord_args() ); }
-    );
-
     scarab::config_decorator* t_agent_get = the_main.add_config_subcommand( "get", "Send an OP_GET request" );
     t_agent_get->add_config_option< std::string >( "routing_key", "rk", "Set the routing key" )->required();
     t_agent_get->this_app()->callback(

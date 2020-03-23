@@ -18,11 +18,7 @@ TEST_CASE( "submit_msg", "[endpoint]" )
 
     REQUIRE_THROWS_AS( t_endpoint.submit_alert_message( t_alert_ptr ), dripline::dripline_error );
 
-    dripline::request_ptr_t t_request_ptr = dripline::msg_request::create( scarab::param_ptr_t( new scarab::param() ), dripline::op_t::run, "routing.key", "specifier", "" );
-
-    REQUIRE_NOTHROW( t_endpoint.submit_request_message( t_request_ptr ) );
-
-    t_request_ptr->set_message_operation( dripline::op_t::get );
+    dripline::request_ptr_t t_request_ptr = dripline::msg_request::create( scarab::param_ptr_t( new scarab::param() ), dripline::op_t::get, "routing.key", "specifier", "" );
 
     REQUIRE_NOTHROW( t_endpoint.submit_request_message( t_request_ptr ) );
 
