@@ -11,6 +11,7 @@
 
 #include "dripline_exceptions.hh"
 #include "message.hh"
+#include "mock_broker.hh"
 
 #include "authentication.hh"
 #include "logger.hh"
