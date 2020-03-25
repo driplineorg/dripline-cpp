@@ -1,6 +1,7 @@
 language: cpp
 
 stages:
+  - test
   - name: build-test
     if: branch = master OR branch = develop OR branch =~ /.*\\.(?i:build)$/ or type = pull_request
   - name: deploy
@@ -10,6 +11,11 @@ stages:
 
 jobs:
   include:
+    - stage: test
+      os: linux
+      dist: bionic
+      script:
+        - echo "Yes, it worked"
     - stage: build-test
       os: osx
       compiler: clang
