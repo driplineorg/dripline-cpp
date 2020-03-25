@@ -80,7 +80,7 @@ jobs:
           packages:
             - tree
             - doxygen
-      before_instal:
+      before_install:
         - openssl aes-256-cbc -K $encrypted_ef08ab9a7293_key -iv $encrypted_ef08ab9a7293_iv -in .deploy_key.enc -out .deploy_key -d
         - eval "$(ssh-agent -s)"
         - chmod 600 ./deploy_key
@@ -105,5 +105,3 @@ jobs:
         - git remote set-url origin "git@github.com:${TRAVIS_REPO_SLUG}"
         - git remote -v
         - git push
-
-        
