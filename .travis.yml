@@ -81,6 +81,7 @@ jobs:
         packages:
         - tree
         - doxygen
+        - dot
     before_install:
     - openssl aes-256-cbc -K $encrypted_ef08ab9a7293_key -iv $encrypted_ef08ab9a7293_iv
       -in .deploy_key.enc -out .deploy_key -d
@@ -98,6 +99,8 @@ jobs:
     - mv ./build/html /tmp/build.html
     - git checkout gh-pages
     - git clean -d -f -x
+    - rm -rf SimpleAmqpClient
+    - rm -rf scarab
     - ls
     - rsync -av --delete /tmp/build.html/ ./$(cat /tmp/output_location)
     - tree -L 3
