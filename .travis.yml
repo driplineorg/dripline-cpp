@@ -73,6 +73,7 @@ jobs:
         - docker push driplineorg/dripline-cpp:$DOCKER_TAG
     - stage: build-docs
       os: linux
+      dist: bionic
       git:
         depth: false
       addons:
