@@ -84,8 +84,8 @@ jobs:
     - openssl aes-256-cbc -K $encrypted_ef08ab9a7293_key -iv $encrypted_ef08ab9a7293_iv
       -in .deploy_key.enc -out .deploy_key -d
     - eval "$(ssh-agent -s)"
-    - chmod 600 ./deploy_key
-    - ssh-add ./deploy_key
+    - chmod 600 ./.deploy_key
+    - ssh-add ./.deploy_key
     script:
     - echo $(if [[ "$TRAVIS_BRANCH" == "develop" || "$TRAVIS_BRANCH" == "master" ]];
       then echo "$TRAVIS_BRANCH"; elif [[ ! -z "$TRAVIS_TAG" ]]; then echo "tags/$TRAVIS_TAG";
