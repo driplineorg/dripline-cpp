@@ -88,6 +88,7 @@ jobs:
     - chmod 600 ./.deploy_key
     - ssh-add ./.deploy_key
     script:
+    - pip install sphinx
     - echo $(if [[ "$TRAVIS_BRANCH" == "develop" || "$TRAVIS_BRANCH" == "master" ]];
       then echo "$TRAVIS_BRANCH"; elif [[ ! -z "$TRAVIS_TAG" ]]; then echo "tags/$TRAVIS_TAG";
       else echo "branches/$(echo $TRAVIS_BRANCH | tr / _ | tr - .)"; fi) | tee /tmp/output_location
