@@ -384,7 +384,19 @@ namespace dripline
     {
         if( s_offline || ! a_channel )
         {
-            return false;
+            mock_broker* t_broker = mock_broker::get_instance();
+            try
+            {
+                t_broker->bind( a_exchange, a_queue_name, a_routing_key );
+            }
+            catch(const std::exception& e)
+            {
+                LERROR( dlog, "Could not bind key <" << a_routing_key << "> via the mock broker" );
+                return false;
+            }
+            
+            LDEBUG( dlog, "Bound key <" << a_routing_key << "> to queue <" << a_queue_name << "> over exchange <" << a_exchange << "> using the mock broker" );
+            return true;
         }
 
         try
@@ -471,6 +483,7 @@ namespace dripline
     {
         if( s_offline || ! a_channel )
         {
+            // TODO
             return false;
         }
 
@@ -501,6 +514,7 @@ namespace dripline
     {
         if( s_offline || ! a_channel )
         {
+            // TODO
             return false;
         }
 

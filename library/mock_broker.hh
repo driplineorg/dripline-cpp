@@ -10,6 +10,8 @@
 
 #include "endpoint.hh"
 
+#include "singleton.hh"
+
 namespace dripline
 {
 
@@ -21,27 +23,29 @@ namespace dripline
 
      @details
     */
-    class DRIPLINE_API mock_broker
+    class DRIPLINE_API mock_broker : public scarab::singleton< mock_broker >
     {
-        enum class exchange
-        {
-            requests,
-            alerts
-        };
+        public:
+            void send( message_ptr_t a_message, const std::string& an_exchange );
 
-        mock_broker();
-        mock_broker( const mock_broker& a_orig );
-        mock_broker( mock_broker&& a_orig );
-        virtual ~mock_broker();
+            void bind( const std::string& an_exchange, const std::string& a_queue, const std::string& a_key );
+            void unbind( const std::string& an_exchange, const std::string& a_queue, const std::string& a_key );
 
-        mock_broker& operator=( const mock_broker& a_orig );
-        mock_broker& operator=( mock_broker&& a_orig );
+            void remove_queue( const std::string& an_exchange, const std::string& a_queue );
 
-        void take( message_ptr_t a_message, exchange an_exchange );
+        protected:
+            allow_singleton_access( mock_broker );
 
-        void bind( exchange an_exchange, const std::string& a_key );
-        void unbind( exchange an_exchange, const std::string& a_key );
+            mock_broker();
+            mock_broker( const mock_broker& a_orig ) = delete;
+            mock_broker( mock_broker&& a_orig ) = delete;
+            virtual ~mock_broker();
 
+            mock_broker& operator=( const mock_broker& a_orig ) = delete;
+            mock_broker& operator=( mock_broker&& a_orig ) = delete;
+
+            // TODO: map: RK --> queue
+            // TODO: 
     }
 
 } /* namespace dripline */

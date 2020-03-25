@@ -39,3 +39,10 @@
 # Build directories
 build*/
 
+# Documentation build
+documentation/build/
+documentation/source/_static/
+
+# Github deploy key
+.deploy_key.pub
+.deploy_key
