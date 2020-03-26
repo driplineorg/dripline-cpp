@@ -5,7 +5,8 @@ Getting Started
 What's Included
 ===============
 
-* dl_agent: An executable that allows you to send Dripline messages
+* dl-agent: An executable that allows you to send Dripline messages
+* dl-mon: An executable that monitors messages on the mesh
 * dripline-cpp library: Dripline API that can be used to send and receive messages
 
 Requirements
