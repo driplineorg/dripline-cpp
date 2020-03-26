@@ -81,7 +81,7 @@ jobs:
         packages:
         - tree
         - doxygen
-        - dot
+        - graphviz
     before_install:
     - openssl aes-256-cbc -K $encrypted_ef08ab9a7293_key -iv $encrypted_ef08ab9a7293_iv
       -in .deploy_key.enc -out .deploy_key -d
