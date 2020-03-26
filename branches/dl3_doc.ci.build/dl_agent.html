@@ -1,0 +1,181 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Dripline Agent &#8212; Dripline-Cpp v2.1.3 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Dripline Library" href="library.html" />
+    <link rel="prev" title="Getting Started" href="getting_started.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="dripline-agent">
+<h1>Dripline Agent<a class="headerlink" href="#dripline-agent" title="Permalink to this headline">¶</a></h1>
+<p>Dripline includes an executable for sending dripline commands: <code class="docutils literal notranslate"><span class="pre">dl_agent</span></code>.</p>
+<div class="section" id="use">
+<h2>Use<a class="headerlink" href="#use" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">&gt;</span> <span class="pre">dl_agent</span> <span class="pre">[options]</span> <span class="pre">routing_key</span> <span class="pre">[specifier]</span> <span class="pre">subcommand</span> <span class="pre">[values]</span> <span class="pre">[keyword</span> <span class="pre">arguments]</span></code></p>
+</div></blockquote>
+<div class="section" id="routing-key">
+<h3>Routing Key<a class="headerlink" href="#routing-key" title="Permalink to this headline">¶</a></h3>
+<p>Provide the AMQP routing key to which you’re sending your message (required).</p>
+</div>
+<div class="section" id="specifier">
+<h3>Specifier<a class="headerlink" href="#specifier" title="Permalink to this headline">¶</a></h3>
+<p>Provide the dripline specifier to further direct your message (optional).</p>
+</div>
+<div class="section" id="subcommands">
+<h3>Subcommands<a class="headerlink" href="#subcommands" title="Permalink to this headline">¶</a></h3>
+<p>The four dripline subcommands are available as:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">run</span></code>    Send an OP_RUN request</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">get</span></code>    Send an OP_GET request</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">set</span></code>    Send an OP_SET request</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cmd</span></code>    Send an OP_CMD request</p></li>
+</ul>
+</div>
+<div class="section" id="values-and-keyword-arguments">
+<h3>Values and Keyword Arguments<a class="headerlink" href="#values-and-keyword-arguments" title="Permalink to this headline">¶</a></h3>
+<p>Any non-option arguments other than the routing key and specifier will be counted either as values or keyword arguments.</p>
+<p>Values are arguments that are not in the form <code class="docutils literal notranslate"><span class="pre">keyword=value</span></code>.  They are added to the <code class="docutils literal notranslate"><span class="pre">values</span></code> array in the payload in the order received.</p>
+<p>Keyword arguments are arguments in the form <code class="docutils literal notranslate"><span class="pre">keyword=value</span></code>.  They are added to the payload.
+The keyword is the address within the payload.  For example, <code class="docutils literal notranslate"><span class="pre">my.value.0=10</span></code> would add this to the payload:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my</span><span class="p">:</span>
+  <span class="n">value</span><span class="p">:</span>
+    <span class="o">-</span> <span class="mi">10</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="keyword-arguments">
+<h3>Keyword Arguments<a class="headerlink" href="#keyword-arguments" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="options">
+<h3>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span><span class="n">h</span><span class="p">,</span><span class="o">--</span><span class="n">help</span>                   <span class="n">Print</span> <span class="n">this</span> <span class="n">help</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span>
+<span class="o">-</span><span class="n">c</span><span class="p">,</span><span class="o">--</span><span class="n">config</span> <span class="n">FILE</span>            <span class="n">Config</span> <span class="n">file</span> <span class="n">filename</span>
+<span class="o">--</span><span class="n">verbosity</span> <span class="n">UINT</span>            <span class="n">Global</span> <span class="n">logger</span> <span class="n">verosity</span>
+<span class="o">-</span><span class="n">V</span><span class="p">,</span><span class="o">--</span><span class="n">version</span>                <span class="n">Print</span> <span class="n">the</span> <span class="n">version</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span>
+<span class="o">-</span><span class="n">b</span><span class="p">,</span><span class="o">--</span><span class="n">broker</span> <span class="n">TEXT</span>            <span class="n">Set</span> <span class="n">the</span> <span class="n">dripline</span> <span class="n">broker</span> <span class="n">address</span>
+<span class="o">-</span><span class="n">p</span><span class="p">,</span><span class="o">--</span><span class="n">port</span> <span class="n">UINT</span>              <span class="n">Set</span> <span class="n">the</span> <span class="n">port</span> <span class="k">for</span> <span class="n">communication</span> <span class="k">with</span> <span class="n">the</span> <span class="n">dripline</span> <span class="n">broker</span>
+<span class="o">-</span><span class="n">e</span><span class="p">,</span><span class="o">--</span><span class="n">exchange</span> <span class="n">TEXT</span>          <span class="n">Set</span> <span class="n">the</span> <span class="n">exchange</span> <span class="n">to</span> <span class="n">send</span> <span class="n">message</span> <span class="n">on</span>
+<span class="o">-</span><span class="n">a</span><span class="p">,</span><span class="o">--</span><span class="n">auth</span><span class="o">-</span><span class="n">file</span> <span class="n">TEXT</span>
+<span class="o">-</span><span class="n">t</span><span class="p">,</span><span class="o">--</span><span class="n">timeout</span> <span class="n">UINT</span>           <span class="n">Set</span> <span class="n">the</span> <span class="n">timeout</span> <span class="k">for</span> <span class="n">waiting</span> <span class="k">for</span> <span class="n">a</span> <span class="n">reply</span> <span class="p">(</span><span class="n">seconds</span><span class="p">)</span>
+<span class="o">-</span><span class="n">k</span><span class="p">,</span><span class="o">--</span><span class="n">lockout</span><span class="o">-</span><span class="n">key</span> <span class="n">TEXT</span>       <span class="n">Set</span> <span class="n">the</span> <span class="n">lockout</span> <span class="n">key</span> <span class="n">to</span> <span class="n">send</span> <span class="k">with</span> <span class="n">the</span> <span class="n">message</span>
+<span class="o">--</span><span class="n">payload</span> <span class="n">TEXT</span> <span class="o">...</span>          <span class="n">Add</span> <span class="n">values</span> <span class="n">to</span> <span class="n">the</span> <span class="n">payload</span>
+<span class="o">-</span><span class="n">v</span><span class="p">,</span><span class="o">--</span><span class="n">values</span> <span class="n">TEXT</span> <span class="o">...</span>        <span class="n">Add</span> <span class="n">ordered</span> <span class="n">values</span>
+<span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span><span class="o">-</span><span class="n">msg</span>               <span class="n">Print</span> <span class="n">the</span> <span class="n">message</span> <span class="n">contents</span> <span class="ow">and</span> <span class="n">do</span> <span class="ow">not</span> <span class="n">send</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="build-options">
+<h2>Build Options<a class="headerlink" href="#build-options" title="Permalink to this headline">¶</a></h2>
+<p>The default agent configuration can include a default authentication file, which is expected to be in the user’s home directory.  It is specified at build time with the preprocessor macro <code class="docutils literal notranslate"><span class="pre">DRIPLINE_AUTH_FILE</span></code>.</p>
+<p>In a CMake build of a package that uses dripline, it can be specified with:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">add_definitions(</span> <span class="pre">-DDRIPLINE_AUTH_FILE=[filename]</span> <span class="pre">)</span></code></p>
+</div></blockquote>
+<p>This should be included before the Dripline submodule is added.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Dripline-Cpp</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Application: ``dl_agent``</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#use">Use</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#build-options">Build Options</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="library.html">Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="offline.html">Offline &amp; No-Connection</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="getting_started.html" title="previous chapter">Getting Started</a></li>
+      <li>Next: <a href="library.html" title="next chapter">Dripline Library</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Dripline-Cpp Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/dl_agent.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

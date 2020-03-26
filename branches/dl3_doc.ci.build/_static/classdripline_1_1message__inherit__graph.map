@@ -1,0 +1,5 @@
+<map id="message" name="message">
+<area shape="rect" id="node2" href="$classdripline_1_1msg__alert.html" title="Alert message class. " alt="" coords="5,446,221,699"/>
+<area shape="rect" id="node3" href="$classdripline_1_1msg__reply.html" title="Reply message class. " alt="" coords="245,409,472,736"/>
+<area shape="rect" id="node4" href="$classdripline_1_1msg__request.html" title="Request message class. " alt="" coords="496,409,723,736"/>
+</map>
