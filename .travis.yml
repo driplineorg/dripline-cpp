@@ -97,11 +97,13 @@ jobs:
     - make html
     - ls ./build/html
     - mv ./build/html /tmp/build.html
+    - cd ..
     - git checkout gh-pages
     - git clean -d -f -x
     - rm -rf SimpleAmqpClient
     - rm -rf scarab
     - ls
+    - mkdir -p ./$(cat /tmp/output_location)
     - rsync -av --delete /tmp/build.html/ ./$(cat /tmp/output_location)
     - tree -L 3
     - git add $(cat /tmp/output_location)
