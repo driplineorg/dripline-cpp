@@ -1,9 +1,11 @@
 ======================================
-Dripline-Cpp Use and API Documentation
+Dripline-cpp Use and API Documentation
 ======================================
 
-Dripline-Cpp has two main components: a command-line application for sending Dripline messages, ``dl_agent``, 
-and the library, which allows you to build Dripline-enabled applications.
+Dripline-cpp has three main components: 
+a command-line application for sending dripline messages, ``dl-agent``, 
+a command-line application for monitoring dripline messages, ``dl-mon``,
+and the library, which allows you to build dripline-enabled applications.
 
 Contents:
 
@@ -11,7 +13,8 @@ Contents:
    :maxdepth: 2
 
    Getting Started <getting_started>
-   Application: ``dl_agent`` <dl_agent>
+   ``dl-agent`` <dl_agent>
+   ``dl-mon`` <dl_mon>
    Library <library>
    Offline & No-Connection <offline>
 

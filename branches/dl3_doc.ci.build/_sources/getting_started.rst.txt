@@ -25,11 +25,13 @@ Included Packages
 How to Install
 ==============
 
-There are two main ways to use dripline-cpp:
+There are three main ways to use dripline-cpp:
 
 1. As a standalone package.
 
-2. As a submodule of another package.  
+2. As a submodule of another package.
+
+3. In a Docker container
 
 Standalone Installation
 -----------------------
@@ -62,3 +64,10 @@ Submodule Installation
 1. Add the submodule::
 
     git submodule add https://github.com/driplineorg/dripline-cpp [desired path]
+
+Docker Container
+----------------
+
+Pre-built docker containers containing a dripline-cpp installation are available on `Docker Hub <https://hub.docker.com/repository/docker/driplineorg/dripline-cpp>`_.
+
+Images are automatically built for each tagged release, and for the ``master`` and ``develop`` branches.
