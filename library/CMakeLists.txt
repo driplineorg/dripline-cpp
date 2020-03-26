@@ -19,6 +19,7 @@ set( dripline_HEADERS
     hub.hh
     listener.hh
     message.hh
+    mock_broker.hh
     monitor.hh
     monitor_config.hh
     receiver.hh
@@ -45,6 +46,7 @@ set( dripline_SOURCES
     hub.cc
     listener.cc
     message.cc
+    mock_broker.cc
     monitor.cc
     monitor_config.cc
     receiver.cc
