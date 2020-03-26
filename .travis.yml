@@ -2,12 +2,17 @@ language: cpp
 
 stages:
 - name: build-test
-  if: branch = master OR branch = develop OR branch =~ /.*\.(?i:build)$/ OR type =
-    pull_request
+  if: branch = master OR branch = develop OR 
+    branch = dl3/master OR branch = dl3/develop OR 
+    branch =~ /.*\.(?i:build)$/ OR type = pull_request
 - name: deploy
-  if: branch = master OR branch = develop OR branch =~ /^v\d+\.\d+\.\d+(-S*)?$/
+  if: branch = master OR branch = develop OR 
+    branch = dl3/master OR branch = dl3/develop OR 
+    branch =~ /^v\d+\.\d+\.\d+(-S*)?$/
 - name: build-docs
-  if: branch = master OR branch = develop OR branch =~ /.*\.(?i:build)$/
+  if: branch = master OR branch = develop OR 
+    branch = dl3/master OR branch = dl3/develop OR 
+    branch =~ /.*\.(?i:build)$/
 
 jobs:
   include:
