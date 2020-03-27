@@ -37,15 +37,15 @@
 <h1>Dripline Library<a class="headerlink" href="#dripline-library" title="Permalink to this headline">¶</a></h1>
 <p>The “end-user” aspects of the dripline-cpp API can be divided into core dripline implementations:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="dl_agent.html#agent"><span class="std std-ref">Agent</span></a>: sends messages (primarily used by the <span class="xref std std-ref">agent</span>)</p></li>
-<li><p><span class="xref std std-ref">Endpoint</span>: receives messages and acts on them</p></li>
-<li><p><span class="xref std std-ref">Service</span>: primary connection with the broker; can have child endpoints and is an endpoint itself</p></li>
-<li><p><span class="xref std std-ref">Messages</span>: concrete implementations of the request, reply, and alert message concepts</p></li>
+<li><p><a class="reference internal" href="#agent"><span class="std std-ref">Agent</span></a>: sends messages (primarily used by the <span class="xref std std-ref">agent</span>)</p></li>
+<li><p><a class="reference internal" href="#endpoint"><span class="std std-ref">Endpoint</span></a>: receives messages and acts on them</p></li>
+<li><p><a class="reference internal" href="#service"><span class="std std-ref">Service</span></a>: primary connection with the broker; can have child endpoints and is an endpoint itself</p></li>
+<li><p><a class="reference internal" href="#messages"><span class="std std-ref">Messages</span></a>: concrete implementations of the request, reply, and alert message concepts</p></li>
 </ul>
 <p>and useful extensions:</p>
 <ul class="simple">
 <li><p><span class="xref std std-ref">Hub</span>: service that dispatches requests to C++ functions (or function-like objects)</p></li>
-<li><p><a class="reference internal" href="dl_mon.html#monitor"><span class="std std-ref">Monitor</span></a>: listens to messages on a mesh (primarily used by the <span class="xref std std-ref">monitor</span>)</p></li>
+<li><p><span class="xref std std-ref">Monitor</span>: listens to messages on a mesh (primarily used by the <span class="xref std std-ref">monitor</span>)</p></li>
 <li><p><span class="xref std std-ref">Relayer</span>: asynchronously sends messages</p></li>
 </ul>
 <p>There are also a number of classes that implement various features of the above classes:</p>
@@ -60,18 +60,18 @@
 </ul>
 <div class="section" id="core-behavior">
 <h2>Core Behavior<a class="headerlink" href="#core-behavior" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="agent">
-<h3>Agent<a class="headerlink" href="#agent" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id1">
+<h3>Agent<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <p>An <code class="docutils literal notranslate"><span class="pre">agent</span></code> takes command-line arguments and sends messages accordingly.  It is primarily used
 for the <span class="xref std std-ref">agent</span> application.</p>
 </div>
-<div class="section" id="endpoint">
-<h3>Endpoint<a class="headerlink" href="#endpoint" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id2">
+<h3>Endpoint<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">endpoint</span></code> is the basic dripline object capable of handling requests.</p>
 <p>An implementation of a particular endpoint should be a class that inherits from <code class="docutils literal notranslate"><span class="pre">endpoint</span></code>.</p>
 </div>
-<div class="section" id="service">
-<h3>Service<a class="headerlink" href="#service" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id3">
+<h3>Service<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
 <p>The <code class="docutils literal notranslate"><span class="pre">service</span></code> class implements the fundamental “service” concept in dripline:
 it’s the basic work unit in a dripline mesh.  It maintains the connection to the broker
 that’s used by one or more endpoints, and it is itself an endpoint.</p>
@@ -93,8 +93,8 @@ that’s used by one or more endpoints, and it is itself an endpoint.</p>
 handled synchronously with the recieving of messages and with processing messages bound for itself.
 With the latter, requests are passed to the appropriate endpoint, which handles them in its own thread.</p>
 </div>
-<div class="section" id="messages">
-<h3>Messages<a class="headerlink" href="#messages" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="id4">
+<h3>Messages<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
 <p>The message classes encapsulate the information in dripline messages as C++ objects.</p>
 <p>The set of classes comprise the base class, <code class="docutils literal notranslate"><span class="pre">message</span></code>, and the concrete classes <code class="docutils literal notranslate"><span class="pre">msg_alert</span></code>,
 <code class="docutils literal notranslate"><span class="pre">msg_reply</span></code>, and <code class="docutils literal notranslate"><span class="pre">msg_request</span></code>.</p>

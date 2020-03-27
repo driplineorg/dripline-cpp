@@ -44,9 +44,9 @@ Users can also build their own images using the provided Dockerfile or by custom
 Using Dripline-cpp
 ================== 
 
-See `Agent <agent>`_ and `Monitor <monitor>`_ for instructions on using the included applications.
+See `Agent<dl_agent>`_ and :ref:`Monitor<dl_mon>`_ for instructions on using the included applications.
 
-See `Library <library>`_ for instructions on using the Dripline C++ API.
+See `Library<library>`_ for instructions on using the Dripline C++ API.
 
 
 Setting Up a Mesh
