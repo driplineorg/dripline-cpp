@@ -3,9 +3,10 @@
 Building Dripline
 =================
 
-Dripline is typically built either with the :ref:`build_standalone`, or with the :ref:`build_submodule`.
+Dripline is typically built either in the :ref:`Standalone<build_standalone>` configuration, 
+or in the :ref:`Submodule<build_submodule>`.
 
-For either build option, a number of :ref:`build_options` can be used to customize the build.
+For either build option, a number of :ref:`build options<build_options>` can be used to customize the build.
 
 .. _build_options:
 Build Options
