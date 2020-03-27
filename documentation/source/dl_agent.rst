@@ -89,4 +89,4 @@ Authentication
 
 Communication with the RabbitMQ broker requires the broker address and port, and user/password authentication. 
 
-See :ref:`authentication` for information on how to specify the broker and authentication information.
+See :ref:`Authentication<authentication>` for information on how to specify the broker and authentication information.
