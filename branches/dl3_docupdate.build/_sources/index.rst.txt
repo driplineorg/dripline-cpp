@@ -14,8 +14,8 @@ Contents:
 
    Getting Started <getting_started>
    Installation <building>
-   ``dl-agent`` <dl_agent>
-   ``dl-mon`` <dl_mon>
+   Agent <dl_agent>
+   Monitor <dl_mon>
    Library <library>
    Authentication <authentication>
    Offline & No-Connection <offline>

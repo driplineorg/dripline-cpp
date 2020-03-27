@@ -33,7 +33,7 @@ The Dripline-cpp repository is available on `GitHub <https://driplineorg.github.
 
 Dripline-cpp can either be built manually, or used from a Docker container.
 
-For manual installation instructions, see :ref:`building:build`.
+For manual installation instructions, see `Installation <building>`_.
 
 Pre-built docker containers containing a dripline-cpp installation are available on `Docker Hub <https://hub.docker.com/repository/docker/driplineorg/dripline-cpp>`_.
 
