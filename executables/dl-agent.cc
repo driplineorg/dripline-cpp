@@ -37,8 +37,8 @@ int main( int argc, char** argv )
     the_main.fallthrough(); // pass any options not handled by the subcommands to the main app (this)
 
     the_main.footer( std::string() + "\nValues and Keyword Arguments:\n\n" +
-            "  Further positional arguments (other than the routing key and specifier)\n" +
-            "  can be used to add to the values array in the payload and to other parts of the payload.\n\n" +
+            "  Positional arguments can be used to add to the values array in the payload\n" +
+            "  and to other parts of the payload.\n\n" +
             "  Arguments in the form [key]=[value] will be assumed to be keyword arguments.\n" +
             "  Other arguments will be assumed to be entries in the values array.\n\n" +
             "  The key portion of a keyword argument is an address that can specify\n" +

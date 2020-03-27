@@ -13,9 +13,11 @@ Contents:
    :maxdepth: 2
 
    Getting Started <getting_started>
+   Installation <building>
    ``dl-agent`` <dl_agent>
    ``dl-mon`` <dl_mon>
    Library <library>
+   Authentication <authentication>
    Offline & No-Connection <offline>
 
 .. end of toc
