@@ -8,6 +8,7 @@ or in the :ref:`Submodule<submodule-option>`.
 
 For either build option, a number of :ref:`build options<build-options>` can be used to customize the build.
 
+.. _build-options:
 Build Options
 =============
 
@@ -31,6 +32,7 @@ You can additionally define preprocessor macros that are used directly in the co
 
 * ``DRIPLINE_AUTH_FILE``: specifies the location and filename of the default authentication file
 
+.. _standalone-option:
 Standalone Option 
 =================
 
@@ -53,7 +55,7 @@ Standalone Option
     make install
 
 
-.. _build_submodule:
+.. _submodule-option:
 Submodule Option
 ================
 

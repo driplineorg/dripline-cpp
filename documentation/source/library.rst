@@ -29,12 +29,14 @@ There are also a number of classes that implement various features of the above 
 Core Behavior
 =============
 
+.. _agent:
 Agent
 -----
 
 An ``agent`` takes command-line arguments and sends messages accordingly.  It is primarily used 
 for the :ref:`agent` application.
 
+.. _endpoint:
 Endpoint
 --------
 
@@ -42,6 +44,7 @@ The ``endpoint`` is the basic dripline object capable of handling requests.
 
 An implementation of a particular endpoint should be a class that inherits from ``endpoint``.
 
+.. _service:
 Service
 -------
 
@@ -67,6 +70,7 @@ A service can have both synchronous and asynchronous child endpoints.  With the 
 handled synchronously with the recieving of messages and with processing messages bound for itself.  
 With the latter, requests are passed to the appropriate endpoint, which handles them in its own thread.
 
+.. _messages:
 Messages
 --------
 
