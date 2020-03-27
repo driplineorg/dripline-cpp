@@ -1,0 +1,4 @@
+<map id="receiver" name="receiver">
+<area shape="rect" id="node2" href="$classdripline_1_1concurrent__receiver.html" title="Receives and processes messages concurrently. " alt="" coords="7,336,230,560"/>
+<area shape="rect" id="node3" href="$classdripline_1_1listener__receiver.html" title="Convenience class to bring together listener and concurrent_receiver. " alt="" coords="41,608,197,744"/>
+</map>
