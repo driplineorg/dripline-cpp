@@ -15,7 +15,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Dripline Agent" href="dl_agent.html" />
+    <link rel="next" title="Building Dripline" href="building.html" />
     <link rel="prev" title="Dripline-cpp Use and API Documentation" href="index.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -33,13 +33,13 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="getting-started">
-<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="id1">
+<h1>Getting Started<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="what-s-included">
 <h2>What’s Included<a class="headerlink" href="#what-s-included" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p>dl-agent: An executable that allows you to send Dripline messages</p></li>
-<li><p>dl-mon: An executable that monitors messages on the mesh</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dl-agent</span></code>: An executable that allows you to send Dripline messages</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dl-mon</span></code>: An executable that monitors messages on the mesh</p></li>
 <li><p>dripline-cpp library: Dripline API that can be used to send and receive messages</p></li>
 </ul>
 </div>
@@ -58,63 +58,24 @@
 <li><p>SimpleAmqpClient</p></li>
 </ul>
 </div>
-<div class="section" id="how-to-install">
-<h2>How to Install<a class="headerlink" href="#how-to-install" title="Permalink to this headline">¶</a></h2>
-<p>There are three main ways to use dripline-cpp:</p>
-<ol class="arabic simple">
-<li><p>As a standalone package.</p></li>
-<li><p>As a submodule of another package.</p></li>
-<li><p>In a Docker container</p></li>
-</ol>
-<div class="section" id="standalone-installation">
-<h3>Standalone Installation<a class="headerlink" href="#standalone-installation" title="Permalink to this headline">¶</a></h3>
-<ol class="arabic">
-<li><p>Clone the repository:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">driplineorg</span><span class="o">/</span><span class="n">dripline</span><span class="o">-</span><span class="n">cpp</span> <span class="o">--</span><span class="n">recurse</span><span class="o">-</span><span class="n">submodules</span>
-</pre></div>
-</div>
-</li>
-<li><p>Create a build directory:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">dripline</span><span class="o">-</span><span class="n">cpp</span>
-<span class="n">mkdir</span> <span class="n">build</span>
-<span class="n">cd</span> <span class="n">build</span>
-</pre></div>
-</div>
-</li>
-<li><p>Run CMake:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cmake</span> <span class="o">..</span>
-</pre></div>
-</div>
-</li>
-<li><p>Build and install:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">install</span>
-</pre></div>
-</div>
-</li>
-</ol>
-</div>
-<div class="section" id="submodule-installation">
-<h3>Submodule Installation<a class="headerlink" href="#submodule-installation" title="Permalink to this headline">¶</a></h3>
-<ol class="arabic">
-<li><p>Go to the top-level directory of the repo in which you want to include dripline-cpp:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">my_package</span>
-</pre></div>
-</div>
-</li>
-</ol>
-<ol class="arabic">
-<li><p>Add the submodule:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">submodule</span> <span class="n">add</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">driplineorg</span><span class="o">/</span><span class="n">dripline</span><span class="o">-</span><span class="n">cpp</span> <span class="p">[</span><span class="n">desired</span> <span class="n">path</span><span class="p">]</span>
-</pre></div>
-</div>
-</li>
-</ol>
-</div>
-<div class="section" id="docker-container">
-<h3>Docker Container<a class="headerlink" href="#docker-container" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="getting-dripline-cpp">
+<h2>Getting Dripline-cpp<a class="headerlink" href="#getting-dripline-cpp" title="Permalink to this headline">¶</a></h2>
+<p>The Dripline-cpp repository is available on <a class="reference external" href="https://driplineorg.github.com/dripline-cpp">GitHub</a>.</p>
+<p>Dripline-cpp can either be built manually, or used from a Docker container.</p>
+<p>For manual installation instructions, see <span class="xref std std-ref">building:build</span>.</p>
 <p>Pre-built docker containers containing a dripline-cpp installation are available on <a class="reference external" href="https://hub.docker.com/repository/docker/driplineorg/dripline-cpp">Docker Hub</a>.</p>
 <p>Images are automatically built for each tagged release, and for the <code class="docutils literal notranslate"><span class="pre">master</span></code> and <code class="docutils literal notranslate"><span class="pre">develop</span></code> branches.</p>
+<p>Users can also build their own images using the provided Dockerfile or by customizing their own.</p>
 </div>
+<div class="section" id="using-dripline-cpp">
+<h2>Using Dripline-cpp<a class="headerlink" href="#using-dripline-cpp" title="Permalink to this headline">¶</a></h2>
+<p>See <span class="xref std std-ref">agent</span> and <span class="xref std std-ref">monitor</span> for instructions on using the included applications.</p>
+<p>See <span class="xref std std-ref">library</span> for instructions on using the Dripline C++ API.</p>
+</div>
+<div class="section" id="setting-up-a-mesh">
+<h2>Setting Up a Mesh<a class="headerlink" href="#setting-up-a-mesh" title="Permalink to this headline">¶</a></h2>
+<p>Instructions and examples for setting up a dripline mesh can be found
+from the main <a class="reference external" href="https://driplineorg.github.io">documentation site</a>.</p>
 </div>
 </div>
 
@@ -140,11 +101,16 @@
 <li class="toctree-l2"><a class="reference internal" href="#what-s-included">What’s Included</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#included-packages">Included Packages</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#how-to-install">How to Install</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-dripline-cpp">Getting Dripline-cpp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-dripline-cpp">Using Dripline-cpp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-a-mesh">Setting Up a Mesh</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="building.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dl_agent.html">``dl-agent``</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dl_mon.html">``dl-mon``</a></li>
 <li class="toctree-l1"><a class="reference internal" href="library.html">Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
 <li class="toctree-l1"><a class="reference internal" href="offline.html">Offline &amp; No-Connection</a></li>
 </ul>
 
@@ -153,7 +119,7 @@
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="index.html" title="previous chapter">Dripline-cpp Use and API Documentation</a></li>
-      <li>Next: <a href="dl_agent.html" title="next chapter">Dripline Agent</a></li>
+      <li>Next: <a href="building.html" title="next chapter">Building Dripline</a></li>
   </ul></li>
 </ul>
 </div>
