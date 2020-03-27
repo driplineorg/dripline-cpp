@@ -1,4 +1,3 @@
-.. _authentication:
 ==============
 Authentication
 ==============
