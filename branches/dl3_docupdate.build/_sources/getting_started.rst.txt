@@ -1,4 +1,3 @@
-.. _getting_started:
 ===============
 Getting Started
 ===============
@@ -45,9 +44,9 @@ Users can also build their own images using the provided Dockerfile or by custom
 Using Dripline-cpp
 ================== 
 
-See :ref:`agent` and :ref:`monitor` for instructions on using the included applications.
+See `Agent <agent>`_ and `Monitor <monitor>`_ for instructions on using the included applications.
 
-See :ref:`library` for instructions on using the Dripline C++ API.
+See `Library <library>`_ for instructions on using the Dripline C++ API.
 
 
 Setting Up a Mesh

@@ -4,39 +4,37 @@ Dripline Library
 
 The "end-user" aspects of the dripline-cpp API can be divided into core dripline implementations:
 
-* :ref:`agent`: sends messages (primarily used by the :ref:`agent`)
-* :ref:`endpoint`: receives messages and acts on them
-* :ref:`service`: primary connection with the broker; can have child endpoints and is an endpoint itself
-* :ref:`messages`: concrete implementations of the request, reply, and alert message concepts
+* :ref:`Agent<agent>`: sends messages (primarily used by the :ref:`agent`)
+* :ref:`Endpoint<endpoint>`: receives messages and acts on them
+* :ref:`Service<service>`: primary connection with the broker; can have child endpoints and is an endpoint itself
+* :ref:`Messages<messages>`: concrete implementations of the request, reply, and alert message concepts
 
 and useful extensions:
 
-* :ref:`hub`: service that dispatches requests to C++ functions (or function-like objects)
-* :ref:`monitor`: listens to messages on a mesh (primarily used by the :ref:`monitor`)
-* :ref:`relayer`: asynchronously sends messages
+* :ref:`Hub<hub>`: service that dispatches requests to C++ functions (or function-like objects)
+* :ref:`Monitor<monitor>`: listens to messages on a mesh (primarily used by the :ref:`monitor`)
+* :ref:`Relayer<relayer>`: asynchronously sends messages
 
 There are also a number of classes that implement various features of the above classes:
 
-* :ref:`core`: interface for the RabbitMQ client library; interface includes interacting with the broker and for sending and receiving messages
-* :ref:`heartbeater`: implements the heartbeat behavior
-* :ref:`listeners`: listen for AMQP messages (dripline message chunks or whole messages)
-* :ref:`receivers`: collects dripline message chunks and assembles them into complete messages
-* :ref:`scheduler`: executes scheduled events
-* :ref:`specifier`: parses specifier strings
-* :ref:`version_store`: stores version information for a particular application context
+* :ref:`Core<core>`: interface for the RabbitMQ client library; interface includes interacting with the broker and for sending and receiving messages
+* :ref:`Heartbeater<heartbeater>`: implements the heartbeat behavior
+* :ref:`Listeners<listeners>`: listen for AMQP messages (dripline message chunks or whole messages)
+* :ref:`Receivers<receivers>`: collect dripline message chunks and assembles them into complete messages
+* :ref:`Scheduler<scheduler>`: executes scheduled events
+* :ref:`Specifier<specifier>`: parses specifier strings
+* :ref:`Version Store<version-store>`: stores version information for a particular application context
 
 
 Core Behavior
 =============
 
-.. _agent:
 Agent
 -----
 
 An ``agent`` takes command-line arguments and sends messages accordingly.  It is primarily used 
 for the :ref:`agent` application.
 
-.. _endpoint:
 Endpoint
 --------
 
@@ -44,7 +42,6 @@ The ``endpoint`` is the basic dripline object capable of handling requests.
 
 An implementation of a particular endpoint should be a class that inherits from ``endpoint``.
 
-.. _service:
 Service
 -------
 
@@ -70,7 +67,6 @@ A service can have both synchronous and asynchronous child endpoints.  With the 
 handled synchronously with the recieving of messages and with processing messages bound for itself.  
 With the latter, requests are passed to the appropriate endpoint, which handles them in its own thread.
 
-.. _messages:
 Messages
 --------
 
@@ -85,7 +81,6 @@ Message objects know how to convert between themselves and AMQP message objects.
 Useful Extensions
 =================
 
-.. _hub:
 Hub
 ---
 
@@ -95,7 +90,6 @@ a single application and have the requests distributed accordingly.
 
 .. image:: ../images/DriplineHubDiagram.png
 
-.. _monitor:
 Monitor
 -------
 
@@ -103,7 +97,6 @@ A ``monitor`` listens for messages sent to a particular set of keys and prints t
 
 It is used primarily for the :ref:`monitor` application.
 
-.. _relayer:
 Relayer
 -------
 
@@ -115,7 +108,6 @@ or ignored.
 Other Classes
 =============
 
-.. _core:
 Core
 ----
 
@@ -126,7 +118,6 @@ The class includes a number of static utility functions for interacting with the
 
 It further includes a complete interface for sending messages.
 
-.. _heartbeater:
 Heartbeater
 -----------
 
@@ -137,7 +128,6 @@ The heartbeat is an alert sent to a pre-determined routing key, which is given a
 ``execute()`` function.  The interval for sending the heartbeats is ``f_heartbeat_interval_s``, 
 which is in seconds.  The default interval is 60 s.
 
-.. _listeners:
 Listeners
 ---------
 
@@ -157,7 +147,6 @@ The typical use case involves at least two threads:
 ``endpoint_listener_receiver`` is a decorator class for a "plain" endpoint: 
 it adds ``listener_receiver`` capabilities, allowing it to act as an asynchronous endpoint of a ``service``.
 
-.. _receivers:
 Receivers
 ---------
 
@@ -172,7 +161,6 @@ The ``receiver`` class contains an interface specifically for users waiting to r
 The ``concurrent_receiver`` class allows client code to concurrently receive and process messages 
 (i.e. in separate threads).  
 
-.. _scheduler:
 Scheduler
 ---------
 
@@ -184,14 +172,12 @@ Events can be one-off, scheduled for a particular time, or they can be repeating
 scheduled with an interval starting at a particular time.  The default start time for 
 repeating events is "now."
 
-.. _specifier:
 Specifier
 ---------
 
 Message specifier strings of the form ``"my.favorite.command"`` are tokenized 
 into an array of strings: ``["my", "favorite", "command"]``.
 
-.. _version_store:
 Version Store
 -------------
 
