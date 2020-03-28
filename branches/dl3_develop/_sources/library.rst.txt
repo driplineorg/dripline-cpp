@@ -1,3 +1,5 @@
+.. _library:
+
 ================
 Dripline Library
 ================
@@ -30,13 +32,15 @@ Core Behavior
 =============
 
 .. _agent:
+
 Agent
 -----
 
 An ``agent`` takes command-line arguments and sends messages accordingly.  It is primarily used 
-for the :ref:`agent` application.
+for the :ref:`dl-agent` application.
 
 .. _endpoint:
+
 Endpoint
 --------
 
@@ -45,6 +49,7 @@ The ``endpoint`` is the basic dripline object capable of handling requests.
 An implementation of a particular endpoint should be a class that inherits from ``endpoint``.
 
 .. _service:
+
 Service
 -------
 
@@ -71,6 +76,7 @@ handled synchronously with the recieving of messages and with processing message
 With the latter, requests are passed to the appropriate endpoint, which handles them in its own thread.
 
 .. _messages:
+
 Messages
 --------
 
@@ -85,6 +91,8 @@ Message objects know how to convert between themselves and AMQP message objects.
 Useful Extensions
 =================
 
+.. _hub:
+
 Hub
 ---
 
@@ -94,12 +102,16 @@ a single application and have the requests distributed accordingly.
 
 .. image:: ../images/DriplineHubDiagram.png
 
+.. _monitor:
+
 Monitor
 -------
 
 A ``monitor`` listens for messages sent to a particular set of keys and prints them to the terminal.
 
-It is used primarily for the :ref:`monitor` application.
+It is used primarily for the :ref:`dl-mon` application.
+
+.. _relayer:
 
 Relayer
 -------
@@ -112,6 +124,8 @@ or ignored.
 Other Classes
 =============
 
+.. _core:
+
 Core
 ----
 
@@ -122,6 +136,8 @@ The class includes a number of static utility functions for interacting with the
 
 It further includes a complete interface for sending messages.
 
+.. _heartbeater:
+
 Heartbeater
 -----------
 
@@ -131,6 +147,8 @@ to repeatedly sends a heartbeat on a particular time interval.
 The heartbeat is an alert sent to a pre-determined routing key, which is given as a parameter to the 
 ``execute()`` function.  The interval for sending the heartbeats is ``f_heartbeat_interval_s``, 
 which is in seconds.  The default interval is 60 s.
+
+.. _listeners:
 
 Listeners
 ---------
@@ -151,6 +169,8 @@ The typical use case involves at least two threads:
 ``endpoint_listener_receiver`` is a decorator class for a "plain" endpoint: 
 it adds ``listener_receiver`` capabilities, allowing it to act as an asynchronous endpoint of a ``service``.
 
+.. _receivers:
+
 Receivers
 ---------
 
@@ -165,6 +185,8 @@ The ``receiver`` class contains an interface specifically for users waiting to r
 The ``concurrent_receiver`` class allows client code to concurrently receive and process messages 
 (i.e. in separate threads).  
 
+.. _scheduler:
+
 Scheduler
 ---------
 
@@ -176,11 +198,15 @@ Events can be one-off, scheduled for a particular time, or they can be repeating
 scheduled with an interval starting at a particular time.  The default start time for 
 repeating events is "now."
 
+.. _specifier:
+
 Specifier
 ---------
 
 Message specifier strings of the form ``"my.favorite.command"`` are tokenized 
 into an array of strings: ``["my", "favorite", "command"]``.
+
+.. _version-store:
 
 Version Store
 -------------

@@ -1,3 +1,5 @@
+.. _dl-agent:
+
 ==============
 Dripline Agent
 ==============
@@ -88,4 +90,4 @@ Authentication
 
 Communication with the RabbitMQ broker requires the broker address and port, and user/password authentication. 
 
-See `Authentication<authentication>`_ for information on how to specify the broker and authentication information.
+See :ref:`Authentication<authentication>` for information on how to specify the broker and authentication information.
