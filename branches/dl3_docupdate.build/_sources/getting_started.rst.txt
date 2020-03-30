@@ -5,8 +5,8 @@ Getting Started
 What's Included
 ===============
 
-* ``dl-agent``: An executable that allows you to send Dripline messages
-* ``dl-mon``: An executable that monitors messages on the mesh
+* :ref:`dl-agent <dl-agent>`: An executable that allows you to send Dripline messages
+* :ref:`dl-mon <dl-mon>`: An executable that monitors messages on the mesh
 * dripline-cpp library: Dripline API that can be used to send and receive messages
 
 
@@ -22,7 +22,8 @@ Requirements
 Included Packages
 =================
 
-* SimpleAmqpClient
+* `SimpleAmqpClient <https://github.com/project8/SimpleAmqpClient>`_ (unchanged fork of `upstream SimpleAmqpClient <https://github.com/alanxz/SimpleAmqpClient>`_)
+* `scarab <https://github.com/project8/scarab>`_
 
 
 Getting Dripline-cpp
