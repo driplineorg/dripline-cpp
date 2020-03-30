@@ -36,33 +36,51 @@
   <div class="section" id="building-dripline">
 <span id="building"></span><h1>Building Dripline<a class="headerlink" href="#building-dripline" title="Permalink to this headline">¶</a></h1>
 <p>Dripline is typically built either in the <a class="reference internal" href="#standalone-option"><span class="std std-ref">Standalone</span></a> configuration,
-or in the <a class="reference internal" href="#submodule-option"><span class="std std-ref">Submodule</span></a>.</p>
+or as a <a class="reference internal" href="#submodule-option"><span class="std std-ref">Submodule</span></a>.</p>
 <p>For either build option, a number of <a class="reference internal" href="#build-options"><span class="std std-ref">build options</span></a> can be used to customize the build.</p>
 <div class="section" id="build-options">
 <span id="id1"></span><h2>Build Options<a class="headerlink" href="#build-options" title="Permalink to this headline">¶</a></h2>
 <p>Dripline build options include:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Dripline_BUILD_EXAMPLES</span></code>: if ON, builds the example applications</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Dripline_BUILD_PYTHON</span></code>: if ON, builds utilities used by the Python wrapping</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Dripline_ENABLE_EXECUTABLES</span></code>: if ON, builds the Dripline executables</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Dripline_ENABLE_TESTING</span></code>: if ON, builds the testing application</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Dripline_MAX_PAYLOAD_SIZE</span></code>: Maximum payload size in bytes</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Dripline_PYTHON_THROW_REPLY_KEYWORD</span></code>: keyword used by the python wrapping that indicates that the thrown object is a reply message to be sent</p></li>
-</ul>
+<dl class="glossary simple">
+<dt id="term-dripline-build-examples-bool"><code class="docutils literal notranslate"><span class="pre">Dripline_BUILD_EXAMPLES</span></code> (BOOL)</dt><dd><p>if ON, builds the example applications</p>
+</dd>
+<dt id="term-0"><code class="docutils literal notranslate"><span class="pre">Dripline_BUILD_EXAMPLES</span></code> (BOOL)</dt><dd><p>if ON, builds the example applications</p>
+</dd>
+<dt id="term-dripline-build-python-bool"><code class="docutils literal notranslate"><span class="pre">Dripline_BUILD_PYTHON</span></code> (BOOL)</dt><dd><p>if ON, builds utilities used by the Python wrapping</p>
+</dd>
+<dt id="term-dripline-enable-executables-bool"><code class="docutils literal notranslate"><span class="pre">Dripline_ENABLE_EXECUTABLES</span></code> (BOOL)</dt><dd><p>if ON, builds the Dripline executables</p>
+</dd>
+<dt id="term-dripline-enable-testing-bool"><code class="docutils literal notranslate"><span class="pre">Dripline_ENABLE_TESTING</span></code> (BOOL)</dt><dd><p>if ON, builds the testing application</p>
+</dd>
+<dt id="term-dripline-max-payload-size-int"><code class="docutils literal notranslate"><span class="pre">Dripline_MAX_PAYLOAD_SIZE</span></code> (INT)</dt><dd><p>Maximum payload size in bytes</p>
+</dd>
+<dt id="term-dripline-python-throw-reply-keyword"><code class="docutils literal notranslate"><span class="pre">Dripline_PYTHON_THROW_REPLY_KEYWORD</span></code></dt><dd><p>keyword used by the python wrapping that indicates that the thrown object is a reply message to be sent</p>
+</dd>
+</dl>
 <p>From the built-in CMake options, users may be interested in adjusting the build type
-to control the level of compiler optimizationa and terminal output.
-The CMake option is <code class="docutils literal notranslate"><span class="pre">CMAKE_BUILD_TYPE</span></code>, and the options are:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Debug</span></code>: prints info and debug messages, and can print trace messages; low compiler optimization; debugging symbols included</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Release</span></code>: only prints warning and error messages; highly optimized, and no debugging symbols included</p></li>
-</ul>
+to control the level of compiler optimization and terminal output.
+The CMake option and possible values are:</p>
+<dl class="glossary simple">
+<dt id="term-cmake-build-type-string-debug-release"><code class="docutils literal notranslate"><span class="pre">CMAKE_BUILD_TYPE</span></code> (STRING: [Debug || Release])</dt><dd><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">Debug</span></code></dt><dd><p>prints info and debug messages, and can print trace messages; low compiler optimization; debugging symbols included</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Release</span></code></dt><dd><p>only prints warning and error messages; highly optimized, and no debugging symbols included</p>
+</dd>
+</dl>
+</dd>
+</dl>
 <p>You can additionally define preprocessor macros that are used directly in the code:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">DRIPLINE_AUTH_FILE</span></code>: specifies the location and filename of the default authentication file</p></li>
-</ul>
+<dl class="glossary simple">
+<dt id="term-dripline-auth-file-path"><code class="docutils literal notranslate"><span class="pre">DRIPLINE_AUTH_FILE</span></code> (PATH)</dt><dd><p>specifies the location and filename of the default authentication file</p>
+</dd>
+</dl>
 </div>
 <div class="section" id="standalone-option">
 <span id="id2"></span><h2>Standalone Option<a class="headerlink" href="#standalone-option" title="Permalink to this headline">¶</a></h2>
+<p>In standalone mode, one compiles only the dripline-cpp repository and its dependencies.
+This option is best for testing, providing access to commandline tools, or when a derrived software product uses dripline-cpp as an external dependency.
+This is the approach used in the Dockerfile, which is included in the dripline-cpp repository and used to automatically build dripline-cpp container images.
+The steps are:</p>
 <ol class="arabic">
 <li><p>Clone the repository:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">driplineorg</span><span class="o">/</span><span class="n">dripline</span><span class="o">-</span><span class="n">cpp</span> <span class="o">--</span><span class="n">recurse</span><span class="o">-</span><span class="n">submodules</span>
@@ -90,6 +108,10 @@ The CMake option is <code class="docutils literal notranslate"><span class="pre"
 </div>
 <div class="section" id="submodule-option">
 <span id="id3"></span><h2>Submodule Option<a class="headerlink" href="#submodule-option" title="Permalink to this headline">¶</a></h2>
+<p>The submodule build configuration is for when the dripline-cpp is being include as a git submodule in some derived package’s repository.
+This option is best when you want to track and pin the exact dripline-cpp version to be used in another project and you want to build them together using cmake.
+This is the approach used in the dripline-python package, which builds a python library on top of dripline-cpp.
+The steps for this mode are:</p>
 <ol class="arabic">
 <li><p>Go to the top-level directory of the parent pacakge in which you want to include dripline-cpp:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">my_package</span>
