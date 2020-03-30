@@ -41,6 +41,20 @@ Options
   --json-print                
   --pretty-print              
 
+Keyword Arguments
+-----------------
+
+Positional arguments can be used to add to the values array in the payload and to other parts of the payload.
+
+Arguments in the form [key]=[value] will be assumed to be keyword arguments.
+Other arguments will be assumed to be entries in the values array.
+
+The "key" portion of a keyword argument is an address that can specify both node and array locations.
+For example, ``my.value.0=10`` would add this to the payload::
+
+    my:
+      value:
+        - 10
 
 Authentication
 ==============
