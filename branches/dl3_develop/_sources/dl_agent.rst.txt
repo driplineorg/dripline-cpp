@@ -1,5 +1,7 @@
 .. _dl-agent:
 
+.. highlight:: bash
+
 ==============
 Dripline Agent
 ==============
