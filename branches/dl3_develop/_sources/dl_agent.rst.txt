@@ -1,6 +1,7 @@
-.. _dl-agent:
-
+.. set the default highlight for this file
 .. highlight:: bash
+
+.. _dl-agent:
 
 ==============
 Dripline Agent
