@@ -41,8 +41,8 @@
 <blockquote>
 <div><p><code class="docutils literal notranslate"><span class="pre">&gt;</span> <span class="pre">dl-mon</span> <span class="pre">[options]</span> <span class="pre">[keyword</span> <span class="pre">arguments]</span></code></p>
 </div></blockquote>
-<p>The user should specify routing keys to be monitored using either or both
-of the <code class="docutils literal notranslate"><span class="pre">-r,--requests</span></code> and <code class="docutils literal notranslate"><span class="pre">-a,--alerts</span></code> options.  Standard RabbitMQ wildcard rules apply.</p>
+<p>The user should specify routing keys to be monitored on the requests or alerts exchange using either or both of the <code class="docutils literal notranslate"><span class="pre">-r,--requests</span></code> and <code class="docutils literal notranslate"><span class="pre">-a,--alerts</span></code> options.
+Standard RabbitMQ wildcard rules apply.</p>
 <div class="section" id="options">
 <h3>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span><span class="n">h</span><span class="p">,</span><span class="o">--</span><span class="n">help</span>                   <span class="n">Print</span> <span class="n">this</span> <span class="n">help</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span>
@@ -64,19 +64,6 @@ of the <code class="docutils literal notranslate"><span class="pre">-r,--request
 <span class="o">-</span><span class="n">a</span><span class="p">,</span><span class="o">--</span><span class="n">alerts</span> <span class="n">TEXT</span> <span class="o">...</span>        <span class="n">Assign</span> <span class="n">keys</span> <span class="k">for</span> <span class="n">binding</span> <span class="n">to</span> <span class="n">the</span> <span class="n">alerts</span> <span class="n">exchange</span>
 <span class="o">--</span><span class="n">json</span><span class="o">-</span><span class="nb">print</span>
 <span class="o">--</span><span class="n">pretty</span><span class="o">-</span><span class="nb">print</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="keyword-arguments">
-<h3>Keyword Arguments<a class="headerlink" href="#keyword-arguments" title="Permalink to this headline">¶</a></h3>
-<p>Positional arguments can be used to add to the values array in the payload and to other parts of the payload.</p>
-<p>Arguments in the form [key]=[value] will be assumed to be keyword arguments.
-Other arguments will be assumed to be entries in the values array.</p>
-<p>The “key” portion of a keyword argument is an address that can specify both node and array locations.
-For example, <code class="docutils literal notranslate"><span class="pre">my.value.0=10</span></code> would add this to the payload:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my</span><span class="p">:</span>
-  <span class="n">value</span><span class="p">:</span>
-    <span class="o">-</span> <span class="mi">10</span>
 </pre></div>
 </div>
 </div>

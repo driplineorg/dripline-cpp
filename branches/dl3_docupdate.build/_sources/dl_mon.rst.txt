@@ -6,14 +6,15 @@ Dripline Monitor
 
 Dripline includes an executable for monitoring the messages being passed around on a mesh: ``dl-mon``.
 
+.. TODO sphinx supports autodoc for the CLI tools. We should consider replacing the following code blocks with parsed CLI output from `--help` in the future (if we're building in an environment where dripline-cpp is installed).
 
 Use
 ===
 
   ``> dl-mon [options] [keyword arguments]``
 
-The user should specify routing keys to be monitored using either or both 
-of the ``-r,--requests`` and ``-a,--alerts`` options.  Standard RabbitMQ wildcard rules apply.
+The user should specify routing keys to be monitored on the requests or alerts exchange using either or both of the ``-r,--requests`` and ``-a,--alerts`` options.
+Standard RabbitMQ wildcard rules apply.
 
 Options
 -------
@@ -39,21 +40,6 @@ Options
   -a,--alerts TEXT ...        Assign keys for binding to the alerts exchange
   --json-print                
   --pretty-print              
-
-Keyword Arguments
------------------
-
-Positional arguments can be used to add to the values array in the payload and to other parts of the payload.
-
-Arguments in the form [key]=[value] will be assumed to be keyword arguments.
-Other arguments will be assumed to be entries in the values array.
-
-The "key" portion of a keyword argument is an address that can specify both node and array locations.
-For example, ``my.value.0=10`` would add this to the payload::
-
-    my:
-      value:
-        - 10
 
 
 Authentication
