@@ -34,7 +34,7 @@
           <div class="body" role="main">
             
   <div class="section" id="dripline-agent">
-<span id="dl-agent"></span><h1>Dripline Agent<a class="headerlink" href="#dripline-agent" title="Permalink to this headline">¶</a></h1>
+<h1>Dripline Agent<a class="headerlink" href="#dripline-agent" title="Permalink to this headline">¶</a></h1>
 <p>Dripline includes an executable for sending dripline messages: <code class="docutils literal notranslate"><span class="pre">dl-agent</span></code>.</p>
 <div class="section" id="use">
 <h2>Use<a class="headerlink" href="#use" title="Permalink to this headline">¶</a></h2>
@@ -47,31 +47,31 @@ authentication file), the specifier (<code class="docutils literal notranslate">
 and the values (<code class="docutils literal notranslate"><span class="pre">-v,--values</span></code>, or positional after the routing key)</p>
 <div class="section" id="options">
 <h3>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span><span class="n">h</span><span class="p">,</span><span class="o">--</span><span class="n">help</span>                     <span class="n">Print</span> <span class="n">this</span> <span class="n">help</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span>
-<span class="o">-</span><span class="n">c</span><span class="p">,</span><span class="o">--</span><span class="n">config</span> <span class="n">TEXT</span><span class="p">:</span><span class="n">FILE</span>         <span class="n">Config</span> <span class="n">file</span> <span class="n">filename</span>
-<span class="o">--</span><span class="n">verbosity</span> <span class="n">UINT</span>              <span class="n">Global</span> <span class="n">logger</span> <span class="n">verosity</span>
-<span class="o">-</span><span class="n">V</span><span class="p">,</span><span class="o">--</span><span class="n">version</span>                  <span class="n">Print</span> <span class="n">the</span> <span class="n">version</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span>
-<span class="o">-</span><span class="n">b</span><span class="p">,</span><span class="o">--</span><span class="n">broker</span> <span class="n">TEXT</span>              <span class="n">Set</span> <span class="n">the</span> <span class="n">dripline</span> <span class="n">broker</span> <span class="n">address</span>
-<span class="o">-</span><span class="n">p</span><span class="p">,</span><span class="o">--</span><span class="n">port</span> <span class="n">UINT</span>                <span class="n">Set</span> <span class="n">the</span> <span class="n">port</span> <span class="k">for</span> <span class="n">communication</span> <span class="k">with</span> <span class="n">the</span> <span class="n">dripline</span> <span class="n">broker</span>
-<span class="o">--</span><span class="n">auth</span><span class="o">-</span><span class="n">file</span> <span class="n">TEXT</span>              <span class="n">Set</span> <span class="n">the</span> <span class="n">authentication</span> <span class="n">file</span> <span class="n">path</span>
-<span class="o">--</span><span class="n">requests</span><span class="o">-</span><span class="n">exchange</span> <span class="n">TEXT</span>      <span class="n">Set</span> <span class="n">the</span> <span class="n">name</span> <span class="n">of</span> <span class="n">the</span> <span class="n">requests</span> <span class="n">exchange</span>
-<span class="o">--</span><span class="n">alerts</span><span class="o">-</span><span class="n">exchange</span> <span class="n">TEXT</span>        <span class="n">Set</span> <span class="n">the</span> <span class="n">name</span> <span class="n">of</span> <span class="n">the</span> <span class="n">alerts</span> <span class="n">exchange</span>
-<span class="o">--</span><span class="nb">max</span><span class="o">-</span><span class="n">payload</span> <span class="n">UINT</span>            <span class="n">Set</span> <span class="n">the</span> <span class="n">maximum</span> <span class="n">payload</span> <span class="n">size</span> <span class="p">(</span><span class="ow">in</span> <span class="nb">bytes</span><span class="p">)</span>
-<span class="o">--</span><span class="n">loop</span><span class="o">-</span><span class="n">timeout</span><span class="o">-</span><span class="n">msdripline</span><span class="o">.</span><span class="n">loop</span><span class="o">-</span><span class="n">timeout</span><span class="o">-</span><span class="n">ms</span> <span class="n">UINT</span>
-<span class="o">--</span><span class="n">message</span><span class="o">-</span><span class="n">wait</span><span class="o">-</span><span class="n">msdripline</span><span class="o">.</span><span class="n">message</span><span class="o">-</span><span class="n">wait</span><span class="o">-</span><span class="n">ms</span> <span class="n">UINT</span>
-<span class="o">--</span><span class="n">heartbeat</span><span class="o">-</span><span class="n">routing</span><span class="o">-</span><span class="n">key</span> <span class="n">TEXT</span>  <span class="n">Set</span> <span class="n">the</span> <span class="n">first</span> <span class="n">token</span> <span class="n">of</span> <span class="n">heartbeat</span> <span class="n">routing</span> <span class="n">keys</span><span class="p">:</span> <span class="p">[</span><span class="n">token</span><span class="p">]</span><span class="o">.</span><span class="p">[</span><span class="n">origin</span><span class="p">]</span>
-<span class="o">--</span><span class="n">heartbeat</span><span class="o">-</span><span class="n">interval</span><span class="o">-</span><span class="n">s</span> <span class="n">UINT</span>   <span class="n">Set</span> <span class="n">the</span> <span class="n">interval</span> <span class="n">between</span> <span class="n">heartbeats</span> <span class="ow">in</span> <span class="n">s</span>
-<span class="o">-</span><span class="n">s</span><span class="p">,</span><span class="o">--</span><span class="n">specifier</span> <span class="n">TEXT</span>           <span class="n">Set</span> <span class="n">the</span> <span class="n">specifier</span>
-<span class="o">-</span><span class="n">P</span><span class="p">,</span><span class="o">--</span><span class="n">payload</span> <span class="n">TEXT</span> <span class="o">...</span>         <span class="n">Add</span> <span class="n">values</span> <span class="n">to</span> <span class="n">the</span> <span class="n">payload</span>
-<span class="o">-</span><span class="n">v</span><span class="p">,</span><span class="o">--</span><span class="n">values</span> <span class="n">TEXT</span> <span class="o">...</span>          <span class="n">Add</span> <span class="n">ordered</span> <span class="n">values</span>
-<span class="o">-</span><span class="n">t</span><span class="p">,</span><span class="o">--</span><span class="n">timeout</span> <span class="n">UINT</span>             <span class="n">Set</span> <span class="n">the</span> <span class="n">timeout</span> <span class="k">for</span> <span class="n">waiting</span> <span class="k">for</span> <span class="n">a</span> <span class="n">reply</span> <span class="p">(</span><span class="n">seconds</span><span class="p">)</span>
-<span class="o">-</span><span class="n">k</span><span class="p">,</span><span class="o">--</span><span class="n">lockout</span><span class="o">-</span><span class="n">key</span> <span class="n">TEXT</span>         <span class="n">Set</span> <span class="n">the</span> <span class="n">lockout</span> <span class="n">key</span> <span class="n">to</span> <span class="n">send</span> <span class="k">with</span> <span class="n">the</span> <span class="n">message</span> <span class="p">(</span><span class="k">for</span> <span class="n">sending</span> <span class="n">requests</span> <span class="n">only</span><span class="p">)</span>
-<span class="o">--</span><span class="n">suppress</span><span class="o">-</span><span class="n">output</span>
-<span class="o">--</span><span class="n">json</span><span class="o">-</span><span class="nb">print</span>
-<span class="o">--</span><span class="n">pretty</span><span class="o">-</span><span class="nb">print</span>
-<span class="o">--</span><span class="k">return</span><span class="o">-</span><span class="n">code</span> <span class="n">UINT</span>            <span class="n">Set</span> <span class="n">the</span> <span class="k">return</span> <span class="n">code</span> <span class="n">sent</span> <span class="p">(</span><span class="k">for</span> <span class="n">sending</span> <span class="n">replies</span> <span class="n">only</span><span class="p">)</span>
-<span class="o">--</span><span class="k">return</span><span class="o">-</span><span class="n">msg</span> <span class="n">TEXT</span>             <span class="n">Set</span> <span class="n">the</span> <span class="k">return</span> <span class="n">message</span> <span class="n">sent</span> <span class="p">(</span><span class="k">for</span> <span class="n">sending</span> <span class="n">replies</span> <span class="n">only</span><span class="p">)</span>
-<span class="o">--</span><span class="n">dry</span><span class="o">-</span><span class="n">run</span><span class="o">-</span><span class="n">msg</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>-h,--help                     Print this <span class="nb">help</span> message and <span class="nb">exit</span>
+-c,--config TEXT:FILE         Config file filename
+--verbosity UINT              Global logger verosity
+-V,--version                  Print the version message and <span class="nb">exit</span>
+-b,--broker TEXT              Set the dripline broker address
+-p,--port UINT                Set the port <span class="k">for</span> communication with the dripline broker
+--auth-file TEXT              Set the authentication file path
+--requests-exchange TEXT      Set the name of the requests exchange
+--alerts-exchange TEXT        Set the name of the alerts exchange
+--max-payload UINT            Set the maximum payload size <span class="o">(</span>in bytes<span class="o">)</span>
+--loop-timeout-msdripline.loop-timeout-ms UINT
+--message-wait-msdripline.message-wait-ms UINT
+--heartbeat-routing-key TEXT  Set the first token of heartbeat routing keys: <span class="o">[</span>token<span class="o">]</span>.<span class="o">[</span>origin<span class="o">]</span>
+--heartbeat-interval-s UINT   Set the interval between heartbeats in s
+-s,--specifier TEXT           Set the specifier
+-P,--payload TEXT ...         Add values to the payload
+-v,--values TEXT ...          Add ordered values
+-t,--timeout UINT             Set the timeout <span class="k">for</span> waiting <span class="k">for</span> a reply <span class="o">(</span>seconds<span class="o">)</span>
+-k,--lockout-key TEXT         Set the lockout key to send with the message <span class="o">(</span><span class="k">for</span> sending requests only<span class="o">)</span>
+--suppress-output
+--json-print
+--pretty-print
+--return-code UINT            Set the <span class="k">return</span> code sent <span class="o">(</span><span class="k">for</span> sending replies only<span class="o">)</span>
+--return-msg TEXT             Set the <span class="k">return</span> message sent <span class="o">(</span><span class="k">for</span> sending replies only<span class="o">)</span>
+--dry-run-msg
 </pre></div>
 </div>
 </div>
@@ -100,9 +100,9 @@ technically an option of the subcommand.  It will show up if using <code class="
 Other arguments will be assumed to be entries in the values array.</p>
 <p>The “key” portion of a keyword argument is an address that can specify both node and array locations.
 For example, <code class="docutils literal notranslate"><span class="pre">my.value.0=10</span></code> would add this to the payload:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my</span><span class="p">:</span>
-  <span class="n">value</span><span class="p">:</span>
-    <span class="o">-</span> <span class="mi">10</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>my:
+  value:
+    - <span class="m">10</span>
 </pre></div>
 </div>
 </div>
