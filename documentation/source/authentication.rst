@@ -23,8 +23,8 @@ Command-line arguments::
 If your broker is using the default port (5762), it doesn't need to be separately specified when running 
 any dripline applications.
 
-Authentication
---------------
+RabbitMQ Authentication
+-----------------------
 
 Authentication for communication with the RabbitMQ broker is performed with a username/password pair.  
 
@@ -51,13 +51,18 @@ An authentication file for dripline can look like this (JSON)::
 The username and password are required, but the ``broker`` and ``broker-port`` are optional, 
 as they may be specified in the application configuraiton file or command-line arguments.
 
-Auth File Location
-------------------
+Specifying the File
+-------------------
 
-The default location for the authentication file is the user's home directory, 
-and that default location and filename can be set at build time by defining ``DRIPLINE_AUTH_FILE``.
+The default path can be set at build time by defining ``DRIPLINE_AUTH_FILE`` before building dripline-cpp 
+in a derived project.  If that macro is not defined, then there is no default path.
 
-The actual location of the file can be specified at runtime using the application configuration file 
-a command-line argument::
+The authentication file is specified in an application configuration as:
+
+    amqp:
+        auth-file: [filename]
+
+At runtime the authentication file path can be modified by any of the normal ways, plus the 
+command-line argument:
 
     --auth-file [file]
