@@ -51,8 +51,8 @@ These can be specified either in the application configuration file or as comman
 </div>
 <p>If your broker is using the default port (5762), it doesn’t need to be separately specified when running
 any dripline applications.</p>
-<div class="section" id="id2">
-<h3>Authentication<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="rabbitmq-authentication">
+<h3>RabbitMQ Authentication<a class="headerlink" href="#rabbitmq-authentication" title="Permalink to this headline">¶</a></h3>
 <p>Authentication for communication with the RabbitMQ broker is performed with a username/password pair.</p>
 </div>
 </div>
@@ -76,15 +76,22 @@ command-line arguments.</p>
 </div>
 <p>The username and password are required, but the <code class="docutils literal notranslate"><span class="pre">broker</span></code> and <code class="docutils literal notranslate"><span class="pre">broker-port</span></code> are optional,
 as they may be specified in the application configuraiton file or command-line arguments.</p>
-<div class="section" id="auth-file-location">
-<h3>Auth File Location<a class="headerlink" href="#auth-file-location" title="Permalink to this headline">¶</a></h3>
-<p>The default location for the authentication file is the user’s home directory,
-and that default location and filename can be set at build time by defining <code class="docutils literal notranslate"><span class="pre">DRIPLINE_AUTH_FILE</span></code>.</p>
-<p>The actual location of the file can be specified at runtime using the application configuration file
-a command-line argument:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">--</span><span class="n">auth</span><span class="o">-</span><span class="n">file</span> <span class="p">[</span><span class="n">file</span><span class="p">]</span>
-</pre></div>
-</div>
+<div class="section" id="specifying-the-file">
+<h3>Specifying the File<a class="headerlink" href="#specifying-the-file" title="Permalink to this headline">¶</a></h3>
+<p>The default path can be set at build time by defining <code class="docutils literal notranslate"><span class="pre">DRIPLINE_AUTH_FILE</span></code> before building dripline-cpp
+in a derived project.  If that macro is not defined, then there is no default path.</p>
+<p>The authentication file is specified in an application configuration as:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>amqp:</dt><dd><p>auth-file: [filename]</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>At runtime the authentication file path can be modified by any of the normal ways, plus the
+command-line argument:</p>
+<blockquote>
+<div><p>–auth-file [file]</p>
+</div></blockquote>
 </div>
 </div>
 </div>

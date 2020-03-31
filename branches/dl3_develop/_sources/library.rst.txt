@@ -96,11 +96,11 @@ Useful Extensions
 Hub
 ---
 
-A hub is a service that is setup to receive requests and maps routing key specifiers to C++ handler functions.  
+A hub is a service that is setup to receive requests and maps specifiers to C++ handler functions.  
 This allows you to, for example, receive requests intended for a variety of destinations within 
 a single application and have the requests distributed accordingly.
 
-.. image:: ../images/DriplineHubDiagram.png
+.. image:: ../images/HubDiagram.png
 
 .. _monitor:
 
