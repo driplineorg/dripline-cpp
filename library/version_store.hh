@@ -26,7 +26,7 @@ namespace dripline
      @class version_store
      @author N.S. Oblath
 
-     @brief Singleton class to store all version information relevant in any particular context.
+     @brief Singleton class to store all version information relevant in any particular application context.
 
      @details
      This class is used to provide all of the relevant version information to a dripline message object.
