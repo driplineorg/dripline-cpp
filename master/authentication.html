@@ -1,0 +1,181 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Authentication &#8212; Dripline-Cpp v2.3.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="shortcut icon" href="_static/DL3Logo.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Offline &amp; No-Connection Use" href="offline.html" />
+    <link rel="prev" title="Configuration" href="configuration.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="authentication">
+<span id="id1"></span><h1>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="broker-information">
+<h2>Broker Information<a class="headerlink" href="#broker-information" title="Permalink to this headline">¶</a></h2>
+<p>The basic information needed for communicating with the broker is the broker address and the port.
+These can be specified either in the application configuration file or as command-line arguments.</p>
+<p>Configuration file (YAML):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">broker</span><span class="p">:</span> <span class="n">my</span><span class="o">.</span><span class="n">broker</span>
+<span class="n">broker</span><span class="o">-</span><span class="n">port</span><span class="p">:</span> <span class="mi">5362</span>
+</pre></div>
+</div>
+<p>Command-line arguments:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">--</span><span class="n">broker</span> <span class="n">my</span><span class="o">.</span><span class="n">broker</span>
+<span class="o">--</span><span class="n">port</span> <span class="mi">5762</span>
+</pre></div>
+</div>
+<p>If your broker is using the default port (5762), it doesn’t need to be separately specified when running
+any dripline applications.</p>
+<div class="section" id="rabbitmq-authentication">
+<h3>RabbitMQ Authentication<a class="headerlink" href="#rabbitmq-authentication" title="Permalink to this headline">¶</a></h3>
+<p>Authentication for communication with the RabbitMQ broker is performed with a username/password pair.</p>
+</div>
+</div>
+<div class="section" id="authentication-file">
+<h2>Authentication File<a class="headerlink" href="#authentication-file" title="Permalink to this headline">¶</a></h2>
+<p>The authentication information is typically stored in an authentication file (JSON format)
+on the machine running the dripline application.
+The authentication file can also store the broker address and port,
+though the broker information can also be overridden with an application configuration file and
+command-line arguments.</p>
+<p>An authentication file for dripline can look like this (JSON):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;amqp&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;username&quot;</span><span class="p">:</span> <span class="s2">&quot;a_user&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;password&quot;</span><span class="p">:</span> <span class="s2">&quot;123456&quot;</span>
+        <span class="s2">&quot;broker&quot;</span><span class="p">:</span> <span class="s2">&quot;my.broker&quot;</span>
+        <span class="s2">&quot;broker-port&quot;</span><span class="p">:</span> <span class="mi">5762</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The username and password are required, but the <code class="docutils literal notranslate"><span class="pre">broker</span></code> and <code class="docutils literal notranslate"><span class="pre">broker-port</span></code> are optional,
+as they may be specified in the application configuraiton file or command-line arguments.</p>
+<div class="section" id="specifying-the-file">
+<h3>Specifying the File<a class="headerlink" href="#specifying-the-file" title="Permalink to this headline">¶</a></h3>
+<p>The default path can be set at build time by defining <code class="docutils literal notranslate"><span class="pre">DRIPLINE_AUTH_FILE</span></code> before building dripline-cpp
+in a derived project.  If that macro is not defined, then there is no default path.</p>
+<p>The authentication file is specified in an application configuration as:</p>
+<blockquote>
+<div><dl class="simple">
+<dt>amqp:</dt><dd><p>auth-file: [filename]</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>At runtime the authentication file path can be modified by any of the normal ways, plus the
+command-line argument:</p>
+<blockquote>
+<div><p>–auth-file [file]</p>
+</div></blockquote>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/DL3Logo.png" alt="Logo"/>
+            </a></p>
+<h1 class="logo"><a href="index.html">Dripline-Cpp</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="building.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dl_agent.html">Agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dl_mon.html">Monitor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="library.html">Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Authentication</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#broker-information">Broker Information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#authentication-file">Authentication File</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="offline.html">Offline &amp; No-Connection</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="configuration.html" title="previous chapter">Configuration</a></li>
+      <li>Next: <a href="offline.html" title="next chapter">Offline &amp; No-Connection Use</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Dripline-Cpp Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/authentication.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,9 @@
+<map id="run_simple_service.cc" name="run_simple_service.cc">
+<area shape="rect" id="node2" href="$agent__config_8hh.html" title="agent_config.hh" alt="" coords="127,80,253,107"/>
+<area shape="rect" id="node5" href="$dripline__constants_8hh.html" title="dripline_constants.hh" alt="" coords="355,80,516,107"/>
+<area shape="rect" id="node12" href="$version__store_8hh.html" title="version_store.hh" alt="" coords="607,155,738,181"/>
+<area shape="rect" id="node18" href="$simple__service_8hh.html" title="simple_service.hh" alt="" coords="671,80,811,107"/>
+<area shape="rect" id="node3" href="$dripline__config_8hh.html" title="dripline_config.hh" alt="" coords="5,155,143,181"/>
+<area shape="rect" id="node4" href="$dripline__api_8hh.html" title="dripline_api.hh" alt="" coords="124,229,243,256"/>
+<area shape="rect" id="node19" href="$service_8hh.html" title="service.hh" alt="" coords="763,155,852,181"/>
+</map>

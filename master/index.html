@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Dripline-cpp Use and API Documentation &#8212; Dripline-Cpp v2.3.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="shortcut icon" href="_static/DL3Logo.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Getting Started" href="getting_started.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="dripline-cpp-use-and-api-documentation">
+<h1>Dripline-cpp Use and API Documentation<a class="headerlink" href="#dripline-cpp-use-and-api-documentation" title="Permalink to this headline">¶</a></h1>
+<p>Dripline-cpp has three main components:
+a command-line application for sending dripline messages, <code class="docutils literal notranslate"><span class="pre">dl-agent</span></code>,
+a command-line application for monitoring dripline messages, <code class="docutils literal notranslate"><span class="pre">dl-mon</span></code>,
+and the library, which allows you to build dripline-enabled applications.</p>
+<p>Note that the documentation on this dripline-cpp site pertain specifically
+to dripline-cpp.  Derived or unrelated implementations may differ in ways
+that aren’t subject to the dripline standards.  This is particularly true
+for the user interface.</p>
+<p>Contents:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#what-s-included">What’s Included</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#included-packages">Included Packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#getting-dripline-cpp">Getting Dripline-cpp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#using-dripline-cpp">Using Dripline-cpp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#setting-up-a-mesh">Setting Up a Mesh</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="building.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="building.html#build-options">Build Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#standalone-option">Standalone Option</a></li>
+<li class="toctree-l2"><a class="reference internal" href="building.html#submodule-option">Submodule Option</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dl_agent.html">Agent</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dl_agent.html#use">Use</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dl_agent.html#authentication">Authentication</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dl_mon.html">Monitor</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dl_mon.html#use">Use</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dl_mon.html#authentication">Authentication</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="library.html">Library</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="library.html#core-behavior">Core Behavior</a></li>
+<li class="toctree-l2"><a class="reference internal" href="library.html#useful-extensions">Useful Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="library.html#other-classes">Other Classes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#dripline-parameters">Dripline Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#application-parameters">Application Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#specifying-parameters">Specifying Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#broker-and-broker-port">Broker and Broker Port</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="authentication.html#broker-information">Broker Information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="authentication.html#authentication-file">Authentication File</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="offline.html">Offline &amp; No-Connection</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="offline.html#offline">Offline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="offline.html#no-connection">No-Connection</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<p><a class="reference external" href="_static/index.html">Full Doxygen API Reference</a></p>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="#">
+              <img class="logo" src="_static/DL3Logo.png" alt="Logo"/>
+            </a></p>
+<h1 class="logo"><a href="#">Dripline-Cpp</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="building.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dl_agent.html">Agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dl_mon.html">Monitor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="library.html">Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="offline.html">Offline &amp; No-Connection</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="getting_started.html" title="next chapter">Getting Started</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Dripline-Cpp Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
