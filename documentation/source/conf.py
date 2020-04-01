@@ -38,7 +38,7 @@ os.environ['PROJECT_NAME'] = 'Dripline-Cpp'
 os.environ['PROJECT_NUMBER'] = this_version
 os.environ['PROJECT_BRIEF_DESC'] = 'Dripline Implementation in C++'
 # located in your documentation directory, or give the relative path from the documentation directory
-os.environ['PROJECT_LOGO'] = ''
+os.environ['PROJECT_LOGO'] = '../images/DL3Logo.png'
 
 # directories in which doxygen should look for source files; if you have a `doxfiles` directory in your documentation, that should go here; string with space-separated directories
 os.environ['DOXYGEN_INPUT'] = '../doxfiles ../../library ../../executables ../../examples'
@@ -163,7 +163,7 @@ todo_include_todos = False
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-html_favicon = 'favicon.ico'
+html_favicon = '../images/DL3Logo.ico'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
