@@ -29,7 +29,7 @@ from subprocess import call, check_output
 # version
 this_version = 'v?.?.?'
 try:
-    this_version = check_output(['git', 'describe', '--abbrev=0', '--tags'])
+    this_version = check_output(['git', 'describe', '--abbrev=0', '--tags']).decode('utf-8').strip()
 except:
     pass
 
@@ -38,17 +38,17 @@ os.environ['PROJECT_NAME'] = 'Dripline-Cpp'
 os.environ['PROJECT_NUMBER'] = this_version
 os.environ['PROJECT_BRIEF_DESC'] = 'Dripline Implementation in C++'
 # located in your documentation directory, or give the relative path from the documentation directory
-os.environ['PROJECT_LOGO'] = ''
+os.environ['PROJECT_LOGO'] = '../images/DL3Logo.png'
 
 # directories in which doxygen should look for source files; if you have a `doxfiles` directory in your documentation, that should go here; string with space-separated directories
-os.environ['DOXYGEN_INPUT'] = 'doxfiles ../library ../executables ../examples'
+os.environ['DOXYGEN_INPUT'] = '../doxfiles ../../library ../../executables ../../examples'
 # directories within DOXYGEN_INPUT that you want to exclude from doxygen (e.g. if there's  a submodule included that you don't want to index); string with space-separated directories
 os.environ['DOXYGEN_EXCLUDE'] = ''
 # directories outside of DOXYGEN_INPUT that you want the C preprocessor to look in for macro definitions (e.g. if there's a submodule not included that has relevant macros); string with space-separated directories
-os.environ['PREPROC_INCLUDE_PATH'] = '../scarab/library/utility ../scarab/library/logger'
+os.environ['PREPROC_INCLUDE_PATH'] = '../../scarab/library/utility ../../scarab/library/logger'
 
 # Doxygen
-call(['doxygen', '../scarab/documentation/cpp/Doxyfile'])
+call(['doxygen', '../../scarab/documentation/cpp/Doxyfile'])
 call(['mv', './user_doxygen_out/html', './_static'])
 
 
@@ -56,9 +56,7 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if on_rtd:
   html_theme = 'default'
 else:
-  import sphinx_rtd_theme
-  html_theme = "sphinx_rtd_theme"
-  html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+  html_theme = 'alabaster'
 
 
 # -- General configuration ------------------------------------------------
@@ -87,8 +85,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Dripline-Cpp'
-copyright = u'2018, Dripline-Cpp Authors'
-author = u'Project 8 Collaboration'
+copyright = u'2020, Dripline-Cpp Authors'
+author = u'Driplineorg Developers'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -160,12 +158,12 @@ todo_include_todos = False
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-#html_logo = None
+html_logo = '../images/DL3Logo.png'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-html_favicon = 'favicon.ico'
+html_favicon = '../images/DL3Logo.ico'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -256,7 +254,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
   (master_doc, 'Dripline-Cpp.tex', u'Dripline-Cpp Documentation',
-   u'Project 8 Collaboration', 'manual'),
+   u'Driplineorg Developers', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
