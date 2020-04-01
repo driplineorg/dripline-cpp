@@ -23,7 +23,8 @@ Options
 
   -h,--help                   Print this help message and exit
   -c,--config TEXT:FILE       Config file filename
-  --verbosity UINT            Global logger verosity
+  -v,--verbose                Increase verbosity
+  -q,--quiet                  Decrease verbosity
   -V,--version                Print the version message and exit
   -b,--broker TEXT            Set the dripline broker address
   -p,--port UINT              Set the port for communication with the dripline broker
