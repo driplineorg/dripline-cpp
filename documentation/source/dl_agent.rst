@@ -28,7 +28,8 @@ Options
 
   -h,--help                     Print this help message and exit
   -c,--config TEXT:FILE         Config file filename
-  --verbosity UINT              Global logger verosity
+  -v,--verbose                  Increase verbosity
+  -q,--quiet                    Decrease verbosity
   -V,--version                  Print the version message and exit
   -b,--broker TEXT              Set the dripline broker address
   -p,--port UINT                Set the port for communication with the dripline broker
@@ -42,7 +43,7 @@ Options
   --heartbeat-interval-s UINT   Set the interval between heartbeats in s
   -s,--specifier TEXT           Set the specifier
   -P,--payload TEXT ...         Add values to the payload
-  -v,--values TEXT ...          Add ordered values
+  --values TEXT ...             Add ordered values
   -t,--timeout UINT             Set the timeout for waiting for a reply (seconds)
   -k,--lockout-key TEXT         Set the lockout key to send with the message (for sending requests only)
   --suppress-output           

@@ -82,7 +82,7 @@ int main( int argc, char** argv )
     add_dripline_options( the_main );
     the_main.add_config_option< std::string >( "-s,--specifier", "specifier", "Set the specifier" );
     the_main.add_config_multi_option< std::string >( "-P,--payload", "payload", "Add values to the payload" );
-    the_main.add_config_multi_option< std::string >( "-v,--values", "option-values", "Add ordered values" ); // stored in the config as "option-values" so they can be merged in later in the proper order
+    the_main.add_config_multi_option< std::string >( "--values", "option-values", "Add ordered values" ); // stored in the config as "option-values" so they can be merged in later in the proper order
     the_main.add_config_option< unsigned >( "-t,--timeout", "timeout", "Set the timeout for waiting for a reply (seconds)" );
     the_main.add_config_option< std::string >( "-k,--lockout-key", "lockout-key", "Set the lockout key to send with the message (for sending requests only)" );
     the_main.add_config_flag< bool >( "--suppress-output", "suppress-output", "Suppress the output of the returned reply" );
