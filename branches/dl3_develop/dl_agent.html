@@ -49,7 +49,8 @@ and the values (<code class="docutils literal notranslate"><span class="pre">-v,
 <h3>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>-h,--help                     Print this <span class="nb">help</span> message and <span class="nb">exit</span>
 -c,--config TEXT:FILE         Config file filename
---verbosity UINT              Global logger verosity
+-v,--verbose                  Increase verbosity
+-q,--quiet                    Decrease verbosity
 -V,--version                  Print the version message and <span class="nb">exit</span>
 -b,--broker TEXT              Set the dripline broker address
 -p,--port UINT                Set the port <span class="k">for</span> communication with the dripline broker
@@ -63,7 +64,7 @@ and the values (<code class="docutils literal notranslate"><span class="pre">-v,
 --heartbeat-interval-s UINT   Set the interval between heartbeats in s
 -s,--specifier TEXT           Set the specifier
 -P,--payload TEXT ...         Add values to the payload
--v,--values TEXT ...          Add ordered values
+--values TEXT ...             Add ordered values
 -t,--timeout UINT             Set the timeout <span class="k">for</span> waiting <span class="k">for</span> a reply <span class="o">(</span>seconds<span class="o">)</span>
 -k,--lockout-key TEXT         Set the lockout key to send with the message <span class="o">(</span><span class="k">for</span> sending requests only<span class="o">)</span>
 --suppress-output
