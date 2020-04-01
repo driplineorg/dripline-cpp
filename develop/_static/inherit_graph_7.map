@@ -1,0 +1,6 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classdripline_1_1message.html" title="Contains all of the information common to all types of Dripline messages. " alt="" coords="5,56,87,83"/>
+<area shape="rect" id="node2" href="$classdripline_1_1msg__alert.html" title="Alert message class. " alt="" coords="145,5,231,32"/>
+<area shape="rect" id="node3" href="$classdripline_1_1msg__reply.html" title="Reply message class. " alt="" coords="143,56,233,83"/>
+<area shape="rect" id="node4" href="$classdripline_1_1msg__request.html" title="Request message class. " alt="" coords="135,107,241,133"/>
+</map>
