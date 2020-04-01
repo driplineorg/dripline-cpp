@@ -39,3 +39,11 @@
 # Build directories
 build*/
 
+# Documentation build
+documentation/build/
+documentation/source/_static/
+documentation/source/user_doxygen_out
+
+# Github deploy key
+.deploy_key.pub
+.deploy_key

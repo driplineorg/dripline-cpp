@@ -128,11 +128,6 @@ namespace dripline
 
             switch( a_request->get_message_operation() )
             {
-                case op_t::run:
-                {
-                    t_reply =  __do_run_request( a_request );
-                    break;
-                }
                 case op_t::get:
                 {
                     t_reply =  __do_get_request( a_request );

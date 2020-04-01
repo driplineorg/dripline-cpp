@@ -37,20 +37,14 @@ int main( int argc, char** argv )
     the_main.fallthrough(); // pass any options not handled by the subcommands to the main app (this)
 
     the_main.footer( std::string() + "\nValues and Keyword Arguments:\n\n" +
-            "  Further positional arguments (other than the routing key and specifier)\n" +
-            "  can be used to add to the values array in the payload and to other parts of the payload.\n\n" +
+            "  Positional arguments can be used to add to the values array in the payload\n" +
+            "  and to other parts of the payload.\n\n" +
             "  Arguments in the form [key]=[value] will be assumed to be keyword arguments.\n" +
             "  Other arguments will be assumed to be entries in the values array.\n\n" +
             "  The key portion of a keyword argument is an address that can specify\n" +
             "  both node and array locations (e.g. my.value.0)." );
 
     // Application subcommands
-    scarab::config_decorator* t_agent_run = the_main.add_config_subcommand( "run", "Send an OP_RUN request" );
-    t_agent_run->add_config_option< std::string >( "routing_key", "rk", "Set the routing key" )->required();
-    t_agent_run->this_app()->callback(
-            [&]() { the_agent.execute< agent::sub_agent_run >( the_main.master_config(), the_main.nonoption_ord_args() ); }
-    );
-
     scarab::config_decorator* t_agent_get = the_main.add_config_subcommand( "get", "Send an OP_GET request" );
     t_agent_get->add_config_option< std::string >( "routing_key", "rk", "Set the routing key" )->required();
     t_agent_get->this_app()->callback(
@@ -88,7 +82,7 @@ int main( int argc, char** argv )
     add_dripline_options( the_main );
     the_main.add_config_option< std::string >( "-s,--specifier", "specifier", "Set the specifier" );
     the_main.add_config_multi_option< std::string >( "-P,--payload", "payload", "Add values to the payload" );
-    the_main.add_config_multi_option< std::string >( "-v,--values", "option-values", "Add ordered values" ); // stored in the config as "option-values" so they can be merged in later in the proper order
+    the_main.add_config_multi_option< std::string >( "--values", "option-values", "Add ordered values" ); // stored in the config as "option-values" so they can be merged in later in the proper order
     the_main.add_config_option< unsigned >( "-t,--timeout", "timeout", "Set the timeout for waiting for a reply (seconds)" );
     the_main.add_config_option< std::string >( "-k,--lockout-key", "lockout-key", "Set the lockout key to send with the message (for sending requests only)" );
     the_main.add_config_flag< bool >( "--suppress-output", "suppress-output", "Suppress the output of the returned reply" );

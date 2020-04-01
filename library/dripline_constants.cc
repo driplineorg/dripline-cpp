@@ -32,7 +32,6 @@ namespace dripline
         switch (an_op) {
             case op_t::set: return "set";
             case op_t::get: return "get";
-            case op_t::run: return "run";
             case op_t::cmd: return "cmd";
             case op_t::unknown: return "unknown";
             default: throw dripline_error() << "op_t value <" << an_op << "> not recognized";
@@ -42,7 +41,6 @@ namespace dripline
     {
         if ( an_op_str == to_string( op_t::set ) ) return op_t::set;
         if ( an_op_str == to_string( op_t::get ) ) return op_t::get;
-        if ( an_op_str == to_string( op_t::run ) ) return op_t::run;
         if ( an_op_str == to_string( op_t::cmd ) ) return op_t::cmd;
         if ( an_op_str == to_string( op_t::unknown ) ) return op_t::unknown;
         throw dripline_error() << "unable to map <" << an_op_str << "> to an op_t value";
