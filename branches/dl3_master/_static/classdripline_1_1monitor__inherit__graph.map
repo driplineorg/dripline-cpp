@@ -1,6 +1,0 @@
-<map id="monitor" name="monitor">
-<area shape="rect" id="node2" href="$classdripline_1_1core.html" title="Basic AMQP interactions, including sending messages and interacting with AMQP channels. " alt="" coords="5,277,180,663"/>
-<area shape="rect" id="node3" href="$classdripline_1_1listener__receiver.html" title="Convenience class to bring together listener and concurrent_receiver. " alt="" coords="204,402,360,538"/>
-<area shape="rect" id="node4" href="$classdripline_1_1listener.html" title="A listener is a class capable of listening for AMQP messages on an AMQP channel. This class provides ..." alt="" coords="43,5,270,229"/>
-<area shape="rect" id="node5" href="$classdripline_1_1concurrent__receiver.html" title="Receives and processes messages concurrently. " alt="" coords="295,5,517,229"/>
-</map>

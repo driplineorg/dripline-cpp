@@ -1,6 +1,0 @@
-<map id="heartbeater" name="heartbeater">
-<area shape="rect" id="node3" href="$classdripline_1_1service.html" title="Consumer of Dripline messages on a particular queue. " alt="" coords="218,403,445,744"/>
-<area shape="rect" id="node4" href="$classdripline_1_1hub.html" title="Service class aimed at adding a Dripline API to an existing codebase. " alt="" coords="5,792,193,1089"/>
-<area shape="rect" id="node5" href="$classdripline_1_1oscillator__service__endpoints.html" title="{oscillator_service\l_endpoints\n||+ oscillator_service\l_endpoints()\l+ ~oscillator_service\l_endpoints()\l+ set_pointers()\l+ execute()\l+ snake_case_mv_referrable()\l+ snake_case_mv_accessible()\l}" alt="" coords="218,843,445,1038"/>
-<area shape="rect" id="node6" href="$classdripline_1_1simple__service.html" title="{simple_service\n||+ simple_service()\l+ ~simple_service()\l+ execute()\l+ do_run_request()\l+ do_get_request()\l+ do_set_request()\l+ do_cmd_request()\l+ mv_accessible()\l}" alt="" coords="469,851,625,1031"/>
-</map>
