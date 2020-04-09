@@ -29,6 +29,23 @@ namespace dripline
 
     }
 
+    message_ptr_t mock_broker::consume( const std::string& a_consumer_tag )
+    {
+
+    }
+
+    void mock_broker::declare_exchange( const std::string& an_exchange )
+    {
+        f_exchanges.insert( an_exchange );
+        return;
+    }
+
+    void mock_broker::declare_queue( const std::string& a_queue )
+    {
+        f_queues.insert( map_to_queues_t::value_type( std::make_pair(a_queue, queue_ptr_t(new queue_t)) ) );
+        return;
+    }
+
     void mock_broker::bind( const std::string& an_exchange, const std::string& a_queue, const std::string& a_key )
     {
 
