@@ -30,6 +30,9 @@ namespace dripline
     class DRIPLINE_API mock_broker : public scarab::singleton< mock_broker >
     {
         public:
+            typedef scarab::concurrent_queue< message_ptr_t > queue_t;
+            typedef std::shared_ptr< queue_t > queue_ptr_t;
+
             void send( message_ptr_t a_message, const std::string& an_exchange );
 
             // consumer tag should be the queue name
@@ -46,6 +49,8 @@ namespace dripline
 
             void remove_queue( const std::string& an_exchange, const std::string& a_queue );
 
+            bool is_bound( const std::string& an_exchange, const std::string& a_queue, const std::string& a_key ) const;
+
         protected:
             allow_singleton_access( mock_broker );
 
@@ -57,14 +62,16 @@ namespace dripline
             mock_broker& operator=( const mock_broker& a_orig ) = delete;
             mock_broker& operator=( mock_broker&& a_orig ) = delete;
 
-            typedef scarab::concurrent_queue< message_ptr_t > queue;
-            typedef std::shared_ptr< queue > queue_ptr_t;
+            typedef std::map< std::string, queue_ptr_t > map_to_queues_t;
+            typedef std::set< std::string > string_set_t;
 
-            mv_referrable( std::map< std::string, queue_ptr_t >, queues );
-            mv_referrable( std::set< std::string >, exchanges );
-            mv_referrable( std::map< std::string, queue_ptr_t >, routing_keys );
+            mv_referrable( map_to_queues_t, queues );  // queue name --> queue  (to return or remove a queue)
+            mv_referrable( string_set_t, exchanges );  // exchange name (to return or remove an exchange)
 
-    }
+            typedef std::map< std::string, map_to_queues_t > bindings_map_t;
+            mv_referrable( bindings_map_t, routing_keys );  // exchange --> routing key --> queue  (to route a message or unbind a key)
+
+    };
 
 } /* namespace dripline */
 
