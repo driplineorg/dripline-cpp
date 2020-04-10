@@ -12,6 +12,11 @@
 
 #include "dripline_exceptions.hh"
 
+#include "logger.hh"
+
+
+LOGGER( dlog, "mock_broker" );
+
 namespace dripline
 {
 
@@ -48,17 +53,139 @@ namespace dripline
 
     void mock_broker::bind( const std::string& an_exchange, const std::string& a_queue, const std::string& a_key )
     {
+        LDEBUG( dlog, "Binding: <" << an_exchange << "--(" << a_key << ")-->" << a_queue << ">")
 
+        // find exchange
+        if( f_exchanges.count( an_exchange ) == 0 )
+        {
+            LWARN( dlog, "Exchange <" << an_exchange << "> does not exist" );
+            throw dripline_error() << "Cannot create binding <" << an_exchange << "--(" << a_key << ")-->" << a_queue << ">:\n"
+                << " exchange does not exist";
+        }
+
+        // find queue
+        if( f_queues.count( a_queue) == 0 )
+        {
+            LWARN( dlog, "Queue <" << a_queue << "> does not exist" );
+            throw dripline_error() << "Cannot create binding <" << an_exchange << "--(" << a_key << ")-->" << a_queue << ">:\n"
+                << " queue does not exist";
+        }
+        queue_ptr_t t_queue_to_bind = f_queues.at( a_queue );
+
+        // check for existing binding
+        auto t_exchange_bindings = f_routing_keys[ an_exchange ]; // performs insert if exchange is not present
+        if( t_exchange_bindings.count( a_key ) != 0 )
+        {
+            LWARN( dlog, "Unable to create binding; routing key <" << a_key << "> is already in use" );
+            throw dripline_error() << "Cannot create binding <" << an_exchange << "--(" << a_key << ")-->" << a_queue << ">:\n"
+                << " routing key is already in use ";
+        }
+        queue_ptr_t t_bound_queue = t_exchange_bindings[ a_key ]; // performs insert if routing key is not present
+
+        t_bound_queue = t_queue_to_bind;
+        LINFO( dlog, "Bound: <" << an_exchange << "--(" << a_key << ")-->" << a_queue << ">")
+
+        return;
     }
 
     void mock_broker::unbind( const std::string& an_exchange, const std::string& a_queue, const std::string& a_key )
     {
+        LDEBUG( dlog, "Unbinding: <" << an_exchange << "--(" << a_key << ")-->" << a_queue << ">")
 
+        // find exchange
+        if( f_exchanges.count( an_exchange ) == 0 || f_routing_keys.count( an_exchange ) == 0 )
+        {
+            LWARN( dlog, "Exchange <" << an_exchange << "> does not exist" );
+            throw dripline_error() << "Cannot unbind <" << an_exchange << "--(" << a_key << ")-->" << a_queue << ">:\n"
+                << " exchange does not exist or has no bindings";
+        }
+
+        // find queue
+        if( f_queues.count( a_queue) == 0 )
+        {
+            LWARN( dlog, "Queue <" << a_queue << "> does not exist" );
+            throw dripline_error() << "Cannot unbind <" << an_exchange << "--(" << a_key << ")-->" << a_queue << ">:\n"
+                << " queue does not exist";
+        }
+
+        // check for existing binding
+        auto t_exchange_bindings_it = f_routing_keys.find( an_exchange );
+        // we already checked that f_routing_keys has an_exchange, so we don't need to check whether it was found
+        if( t_exchange_bindings_it->second.count( a_key ) == 0 )
+        {
+            LWARN( dlog, "Routing key <" << a_key << "> is not in use for this binding" );
+            throw dripline_error() << "Cannot unbind <" << an_exchange << "--(" << a_key << ")-->" << a_queue << ">:\n"
+                << " routing key is not in use ";
+        }
+        t_exchange_bindings_it->second.erase( a_key );
+
+        // check whether that was the last binding on the exchange
+        if( t_exchange_bindings_it->second.empty() )
+        {
+            LDEBUG( dlog, "Last routing key for exchange <" << an_exchange << "> has been unbound" );
+            f_routing_keys.erase( an_exchange );
+        }
+
+        LINFO( dlog, "Unbound: <" << an_exchange << "--(" << a_key << ")-->" << a_queue << ">" )
+
+        return;
     }
 
-    void mock_broker::remove_queue( const std::string& an_exchange, const std::string& a_queue )
+    void mock_broker::delete_queue( const std::string& a_queue )
     {
+        LINFO( dlog, "Deleting queue <" << a_queue << ">" );
 
+        auto t_this_queue_it = f_queues.find( a_queue );
+        // if the queue doesn't exist, we can just quit
+        if( t_this_queue_it == f_queues.end() ) return;
+
+        // unbind queue if bound to any exchanges
+        for( auto t_exchange_it = f_routing_keys.begin(); t_exchange_it != f_routing_keys.end(); ++t_exchange_it )
+        {
+            for( auto t_binding_it = t_exchange_it->second.begin(); t_binding_it != t_exchange_it->second.end(); ++t_binding_it )
+            {
+                if( t_this_queue_it->second == t_binding_it->second )
+                {
+                    LDEBUG( dlog, "Unbinding <" << t_exchange_it->first << "--(" << t_this_queue_it->first << ")-->" << a_queue << ">" );
+                    t_exchange_it->second.erase( t_binding_it );
+                }
+            }
+            // remove exchange from the bindings map 
+            if( t_exchange_it->second.empty() )
+            {
+                LDEBUG( dlog, "Last routing key for exchange <" << t_exchange_it->first << "> has been unbound" );
+                f_routing_keys.erase( t_exchange_it );
+            }
+        }
+
+        // finally, remove the queue
+        f_queues.erase( t_this_queue_it );
+
+        return;
+    }
+
+    void mock_broker::delete_exchange( const std::string& an_exchange )
+    {
+        LINFO( dlog, "Deleting exchange <" << an_exchange << ">" );
+
+        if( f_exchanges.count( an_exchange ) == 0 ) return;
+
+        auto t_exchange_it = f_routing_keys.find( an_exchange );
+        if( t_exchange_it != f_routing_keys.end() )
+        {
+            for( auto t_binding_it = t_exchange_it->second.begin(); t_binding_it != t_exchange_it->second.end(); ++t_binding_it )
+            {
+                    LDEBUG( dlog, "Unbinding <" << t_exchange_it->first << "--(" << t_binding_it->first << ")-->[queue]>" );
+                    t_exchange_it->second.erase( t_binding_it );
+            }
+            // erase bindings map for this exchange
+            f_routing_keys.erase( t_exchange_it );
+        }
+
+        // remove the exchange
+        f_exchanges.erase( an_exchange );
+
+        return;
     }
 
     bool mock_broker::is_bound( const std::string& an_exchange, const std::string& a_queue, const std::string& a_key ) const

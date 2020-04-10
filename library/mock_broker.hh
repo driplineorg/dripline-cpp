@@ -47,7 +47,9 @@ namespace dripline
 
             void unbind( const std::string& an_exchange, const std::string& a_queue, const std::string& a_key );
 
-            void remove_queue( const std::string& an_exchange, const std::string& a_queue );
+            void delete_queue( const std::string& a_queue );
+
+            void delete_exchange( const std::string& an_exchange );
 
             bool is_bound( const std::string& an_exchange, const std::string& a_queue, const std::string& a_key ) const;
 
