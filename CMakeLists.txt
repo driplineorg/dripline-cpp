@@ -116,6 +116,33 @@ if( Dripline_ENABLE_TESTING )
     add_subdirectory( testing )
 endif()
 
+#########################
+# Package configuration #
+#########################
+
+install( EXPORT SimpleAmqpClientTargets
+    DESTINATION ${LIB_INSTALL_DIR}/cmake/DriplineCpp
+    NAMESPACE SimpleAmqpClient
+    FILE SimpleAmqpClientConfig.cmake
+)
+install( EXPORT ScarabTargets
+    DESTINATION ${LIB_INSTALL_DIR}/cmake/DriplineCpp
+    NAMESPACE Scarab
+    FILE ScarabConfig.cmake
+)
+install( EXPORT DriplineTargets
+    DESTINATION ${LIB_INSTALL_DIR}/cmake/DriplineCpp
+    NAMESPACE DriplineCpp
+    FILE DriplineCppConfig.cmake
+)
+
+include( CMakePackageConfigHelpers )
+
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/DriplineCppConfigVersion.cmake
+    COMPATIBILITY SameMajorVersion
+)
+
 ################################
 # Variables for parent project #
 ################################
