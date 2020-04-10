@@ -13,6 +13,7 @@ set( dripline_HEADERS
     dripline_config.hh
     dripline_constants.hh
     dripline_exceptions.hh
+    dripline_fwd.hh
     dripline_version.hh
     endpoint.hh
     heartbeater.hh
