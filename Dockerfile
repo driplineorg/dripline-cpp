@@ -1,4 +1,5 @@
-FROM debian:9
+#FROM debian:9
+FROM amd64/python:3.7
 
 # Most dependencies
 
