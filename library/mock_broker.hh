@@ -36,7 +36,7 @@ namespace dripline
             void send( message_ptr_t a_message, const std::string& an_exchange );
 
             // consumer tag should be the queue name
-            message_ptr_t consume( const std::string& a_consumer_tag );
+            message_ptr_t consume( const std::string& a_consumer_tag, unsigned a_timeout_ms = 0 );
 
             void declare_exchange( const std::string& an_exchange );
 

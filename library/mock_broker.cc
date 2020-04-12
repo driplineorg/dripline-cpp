@@ -31,12 +31,54 @@ namespace dripline
 
     void mock_broker::send( message_ptr_t a_message, const std::string& an_exchange )
     {
+        if( f_exchanges.count( an_exchange ) == 0 )
+        {
+            LWARN( dlog, "Exchange <" << an_exchange << "> does not exist" );
+            throw dripline_error() << "Cannot send message:\n"
+                << "\tExchange <" << an_exchange << "> does not exist";
+        }
 
+        std::string& t_key( a_message->routing_key() );
+        auto t_bindings_it = f_routing_keys[ an_exchange ].find( t_key );
+        if( t_bindings_it == f_routing_keys[ an_exchange ].end() )
+        {
+            LWARN( dlog, "No binding for key <" << t_key << ">" );
+            throw dripline_error() << "Cannot send message:\n"
+                << "\tNo binding for key <" << t_key << ">";
+        }
+
+        t_bindings_it->second->push( a_message );
+
+        return;
     }
 
-    message_ptr_t mock_broker::consume( const std::string& a_consumer_tag )
+    message_ptr_t mock_broker::consume( const std::string& a_consumer_tag, unsigned a_timeout_ms )
     {
+        // find queue
+        auto t_queue_it = f_queues.find( a_consumer_tag );
+        if( t_queue_it == f_queues.end() )
+        {
+            LWARN( dlog, "Queue <" << a_consumer_tag << "> does not exist" );
+            throw dripline_error() << "Cannot consume message with consumer tag <" << a_consumer_tag << ">:\n"
+                << "\tQueue does not exist";
+        }
 
+        if( a_timeout_ms != 0 )
+        {
+            t_queue_it->second->set_timeout( a_timeout_ms );
+        }
+
+        message_ptr_t t_retrieved_message;
+        bool t_success = t_queue_it->second->timed_wait_and_pop( t_retrieved_message );
+
+        if( ! t_success )
+        {
+            LWARN( dlog, "Did not retrieve message from queue <" << t_queue_it->first << ">");
+            throw dripline_error() << "Did not retrieve message from queue <" << t_queue_it->first << ">:\n"
+                << "\tEither wait timed out or queue was interrupted";
+        }
+
+        return t_retrieved_message;
     }
 
     void mock_broker::declare_exchange( const std::string& an_exchange )
