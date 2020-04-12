@@ -60,7 +60,7 @@ namespace dripline
         {
             LWARN( dlog, "Exchange <" << an_exchange << "> does not exist" );
             throw dripline_error() << "Cannot create binding <" << an_exchange << "--(" << a_key << ")-->" << a_queue << ">:\n"
-                << " exchange does not exist";
+                << "\tExchange does not exist";
         }
 
         // find queue
@@ -68,21 +68,19 @@ namespace dripline
         {
             LWARN( dlog, "Queue <" << a_queue << "> does not exist" );
             throw dripline_error() << "Cannot create binding <" << an_exchange << "--(" << a_key << ")-->" << a_queue << ">:\n"
-                << " queue does not exist";
+                << "\tQueue does not exist";
         }
         queue_ptr_t t_queue_to_bind = f_queues.at( a_queue );
 
         // check for existing binding
-        auto t_exchange_bindings = f_routing_keys[ an_exchange ]; // performs insert if exchange is not present
-        if( t_exchange_bindings.count( a_key ) != 0 )
+        if( f_routing_keys[ an_exchange ].count( a_key ) != 0 )
         {
             LWARN( dlog, "Unable to create binding; routing key <" << a_key << "> is already in use" );
             throw dripline_error() << "Cannot create binding <" << an_exchange << "--(" << a_key << ")-->" << a_queue << ">:\n"
-                << " routing key is already in use ";
+                << "\tRouting key is already in use ";
         }
-        queue_ptr_t t_bound_queue = t_exchange_bindings[ a_key ]; // performs insert if routing key is not present
 
-        t_bound_queue = t_queue_to_bind;
+        f_routing_keys[ an_exchange ][ a_key ] = t_queue_to_bind;
         LINFO( dlog, "Bound: <" << an_exchange << "--(" << a_key << ")-->" << a_queue << ">")
 
         return;
@@ -97,7 +95,7 @@ namespace dripline
         {
             LWARN( dlog, "Exchange <" << an_exchange << "> does not exist" );
             throw dripline_error() << "Cannot unbind <" << an_exchange << "--(" << a_key << ")-->" << a_queue << ">:\n"
-                << " exchange does not exist or has no bindings";
+                << "\tExchange does not exist or has no bindings";
         }
 
         // find queue
@@ -105,7 +103,7 @@ namespace dripline
         {
             LWARN( dlog, "Queue <" << a_queue << "> does not exist" );
             throw dripline_error() << "Cannot unbind <" << an_exchange << "--(" << a_key << ")-->" << a_queue << ">:\n"
-                << " queue does not exist";
+                << "\tQueue does not exist";
         }
 
         // check for existing binding
@@ -115,7 +113,7 @@ namespace dripline
         {
             LWARN( dlog, "Routing key <" << a_key << "> is not in use for this binding" );
             throw dripline_error() << "Cannot unbind <" << an_exchange << "--(" << a_key << ")-->" << a_queue << ">:\n"
-                << " routing key is not in use ";
+                << "\tRouting key is not in use ";
         }
         t_exchange_bindings_it->second.erase( a_key );
 
@@ -140,21 +138,31 @@ namespace dripline
         if( t_this_queue_it == f_queues.end() ) return;
 
         // unbind queue if bound to any exchanges
-        for( auto t_exchange_it = f_routing_keys.begin(); t_exchange_it != f_routing_keys.end(); ++t_exchange_it )
+        for( auto t_exchange_it = f_routing_keys.begin(); t_exchange_it != f_routing_keys.end(); )
         {
-            for( auto t_binding_it = t_exchange_it->second.begin(); t_binding_it != t_exchange_it->second.end(); ++t_binding_it )
+            LWARN( dlog, "exchange <" << t_exchange_it->first << "> has <" << t_exchange_it->second.size() << "> entries" );
+            for( auto t_binding_it = t_exchange_it->second.begin(); t_binding_it != t_exchange_it->second.end(); )
             {
                 if( t_this_queue_it->second == t_binding_it->second )
                 {
-                    LDEBUG( dlog, "Unbinding <" << t_exchange_it->first << "--(" << t_this_queue_it->first << ")-->" << a_queue << ">" );
-                    t_exchange_it->second.erase( t_binding_it );
+                    LDEBUG( dlog, "Unbinding <" << t_exchange_it->first << "--(" << t_binding_it->first << ")-->" << a_queue << ">" );
+                    t_binding_it = t_exchange_it->second.erase( t_binding_it );
                 }
+                else
+                {
+                    ++t_binding_it;
+                }
+                
             }
             // remove exchange from the bindings map 
             if( t_exchange_it->second.empty() )
             {
                 LDEBUG( dlog, "Last routing key for exchange <" << t_exchange_it->first << "> has been unbound" );
-                f_routing_keys.erase( t_exchange_it );
+                t_exchange_it = f_routing_keys.erase( t_exchange_it );
+            }
+            else
+            {
+                ++t_exchange_it;
             }
         }
 
@@ -173,11 +181,13 @@ namespace dripline
         auto t_exchange_it = f_routing_keys.find( an_exchange );
         if( t_exchange_it != f_routing_keys.end() )
         {
-            for( auto t_binding_it = t_exchange_it->second.begin(); t_binding_it != t_exchange_it->second.end(); ++t_binding_it )
+#ifndef NDEBUG
+            for( auto t_binding_it = t_exchange_it->second.begin(); t_binding_it != t_exchange_it->second.end(); )
             {
                     LDEBUG( dlog, "Unbinding <" << t_exchange_it->first << "--(" << t_binding_it->first << ")-->[queue]>" );
-                    t_exchange_it->second.erase( t_binding_it );
+                    t_binding_it = t_exchange_it->second.erase( t_binding_it );
             }
+#endif
             // erase bindings map for this exchange
             f_routing_keys.erase( t_exchange_it );
         }
