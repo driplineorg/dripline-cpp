@@ -132,8 +132,11 @@ namespace dripline
             t_values.merge( t_config["option-values"].as_array() );
             t_config.erase( "option-values" );
         }
-        t_config.add( "values", t_values );
-
+        if( ! t_values.empty() )
+        {
+            t_config.add( "values", t_values );
+        }
+        
         // check if this is meant to be a dry run message
         if( t_config.has( "dry-run-msg" ) )
         {
