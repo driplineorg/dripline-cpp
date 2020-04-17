@@ -144,7 +144,7 @@ namespace dripline
                     break;
                 }
                 default:
-                    throw throw_reply( dl_service_error_invalid_method() ) << "Unrecognized message operation: <" << a_request->get_message_type() << ">";
+                    throw throw_reply( dl_service_error_invalid_method() ) << "Unrecognized message operation: <" << a_request->get_message_operation() << ">";
                     break;
             } // end switch on message type
             // reply to be sent outside the try block
