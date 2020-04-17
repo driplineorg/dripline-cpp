@@ -133,7 +133,7 @@ namespace dripline
             void set_sender_info( const scarab::param_node& a_sender_info );
 
             /// Creates and returns a new param_node object to contain the full message
-            scarab::param_node get_message_param() const;
+            scarab::param_node get_message_param( bool a_include_payload = true ) const;
 
         public:
             scarab::param& payload();

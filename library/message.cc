@@ -451,7 +451,7 @@ namespace dripline
         return;
     }
 
-    param_node message::get_message_param() const
+    param_node message::get_message_param( bool a_include_payload ) const
     {
         param_node t_message_node;
         t_message_node.add( "routing_key", f_routing_key );
@@ -463,7 +463,7 @@ namespace dripline
         t_message_node.add( "encoding", interpret_encoding() );
         t_message_node.add( "timestamp", f_timestamp );
         t_message_node.add( "sender_info", get_sender_info() );
-        t_message_node.add( "payload", payload() );
+        if( a_include_payload ) t_message_node.add( "payload", payload() );
         this->derived_modify_message_param( t_message_node );
         return t_message_node;
     }
