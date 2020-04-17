@@ -20,6 +20,7 @@
 
 #include "application.hh"
 #include "logger.hh"
+#include "signal_handler.hh"
 
 using namespace dripline;
 
@@ -66,7 +67,8 @@ int main( int argc, char** argv )
 
         if( ! the_monitor->stop() ) return;
 
-        the_return = dl_success().rc_value() / 100;
+        the_return = scarab::signal_handler::got_exit_signal() ? 
+                scarab::signal_handler::get_return_code() : dl_success().rc_value() / 100;
     };
 
     the_main.callback( t_callback );

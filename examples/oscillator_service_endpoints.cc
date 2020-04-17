@@ -172,7 +172,12 @@ namespace dripline
         catch( std::exception& e )
         {
             LERROR( dlog, "Exception caught: " << e.what() );
-            f_return = dl_client_error().rc_value() / 100;
+            f_return = dl_service_error().rc_value() / 100;
+        }
+
+        if( scarab::signal_handler::got_exit_signal() )
+        {
+            f_return = scarab::signal_handler::get_return_code();
         }
 
         return;

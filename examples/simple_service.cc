@@ -12,6 +12,7 @@
 #include "dripline_exceptions.hh"
 
 #include "logger.hh"
+#include "macros.hh"
 #include "param.hh"
 #include "signal_handler.hh"
 
@@ -50,7 +51,12 @@ namespace dripline
         catch( std::exception& e )
         {
             LERROR( dlog, "Exception caught: " << e.what() );
-            f_return = dl_resource_error().rc_value();
+            f_return = dl_service_error().rc_value() / 100;
+        }
+
+        if( scarab::signal_handler::got_exit_signal() )
+        {
+            f_return = scarab::signal_handler::get_return_code();
         }
 
         return;
