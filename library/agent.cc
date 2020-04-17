@@ -174,7 +174,8 @@ namespace dripline
 
         t_request->lockout_key() = f_agent->lockout_key();
 
-        LDEBUG( dlog, "Sending message w/ message_operation = " << t_request->get_message_operation() << " to " << t_request->routing_key() );
+        LINFO( dlog, "Sending message w/ message_operation = " << t_request->get_message_operation() << " to " << t_request->routing_key() );
+        LDEBUG( dlog, "Message headers:\n" << t_request->get_message_param( false ) );
 
         sent_msg_pkg_ptr t_receive_reply;
         try
@@ -297,7 +298,8 @@ namespace dripline
             return;
         }
 
-        LDEBUG( dlog, "Sending reply with return code <" << t_reply->get_return_code() << "> and message <" << t_reply->return_message() << "> to key " << t_reply->routing_key() );
+        LINFO( dlog, "Sending reply with return code <" << t_reply->get_return_code() << "> and message <" << t_reply->return_message() << "> to key " << t_reply->routing_key() );
+        LDEBUG( dlog, "Message headers:\n" << t_reply->get_message_param( false ) );
 
         sent_msg_pkg_ptr t_msg_sent;
         try
@@ -361,7 +363,8 @@ namespace dripline
             return;
         }
 
-        LDEBUG( dlog, "Sending alert with key " << t_alert->routing_key() );
+        LINFO( dlog, "Sending alert with key " << t_alert->routing_key() );
+        LDEBUG( dlog, "Message headers:\n" << t_alert->get_message_param( false ) );
 
         sent_msg_pkg_ptr t_msg_sent;
         try
