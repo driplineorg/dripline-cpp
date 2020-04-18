@@ -52,7 +52,7 @@ find_library(DriplineCpp_LIBRARY
 #set(Foo_VERSION ${PC_Foo_VERSION})
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(Foo
+find_package_handle_standard_args( DriplineCpp
   FOUND_VAR DriplineCpp_FOUND
   REQUIRED_VARS
     DriplineCpp_LIBRARY
