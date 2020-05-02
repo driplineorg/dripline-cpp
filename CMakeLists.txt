@@ -121,22 +121,26 @@ endif()
 #########################
 
 install( EXPORT SimpleAmqpClientTargets
-    DESTINATION ${LIB_INSTALL_DIR}/cmake/SimpleAmqpClientTargets
-    NAMESPACE SimpleAmqpClient
-    FILE SimpleAmqpClientConfig.cmake
+    DESTINATION ${LIB_INSTALL_DIR}/cmake/SimpleAmqpClient
+    NAMESPACE SimpleAmqpClient::
+    FILE SimpleAmqpClientTargets.cmake
 )
 install( EXPORT ScarabTargets
     DESTINATION ${LIB_INSTALL_DIR}/cmake/Scarab
-    NAMESPACE Scarab
-    FILE ScarabConfig.cmake
+    NAMESPACE Scarab::
+    FILE ScarabTargets.cmake
 )
 install( EXPORT DriplineTargets
     DESTINATION ${LIB_INSTALL_DIR}/cmake/DriplineCpp
-    NAMESPACE DriplineCpp
-    FILE DriplineCppConfig.cmake
+    NAMESPACE DriplineCpp::
+    FILE DriplineCppTargets.cmake
 )
 
 include( CMakePackageConfigHelpers )
+
+configure_package_config_file(
+    
+)
 
 write_basic_package_version_file(
     ${CMAKE_CURRENT_BINARY_DIR}/DriplineCppConfigVersion.cmake
