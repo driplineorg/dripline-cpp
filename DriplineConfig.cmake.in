@@ -1,0 +1,15 @@
+# DriplineConfig.cmake
+
+get_filename_component( Dripline_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH )
+
+#include( CMakeFindDependencyMacro )
+#find_dependency( SimpleAmqpClientSimpleAmqpClient REQUIRED )
+
+# Import targets if they're not already present
+if( NOT TARGET SimpleAmqpClient::SimpleAmqpClient )
+    include( "${Dripline_CMAKE_DIR}/SimpleAmqpClientTargets.cmake" )
+endif()
+
+if( NOT TARGET Dripline::Dripline )
+    include( "${Dripline_CMAKE_DIR}/DriplineTargets.cmake" )
+endif()
