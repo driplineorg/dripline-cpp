@@ -4,11 +4,14 @@
 
 ##########
 
-set( lib_dependencies 
+set( sources
+    dl-agent.cc
+    dl-mon.cc
+)
+
+set( PACKAGE_LIBS 
     Dripline
 )
-set( programs
-    dl-agent
-    dl-mon
-)
-pbuilder_executables( programs lib_dependencies )
+
+
+pbuilder_executables( sources PACKAGE_LIBS PUBLIC_EXT_LIBS PRIVATE_EXT_LIBS  )

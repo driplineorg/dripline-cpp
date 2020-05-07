@@ -39,40 +39,46 @@ set_option( USE_CPP11 TRUE )
 
 
 #########################
-# dripline dependencies #
+# External dependencies #
 #########################
 
-########
-# Scarab
-########
+set( PUBLIC_EXT_LIBS )
+set( PRIVATE_EXT_LIBS )
+
+##########
+# Scarab #
+##########
 
 # set authentication build to TRUE
 # this will require Boost 1.46 or better
 set_option( Scarab_BUILD_AUTHENTICATION TRUE )
+set_option( Scarab_BUILD_CODEC_JSON TRUE )
 
-pbuilder_add_submodule( Scarab scarab/library )
+if( Dripline_BUILD_PYTHON )
+    set_option( Scarab_BUILD_PYTHON TRUE )
+else( Dripline_BUILD_PYTHON )
+    set_option( Scarab_BUILD_PYTHON FALSE )
+endif( Dripline_BUILD_PYTHON )
+
+pbuilder_add_submodule( Scarab scarab )
 
 if( Dripline_BUILD_PYTHON )
     message( STATUS "Dripline-cpp is being built with Python" )
-    set( Scarab_BUILD_PYTHON TRUE )
     add_definitions( -DDL_PYTHON )
     add_definitions( -DPYTHON_THROW_REPLY_KEYWORD=${Dripline_PYTHON_THROW_REPLY_KEYWORD} )
     include_directories( ${PYTHON_INCLUDE_DIRS} )    
 else( Dripline_BUILD_PYTHON )
     message( STATUS "Dripline-cpp is being built without Python" )
-    set( Scarab_BUILD_PYTHON FALSE )
     remove_definitions( -DDL_PYTHON )
     remove_definitions( -DPYTHON_THROW_REPLY_KEYWORD=${Dripline_PYTHON_THROW_REPLY_KEYWORD} )
 endif( Dripline_BUILD_PYTHON )
 
-##################
-# SimpleAmqpClient
-##################
+
+####################
+# SimpleAmqpClient #
+####################
 
 pbuilder_add_submodule( SimpleAmqpClient SimpleAmqpClient )
-set( Scarab_BUILD_CODEC_JSON TRUE CACHE BOOL "" FORCE )
-set( Scarab_BUILD_CODEC_MSGPACK TRUE CACHE BOOL "" FORCE )
-
 
 ##################
 # Build Dripline #
@@ -120,5 +126,5 @@ endif()
 # Variables for parent project #
 ################################
 
-pbuilder_variables_for_parent()
+#pbuilder_variables_for_parent()
 

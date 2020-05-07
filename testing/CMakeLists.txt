@@ -23,7 +23,7 @@ set( testing_SOURCES
     use_catch.cc
 )
 
-set( lib_dependencies 
+set( PACKAGE_LIBS 
     Dripline
     Catch
 )
