@@ -26,6 +26,7 @@ RUN mkdir -p /usr/local/deps && \
         -DYAML_CPP_BUILD_CONTRIB:BOOL=FALSE \
         -DYAML_CPP_BUILD_TOOLS:BOOL=FALSE \
         -DYAML_CPP_BUILD_TESTS:BOOL=FALSE \
+        -DYAML_BUILD_SHARED_LIBS=TRUE \
         .. && \
     make install 
 
