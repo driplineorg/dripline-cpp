@@ -14,6 +14,7 @@ RUN apt-get update && \
         libboost-filesystem-dev \
         libboost-system-dev \
         librabbitmq-dev \
+        pybind11-dev \
         wget && \
     rm -rf /var/lib/apt/lists/*
 
@@ -64,5 +65,6 @@ RUN mkdir -p /usr/local/build && \
     cmake -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX:PATH=/usr/local \ 
         -DDripline_BUILD_EXAMPLES:BOOL=FALSE \
+        -DDripline_BUILD_PYTHON=TRUE \
         ../src && \
     make install
