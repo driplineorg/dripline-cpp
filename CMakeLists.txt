@@ -21,6 +21,9 @@ list( GET JSON_STRINGS 0 JSON_STRING )
 string( REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" DRIPLINE_PROTOCOL_VERSION ${JSON_STRING})
 message( STATUS "Dripline protocol version: ${DRIPLINE_PROTOCOL_VERSION}" )
 
+pbuilder_expand_lib_name( Dripline )
+set( Dripline_FULL_TARGET_NAME ${FULL_LIB_NAME} )
+message( STATUS "@@@@@@@ dripline full target name: ${Dripline_FULL_TARGET_NAME}" )
 
 ####################
 # dripline options #
@@ -120,10 +123,12 @@ if( Dripline_BUILD_PYTHON )
     add_definitions( -DDL_PYTHON )
     add_definitions( -DPYTHON_THROW_REPLY_KEYWORD=${Dripline_PYTHON_THROW_REPLY_KEYWORD} )
     include_directories( ${PYTHON_INCLUDE_DIRS} )    
+    #list( APPEND PRIVATE_EXT_LIBS Python::Python )
 else( Dripline_BUILD_PYTHON )
     message( STATUS "Dripline-cpp is being built without Python" )
     remove_definitions( -DDL_PYTHON )
     remove_definitions( -DPYTHON_THROW_REPLY_KEYWORD=${Dripline_PYTHON_THROW_REPLY_KEYWORD} )
+    #list( REMOVE_ITEM PRIVATE_EXT_LIBS Python::Python )
 endif( Dripline_BUILD_PYTHON )
 
 
@@ -179,9 +184,9 @@ endif()
 # Package Config #
 ##################
 
-configure_file( ${PROJECT_SOURCE_DIR}/DriplineConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/DriplineConfig.cmake @ONLY )
+configure_file( ${PROJECT_SOURCE_DIR}/DriplineConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/${Dripline_FULL_TARGET_NAME}Config.cmake @ONLY )
 
-pbuilder_do_package_config( ${CMAKE_CURRENT_BINARY_DIR}/DriplineConfig.cmake )
+pbuilder_do_package_config( FILE_PREFIX ${Dripline_FULL_TARGET_NAME} )
 
 ################################
 # Variables for parent project #
