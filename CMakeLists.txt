@@ -76,7 +76,7 @@ set( PRIVATE_EXT_LIBS )
         NAMESPACE
             SimpleAmqpClient::
         DESTINATION
-            ${PACKAGE_CONFIG_INSTALL_DIR}
+            ${PACKAGE_CONFIG_PREFIX}/SimpleAmqpClient
     )
 
     list( APPEND PRIVATE_EXT_LIBS SimpleAmqpClient )
@@ -186,7 +186,7 @@ endif()
 
 configure_file( ${PROJECT_SOURCE_DIR}/DriplineConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/${Dripline_FULL_TARGET_NAME}Config.cmake @ONLY )
 
-pbuilder_do_package_config( FILE_PREFIX ${Dripline_FULL_TARGET_NAME} )
+pbuilder_do_package_config( FILE_PREFIX ${Dripline_FULL_TARGET_NAME} INSTALL_SUBDIR ${Dripline_FULL_TARGET_NAME} )
 
 ################################
 # Variables for parent project #

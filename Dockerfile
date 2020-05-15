@@ -68,3 +68,5 @@ RUN mkdir -p /usr/local/build && \
         -DDripline_BUILD_PYTHON=TRUE \
         ../src && \
     make install
+
+# TODO: rm -rf /usr/local/src
