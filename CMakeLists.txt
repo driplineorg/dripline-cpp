@@ -22,8 +22,6 @@ string( REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" DRIPLINE_PROTOCOL_VERSION ${JSON_
 message( STATUS "Dripline protocol version: ${DRIPLINE_PROTOCOL_VERSION}" )
 
 pbuilder_expand_lib_name( Dripline )
-set( Dripline_FULL_TARGET_NAME ${FULL_LIB_NAME} )
-message( STATUS "@@@@@@@ dripline full target name: ${Dripline_FULL_TARGET_NAME}" )
 
 ####################
 # dripline options #
@@ -184,9 +182,9 @@ endif()
 # Package Config #
 ##################
 
-configure_file( ${PROJECT_SOURCE_DIR}/DriplineConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/${Dripline_FULL_TARGET_NAME}Config.cmake @ONLY )
+configure_file( ${PROJECT_SOURCE_DIR}/DriplineConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/DriplineConfig.cmake @ONLY )
 
-pbuilder_do_package_config( FILE_PREFIX ${Dripline_FULL_TARGET_NAME} INSTALL_SUBDIR ${Dripline_FULL_TARGET_NAME} )
+pbuilder_do_package_config()
 
 ################################
 # Variables for parent project #

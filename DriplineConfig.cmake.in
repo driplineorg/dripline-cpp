@@ -2,8 +2,10 @@
 
 get_filename_component( Dripline_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH )
 
-#include( CMakeFindDependencyMacro )
-#find_dependency( SimpleAmqpClientSimpleAmqpClient REQUIRED )
+include( CMakeFindDependencyMacro )
+find_dependency( SimpleAmqpClient REQUIRED PATHS ${Dripline_CMAKE_DIR}/SimpleAmqpClient )
+find_dependency( Scarab REQUIRED PATHS ${Dripline_CMAKE_DIR}/Scarab )
+
 
 # Import targets if they're not already present
 if( NOT TARGET SimpleAmqpClient::SimpleAmqpClient )
@@ -16,6 +18,6 @@ if( NOT TARGET Dripline::@Dripline_FULL_TARGET_NAME@ )
         add_library( Dripline::@Dripline_FULL_TARGET_NAME@ ALIAS @Dripline_FULL_TARGET_NAME@ )
     else()
         message( STATUS "******** don't have @Dripline_FULL_TARGET_NAME@ target; including the targets file" )
-        include("${Dripline_CMAKE_DIR}/@Dripline_FULL_TARGET_NAME@Targets.cmake")
+        include("${Dripline_CMAKE_DIR}/DriplineTargets.cmake")
     endif()
 endif()
