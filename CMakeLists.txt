@@ -46,59 +46,43 @@ set_option( USE_CPP11 TRUE )
 set( PUBLIC_EXT_LIBS )
 set( PRIVATE_EXT_LIBS )
 
-#find_package( SimpleAmqpClient )
-#if( NOT SimpleAmqpClient_FOUND )
-    add_subdirectory( external/SimpleAmqpClient )
 
-    # Because the SimpleAmqpClient CMake build doesn't take care of this stuff, we have to do it ourselves
+####################
+# SimpleAmqpClient #
+####################
 
-    # Set interface include directories
-    set_property( TARGET SimpleAmqpClient 
-        APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES
-                "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/SimpleAmqpClient/src>"
-                "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
-    )
+add_subdirectory( external/SimpleAmqpClient )
 
-    # Build-interface targets
-    export( TARGETS SimpleAmqpClient
-        NAMESPACE SimpleAmqpClient::
-        FILE ${CMAKE_CURRENT_BINARY_DIR}/SimpleAmqpClientTargets.cmake
-    )
+# Because the SimpleAmqpClient CMake build doesn't take care of this stuff, we have to do it ourselves
 
-    # Install-interface targets
-    # The SimpleAmqpClientTargets export was added to SimpleAmqpClient in the project8 fork
-    # Install SimpleAmqpClientTargets.cmake in the Dripline package-config install directory
-    install( EXPORT SimpleAmqpClientTargets
-        FILE
-            SimpleAmqpClientTargets.cmake
-        NAMESPACE
-            SimpleAmqpClient::
-        DESTINATION
-            ${PACKAGE_CONFIG_PREFIX}/SimpleAmqpClient
-    )
-
-    list( APPEND PRIVATE_EXT_LIBS SimpleAmqpClient )
-#endif()
-
-#[[
-include( ExternalProject )
-
-ExternalProject_Add( SimpleAmqpClient
-    EXCLUDE_FROM_ALL 0
-
-    GIT_REPOSITORY 
-    GIT_TAG 
-
-    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/SimpleAmqpClient
-    CONFIGURE_COMMAND cmake
-
-    BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/SimpleAmqpClient
-
-    INSTALL_DIR ${CMAKE_INSTALL_PREFIX}
-
-    TEST_COMMAND ""
+# Set interface include directories
+set_property( TARGET SimpleAmqpClient 
+    APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES
+            "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/SimpleAmqpClient/src>"
+            "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
 )
-]]
+
+# Build-interface targets
+export( TARGETS SimpleAmqpClient
+    NAMESPACE SimpleAmqpClient::
+    FILE ${CMAKE_CURRENT_BINARY_DIR}/SimpleAmqpClientTargets.cmake
+)
+
+# Install-interface targets
+# The SimpleAmqpClientTargets export was added to SimpleAmqpClient in the project8 fork
+# Install SimpleAmqpClientTargets.cmake in the Dripline package-config install directory
+install( EXPORT SimpleAmqpClientTargets
+    FILE
+        SimpleAmqpClientTargets.cmake
+    NAMESPACE
+        SimpleAmqpClient::
+    DESTINATION
+        ${PACKAGE_CONFIG_PREFIX}/SimpleAmqpClient
+)
+
+list( APPEND PRIVATE_EXT_LIBS SimpleAmqpClient )
+
+
 ##########
 # Scarab #
 ##########
@@ -129,12 +113,6 @@ else( Dripline_BUILD_PYTHON )
     #list( REMOVE_ITEM PRIVATE_EXT_LIBS Python::Python )
 endif( Dripline_BUILD_PYTHON )
 
-
-####################
-# SimpleAmqpClient #
-####################
-
-#pbuilder_add_submodule( SimpleAmqpClient SimpleAmqpClient )
 
 ##################
 # Build Dripline #
@@ -185,10 +163,3 @@ endif()
 configure_file( ${PROJECT_SOURCE_DIR}/DriplineConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/DriplineConfig.cmake @ONLY )
 
 pbuilder_do_package_config()
-
-################################
-# Variables for parent project #
-################################
-
-#pbuilder_variables_for_parent()
-
