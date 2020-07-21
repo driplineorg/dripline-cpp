@@ -1,5 +1,5 @@
-# Minimum cmake verison 3.12 required for Scarab
-cmake_minimum_required (VERSION 3.12)
+# Minimum cmake verison 3.13 required for linking to libraries not created by the parent or sub directories
+cmake_minimum_required (VERSION 3.13)
 
 #########
 # setup #
