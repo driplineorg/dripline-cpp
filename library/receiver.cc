@@ -45,11 +45,13 @@ namespace dripline
 
 
     receiver::receiver() :
+            scarab::cancelable(),
             f_incoming_messages(),
             f_single_message_wait_ms( 1000 )
     {}
 
     receiver::receiver( receiver&& a_orig ) :
+            scarab::cancelable( std::move(a_orig) ),
             f_incoming_messages( std::move(a_orig.f_incoming_messages) ),
             f_single_message_wait_ms( a_orig.f_single_message_wait_ms )
     {
@@ -61,6 +63,7 @@ namespace dripline
 
     receiver& receiver::operator=( receiver&& a_orig )
     {
+        scarab::cancelable::operator=( std::move(a_orig) );
         f_incoming_messages = std::move(a_orig.f_incoming_messages);
         f_single_message_wait_ms = a_orig.f_single_message_wait_ms;
         a_orig.f_single_message_wait_ms = 1000;
@@ -231,10 +234,17 @@ namespace dripline
         //   2. listening times out (return empty reply pointer; a_chan_valid will be true)
         //   3. a full dripline message is received (return message)
         //   4. error processing a recieved amqp message (return empty reply pointer)
-        while( true )
+        while( ! is_canceled() )
         {
             amqp_envelope_ptr t_envelope;
             a_chan_valid = core::listen_for_message( t_envelope, a_receive_reply->f_channel, a_receive_reply->f_consumer_tag, a_timeout_ms, false );
+
+            // check whether we canceled while listening
+            if( is_canceled() )
+            {
+                LDEBUG( dlog, "Receiver was canceled before receiving reply" );
+                return reply_ptr_t();
+            }
 
             // there was an error listening on the channel; no message received
             if( ! a_chan_valid )
@@ -309,7 +319,10 @@ namespace dripline
                 LERROR( dlog, "There was a problem processing the message: " << e.what() );
                 return reply_ptr_t();
             }
-        } // end while( true )
+        } // end while( ! is_canceled() )
+
+        LDEBUG( dlog, "Receiver was canceled" );
+        return reply_ptr_t();
     }
 
     reply_ptr_t receiver::process_received_reply( incoming_message_pack& a_pack, const std::string& a_message_id )
@@ -352,13 +365,11 @@ namespace dripline
     }
 
     concurrent_receiver::concurrent_receiver() :
-            scarab::cancelable(),
             receiver(),
             f_message_queue()
     {}
 
     concurrent_receiver::concurrent_receiver( concurrent_receiver&& a_orig ) :
-            scarab::cancelable( std::move(a_orig) ),
             receiver( std::move(a_orig) ),
             f_message_queue()
     {}
@@ -368,7 +379,6 @@ namespace dripline
 
     concurrent_receiver& concurrent_receiver::operator=( concurrent_receiver&& a_orig )
     {
-        scarab::cancelable::operator=( std::move(a_orig) );
         receiver::operator=( std::move(a_orig) );
         // nothing to do with message queue
         return *this;
