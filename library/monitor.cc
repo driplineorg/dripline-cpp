@@ -56,7 +56,7 @@ namespace dripline
             f_requests_keys.reserve( t_req_keys.size() );
             for( auto t_it = t_req_keys.begin(); t_it != t_req_keys.end(); ++t_it )
             {
-                LPROG( dlog, "Monitor <" << f_name << "> will monitor key <" << (*t_it)().as_string() << "> on the requests exchange" );
+                LPROG( dlog, "Monitor <" << f_name << "> will monitor key <" << (*t_it)().as_string() << "> on the alerts exchange" );
                 f_alerts_keys.push_back( (*t_it)().as_string() );
             }
         }
