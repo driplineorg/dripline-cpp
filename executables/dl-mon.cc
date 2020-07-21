@@ -67,7 +67,7 @@ int main( int argc, char** argv )
 
         if( ! the_monitor->stop() ) return;
 
-        the_return = scarab::signal_handler::got_exit_signal() ? 
+        the_return = scarab::signal_handler::get_exited() ? 
                 scarab::signal_handler::get_return_code() : dl_success().rc_value() / 100;
     };
 
