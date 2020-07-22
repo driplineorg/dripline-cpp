@@ -20,6 +20,7 @@
 #include "logger.hh"
 #include "param_codec.hh"
 #include "path.hh"
+#include "signal_handler.hh"
 
 #include <algorithm> // for min
 #include <string>
@@ -214,7 +215,9 @@ namespace dripline
 
             // timed blocking call to wait for incoming message
             receiver t_msg_receiver;
+            scarab::signal_handler::add_cancelable_s( &t_msg_receiver );
             dripline::reply_ptr_t t_reply = t_msg_receiver.wait_for_reply( t_receive_reply, f_agent->get_timeout() );
+            scarab::signal_handler::remove_cancelable_s( &t_msg_receiver );
 
             if( t_reply )
             {

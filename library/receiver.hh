@@ -73,7 +73,7 @@ namespace dripline
      The `receiver` class itself does not know how to process a message.  This must be implemented by the class derived from `receiver`.
      The default implementation of `process_message()` will throw a `dripline_error`.
     */
-    class DRIPLINE_API receiver
+    class DRIPLINE_API receiver : public virtual scarab::cancelable
     {
         public:
             receiver();
@@ -150,7 +150,7 @@ namespace dripline
 
      A class deriving from concurrent_receiver must implement `submit_message()`.
     */
-    class DRIPLINE_API concurrent_receiver : public receiver, public virtual scarab::cancelable
+    class DRIPLINE_API concurrent_receiver : public receiver
     {
         public:
             concurrent_receiver();

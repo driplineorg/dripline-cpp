@@ -13,6 +13,7 @@ set( dripline_HEADERS
     dripline_config.hh
     dripline_constants.hh
     dripline_exceptions.hh
+    dripline_fwd.hh
     dripline_version.hh
     endpoint.hh
     heartbeater.hh
@@ -69,16 +70,19 @@ if( Scarab_BUILD_PYTHON )
     )
 endif( Scarab_BUILD_PYTHON )
 
-
 configure_file( dripline_version.cc.in ${CMAKE_CURRENT_BINARY_DIR}/dripline_version.cc )
 set( dripline_SOURCES
     ${dripline_SOURCES}
     ${CMAKE_CURRENT_BINARY_DIR}/dripline_version.cc
 )
 
+set( PACKAGE_LIBS )
+
 
 ##########
 
-pbuilder_library( Dripline dripline_SOURCES "" )
+pbuilder_use_sm_library( Scarab Scarab )
+
+pbuilder_library( Dripline dripline_SOURCES PACKAGE_LIBS PUBLIC_EXT_LIBS PRIVATE_EXT_LIBS )
 
 pbuilder_install_headers( ${dripline_HEADERS} )

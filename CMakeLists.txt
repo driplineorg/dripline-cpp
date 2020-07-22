@@ -1,5 +1,5 @@
-# Minimum cmake verison 3.1 required for the variable CMAKE_CXX_STANDARD
-cmake_minimum_required (VERSION 3.1)
+# Minimum cmake verison 3.13 required for linking to libraries not created by the parent or sub directories
+cmake_minimum_required (VERSION 3.13)
 
 #########
 # setup #
@@ -21,6 +21,7 @@ list( GET JSON_STRINGS 0 JSON_STRING )
 string( REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" DRIPLINE_PROTOCOL_VERSION ${JSON_STRING})
 message( STATUS "Dripline protocol version: ${DRIPLINE_PROTOCOL_VERSION}" )
 
+pbuilder_expand_lib_name( Dripline )
 
 ####################
 # dripline options #
@@ -39,39 +40,78 @@ set_option( USE_CPP11 TRUE )
 
 
 #########################
-# dripline dependencies #
+# External dependencies #
 #########################
 
-########
-# Scarab
-########
+set( PUBLIC_EXT_LIBS )
+set( PRIVATE_EXT_LIBS )
+
+
+####################
+# SimpleAmqpClient #
+####################
+
+add_subdirectory( external/SimpleAmqpClient )
+
+# Because the SimpleAmqpClient CMake build doesn't take care of this stuff, we have to do it ourselves
+
+# Set interface include directories
+set_property( TARGET SimpleAmqpClient 
+    APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES
+            "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/SimpleAmqpClient/src>"
+            "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
+)
+
+# Build-interface targets
+export( TARGETS SimpleAmqpClient
+    NAMESPACE SimpleAmqpClient::
+    FILE ${CMAKE_CURRENT_BINARY_DIR}/SimpleAmqpClientTargets.cmake
+)
+
+# Install-interface targets
+# The SimpleAmqpClientTargets export was added to SimpleAmqpClient in the project8 fork
+# Install SimpleAmqpClientTargets.cmake in the Dripline package-config install directory
+install( EXPORT SimpleAmqpClientTargets
+    FILE
+        SimpleAmqpClientTargets.cmake
+    NAMESPACE
+        SimpleAmqpClient::
+    DESTINATION
+        ${PACKAGE_CONFIG_PREFIX}/SimpleAmqpClient
+)
+
+list( APPEND PRIVATE_EXT_LIBS SimpleAmqpClient )
+
+
+##########
+# Scarab #
+##########
 
 # set authentication build to TRUE
 # this will require Boost 1.46 or better
 set_option( Scarab_BUILD_AUTHENTICATION TRUE )
+set_option( Scarab_BUILD_CODEC_JSON TRUE )
 
-pbuilder_add_submodule( Scarab scarab/library )
+if( Dripline_BUILD_PYTHON )
+    set_option( Scarab_BUILD_PYTHON TRUE )
+else( Dripline_BUILD_PYTHON )
+    set_option( Scarab_BUILD_PYTHON FALSE )
+endif( Dripline_BUILD_PYTHON )
+
+pbuilder_add_submodule( Scarab scarab )
 
 if( Dripline_BUILD_PYTHON )
     message( STATUS "Dripline-cpp is being built with Python" )
-    set( Scarab_BUILD_PYTHON TRUE )
     add_definitions( -DDL_PYTHON )
     add_definitions( -DPYTHON_THROW_REPLY_KEYWORD=${Dripline_PYTHON_THROW_REPLY_KEYWORD} )
     include_directories( ${PYTHON_INCLUDE_DIRS} )    
+    #list( APPEND PRIVATE_EXT_LIBS Python::Python )
 else( Dripline_BUILD_PYTHON )
     message( STATUS "Dripline-cpp is being built without Python" )
-    set( Scarab_BUILD_PYTHON FALSE )
     remove_definitions( -DDL_PYTHON )
     remove_definitions( -DPYTHON_THROW_REPLY_KEYWORD=${Dripline_PYTHON_THROW_REPLY_KEYWORD} )
+    #list( REMOVE_ITEM PRIVATE_EXT_LIBS Python::Python )
 endif( Dripline_BUILD_PYTHON )
-
-##################
-# SimpleAmqpClient
-##################
-
-pbuilder_add_submodule( SimpleAmqpClient SimpleAmqpClient )
-set( Scarab_BUILD_CODEC_JSON TRUE CACHE BOOL "" FORCE )
-set( Scarab_BUILD_CODEC_MSGPACK TRUE CACHE BOOL "" FORCE )
 
 
 ##################
@@ -116,9 +156,10 @@ if( Dripline_ENABLE_TESTING )
     add_subdirectory( testing )
 endif()
 
-################################
-# Variables for parent project #
-################################
+##################
+# Package Config #
+##################
 
-pbuilder_variables_for_parent()
+configure_file( ${PROJECT_SOURCE_DIR}/DriplineConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/DriplineConfig.cmake @ONLY )
 
+pbuilder_do_package_config()

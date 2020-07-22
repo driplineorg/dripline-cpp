@@ -24,7 +24,9 @@ set ( dripline_examples_LIBS
 
 ##########
 
-pbuilder_library( DriplineExamples dripline_examples_SOURCES dripline_examples_LIBS )
+#pbuilder_library( DriplineExamples dripline_examples_SOURCES dripline_examples_LIBS )
+
+pbuilder_library( DriplineExamples dripline_examples_SOURCES dripline_examples_LIBS PUBLIC_EXT_LIBS PRIVATE_EXT_LIBS )
 
 pbuilder_install_headers( ${dripline_examples_HEADERS} )
 
@@ -38,5 +40,6 @@ if( Dripline_ENABLE_EXECUTABLES )
         run_oscillator_service_hub
         run_simple_service
     )
-    pbuilder_executables( programs lib_dependencies )
+    #pbuilder_executables( programs lib_dependencies )
+    pbuilder_executables( programs lib_dependencies PUBLIC_EXT_LIBS PRIVATE_EXT_LIBS  )
 endif( Dripline_ENABLE_EXECUTABLES )

@@ -20,23 +20,38 @@ LOGGER( dlog, "agent_config" );
 namespace dripline
 {
 
-    dripline_config::dripline_config()
+    dripline_config::dripline_config( const std::string& a_auth_file )
     {
         // default dripline configuration
 
+        scarab::path t_auth_default_path;
 #ifdef DRIPLINE_AUTH_FILE
         //add logic for default auth file if it exists
-        scarab::path t_auth_default_path = scarab::expand_path( TOSTRING( DRIPLINE_AUTH_FILE ) );
-        if ( boost::filesystem::exists( t_auth_default_path ) )
+        LTRACE( dlog, "Have a default auth path provided at build time: <" << TOSTRING( DRIPLINE_AUTH_FILE ) << ">" );
+        t_auth_default_path = scarab::expand_path( TOSTRING( DRIPLINE_AUTH_FILE ) );
+#endif
+        if( ! a_auth_file.empty() )
+        {
+            LTRACE( dlog, "Have a default auth path provided at runtime: <" << a_auth_file << ">" );
+            t_auth_default_path = scarab::expand_path( a_auth_file );
+        }
+
+        if ( ! t_auth_default_path.empty() && boost::filesystem::exists( t_auth_default_path ) )
         {
             LDEBUG( dlog, "default auth file found, setting that as initial value: " << t_auth_default_path.string() );
             add( "auth-file", t_auth_default_path.string() );
         }
         else
         {
-            LDEBUG( dlog, "default auth file <" << t_auth_default_path.string() << "> does not exist, not setting" );
+            if( t_auth_default_path.empty() )
+            {
+                LDEBUG( dlog, "No default auth file present; will not be set in dripline_config" );
+            }
+            else
+            {
+                LDEBUG( dlog, "Default auth path <" << t_auth_default_path.string() << "> does not exist; will not be set in dripline_config" );
+            }
         }
-#endif
         add( "requests-exchange", "requests" );
         add( "alerts-exchange", "alerts" );
         add( "max-payload-size", DL_MAX_PAYLOAD_SIZE );

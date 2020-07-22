@@ -1,6 +1,6 @@
 [submodule "scarab"]
 	path = scarab
 	url = https://github.com/project8/scarab
-[submodule "SimpleAmqpClient"]
-	path = SimpleAmqpClient
+[submodule "external/SimpleAmqpClient"]
+	path = external/SimpleAmqpClient
 	url = https://github.com/project8/SimpleAmqpClient
