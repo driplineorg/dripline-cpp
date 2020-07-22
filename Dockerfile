@@ -66,7 +66,8 @@ RUN mkdir -p /usr/local/build && \
         -DCMAKE_INSTALL_PREFIX:PATH=/usr/local \ 
         -DDripline_BUILD_EXAMPLES:BOOL=FALSE \
         -DDripline_BUILD_PYTHON=TRUE \
+        -DPBUILDER_PY_INSTALL_IN_SITELIB=TRUE \
         ../src && \
-    make install
+    make -j3 install
 
 # TODO: rm -rf /usr/local/src
