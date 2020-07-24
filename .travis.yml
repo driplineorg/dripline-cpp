@@ -5,6 +5,10 @@ stages:
   if: branch = master OR branch = develop OR 
     branch = dl3/master OR branch = dl3/develop OR 
     branch =~ /.*\.(?i:build)$/ OR type = pull_request
+- name: build images
+  if: branch = master OR branch = develop OR 
+    branch = dl3/master OR branch = dl3/develop OR 
+    branch =~ /^v\d+\.\d+\.\d+(-S*)?$/
 - name: deploy
   if: branch = master OR branch = develop OR 
     branch = dl3/master OR branch = dl3/develop OR 
@@ -63,6 +67,14 @@ jobs:
     - cd build
     - cmake .. -DScarab_BUILD_PYTHON=FALSE
     - make
+  - stage: build images
+    name: amd64
+    before_install: ".travis/setup_emulation.sh"
+    script:
+    - set -e
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    - ".travis/bootstrap_image.sh -u amd64 -r python -t ${BASE_IMAGE_TAG} -a amd64 -i driplineorg/dripline-python:`echo
+      ${TRAVIS_BRANCH} | tr / _`"
   - stage: deploy
     os: linux
     dist: bionic
