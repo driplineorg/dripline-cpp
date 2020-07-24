@@ -8,6 +8,7 @@ stages:
 - name: build images
   if: branch = master OR branch = develop OR 
     branch = dl3/master OR branch = dl3/develop OR 
+    branch =~ /.*\.(?i:build)$/ OR type = pull_request
     branch =~ /^v\d+\.\d+\.\d+(-S*)?$/
 - name: deploy
   if: branch = master OR branch = develop OR 
