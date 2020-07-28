@@ -1,0 +1,170 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Getting Started &#8212; Dripline-Cpp v2.3.3 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="shortcut icon" href="_static/DL3Logo.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Building Dripline" href="building.html" />
+    <link rel="prev" title="Dripline-cpp Use and API Documentation" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="getting-started">
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="what-s-included">
+<h2>What’s Included<a class="headerlink" href="#what-s-included" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="dl_agent.html#dl-agent"><span class="std std-ref">dl-agent</span></a>: An executable that allows you to send Dripline messages</p></li>
+<li><p><a class="reference internal" href="dl_mon.html#dl-mon"><span class="std std-ref">dl-mon</span></a>: An executable that monitors messages on the mesh</p></li>
+<li><p>dripline-cpp library: Dripline API that can be used to send and receive messages</p></li>
+</ul>
+</div>
+<div class="section" id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>CMake 3.1</p></li>
+<li><p>C++11</p></li>
+<li><p>Boost 1.46</p></li>
+<li><p>rabbitmqc</p></li>
+</ul>
+</div>
+<div class="section" id="included-packages">
+<h2>Included Packages<a class="headerlink" href="#included-packages" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/project8/SimpleAmqpClient">SimpleAmqpClient</a> (unchanged fork of <a class="reference external" href="https://github.com/alanxz/SimpleAmqpClient">upstream SimpleAmqpClient</a>)</p></li>
+<li><p><a class="reference external" href="https://github.com/project8/scarab">scarab</a></p></li>
+</ul>
+</div>
+<div class="section" id="getting-dripline-cpp">
+<h2>Getting Dripline-cpp<a class="headerlink" href="#getting-dripline-cpp" title="Permalink to this headline">¶</a></h2>
+<p>The Dripline-cpp repository is available on <a class="reference external" href="https://driplineorg.github.com/dripline-cpp">GitHub</a>.</p>
+<p>Dripline-cpp can either be built manually, or used from a Docker container.</p>
+<p>For manual installation instructions, see <a class="reference internal" href="building.html#building"><span class="std std-ref">Installation</span></a>.</p>
+<p>Pre-built docker containers containing a dripline-cpp installation are available on <a class="reference external" href="https://hub.docker.com/repository/docker/driplineorg/dripline-cpp">Docker Hub</a>.</p>
+<p>Images are automatically built for each tagged release, and for the <code class="docutils literal notranslate"><span class="pre">master</span></code> and <code class="docutils literal notranslate"><span class="pre">develop</span></code> branches.</p>
+<p>Users can also build their own images using the provided Dockerfile or by customizing their own.</p>
+</div>
+<div class="section" id="using-dripline-cpp">
+<h2>Using Dripline-cpp<a class="headerlink" href="#using-dripline-cpp" title="Permalink to this headline">¶</a></h2>
+<p>See <a class="reference internal" href="dl_agent.html#dl-agent"><span class="std std-ref">Agent</span></a> and <a class="reference internal" href="dl_mon.html#dl-mon"><span class="std std-ref">Monitor</span></a> for instructions on using the included applications.</p>
+<p>See <a class="reference internal" href="library.html#library"><span class="std std-ref">Library</span></a> for instructions on using the Dripline C++ API.</p>
+</div>
+<div class="section" id="setting-up-a-mesh">
+<h2>Setting Up a Mesh<a class="headerlink" href="#setting-up-a-mesh" title="Permalink to this headline">¶</a></h2>
+<p>Instructions and examples for setting up a dripline mesh can be found
+from the main <a class="reference external" href="https://driplineorg.github.io">dripline documentation site</a>.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/DL3Logo.png" alt="Logo"/>
+            </a></p>
+<h1 class="logo"><a href="index.html">Dripline-Cpp</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#what-s-included">What’s Included</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#included-packages">Included Packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-dripline-cpp">Getting Dripline-cpp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-dripline-cpp">Using Dripline-cpp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-a-mesh">Setting Up a Mesh</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="building.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dl_agent.html">Agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dl_mon.html">Monitor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="library.html">Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="offline.html">Offline &amp; No-Connection</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Dripline-cpp Use and API Documentation</a></li>
+      <li>Next: <a href="building.html" title="next chapter">Building Dripline</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Dripline-Cpp Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/getting_started.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
