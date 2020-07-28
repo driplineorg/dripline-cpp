@@ -133,19 +133,6 @@ pbuilder_use_sm_library( Scarab Scarab )
 # Build Dripline #
 ##################
 
-
-#add_library( ${PROJECT_NAME}_void INTERFACE )
-#export( TARGETS ${PROJECT_NAME}_void
-#    FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake
-#)
-#install( TARGETS ${PROJECT_NAME}_void 
-#    EXPORT ${PROJECT_NAME}Targets 
-#    LIBRARY DESTINATION ${LIB_INSTALL_DIR} 
-#)
-
-
-
-
 add_subdirectory( library )
 
 if( Dripline_ENABLE_EXECUTABLES )
