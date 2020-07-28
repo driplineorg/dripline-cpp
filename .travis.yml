@@ -23,6 +23,8 @@ jobs:
     script:
     - brew update
     - brew install rabbitmq-c
+    - brew install rapidjson
+    - brew install yaml-cpp
     - mkdir build
     - cd build
     - cmake ..
@@ -39,6 +41,8 @@ jobs:
         - g++-5
         - libboost-all-dev
         - librabbitmq-dev
+        - rapidjson-dev
+        - libyaml-cpp-dev
     script:
     - export CC=gcc-5 && export CXX=g++-5
     - mkdir build
@@ -57,6 +61,8 @@ jobs:
         - clang
         - libboost-all-dev
         - librabbitmq-dev
+        - rapidjson-dev
+        - libyaml-cpp-dev
     script:
     - export CC=clang && export CXX=clang++
     - mkdir build
