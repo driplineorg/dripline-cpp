@@ -28,9 +28,6 @@ set ( dripline_examples_LIBS
 
 ##########
 
-#pbuilder_library( DriplineExamples dripline_examples_SOURCES dripline_examples_LIBS )
-
-#pbuilder_library( DriplineExamples dripline_examples_SOURCES dripline_examples_LIBS PUBLIC_EXT_LIBS PRIVATE_EXT_LIBS )
 pbuilder_library( 
     TARGET DriplineExamples 
     SOURCES ${dripline_examples_SOURCES}
@@ -52,8 +49,6 @@ if( Dripline_ENABLE_EXECUTABLES )
         run_simple_service.cc
     )
 
-    #pbuilder_executables( programs lib_dependencies )
-    #pbuilder_executables( programs lib_dependencies PUBLIC_EXT_LIBS PRIVATE_EXT_LIBS  )
     set( dripline_examples_exe_PROGRAMS )
     pbuilder_executables( 
         SOURCES ${dripline_examples_exe_SOURCES}
