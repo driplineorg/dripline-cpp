@@ -1,25 +1,3 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node2" href="$classdripline_1_1concurrent__receiver.html" title="Receives and processes messages concurrently. " alt="" coords="151,5,301,32"/>
-<area shape="rect" id="node11" href="$classdripline_1_1heartbeater.html" title="A heartbeater repeatedly sends an alert on a particular time interval. " alt="" coords="399,267,497,293"/>
-<area shape="rect" id="node12" href="$classdripline_1_1listener.html" title="A listener is a class capable of listening for AMQP messages on an AMQP channel. This class provides ..." alt="" coords="191,107,261,133"/>
-<area shape="rect" id="node13" href="$classdripline_1_1relayer.html" title="Asynchronous message sending. " alt="" coords="653,56,721,83"/>
-<area shape="rect" id="node14" href="$classdripline_1_1scheduler.html" title="Executes scheduled events. " alt="" coords="145,158,307,199"/>
-<area shape="rect" id="node15" href="$classdripline_1_1scheduler.html" title="scheduler\&lt;\&gt;" alt="" coords="173,224,279,251"/>
-<area shape="rect" id="node3" href="$classdripline_1_1listener__receiver.html" title="Convenience class to bring together listener and concurrent_receiver. " alt="" coords="383,157,513,184"/>
-<area shape="rect" id="node4" href="$classdripline_1_1endpoint__listener__receiver.html" title="Decorator class for a plain endpoint: adds listener_receiver capabilities. " alt="" coords="589,157,784,184"/>
-<area shape="rect" id="node5" href="$classdripline_1_1monitor.html" title="Listens for messages sent to a particular set of keys and prints them. " alt="" coords="650,107,723,133"/>
-<area shape="rect" id="node6" href="$classdripline_1_1service.html" title="Consumer of Dripline messages on a particular queue. " alt="" coords="652,216,721,243"/>
-<area shape="rect" id="node7" href="$classdripline_1_1hub.html" title="Service class aimed at adding a Dripline API to an existing codebase. " alt="" coords="900,149,947,176"/>
-<area shape="rect" id="node9" href="$classdripline_1_1oscillator__service__endpoints.html" title="oscillator_service\l_endpoints" alt="" coords="855,201,991,242"/>
-<area shape="rect" id="node10" href="$classdripline_1_1simple__service.html" title="simple_service" alt="" coords="863,267,983,293"/>
-<area shape="rect" id="node8" href="$classdripline_1_1oscillator__service__hub.html" title="oscillator_service_hub" alt="" coords="1063,149,1229,176"/>
-<area shape="rect" id="node16" href="$classdripline_1_1core.html" title="Basic AMQP interactions, including sending messages and interacting with AMQP channels. " alt="" coords="423,107,473,133"/>
-<area shape="rect" id="node18" href="$classdripline_1_1endpoint.html" title="Basic Dripline object capable of receiving and acting on messages. " alt="" coords="409,383,487,409"/>
-<area shape="rect" id="node19" href="$classdripline_1_1oscillator__ep.html" title="oscillator_ep" alt="" coords="634,412,739,439"/>
-<area shape="rect" id="node20" href="$classdripline_1_1oscillator__ep__amplitude.html" title="oscillator_ep_amplitude" alt="" coords="834,520,1013,547"/>
-<area shape="rect" id="node21" href="$classdripline_1_1oscillator__ep__frequency.html" title="oscillator_ep_frequency" alt="" coords="835,317,1012,344"/>
-<area shape="rect" id="node22" href="$classdripline_1_1oscillator__ep__in__phase.html" title="oscillator_ep_in_phase" alt="" coords="838,368,1009,395"/>
-<area shape="rect" id="node23" href="$classdripline_1_1oscillator__ep__iq.html" title="oscillator_ep_iq" alt="" coords="861,419,985,445"/>
-<area shape="rect" id="node24" href="$classdripline_1_1oscillator__ep__quadrature.html" title="oscillator_ep_quadrature" alt="" coords="832,469,1015,496"/>
-<area shape="rect" id="node25" href="$classdripline_1_1receiver.html" title="A receiver is able to collect Dripline message chunks and reassemble them into a complete Dripline me..." alt="" coords="14,5,89,32"/>
+<area shape="rect" id="node1" href="$classdripline_1_1oscillator.html" title="oscillator" alt="" coords="5,5,88,32"/>
 </map>
