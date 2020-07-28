@@ -39,6 +39,17 @@ set( Dripline_MAX_PAYLOAD_SIZE "10000" CACHE STRING "Maximum payload size (bytes
 set_option( USE_CPP11 TRUE )
 
 
+# Process options
+
+if( Dripline_OFFLINE )
+    add_definitions( -DDL_OFFLINE )
+else()
+    remove_definitions( -DDL_OFFLINE )
+endif()
+
+add_definitions( -DDL_MAX_PAYLOAD_SIZE=${Dripline_MAX_PAYLOAD_SIZE} )
+
+
 #########################
 # External dependencies #
 #########################
@@ -80,7 +91,8 @@ install( EXPORT SimpleAmqpClientTargets
         ${PACKAGE_CONFIG_PREFIX}/SimpleAmqpClient
 )
 
-list( APPEND PRIVATE_EXT_LIBS SimpleAmqpClient )
+# Added to the public libraries so that downstream code can successfully get the necessary include directories
+list( APPEND PUBLIC_EXT_LIBS SimpleAmqpClient )
 
 
 ##########
@@ -113,22 +125,26 @@ else( Dripline_BUILD_PYTHON )
     #list( REMOVE_ITEM PRIVATE_EXT_LIBS Python::Python )
 endif( Dripline_BUILD_PYTHON )
 
+# all parts of dripline use Scarab, so include it here
+pbuilder_use_sm_library( Scarab Scarab )
+
 
 ##################
 # Build Dripline #
 ##################
 
-if( Dripline_OFFLINE )
-    add_definitions( -DDL_OFFLINE )
-else()
-    remove_definitions( -DDL_OFFLINE )
-endif()
 
-add_definitions( -DDL_MAX_PAYLOAD_SIZE=${Dripline_MAX_PAYLOAD_SIZE} )
+#add_library( ${PROJECT_NAME}_void INTERFACE )
+#export( TARGETS ${PROJECT_NAME}_void
+#    FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake
+#)
+#install( TARGETS ${PROJECT_NAME}_void 
+#    EXPORT ${PROJECT_NAME}Targets 
+#    LIBRARY DESTINATION ${LIB_INSTALL_DIR} 
+#)
 
-include_directories( BEFORE
-    ${PROJECT_SOURCE_DIR}/library
-)
+
+
 
 add_subdirectory( library )
 
@@ -141,10 +157,6 @@ endif()
 ############
 
 if( Dripline_BUILD_EXAMPLES )
-    include_directories( BEFORE
-        ${PROJECT_SOURCE_DIR}/examples
-    )
-
     add_subdirectory( examples )
 endif()
 
