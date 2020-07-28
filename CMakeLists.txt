@@ -1,5 +1,5 @@
 # Minimum cmake verison 3.13 required for linking to libraries not created by the parent or sub directories
-cmake_minimum_required (VERSION 3.13)
+cmake_minimum_required (VERSION 3.1)
 
 #########
 # setup #
