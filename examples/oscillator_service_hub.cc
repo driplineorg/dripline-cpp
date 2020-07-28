@@ -64,7 +64,7 @@ namespace dripline
             f_return = dl_service_error().rc_value() / 100;
         }
 
-        if( scarab::signal_handler::got_exit_signal() )
+        if( scarab::signal_handler::get_exited() )
         {
             f_return = scarab::signal_handler::get_return_code();
         }
