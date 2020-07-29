@@ -7,8 +7,7 @@ stages:
     branch = dl3/master OR 
     branch = dl3/develop OR 
     branch =~ /.*\.(?i:build)$/ OR 
-    type = pull_request AND
-    false
+    type = pull_request 
 - name: build images
   if: branch = master OR 
     branch = develop OR 
