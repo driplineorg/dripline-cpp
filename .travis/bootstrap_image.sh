@@ -120,6 +120,6 @@ docker build \
     $platform_arg \
     -t ${output_image}-${architecture_img_suffix} \
     .
-#docker push ${output_image}-${architecture_img_suffix}
+docker push ${output_image}-${architecture_img_suffix}
 
 set +ex

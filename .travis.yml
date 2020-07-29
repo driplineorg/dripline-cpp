@@ -126,6 +126,8 @@ jobs:
       ${TRAVIS_BRANCH} | tr / _`"
   ## build general-use manifest
   - stage: assemble manifest
+    os: linux
+    dist: bionic
     script:
     - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
     - ".travis/build_manifest.sh -a arm -a amd64 -n driplineorg/dripline-python:`echo
