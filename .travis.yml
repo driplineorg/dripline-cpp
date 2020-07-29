@@ -8,6 +8,7 @@ stages:
     branch = dl3/develop OR 
     branch =~ /.*\.(?i:build)$/ OR 
     type = pull_request 
+  if: False
 - name: build images
   if: branch = master OR 
     branch = develop OR 
@@ -92,6 +93,12 @@ jobs:
     name: amd64
     os: linux
     dist: bionic
+    addons:
+      apt:
+        packages:
+        - qemu-user-static
+        - jq
+        - tree
     before_install: ".travis/setup_emulation.sh"
     script:
     - set -e
