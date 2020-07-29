@@ -47,8 +47,6 @@ jobs:
     dist: bionic
     compiler: gcc
     addons:
-      snaps:
-      - cmake
       apt:
         sources:
         - ubuntu-toolchain-r-test
