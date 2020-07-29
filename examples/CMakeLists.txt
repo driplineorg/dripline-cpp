@@ -4,6 +4,10 @@
 
 ##########
 
+include_directories( BEFORE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 set( dripline_examples_HEADERS
     oscillator.hh
     oscillator_service_endpoints.hh
@@ -24,22 +28,39 @@ set ( dripline_examples_LIBS
 
 ##########
 
-#pbuilder_library( DriplineExamples dripline_examples_SOURCES dripline_examples_LIBS )
-
-pbuilder_library( DriplineExamples dripline_examples_SOURCES dripline_examples_LIBS PUBLIC_EXT_LIBS PRIVATE_EXT_LIBS )
+pbuilder_library( 
+    TARGET DriplineExamples 
+    SOURCES ${dripline_examples_SOURCES}
+    PROJECT_LIBRARIES ${dripline_examples_LIBS}
+    #PUBLIC_EXTERNAL_LIBRARIES ${PUBLIC_EXT_LIBS}
+    #PRIVATE_EXTERNAL_LIBRARIES ${PRIVATE_EXT_LIBS}
+)
 
 pbuilder_install_headers( ${dripline_examples_HEADERS} )
 
 if( Dripline_ENABLE_EXECUTABLES )
-    set( lib_dependencies 
+    set( dripline_examples_exe_LIBS 
         Dripline
         DriplineExamples
     )
-    set( programs
-        run_oscillator_service_endpoints
-        run_oscillator_service_hub
-        run_simple_service
+    set( dripline_examples_exe_SOURCES
+        run_oscillator_service_endpoints.cc
+        run_oscillator_service_hub.cc
+        run_simple_service.cc
     )
-    #pbuilder_executables( programs lib_dependencies )
-    pbuilder_executables( programs lib_dependencies PUBLIC_EXT_LIBS PRIVATE_EXT_LIBS  )
-endif( Dripline_ENABLE_EXECUTABLES )
+
+    set( dripline_examples_exe_PROGRAMS )
+    pbuilder_executables( 
+        SOURCES ${dripline_examples_exe_SOURCES}
+        TARGETS_VAR dripline_examples_exe_PROGRAMS
+        PROJECT_LIBRARIES ${dripline_examples_exe_LIBS}
+        #PUBLIC_EXTERNAL_LIBRARIES ${PUBLIC_EXT_LIBS}
+        #PRIVATE_EXTERNAL_LIBRARIES ${PRIVATE_EXT_LIBS}
+    )
+endif()
+
+pbuilder_component_install_and_export( 
+    COMPONENT Examples
+    LIBTARGETS DriplineExamples
+    EXETARGETS ${dripline_examples_exe_PROGRAMS}
+)
