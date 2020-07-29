@@ -69,7 +69,12 @@ while getopts u:r:t:i:a: option ; do
   esac
 done
 if [[ -z $image_user || -z $image_repo || -z $image_tag || -z $target_arch || -z $output_image ]]; then
-    echo "all arguments are required"
+    echo "all arguments are required, but got:"
+    echo "-u [$image_user]"
+    echo "-r [$image_repo]"
+    echo "-t [$image_tag]"
+    echo "-a [$target_arch]"
+    echo "-i [$output_image]"
     usage
 fi
 
@@ -115,6 +120,6 @@ docker build \
     $platform_arg \
     -t ${output_image}-${architecture_img_suffix} \
     .
-docker push ${output_image}-${architecture_img_suffix}
+#docker push ${output_image}-${architecture_img_suffix}
 
 set +ex
