@@ -89,6 +89,7 @@ jobs:
     - cd build
     - cmake .. -DScarab_BUILD_PYTHON=FALSE
     - make
+  ## build images
   - stage: build images
     name: amd64
     os: linux
@@ -105,20 +106,29 @@ jobs:
     - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
     - ".travis/bootstrap_image.sh -u amd64 -r python -t ${BASE_IMAGE_TAG} -a amd64 -i driplineorg/dripline-python:`echo
       ${TRAVIS_BRANCH} | tr / _`"
-  - stage: deploy
+  - stage: build images
+    name: arm32v7
     os: linux
     dist: bionic
-    services:
-    - docker
     addons:
       apt:
         packages:
-        - docker-ce
+        - qemu-user-static
+        - jq
+        - tree
+    before_install: ".travis/setup_emulation.sh"
     script:
-    - export DOCKER_TAG=`echo $TRAVIS_BRANCH | sed "s/\//-/"`
-    - docker build -t driplineorg/dripline-cpp:$DOCKER_TAG .
+    - set -e
     - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-    - docker push driplineorg/dripline-cpp:$DOCKER_TAG
+    - ".travis/bootstrap_image.sh -u arm32v7 -r python -t ${BASE_IMAGE_TAG} -a arm7 -i driplineorg/dripline-python:`echo
+      ${TRAVIS_BRANCH} | tr / _`"
+  ## build general-use manifest
+  - stage: assemble manifest
+    script:
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    - ".travis/build_manifest.sh -a arm -a amd64 -n driplineorg/dripline-python:`echo
+      ${TRAVIS_BRANCH} | tr / _`"
+  ## build docs
   - stage: build-docs
     language: python
     os: linux
