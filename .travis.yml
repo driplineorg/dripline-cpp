@@ -29,6 +29,9 @@ stages:
     branch = dl3/develop OR 
     branch =~ /.*\.(?i:build)$/
 
+env:
+- DOCKER_CLI_EXPERIMENTAL=enabled BASE_IMAGE_TAG="3.7"
+
 jobs:
   include:
   - stage: build-test
@@ -87,6 +90,8 @@ jobs:
     - make
   - stage: build images
     name: amd64
+    os: linux
+    dist: bionic
     before_install: ".travis/setup_emulation.sh"
     script:
     - set -e
