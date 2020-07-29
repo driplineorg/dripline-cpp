@@ -1,0 +1,139 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline &amp; No-Connection Use &#8212; Dripline-Cpp v2.3.3 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="shortcut icon" href="_static/DL3Logo.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Authentication" href="authentication.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="offline-no-connection-use">
+<h1>Offline &amp; No-Connection Use<a class="headerlink" href="#offline-no-connection-use" title="Permalink to this headline">¶</a></h1>
+<p>Dripline-cpp can be used in two ways without connecting to a broker:  Offline is a build-time option, and no-connection use is a build- or run-time option.</p>
+<div class="section" id="offline">
+<h2>Offline<a class="headerlink" href="#offline" title="Permalink to this headline">¶</a></h2>
+<p>This mode is a build-time option that is typically used for unit-testing purposes.</p>
+<p>In this mode:</p>
+<ul class="simple">
+<li><p>Sending a message results in the message object being thrown (in the C++ sense).  This feature is useful for testing the various send-message options.</p></li>
+<li><p>Receiving messages is currently disabled, as is any other function that uses the SimpleAMQP library API.  Such methods will respond with error conditions.  Some message-receive functionality could be tested using the Offline mode in the future, e.g. by manually submitting a SimpleAMQP envelope object.</p></li>
+</ul>
+<p>Offline mode is selected by building the library with the <code class="docutils literal notranslate"><span class="pre">Dripline_OFFLINE</span></code> flag enabled in CMake.</p>
+</div>
+<div class="section" id="no-connection">
+<h2>No-Connection<a class="headerlink" href="#no-connection" title="Permalink to this headline">¶</a></h2>
+<p>Some dripline classes have flags in the constructors that allow them to be used without making a connection to a broker.  This can be found in <code class="docutils literal notranslate"><span class="pre">service</span></code> and <code class="docutils literal notranslate"><span class="pre">hub</span></code>.</p>
+<p>Depending on how it’s used, this could be done as either a build-time or a run-time option.</p>
+<p>For an object in no-connection mode, methods that use the SimpleAMQP API will respond with error conditions.</p>
+<p>This feature is useful, for example, when a user wants to be able to handle message objects that are not received from a broker (e.g. they’re created manually).</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/DL3Logo.png" alt="Logo"/>
+            </a></p>
+<h1 class="logo"><a href="index.html">Dripline-Cpp</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="building.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dl_agent.html">Agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dl_mon.html">Monitor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="library.html">Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Offline &amp; No-Connection</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#offline">Offline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#no-connection">No-Connection</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="authentication.html" title="previous chapter">Authentication</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Dripline-Cpp Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/offline.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
