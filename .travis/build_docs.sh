@@ -22,11 +22,11 @@ git status
 git diff --cached --quiet; export HAVE_STAGED_FILES=$?
 echo $HAVE_STAGED_FILES
 if [[ "$HAVE_STAGED_FILES" != "0" ]]; then
-git commit -m "built docs for ${TRAVIS_BRANCH}"
-git remote -v
-git remote set-url origin "git@github.com:${TRAVIS_REPO_SLUG}"
-git remote -v
-git push
+    git commit -m "built docs for ${TRAVIS_BRANCH}"
+    git remote -v
+    git remote set-url origin "git@github.com:${TRAVIS_REPO_SLUG}"
+    git remote -v
+    git push
 else
-echo "No documentation updates to push"
+    echo "No documentation updates to push"
 fi
