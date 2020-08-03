@@ -8,7 +8,6 @@ stages:
     branch = dl3/develop OR 
     branch =~ /.*\.(?i:build)$/ OR 
     type = pull_request 
-  if: False
 - name: build images
   if: branch = master OR 
     branch = develop OR 
@@ -17,7 +16,6 @@ stages:
     branch =~ /.*\.(?i:build)$/ OR 
     type = pull_request OR 
     branch =~ /^v\d+\.\d+\.\d+(-S*)?$/
-  if: False
 - name: assemble manifest
   if: branch = master OR 
     branch = develop OR 
@@ -26,7 +24,6 @@ stages:
     branch =~ /.*\.(?i:build)$/ OR 
     type = pull_request OR 
     branch =~ /^v\d+\.\d+\.\d+(-S*)?$/
-  if: False
 - name: build-docs
   if: branch = master OR 
     branch = develop OR 
