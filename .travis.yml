@@ -2,17 +2,29 @@ language: cpp
 
 stages:
 - name: build-test
-  if: branch = master OR branch = develop OR 
-    branch = dl3/master OR branch = dl3/develop OR 
-    branch =~ /.*\.(?i:build)$/ OR type = pull_request
-- name: deploy
-  if: branch = master OR branch = develop OR 
-    branch = dl3/master OR branch = dl3/develop OR 
+  if: branch = master OR 
+    branch = develop OR 
+    branch =~ /.*\.(?i:build)$/ OR 
+    type = pull_request 
+- name: build images
+  if: branch = master OR 
+    branch = develop OR 
+    branch =~ /.*\.(?i:build)$/ OR 
+    type = pull_request OR 
+    branch =~ /^v\d+\.\d+\.\d+(-S*)?$/
+- name: assemble manifest
+  if: branch = master OR 
+    branch = develop OR 
+    branch =~ /.*\.(?i:build)$/ OR 
+    type = pull_request OR 
     branch =~ /^v\d+\.\d+\.\d+(-S*)?$/
 - name: build-docs
-  if: branch = master OR branch = develop OR 
-    branch = dl3/master OR branch = dl3/develop OR 
+  if: branch = master OR 
+    branch = develop OR 
     branch =~ /.*\.(?i:build)$/
+
+env:
+- DOCKER_CLI_EXPERIMENTAL=enabled BASE_IMAGE_TAG="3.7"
 
 jobs:
   include:
@@ -20,11 +32,14 @@ jobs:
     os: osx
     compiler: clang
     osx_image: xcode9.4
+    addons:
+      homebrew:
+        packages:
+        - rabbitmq-c
+        - rapidjson
+        - yaml-cpp
+        update: true
     script:
-    - brew update
-    - brew install rabbitmq-c
-    - brew install rapidjson
-    - brew install yaml-cpp
     - mkdir build
     - cd build
     - cmake ..
@@ -44,6 +59,7 @@ jobs:
         - rapidjson-dev
         - libyaml-cpp-dev
     script:
+    - cmake --version
     - export CC=gcc-5 && export CXX=g++-5
     - mkdir build
     - cd build
@@ -69,20 +85,48 @@ jobs:
     - cd build
     - cmake .. -DScarab_BUILD_PYTHON=FALSE
     - make
-  - stage: deploy
+  ## build images
+  - stage: build images
+    name: amd64
     os: linux
     dist: bionic
-    services:
-    - docker
     addons:
       apt:
         packages:
-        - docker-ce
+        - qemu-user-static
+        - jq
+        - tree
+    before_install: ".travis/setup_emulation.sh"
     script:
-    - export DOCKER_TAG=`echo $TRAVIS_BRANCH | sed "s/\//-/"`
-    - docker build -t driplineorg/dripline-cpp:$DOCKER_TAG .
+    - set -e
     - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-    - docker push driplineorg/dripline-cpp:$DOCKER_TAG
+    - ".travis/bootstrap_image.sh -u amd64 -r python -t ${BASE_IMAGE_TAG} -a amd64 -i driplineorg/dripline-cpp:`echo
+      ${TRAVIS_BRANCH} | tr / _`"
+  - stage: build images
+    name: arm32v7
+    os: linux
+    dist: bionic
+    addons:
+      apt:
+        packages:
+        - qemu-user-static
+        - jq
+        - tree
+    before_install: ".travis/setup_emulation.sh"
+    script:
+    - set -e
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    - ".travis/bootstrap_image.sh -u arm32v7 -r python -t ${BASE_IMAGE_TAG} -a arm7 -i driplineorg/dripline-cpp:`echo
+      ${TRAVIS_BRANCH} | tr / _`"
+  ## build general-use manifest
+  - stage: assemble manifest
+    os: linux
+    dist: bionic
+    script:
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    - ".travis/build_manifest.sh -a arm -a amd64 -n driplineorg/dripline-cpp:`echo
+      ${TRAVIS_BRANCH} | tr / _`"
+  ## build docs
   - stage: build-docs
     language: python
     os: linux
@@ -101,28 +145,4 @@ jobs:
     - eval "$(ssh-agent -s)"
     - chmod 600 ./.deploy_key
     - ssh-add ./.deploy_key
-    script:
-    - pip install sphinx
-    - echo $(if [[ "$TRAVIS_BRANCH" == "develop" || "$TRAVIS_BRANCH" == "master" ]];
-      then echo "$TRAVIS_BRANCH"; elif [[ ! -z "$TRAVIS_TAG" ]]; then echo "tags/$TRAVIS_TAG";
-      else echo "branches/$(echo $TRAVIS_BRANCH | tr / _ | tr - .)"; fi) | tee /tmp/output_location
-    - cd documentation
-    - make html
-    - ls ./build/html
-    - mv ./build/html /tmp/build.html
-    - cd ..
-    - git checkout gh-pages
-    - git clean -d -f -x
-    - rm -rf SimpleAmqpClient
-    - rm -rf scarab
-    - ls
-    - mkdir -p ./$(cat /tmp/output_location)
-    - rsync -av --delete /tmp/build.html/ ./$(cat /tmp/output_location)
-    - tree -L 3
-    - git add $(cat /tmp/output_location)
-    - git status
-    - git commit -m "built docs for ${TRAVIS_BRANCH}"
-    - git remote -v
-    - git remote set-url origin "git@github.com:${TRAVIS_REPO_SLUG}"
-    - git remote -v
-    - git push
+    script: .travis/build_docs.sh
