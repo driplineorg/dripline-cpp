@@ -4,6 +4,10 @@
 
 ##########
 
+include_directories( BEFORE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 set( dripline_HEADERS
     agent.hh
     agent_config.hh
@@ -13,6 +17,7 @@ set( dripline_HEADERS
     dripline_config.hh
     dripline_constants.hh
     dripline_exceptions.hh
+    dripline_fwd.hh
     dripline_version.hh
     endpoint.hh
     heartbeater.hh
@@ -69,16 +74,27 @@ if( Scarab_BUILD_PYTHON )
     )
 endif( Scarab_BUILD_PYTHON )
 
-
 configure_file( dripline_version.cc.in ${CMAKE_CURRENT_BINARY_DIR}/dripline_version.cc )
 set( dripline_SOURCES
     ${dripline_SOURCES}
     ${CMAKE_CURRENT_BINARY_DIR}/dripline_version.cc
 )
 
+set( PACKAGE_LIBS )
+
 
 ##########
 
-pbuilder_library( Dripline dripline_SOURCES "" )
+pbuilder_library( 
+    TARGET Dripline 
+    SOURCES ${dripline_SOURCES}
+    PUBLIC_EXTERNAL_LIBRARIES ${PUBLIC_EXT_LIBS}
+    PRIVATE_EXTERNAL_LIBRARIES ${PRIVATE_EXT_LIBS}
+)
+
+pbuilder_component_install_and_export( 
+    COMPONENT Library
+    LIBTARGETS Dripline
+)
 
 pbuilder_install_headers( ${dripline_HEADERS} )

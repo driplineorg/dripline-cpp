@@ -1,4 +1,4 @@
-# Minimum cmake verison 3.1 required for the variable CMAKE_CXX_STANDARD
+# Minimum cmake verison 3.1 required by Scarab
 cmake_minimum_required (VERSION 3.1)
 
 #########
@@ -6,7 +6,7 @@ cmake_minimum_required (VERSION 3.1)
 #########
 
 cmake_policy( SET CMP0048 NEW ) # version in project()
-project( Dripline VERSION 2.3.3 )
+project( Dripline VERSION 2.4.0 )
 
 list( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/scarab/cmake )
 
@@ -21,6 +21,7 @@ list( GET JSON_STRINGS 0 JSON_STRING )
 string( REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" DRIPLINE_PROTOCOL_VERSION ${JSON_STRING})
 message( STATUS "Dripline protocol version: ${DRIPLINE_PROTOCOL_VERSION}" )
 
+pbuilder_expand_lib_name( Dripline )
 
 ####################
 # dripline options #
@@ -38,45 +39,7 @@ set( Dripline_MAX_PAYLOAD_SIZE "10000" CACHE STRING "Maximum payload size (bytes
 set_option( USE_CPP11 TRUE )
 
 
-#########################
-# dripline dependencies #
-#########################
-
-########
-# Scarab
-########
-
-# set authentication build to TRUE
-# this will require Boost 1.46 or better
-set_option( Scarab_BUILD_AUTHENTICATION TRUE )
-
-pbuilder_add_submodule( Scarab scarab/library )
-
-if( Dripline_BUILD_PYTHON )
-    message( STATUS "Dripline-cpp is being built with Python" )
-    set( Scarab_BUILD_PYTHON TRUE )
-    add_definitions( -DDL_PYTHON )
-    add_definitions( -DPYTHON_THROW_REPLY_KEYWORD=${Dripline_PYTHON_THROW_REPLY_KEYWORD} )
-    include_directories( ${PYTHON_INCLUDE_DIRS} )    
-else( Dripline_BUILD_PYTHON )
-    message( STATUS "Dripline-cpp is being built without Python" )
-    set( Scarab_BUILD_PYTHON FALSE )
-    remove_definitions( -DDL_PYTHON )
-    remove_definitions( -DPYTHON_THROW_REPLY_KEYWORD=${Dripline_PYTHON_THROW_REPLY_KEYWORD} )
-endif( Dripline_BUILD_PYTHON )
-
-##################
-# SimpleAmqpClient
-##################
-
-pbuilder_add_submodule( SimpleAmqpClient SimpleAmqpClient )
-set( Scarab_BUILD_CODEC_JSON TRUE CACHE BOOL "" FORCE )
-set( Scarab_BUILD_CODEC_MSGPACK TRUE CACHE BOOL "" FORCE )
-
-
-##################
-# Build Dripline #
-##################
+# Process options
 
 if( Dripline_OFFLINE )
     add_definitions( -DDL_OFFLINE )
@@ -86,9 +49,89 @@ endif()
 
 add_definitions( -DDL_MAX_PAYLOAD_SIZE=${Dripline_MAX_PAYLOAD_SIZE} )
 
-include_directories( BEFORE
-    ${PROJECT_SOURCE_DIR}/library
+
+#########################
+# External dependencies #
+#########################
+
+set( PUBLIC_EXT_LIBS )
+set( PRIVATE_EXT_LIBS )
+
+
+####################
+# SimpleAmqpClient #
+####################
+
+add_subdirectory( external/SimpleAmqpClient )
+
+# Because the SimpleAmqpClient CMake build doesn't take care of this stuff, we have to do it ourselves
+
+# Set interface include directories
+set_property( TARGET SimpleAmqpClient 
+    APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES
+            "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/SimpleAmqpClient/src>"
+            "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
 )
+
+# Build-interface targets
+export( TARGETS SimpleAmqpClient
+    NAMESPACE SimpleAmqpClient::
+    FILE ${CMAKE_CURRENT_BINARY_DIR}/SimpleAmqpClientTargets.cmake
+)
+
+# Install-interface targets
+# The SimpleAmqpClientTargets export was added to SimpleAmqpClient in the project8 fork
+# Install SimpleAmqpClientTargets.cmake in the Dripline package-config install directory
+install( EXPORT SimpleAmqpClientTargets
+    FILE
+        SimpleAmqpClientTargets.cmake
+    NAMESPACE
+        SimpleAmqpClient::
+    DESTINATION
+        ${PACKAGE_CONFIG_PREFIX}/SimpleAmqpClient
+)
+
+# Added to the public libraries so that downstream code can successfully get the necessary include directories
+list( APPEND PUBLIC_EXT_LIBS SimpleAmqpClient )
+
+
+##########
+# Scarab #
+##########
+
+# set authentication build to TRUE
+# this will require Boost 1.46 or better
+set_option( Scarab_BUILD_AUTHENTICATION TRUE )
+set_option( Scarab_BUILD_CODEC_JSON TRUE )
+
+if( Dripline_BUILD_PYTHON )
+    set_option( Scarab_BUILD_PYTHON TRUE )
+else( Dripline_BUILD_PYTHON )
+    set_option( Scarab_BUILD_PYTHON FALSE )
+endif( Dripline_BUILD_PYTHON )
+
+pbuilder_add_submodule( Scarab scarab )
+
+if( Dripline_BUILD_PYTHON )
+    message( STATUS "Dripline-cpp is being built with Python" )
+    add_definitions( -DDL_PYTHON )
+    add_definitions( -DPYTHON_THROW_REPLY_KEYWORD=${Dripline_PYTHON_THROW_REPLY_KEYWORD} )
+    include_directories( ${PYTHON_INCLUDE_DIRS} )    
+    #list( APPEND PRIVATE_EXT_LIBS Python::Python )
+else( Dripline_BUILD_PYTHON )
+    message( STATUS "Dripline-cpp is being built without Python" )
+    remove_definitions( -DDL_PYTHON )
+    remove_definitions( -DPYTHON_THROW_REPLY_KEYWORD=${Dripline_PYTHON_THROW_REPLY_KEYWORD} )
+    #list( REMOVE_ITEM PRIVATE_EXT_LIBS Python::Python )
+endif( Dripline_BUILD_PYTHON )
+
+# all parts of dripline use Scarab, so include it here
+pbuilder_use_sm_library( Scarab Scarab )
+
+
+##################
+# Build Dripline #
+##################
 
 add_subdirectory( library )
 
@@ -101,10 +144,6 @@ endif()
 ############
 
 if( Dripline_BUILD_EXAMPLES )
-    include_directories( BEFORE
-        ${PROJECT_SOURCE_DIR}/examples
-    )
-
     add_subdirectory( examples )
 endif()
 
@@ -116,9 +155,10 @@ if( Dripline_ENABLE_TESTING )
     add_subdirectory( testing )
 endif()
 
-################################
-# Variables for parent project #
-################################
+##################
+# Package Config #
+##################
 
-pbuilder_variables_for_parent()
+configure_file( ${PROJECT_SOURCE_DIR}/DriplineConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/DriplineConfig.cmake @ONLY )
 
+pbuilder_do_package_config()

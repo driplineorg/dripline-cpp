@@ -29,7 +29,7 @@ namespace dripline
     class DRIPLINE_API dripline_config : public scarab::param_node
     {
         public:
-            dripline_config();
+            dripline_config( const std::string& a_auth_file = "" );
             virtual ~dripline_config();
     };
 

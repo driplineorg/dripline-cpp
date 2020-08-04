@@ -4,10 +4,11 @@
 
 ##########
 
-set( testing_HEADERS
-)
+#set( testing_HEADERS
+#)
 
 set( testing_SOURCES
+    use_catch.cc
     test_agent.cc
     test_amqp.cc
     test_core.cc
@@ -20,10 +21,9 @@ set( testing_SOURCES
     test_specifier.cc
     test_throw_reply.cc
     test_version_store.cc
-    use_catch.cc
 )
 
-set( lib_dependencies 
+set( testing_LIBS 
     Dripline
     Catch
 )
@@ -34,8 +34,8 @@ if( Dripline_BUILD_EXAMPLES )
         test_examples_oscillator.cc
     )
 
-    set( lib_dependencies
-        ${lib_dependencies}
+    set( testing_LIBS
+        ${testing_LIBS}
         DriplineExamples
     )
 endif()
@@ -46,7 +46,7 @@ add_library( Catch INTERFACE )
 target_include_directories( Catch INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/catch )
 
 add_executable( run_tests ${testing_SOURCES} )
-target_link_libraries( run_tests ${lib_dependencies} )
+target_link_libraries( run_tests ${testing_LIBS} )
 
 # So far it seems sufficient to use Catch2's ability to run tests, and not CTest.
 # Here are two ways it could potentially be integrated with CTest, if we change our minds.
