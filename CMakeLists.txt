@@ -81,7 +81,7 @@ execute_process(
                     -D PACKAGE_CONFIG_PREFIX:STRING=${PACKAGE_CONFIG_PREFIX}
                     -D TOP_PROJECT_CMAKE_CONFIG_DIR:STRING=${TOP_PROJECT_CMAKE_CONFIG_DIR}
                     -D LIB_INSTALL_DIR:STRING=${LIB_INSTALL_DIR}
-                    -D BIN_INSTALL-DIR:STRING=${BIN_INSTALL_DIR}
+                    -D BIN_INSTALL_DIR:STRING=${BIN_INSTALL_DIR}
                     -D CMAKE_BUILD_TYPE=RELEASE
                     ${PROJECT_SOURCE_DIR}/external
     WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/external
