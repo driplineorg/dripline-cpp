@@ -1,0 +1,16 @@
+# SimpleAmqpClientConfig.cmake
+
+get_filename_component( SimpleAmqpClient_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH )
+
+# Find the dependencies
+include( CMakeFindDependencyMacro )
+find_dependency( Boost 1.46 REQUIRED COMPONENTS chrono system )
+
+# Import library targets if it's not already present (usable at build time or as installed)
+if( NOT TARGET SimpleAmqpClient::SimpleAmqpClient )
+    if( TARGET SimpleAmqpClient )
+        add_library( SimpleAmqpClient::SimpleAmqpClient ALIAS SimpleAmqpClient )
+    else()
+        include( "${SimpleAmqpClient_CMAKE_DIR}/SimpleAmqpClientTargets.cmake" )
+    endif()
+endif()

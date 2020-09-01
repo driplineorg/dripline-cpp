@@ -62,37 +62,50 @@ set( PRIVATE_EXT_LIBS )
 # SimpleAmqpClient #
 ####################
 
-add_subdirectory( external/SimpleAmqpClient )
+# SimpleAmqpClient needs to be built independently from, but as a submodule and dependency of, dripline-cpp.  
+# In other words, the configuration and build environments need to be kept separate.
 
-# Because the SimpleAmqpClient CMake build doesn't take care of this stuff, we have to do it ourselves
+# First we run the configure stage of SimpleAmqpClient during the configure (cmake) process of dripline-cpp.
+# This build takes place in its own build directory, but it installs in the same place as dripline-cpp.
+# We do this here instead of below in the ExternalProject so that dripline-cpp can learn about the SimpleAmqpClient targets at the configure stage.
 
-# Set interface include directories
-set_property( TARGET SimpleAmqpClient 
-    APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES
-            "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/SimpleAmqpClient/src>"
-            "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>"
+if( NOT EXISTS ${PROJECT_BINARY_DIR}/external )
+    execute_process( 
+        COMMAND mkdir external
+        WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+    )
+endif()
+
+execute_process( 
+    COMMAND cmake -D CMAKE_INSTALL_PREFIX:STRING=${CMAKE_INSTALL_PREFIX} 
+                    -D PACKAGE_CONFIG_PREFIX:STRING=${PACKAGE_CONFIG_PREFIX}
+                    -D TOP_PROJECT_CMAKE_CONFIG_DIR:STRING=${TOP_PROJECT_CMAKE_CONFIG_DIR}
+                    -D CMAKE_BUILD_TYPE=RELEASE
+                    ${PROJECT_SOURCE_DIR}/external
+    WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/external
 )
 
-# Build-interface targets
-export( TARGETS SimpleAmqpClient
-    NAMESPACE SimpleAmqpClient::
-    FILE ${CMAKE_CURRENT_BINARY_DIR}/SimpleAmqpClientTargets.cmake
+# Second we use the ExternalProject module to build and install SimpleAmqpClient.
+# This takes place during the build phase of dripline-cpp.
+# Note that we disable the configure stage of the ExternalProject because we already took care of the configure stage above.
+include(ExternalProject)
+
+ExternalProject_Add( DriplineExternal
+    PREFIX            ${CMAKE_INSTALL_PREFIX}
+    SOURCE_DIR        ${PROJECT_SOURCE_DIR}/external
+    BINARY_DIR        ${PROJECT_BINARY_DIR}/external
+    CONFIGURE_COMMAND ""
+    BUILD_ALWAYS      1
+    BUILD_COMMAND     make -j3
+    INSTALL_DIR       ${CMAKE_INSTALL_PREFIX}
+    INSTALL_COMMAND   make -j3 install
 )
 
-# Install-interface targets
-# The SimpleAmqpClientTargets export was added to SimpleAmqpClient in the project8 fork
-# Install SimpleAmqpClientTargets.cmake in the Dripline package-config install directory
-install( EXPORT SimpleAmqpClientTargets
-    FILE
-        SimpleAmqpClientTargets.cmake
-    NAMESPACE
-        SimpleAmqpClient::
-    DESTINATION
-        ${PACKAGE_CONFIG_PREFIX}/SimpleAmqpClient
-)
+# Finally we use find_package() to learn about the Kassiopeia build targets.
+find_package( SimpleAmqpClient REQUIRED CONFIG HINTS ${PROJECT_BINARY_DIR}/external )
 
 # Added to the public libraries so that downstream code can successfully get the necessary include directories
-list( APPEND PUBLIC_EXT_LIBS SimpleAmqpClient )
+list( APPEND PUBLIC_EXT_LIBS SimpleAmqpClient::SimpleAmqpClient )
 
 
 ##########
