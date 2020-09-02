@@ -50,7 +50,7 @@ RUN cd /usr/local/deps && \
 # note that the build dir is *not* in source, this is so that the source can me mounted onto the container without covering the build target
 
 COPY .git /usr/local/src/.git
-COPY external/SimpleAmqpClient /usr/local/src/external/SimpleAmqpClient
+COPY external /usr/local/src/external
 COPY documentation /usr/local/src/documentation
 COPY scarab /usr/local/src/scarab
 COPY library /usr/local/src/library
