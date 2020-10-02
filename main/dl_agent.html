@@ -1,0 +1,201 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dripline Agent &#8212; Dripline-Cpp v2.4.2 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="shortcut icon" href="_static/DL3Logo.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Dripline Monitor" href="dl_mon.html" />
+    <link rel="prev" title="Building Dripline" href="building.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="dripline-agent">
+<span id="dl-agent"></span><h1>Dripline Agent<a class="headerlink" href="#dripline-agent" title="Permalink to this headline">¶</a></h1>
+<p>Dripline includes an executable for sending dripline messages: <code class="docutils literal notranslate"><span class="pre">dl-agent</span></code>.</p>
+<div class="section" id="use">
+<h2>Use<a class="headerlink" href="#use" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">&gt;</span> <span class="pre">dl-agent</span> <span class="pre">[options]</span> <span class="pre">subcommand</span> <span class="pre">routing_key</span> <span class="pre">[value]</span> <span class="pre">[keyword</span> <span class="pre">arguments]</span></code></p>
+</div></blockquote>
+<p>The subcommand and routing key are required.</p>
+<p>Commonly-used options will include the broker (<code class="docutils literal notranslate"><span class="pre">-b,--broker</span></code>, if not specified in the
+authentication file), the specifier (<code class="docutils literal notranslate"><span class="pre">-s,--specifier</span></code>),
+and the values (<code class="docutils literal notranslate"><span class="pre">-v,--values</span></code>, or positional after the routing key)</p>
+<div class="section" id="options">
+<h3>Options<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>-h,--help                     Print this <span class="nb">help</span> message and <span class="nb">exit</span>
+-c,--config TEXT:FILE         Config file filename
+-v,--verbose                  Increase verbosity
+-q,--quiet                    Decrease verbosity
+-V,--version                  Print the version message and <span class="nb">exit</span>
+-b,--broker TEXT              Set the dripline broker address
+-p,--port UINT                Set the port <span class="k">for</span> communication with the dripline broker
+--auth-file TEXT              Set the authentication file path
+--requests-exchange TEXT      Set the name of the requests exchange
+--alerts-exchange TEXT        Set the name of the alerts exchange
+--max-payload UINT            Set the maximum payload size <span class="o">(</span>in bytes<span class="o">)</span>
+--loop-timeout-msdripline.loop-timeout-ms UINT
+--message-wait-msdripline.message-wait-ms UINT
+--heartbeat-routing-key TEXT  Set the first token of heartbeat routing keys: <span class="o">[</span>token<span class="o">]</span>.<span class="o">[</span>origin<span class="o">]</span>
+--heartbeat-interval-s UINT   Set the interval between heartbeats in s
+-s,--specifier TEXT           Set the specifier
+-P,--payload TEXT ...         Add values to the payload
+--values TEXT ...             Add ordered values
+-t,--timeout UINT             Set the timeout <span class="k">for</span> waiting <span class="k">for</span> a reply <span class="o">(</span>seconds<span class="o">)</span>
+-k,--lockout-key TEXT         Set the lockout key to send with the message <span class="o">(</span><span class="k">for</span> sending requests only<span class="o">)</span>
+--suppress-output
+--json-print
+--pretty-print
+--return-code UINT            Set the <span class="k">return</span> code sent <span class="o">(</span><span class="k">for</span> sending replies only<span class="o">)</span>
+--return-msg TEXT             Set the <span class="k">return</span> message sent <span class="o">(</span><span class="k">for</span> sending replies only<span class="o">)</span>
+--dry-run-msg
+</pre></div>
+</div>
+</div>
+<div class="section" id="subcommands">
+<h3>Subcommands<a class="headerlink" href="#subcommands" title="Permalink to this headline">¶</a></h3>
+<p>The five dripline subcommands correspond to the three request operations,
+and two other message types (reply and alert):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">get</span></code>    Send an OP_GET request</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">set</span></code>    Send an OP_SET request</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cmd</span></code>    Send an OP_CMD request</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reply</span></code>  Send a reply</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alert</span></code>  Send an alert</p></li>
+</ul>
+</div>
+<div class="section" id="routing-key">
+<h3>Routing Key<a class="headerlink" href="#routing-key" title="Permalink to this headline">¶</a></h3>
+<p>The routing key specifies the destination for the message and is required for each subcommand.</p>
+<p>Note that the routing key does not appear in the top-level help, <code class="docutils literal notranslate"><span class="pre">dl-agent</span> <span class="pre">-h</span></code>, because it’s
+technically an option of the subcommand.  It will show up if using <code class="docutils literal notranslate"><span class="pre">dl-agent</span> <span class="pre">subcommand</span> <span class="pre">-h</span></code>.</p>
+</div>
+<div class="section" id="values-and-keyword-arguments">
+<h3>Values and Keyword Arguments<a class="headerlink" href="#values-and-keyword-arguments" title="Permalink to this headline">¶</a></h3>
+<p>Positional arguments can be used to add to the values array in the payload and to other parts of the payload.</p>
+<p>Arguments in the form [key]=[value] will be assumed to be keyword arguments.
+Other arguments will be assumed to be entries in the values array.</p>
+<p>The “key” portion of a keyword argument is an address that can specify both node and array locations.
+For example, <code class="docutils literal notranslate"><span class="pre">my.value.0=10</span></code> would add this to the payload:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>my:
+  value:
+    - <span class="m">10</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="authentication">
+<h2>Authentication<a class="headerlink" href="#authentication" title="Permalink to this headline">¶</a></h2>
+<p>Communication with the RabbitMQ broker requires the broker address and port, and user/password authentication.</p>
+<p>See <a class="reference internal" href="authentication.html#authentication"><span class="std std-ref">Authentication</span></a> for information on how to specify the broker and authentication information.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/DL3Logo.png" alt="Logo"/>
+            </a></p>
+<h1 class="logo"><a href="index.html">Dripline-Cpp</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="building.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Agent</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#use">Use</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#authentication">Authentication</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dl_mon.html">Monitor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="library.html">Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="offline.html">Offline &amp; No-Connection</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="building.html" title="previous chapter">Building Dripline</a></li>
+      <li>Next: <a href="dl_mon.html" title="next chapter">Dripline Monitor</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Dripline-Cpp Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/dl_agent.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,5 @@
+<map id="endpoint_listener_receiver" name="endpoint_listener_receiver">
+<area shape="rect" id="node2" href="$classdripline_1_1listener__receiver.html" title="Convenience class to bring together listener and concurrent_receiver. " alt="" coords="165,277,321,413"/>
+<area shape="rect" id="node3" href="$classdripline_1_1listener.html" title="A listener is a class capable of listening for AMQP messages on an AMQP channel. This class provides ..." alt="" coords="5,5,232,229"/>
+<area shape="rect" id="node4" href="$classdripline_1_1concurrent__receiver.html" title="Receives and processes messages concurrently. " alt="" coords="257,5,479,229"/>
+</map>
