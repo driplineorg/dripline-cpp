@@ -42,8 +42,11 @@ jobs:
       if: ${{ github.event_name == 'pull_request' }}
     
     # Get submodules
-    - name: Initialize submodules
-      run: git submodule update --init --recursive
+    - name: Initialize submodules and install dependencies
+      run: |
+        git submodule update --init --recursive
+        apt-get install libboost-all-dev librabbitmq-dev
+        
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
