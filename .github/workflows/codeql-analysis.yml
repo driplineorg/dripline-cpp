@@ -45,7 +45,8 @@ jobs:
     - name: Initialize submodules and install dependencies
       run: |
         git submodule update --init --recursive
-        sudo apt-get install libboost-all-dev librabbitmq-dev
+        sudo apt-get install libboost-all-dev librabbitmq-dev libyaml-cpp-dev rapidjson-dev
+
         
 
     # Initializes the CodeQL tools for scanning.
