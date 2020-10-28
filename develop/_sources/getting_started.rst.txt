@@ -37,7 +37,7 @@ For manual installation instructions, see :ref:`Installation <building>`.
 
 Pre-built docker containers containing a dripline-cpp installation are available on `Docker Hub <https://hub.docker.com/repository/docker/driplineorg/dripline-cpp>`_.
 
-Images are automatically built for each tagged release, and for the ``master`` and ``develop`` branches.
+Images are automatically built for each tagged release, and for the ``main`` and ``develop`` branches.
 
 Users can also build their own images using the provided Dockerfile or by customizing their own.
 
