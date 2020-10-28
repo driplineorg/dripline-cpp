@@ -59,7 +59,7 @@ int main( int argc, char** argv )
     auto t_callback = [&](){
         the_return = dl_client_error().rc_value() / 100;
 
-        auto the_monitor = std::make_shared< monitor >( the_main.master_config() );
+        auto the_monitor = std::make_shared< monitor >( the_main.primary_config() );
 
         if( ! the_monitor->start() ) return;
 
