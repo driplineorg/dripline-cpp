@@ -6,7 +6,7 @@ cmake_minimum_required (VERSION 3.1)
 #########
 
 cmake_policy( SET CMP0048 NEW ) # version in project()
-project( Dripline VERSION 2.5.1 )
+project( Dripline VERSION 2.5.2 )
 
 list( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/scarab/cmake )
 
@@ -98,9 +98,9 @@ ExternalProject_Add( DriplineExternal
     BINARY_DIR        ${PROJECT_BINARY_DIR}/external
     CONFIGURE_COMMAND ""
     BUILD_ALWAYS      1
-    BUILD_COMMAND     make -j3
+    BUILD_COMMAND     $(MAKE)
     INSTALL_DIR       ${CMAKE_INSTALL_PREFIX}
-    INSTALL_COMMAND   make -j3 install
+    INSTALL_COMMAND   $(MAKE) install
 )
 
 # Finally we use find_package() to learn about the Kassiopeia build targets.
