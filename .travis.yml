@@ -96,6 +96,7 @@ jobs:
         sources:
         - sourceline: "deb https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
         packages:
+        - qemu-user-static
         - docker-ce
         - docker-ce-cli
         - containerd.io
