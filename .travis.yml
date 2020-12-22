@@ -105,8 +105,9 @@ jobs:
 #    before_install: ".travis/setup_emulation.sh"
     script:
 #    - set -e
-    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
     - docker buildx create --use
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
     - docker buildx build --push --platform linux/arm/v7,linux/amd64 --tag driplineorg/dripline-cpp:buildx-test .
 #    - ".travis/bootstrap_image.sh -u amd64 -r python -t ${BASE_IMAGE_TAG} -a amd64 -i driplineorg/dripline-cpp:`echo
 #      ${TRAVIS_BRANCH} | tr / _`"
