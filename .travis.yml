@@ -96,7 +96,9 @@ jobs:
         sources:
         - sourceline: "deb https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
         packages:
-        - docker
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
 #        - jq
 #        - tree
 #    before_install: ".travis/setup_emulation.sh"
