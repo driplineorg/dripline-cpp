@@ -119,11 +119,12 @@ jobs:
     script:
 #    - set -e
     - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-    - docker buildx build --push --progress plain \
-          --platform=linux/arm/v7,linux/arm64,linux/amd64 \
-          --build-arg img_repo=python \
-          --build-arg img_tag=3.8.7-buster \
-          --tag driplineorg/dripline-cpp:buildx-test .
+    - >
+      docker buildx build --push --progress plain 
+      --platform=linux/arm/v7,linux/arm64,linux/amd64 
+      --build-arg img_repo=python 
+      --build-arg img_tag=3.8.7-buster 
+      --tag driplineorg/dripline-cpp:buildx-test .
 #    - ".travis/bootstrap_image.sh -u amd64 -r python -t ${BASE_IMAGE_TAG} -a amd64 -i driplineorg/dripline-cpp:`echo
 #      ${TRAVIS_BRANCH} | tr / _`"
 #  - stage: build images
