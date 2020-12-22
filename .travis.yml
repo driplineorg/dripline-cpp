@@ -13,12 +13,12 @@ stages:
     branch =~ /.*\.(?i:build)$/ OR 
     type = pull_request OR 
     branch =~ /^v\d+\.\d+\.\d+(-S*)?$/
-- name: assemble manifest
-  if: branch = main OR 
-    branch = develop OR 
-    branch =~ /.*\.(?i:build)$/ OR 
-    type = pull_request OR 
-    branch =~ /^v\d+\.\d+\.\d+(-S*)?$/
+#- name: assemble manifest
+#  if: branch = main OR 
+#    branch = develop OR 
+#    branch =~ /.*\.(?i:build)$/ OR 
+#    type = pull_request OR 
+#    branch =~ /^v\d+\.\d+\.\d+(-S*)?$/
 - name: build-docs
   if: branch = main OR 
     branch = develop OR 
@@ -91,6 +91,7 @@ jobs:
     name: all archs
     os: linux
     dist: focal
+    sudo: required
     addons:
       apt:
         sources:
@@ -103,12 +104,19 @@ jobs:
 #        - jq
 #        - tree
 #    before_install: ".travis/setup_emulation.sh"
+    before_install:
+    - curl -fsSL https://get.docker.com | sh
+    - echo '{experimental":"enabled"}' | sudo tee /etc/docker/daemon.json
+    - mkdir -p $HOME/.docker
+    - echo '{"experimental":"enabled"}' | sudo tee $HOME/.docker/config.json
+    - sudo service docker start
+    install:
+    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+    - docker buildx create --name xbuilder --use
     script:
 #    - set -e
-    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-    - docker buildx create --use
     - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-    - docker buildx build --push --platform linux/arm/v7,linux/amd64 --tag driplineorg/dripline-cpp:buildx-test .
+    - docker buildx build --push --progress plain --platform=linux/arm/v7,linux/arm64,linux/amd64 --tag driplineorg/dripline-cpp:buildx-test .
 #    - ".travis/bootstrap_image.sh -u amd64 -r python -t ${BASE_IMAGE_TAG} -a amd64 -i driplineorg/dripline-cpp:`echo
 #      ${TRAVIS_BRANCH} | tr / _`"
 #  - stage: build images
@@ -143,13 +151,13 @@ jobs:
 #    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 #    - ".travis/bootstrap_image.sh -u arm64v8 -r python -t ${BASE_IMAGE_TAG} -a arm8 -i driplineorg/dripline-cpp:`echo
 #      ${TRAVIS_BRANCH} | tr / _`"  ## build general-use manifest
-  - stage: assemble manifest
-    os: linux
-    dist: bionic
-    script:
-    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-    - ".travis/build_manifest.sh -a arm -a amd64 -n driplineorg/dripline-cpp:`echo
-      ${TRAVIS_BRANCH} | tr / _`"
+#  - stage: assemble manifest
+#    os: linux
+#    dist: bionic
+#    script:
+#    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+#    - ".travis/build_manifest.sh -a arm -a amd64 -n driplineorg/dripline-cpp:`echo
+#      ${TRAVIS_BRANCH} | tr / _`"
   ## build docs
   - stage: build-docs
     language: python
