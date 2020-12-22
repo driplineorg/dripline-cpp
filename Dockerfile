@@ -1,8 +1,9 @@
-ARG img_user=amd64
-ARG img_repo=python
-ARG img_tag=3.7
+#ARG img_user=amd64
+#ARG img_repo=python
+#ARG img_tag=3.7
 
-FROM ${img_user}/${img_repo}:${img_tag}
+#FROM ${img_user}/${img_repo}:${img_tag}
+FROM debian:10
 
 # Most dependencies
 
