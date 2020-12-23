@@ -45,7 +45,7 @@ TEST_CASE( "version_store", "[version]" )
     REQUIRE( t_store_ptr->versions().size() == 2 );
     REQUIRE( t_store_ptr->versions().count( "dripline" ) == 1 );
     REQUIRE( t_store_ptr->versions().count( "dripline-cpp" ) == 1 );
-    REQUIRE( t_store_ptr->versions().at("dripline-cpp")->package() == "driplineorg/dripline-cpp" );
+    REQUIRE( (t_store_ptr->versions().at("dripline-cpp")->package() == "driplineorg/dripline-cpp" || t_store_ptr->versions().at("dripline-cpp")->package() == "Dripline") );
 
     // test removing an item
     t_store_ptr->remove_version( "dripline" );
