@@ -61,7 +61,7 @@ jobs:
     - mkdir build
     install:
     - cd build
-    - cmake .. -DScarab_BUILD_PYTHON=FALSE -DDripline_ENABLE_TESTING=TRUE
+    - cmake .. -DScarab_BUILD_PYTHON=FALSE -DDripline_ENABLE_TESTING=TRUE -DCMAKE_CXX_FLAGS=-pthread
     - make install
     script:
     - /usr/local/testing/run_tests
@@ -84,7 +84,7 @@ jobs:
     - mkdir build
     install:
     - cd build
-    - cmake .. -DScarab_BUILD_PYTHON=FALSE -DDripline_ENABLE_TESTING=TRUE
+    - cmake .. -DScarab_BUILD_PYTHON=FALSE -DDripline_ENABLE_TESTING=TRUE -DCMAKE_CXX_FLAGS=-pthread
     - make
     script:
     - /usr/local/testing/run_tests
