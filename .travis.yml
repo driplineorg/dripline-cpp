@@ -39,8 +39,7 @@ jobs:
     - cd build
     - cmake .. -DDripline_ENABLE_TESTING=TRUE
     - make install
-    script:
-    - /usr/local/testing/run_tests
+    script: testing/run_tests
   - stage: build-test
     os: linux
     dist: bionic
@@ -61,10 +60,9 @@ jobs:
     - mkdir build
     install:
     - cd build
-    - cmake .. -DScarab_BUILD_PYTHON=FALSE -DDripline_ENABLE_TESTING=TRUE
+    - cmake .. -DScarab_BUILD_PYTHON=FALSE -DDripline_ENABLE_TESTING=TRUE -DCMAKE_CXX_FLAGS=-pthread
     - make install
-    script:
-    - /usr/local/testing/run_tests
+    script: testing/run_tests
   - stage: build-test
     os: linux
     dist: bionic
@@ -84,10 +82,9 @@ jobs:
     - mkdir build
     install:
     - cd build
-    - cmake .. -DScarab_BUILD_PYTHON=FALSE -DDripline_ENABLE_TESTING=TRUE
+    - cmake .. -DScarab_BUILD_PYTHON=FALSE -DDripline_ENABLE_TESTING=TRUE -DCMAKE_CXX_FLAGS=-pthread
     - make
-    script:
-    - /usr/local/testing/run_tests
+    script: testing/run_tests
   ## build images
   - stage: build-images
     name: all archs
