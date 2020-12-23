@@ -1,6 +1,8 @@
 ARG img_repo=python
 ARG img_tag=3.8-buster
 
+ARG build_type=Release
+
 FROM ${img_repo}:${img_tag}
 
 # Most dependencies
@@ -40,7 +42,7 @@ RUN mkdir -p /usr/local/build && \
     cd /usr/local/build && \
     cmake ../src && \
     # unclear why I have to run cmake twice
-    cmake -DCMAKE_BUILD_TYPE=Release \
+    cmake -DCMAKE_BUILD_TYPE=${build_type} \
         -DCMAKE_INSTALL_PREFIX:PATH=/usr/local \ 
         -DDripline_BUILD_EXAMPLES:BOOL=FALSE \
         -DDripline_BUILD_PYTHON=TRUE \
