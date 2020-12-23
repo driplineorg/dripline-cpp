@@ -13,7 +13,6 @@ stages:
 - name: build-docs
   if: branch = main OR 
     branch = develop OR 
-    branch =~ /.*\.(?i:build)$/
 # Removed these two conditions for build-images on 12/22/20 (NSO):
 #    branch =~ /.*\.(?i:build)$/ OR 
 #    type = pull_request OR 
@@ -34,11 +33,14 @@ jobs:
         - rapidjson
         - yaml-cpp
         update: true
-    script:
+    before_install:
     - mkdir build
+    install:
     - cd build
-    - cmake ..
-    - make
+    - cmake .. -DDripline_ENABLE_TESTING=TRUE
+    - make install
+    script:
+    - /usr/local/testing/run_tests
   - stage: build-test
     os: linux
     dist: bionic
@@ -53,13 +55,16 @@ jobs:
         - librabbitmq-dev
         - rapidjson-dev
         - libyaml-cpp-dev
-    script:
+    before_install:
     - cmake --version
     - export CC=gcc-5 && export CXX=g++-5
     - mkdir build
+    install:
     - cd build
-    - cmake .. -DScarab_BUILD_PYTHON=FALSE
-    - make
+    - cmake .. -DScarab_BUILD_PYTHON=FALSE -DDripline_ENABLE_TESTING=TRUE
+    - make install
+    script:
+    - /usr/local/testing/run_tests
   - stage: build-test
     os: linux
     dist: bionic
@@ -74,12 +79,15 @@ jobs:
         - librabbitmq-dev
         - rapidjson-dev
         - libyaml-cpp-dev
-    script:
+    before_install:
     - export CC=clang && export CXX=clang++
     - mkdir build
+    install:
     - cd build
-    - cmake .. -DScarab_BUILD_PYTHON=FALSE
+    - cmake .. -DScarab_BUILD_PYTHON=FALSE -DDripline_ENABLE_TESTING=TRUE
     - make
+    script:
+    - /usr/local/testing/run_tests
   ## build images
   - stage: build-images
     name: all archs
