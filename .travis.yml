@@ -8,7 +8,6 @@ stages:
     type = pull_request 
 - name: build-images
   if: branch = main OR 
-    branch = feature/arm64 OR
     branch = develop OR 
     branch =~ /^v\d+\.\d+\.\d+(-S*)?$/
 - name: build-docs
