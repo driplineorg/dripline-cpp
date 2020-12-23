@@ -6,7 +6,7 @@ stages:
     branch = develop OR 
     branch =~ /.*\.(?i:build)$/ OR 
     type = pull_request 
-- name: build images
+- name: build-images
   if: branch = main OR 
     branch = feature/arm64 OR
     branch = develop OR 
@@ -87,7 +87,7 @@ jobs:
     - cmake .. -DScarab_BUILD_PYTHON=FALSE
     - make
   ## build images
-  - stage: build images
+  - stage: build-images
     name: all archs
     os: linux
     dist: focal
@@ -101,9 +101,6 @@ jobs:
         - docker-ce
         - docker-ce-cli
         - containerd.io
-#        - jq
-#        - tree
-#    before_install: ".travis/setup_emulation.sh"
     before_install:
     - echo '{experimental":"enabled"}' | sudo tee /etc/docker/daemon.json
     - mkdir -p $HOME/.docker
@@ -111,13 +108,9 @@ jobs:
     - sudo service docker start
     install:
     - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-    - docker buildx create --name xbuilder
+    - docker buildx create --name xbuilder --use
     - docker buildx ls
-    - docker buildx use xbuilder
-    - docker buildx ls
-    - docker buildx inspect --bootstrap
     script:
-#    - set -e
     - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
     - >
       docker buildx build --push --progress plain 
@@ -125,47 +118,6 @@ jobs:
       --build-arg img_repo=python 
       --build-arg img_tag=3.8.7-buster 
       --tag driplineorg/dripline-cpp:buildx-test .
-#    - ".travis/bootstrap_image.sh -u amd64 -r python -t ${BASE_IMAGE_TAG} -a amd64 -i driplineorg/dripline-cpp:`echo
-#      ${TRAVIS_BRANCH} | tr / _`"
-#  - stage: build images
-#    name: arm32v7
-#    os: linux
-#    dist: bionic
-#    addons:
-#      apt:
-#        packages:
-#        - qemu-user-static
-#        - jq
-#        - tree
-#    before_install: ".travis/setup_emulation.sh"
-#    script:
-#    - set -e
-#    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-#    - ".travis/bootstrap_image.sh -u arm32v7 -r python -t ${BASE_IMAGE_TAG} -a arm7 -i driplineorg/dripline-cpp:`echo
-#      ${TRAVIS_BRANCH} | tr / _`"
-#  - stage: build images
-#    name: arm64v8
-#    os: linux
-#    dist: bionic
-#    addons:
-#      apt:
-#        packages:
-#        - qemu-user-static
-#        - jq
-#        - tree
-#    before_install: ".travis/setup_emulation.sh"
-#    script:
-#    - set -e
-#    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-#    - ".travis/bootstrap_image.sh -u arm64v8 -r python -t ${BASE_IMAGE_TAG} -a arm8 -i driplineorg/dripline-cpp:`echo
-#      ${TRAVIS_BRANCH} | tr / _`"  ## build general-use manifest
-#  - stage: assemble manifest
-#    os: linux
-#    dist: bionic
-#    script:
-#    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-#    - ".travis/build_manifest.sh -a arm -a amd64 -n driplineorg/dripline-cpp:`echo
-#      ${TRAVIS_BRANCH} | tr / _`"
   ## build docs
   - stage: build-docs
     language: python
