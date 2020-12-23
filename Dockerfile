@@ -2,9 +2,7 @@
 ARG img_repo=python
 ARG img_tag=3.8-buster
 
-#FROM ${img_user}/${img_repo}:${img_tag}
 FROM ${img_repo}:${img_tag}
-#FROM debian:10
 
 # Most dependencies
 
@@ -19,35 +17,37 @@ RUN apt-get update && \
         libboost-filesystem-dev \
         libboost-system-dev \
         librabbitmq-dev \
+        libyaml-cpp-dev \
+        rapidjson-dev \
         pybind11-dev \
         wget && \
     rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /usr/local/deps && \
-    git clone https://github.com/jbeder/yaml-cpp && \
-    cd yaml-cpp && \
-    mkdir build && \
-    cd build && \
-    cmake -DCMAKE_BUILD_TYPE=Release \
-        -DYAML_CPP_BUILD_CONTRIB:BOOL=FALSE \
-        -DYAML_CPP_BUILD_TOOLS:BOOL=FALSE \
-        -DYAML_CPP_BUILD_TESTS:BOOL=FALSE \
-        -DYAML_BUILD_SHARED_LIBS=TRUE \
-        .. && \
-    make install 
+#RUN mkdir -p /usr/local/deps && \
+#    git clone https://github.com/jbeder/yaml-cpp && \
+#    cd yaml-cpp && \
+#    mkdir build && \
+#    cd build && \
+#    cmake -DCMAKE_BUILD_TYPE=Release \
+#        -DYAML_CPP_BUILD_CONTRIB:BOOL=FALSE \
+#        -DYAML_CPP_BUILD_TOOLS:BOOL=FALSE \
+#        -DYAML_CPP_BUILD_TESTS:BOOL=FALSE \
+#        -DYAML_BUILD_SHARED_LIBS=TRUE \
+#        .. && \
+#    make install 
 
-RUN cd /usr/local/deps && \
-    git clone https://github.com/Tencent/rapidjson && \
-    cd rapidjson && \
-    mkdir build && \
-    cd build && \
-    cmake -DCMAKE_BUILD_TYPE=Release \
-        -DRAPIDJSON_BUILD_DOC=FALSE \
-        -DRAPIDJSON_BUILD_EXAMPLES=FALSE \
-        -DRAPIDJSON_BUILD_TESTS=FALSE \
-        -DRAPIDJSON_BUILD_THIRDPARTY_GTEST=FALSE \
-        .. && \
-    make install
+#RUN cd /usr/local/deps && \
+#    git clone https://github.com/Tencent/rapidjson && \
+#    cd rapidjson && \
+#    mkdir build && \
+#    cd build && \
+#    cmake -DCMAKE_BUILD_TYPE=Release \
+#        -DRAPIDJSON_BUILD_DOC=FALSE \
+#        -DRAPIDJSON_BUILD_EXAMPLES=FALSE \
+#        -DRAPIDJSON_BUILD_TESTS=FALSE \
+#        -DRAPIDJSON_BUILD_THIRDPARTY_GTEST=FALSE \
+#        .. && \
+#    make install
 
 # note that the build dir is *not* in source, this is so that the source can me mounted onto the container without covering the build target
 
