@@ -10,19 +10,14 @@ stages:
   if: branch = main OR 
     branch = feature/arm64 OR
     branch = develop OR 
-    branch =~ /.*\.(?i:build)$/ OR 
-    type = pull_request OR 
     branch =~ /^v\d+\.\d+\.\d+(-S*)?$/
-#- name: assemble manifest
-#  if: branch = main OR 
-#    branch = develop OR 
-#    branch =~ /.*\.(?i:build)$/ OR 
-#    type = pull_request OR 
-#    branch =~ /^v\d+\.\d+\.\d+(-S*)?$/
 - name: build-docs
   if: branch = main OR 
     branch = develop OR 
     branch =~ /.*\.(?i:build)$/
+# Removed these two conditions for build-images on 12/22/20 (NSO):
+#    branch =~ /.*\.(?i:build)$/ OR 
+#    type = pull_request OR 
 
 env:
 - DOCKER_CLI_EXPERIMENTAL=enabled BASE_IMAGE_TAG="3.7"
