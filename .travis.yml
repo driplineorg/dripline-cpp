@@ -1,16 +1,16 @@
 language: cpp
 
 stages:
-- name: build-test
+- name: Test
   if: branch = main OR 
     branch = develop OR 
     branch =~ /.*\.(?i:build)$/ OR 
     type = pull_request 
-- name: build-images
+- name: Images
   if: branch = main OR 
     branch = develop OR 
     branch =~ /^v\d+\.\d+\.\d+(-S*)?$/
-- name: build-docs
+- name: Documentation
   if: branch = main OR 
     branch = develop OR 
 # Removed these two conditions for build-images on 12/22/20 (NSO):
@@ -20,9 +20,11 @@ stages:
 env:
 - DOCKER_CLI_EXPERIMENTAL=enabled BASE_IMAGE_TAG="3.7"
 
+#TODO: build but don't push the docker images in the test stage
+
 jobs:
   include:
-  - stage: build-test
+  - stage: Test
     os: osx
     compiler: clang
     osx_image: xcode11.3
@@ -40,7 +42,7 @@ jobs:
     - cmake .. -DDripline_ENABLE_TESTING=TRUE
     - make install
     script: testing/run_tests
-  - stage: build-test
+  - stage: Test
     os: linux
     dist: bionic
     compiler: gcc
@@ -63,7 +65,7 @@ jobs:
     - cmake .. -DScarab_BUILD_PYTHON=FALSE -DDripline_ENABLE_TESTING=TRUE -DCMAKE_CXX_FLAGS=-pthread
     - make install
     script: testing/run_tests
-  - stage: build-test
+  - stage: Test
     os: linux
     dist: bionic
     compiler: clang
@@ -86,7 +88,7 @@ jobs:
     - make
     script: testing/run_tests
   ## build images
-  - stage: build-images
+  - stage: Images
     name: all archs
     os: linux
     dist: focal
@@ -118,7 +120,7 @@ jobs:
       --build-arg img_tag=3.8.7-buster 
       --tag driplineorg/dripline-cpp:buildx-test .
   ## build docs
-  - stage: build-docs
+  - stage: Documentation
     language: python
     os: linux
     dist: bionic
