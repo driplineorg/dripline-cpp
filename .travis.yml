@@ -34,7 +34,7 @@ jobs:
         - rabbitmq-c
         - rapidjson
         - yaml-cpp
-        update: true
+#        update: true
     before_install:
     - mkdir build
     install:
