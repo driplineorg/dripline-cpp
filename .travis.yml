@@ -34,13 +34,13 @@ jobs:
         - rabbitmq-c
         - rapidjson
         - yaml-cpp
-        update: true
+#        update: true
     before_install:
     - mkdir build
     install:
     - cd build
     - cmake .. -DDripline_ENABLE_TESTING=TRUE
-    - make install
+    - make -j2 install
     script: testing/run_tests
   - stage: Test
     os: linux
@@ -63,7 +63,7 @@ jobs:
     install:
     - cd build
     - cmake .. -DScarab_BUILD_PYTHON=FALSE -DDripline_ENABLE_TESTING=TRUE -DCMAKE_CXX_FLAGS=-pthread
-    - make install
+    - make -j2 install
     script: testing/run_tests
   - stage: Test
     os: linux
@@ -85,7 +85,7 @@ jobs:
     install:
     - cd build
     - cmake .. -DScarab_BUILD_PYTHON=FALSE -DDripline_ENABLE_TESTING=TRUE -DCMAKE_CXX_FLAGS=-pthread
-    - make
+    - make -j2 install
     script: testing/run_tests
   ## build images
   - stage: Images
