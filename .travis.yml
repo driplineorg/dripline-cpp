@@ -1,34 +1,30 @@
 language: cpp
 
 stages:
-- name: build-test
+- name: Test
   if: branch = main OR 
     branch = develop OR 
     branch =~ /.*\.(?i:build)$/ OR 
     type = pull_request 
-- name: build images
+- name: Images
   if: branch = main OR 
     branch = develop OR 
-    branch =~ /.*\.(?i:build)$/ OR 
-    type = pull_request OR 
     branch =~ /^v\d+\.\d+\.\d+(-S*)?$/
-- name: assemble manifest
+- name: Documentation
   if: branch = main OR 
-    branch = develop OR 
-    branch =~ /.*\.(?i:build)$/ OR 
-    type = pull_request OR 
-    branch =~ /^v\d+\.\d+\.\d+(-S*)?$/
-- name: build-docs
-  if: branch = main OR 
-    branch = develop OR 
-    branch =~ /.*\.(?i:build)$/
+    branch = develop
+# Removed these two conditions for build-images on 12/22/20 (NSO):
+#    branch =~ /.*\.(?i:build)$/ OR 
+#    type = pull_request OR 
 
 env:
 - DOCKER_CLI_EXPERIMENTAL=enabled BASE_IMAGE_TAG="3.7"
 
+#TODO: build but don't push the docker images in the test stage
+
 jobs:
   include:
-  - stage: build-test
+  - stage: Test
     os: osx
     compiler: clang
     osx_image: xcode11.3
@@ -38,13 +34,15 @@ jobs:
         - rabbitmq-c
         - rapidjson
         - yaml-cpp
-        update: true
-    script:
+#        update: true
+    before_install:
     - mkdir build
+    install:
     - cd build
-    - cmake ..
-    - make
-  - stage: build-test
+    - cmake .. -DDripline_ENABLE_TESTING=TRUE
+    - make -j2 install
+    script: testing/run_tests
+  - stage: Test
     os: linux
     dist: bionic
     compiler: gcc
@@ -58,14 +56,16 @@ jobs:
         - librabbitmq-dev
         - rapidjson-dev
         - libyaml-cpp-dev
-    script:
+    before_install:
     - cmake --version
     - export CC=gcc-5 && export CXX=g++-5
     - mkdir build
+    install:
     - cd build
-    - cmake .. -DScarab_BUILD_PYTHON=FALSE
-    - make
-  - stage: build-test
+    - cmake .. -DScarab_BUILD_PYTHON=FALSE -DDripline_ENABLE_TESTING=TRUE -DCMAKE_CXX_FLAGS=-pthread
+    - make -j2 install
+    script: testing/run_tests
+  - stage: Test
     os: linux
     dist: bionic
     compiler: clang
@@ -79,55 +79,48 @@ jobs:
         - librabbitmq-dev
         - rapidjson-dev
         - libyaml-cpp-dev
-    script:
+    before_install:
     - export CC=clang && export CXX=clang++
     - mkdir build
+    install:
     - cd build
-    - cmake .. -DScarab_BUILD_PYTHON=FALSE
-    - make
+    - cmake .. -DScarab_BUILD_PYTHON=FALSE -DDripline_ENABLE_TESTING=TRUE -DCMAKE_CXX_FLAGS=-pthread
+    - make -j2 install
+    script: testing/run_tests
   ## build images
-  - stage: build images
-    name: amd64
+  - stage: Images
+    name: all archs
     os: linux
-    dist: bionic
+    dist: focal
+    sudo: required
     addons:
       apt:
+        sources:
+        - sourceline: "deb https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
         packages:
         - qemu-user-static
-        - jq
-        - tree
-    before_install: ".travis/setup_emulation.sh"
-    script:
-    - set -e
-    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-    - ".travis/bootstrap_image.sh -u amd64 -r python -t ${BASE_IMAGE_TAG} -a amd64 -i driplineorg/dripline-cpp:`echo
-      ${TRAVIS_BRANCH} | tr / _`"
-  - stage: build images
-    name: arm32v7
-    os: linux
-    dist: bionic
-    addons:
-      apt:
-        packages:
-        - qemu-user-static
-        - jq
-        - tree
-    before_install: ".travis/setup_emulation.sh"
-    script:
-    - set -e
-    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-    - ".travis/bootstrap_image.sh -u arm32v7 -r python -t ${BASE_IMAGE_TAG} -a arm7 -i driplineorg/dripline-cpp:`echo
-      ${TRAVIS_BRANCH} | tr / _`"
-  ## build general-use manifest
-  - stage: assemble manifest
-    os: linux
-    dist: bionic
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+    before_install:
+    - echo '{experimental":"enabled"}' | sudo tee /etc/docker/daemon.json
+    - mkdir -p $HOME/.docker
+    - echo '{"experimental":"enabled"}' | sudo tee $HOME/.docker/config.json
+    - sudo service docker start
+    install:
+    - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+    - docker buildx create --name xbuilder --use
+    - docker buildx ls
     script:
     - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-    - ".travis/build_manifest.sh -a arm -a amd64 -n driplineorg/dripline-cpp:`echo
-      ${TRAVIS_BRANCH} | tr / _`"
+    - >
+      docker buildx build --push --progress plain 
+      --platform=linux/arm/v7,linux/arm64,linux/amd64 
+      --build-arg img_repo=python 
+      --build-arg img_tag=3.8.7-buster 
+      --tag driplineorg/dripline-cpp:${TRAVIS_BRANCH} .
   ## build docs
-  - stage: build-docs
+  - stage: Documentation
     language: python
     os: linux
     dist: bionic

@@ -1,18 +1,16 @@
-# Minimum cmake verison 3.1 required by Scarab
-cmake_minimum_required (VERSION 3.1)
+# Minimum cmake verison 3.12 required by Scarab
+cmake_minimum_required (VERSION 3.12)
 
 #########
 # setup #
 #########
 
 cmake_policy( SET CMP0048 NEW ) # version in project()
-project( Dripline VERSION 2.5.2 )
+project( Dripline VERSION 2.6.0 )
 
 list( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/scarab/cmake )
 
 include( PackageBuilder )
-
-pbuilder_prepare_project()
 
 # Get the dripline version
 file( STRINGS "dripline_shield.json" JSON_STRINGS )
@@ -36,7 +34,7 @@ set ( Dripline_PYTHON_THROW_REPLY_KEYWORD "ThrowReply" CACHE STRING "Keyword use
 set( Dripline_MAX_PAYLOAD_SIZE "10000" CACHE STRING "Maximum payload size (bytes)" )
 
 # always use C++11
-set_option( USE_CPP11 TRUE )
+set( CMAKE_CXX_STANDARD 11 )
 
 
 # Process options
@@ -110,9 +108,9 @@ find_package( SimpleAmqpClient REQUIRED CONFIG HINTS ${PROJECT_BINARY_DIR}/exter
 list( APPEND PUBLIC_EXT_LIBS SimpleAmqpClient::SimpleAmqpClient )
 
 
-##########
-# Scarab #
-##########
+##################
+# Scarab Options #
+##################
 
 # set authentication build to TRUE
 # this will require Boost 1.46 or better
@@ -124,6 +122,13 @@ if( Dripline_BUILD_PYTHON )
 else( Dripline_BUILD_PYTHON )
     set_option( Scarab_BUILD_PYTHON FALSE )
 endif( Dripline_BUILD_PYTHON )
+
+
+#####################
+# Prepare for Build #
+#####################
+
+pbuilder_prepare_project()
 
 pbuilder_add_submodule( Scarab scarab )
 
