@@ -118,6 +118,9 @@ jobs:
       --platform=linux/arm/v7,linux/arm64,linux/amd64 
       --build-arg img_repo=python 
       --build-arg img_tag=3.8.7-buster 
+      --build-arg build_type=Release
+      --build-arg build_examples=FALSE
+      --build-arg enable_testing=FALSE
       --tag driplineorg/dripline-cpp:$(echo ${TRAVIS_BRANCH} | tr /: _) .
   - stage: Images
     name: all archs dev
@@ -150,6 +153,8 @@ jobs:
       --build-arg img_repo=python 
       --build-arg img_tag=3.8.7-buster
       --build-arg build_type=Debug
+      --build-arg build_examples=TRUE
+      --build-arg enable_testing=TRUE
       --tag driplineorg/dripline-cpp:$(echo ${TRAVIS_BRANCH} | tr /: _)-dev .
   ## build docs
   - stage: Documentation

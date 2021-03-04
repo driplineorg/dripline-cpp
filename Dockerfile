@@ -2,6 +2,8 @@ ARG img_repo=python
 ARG img_tag=3.8-buster
 
 ARG build_type=Release
+ARG build_examples=FALSE
+ARG enable_testing=FALSE
 
 FROM ${img_repo}:${img_tag}
 
@@ -44,8 +46,9 @@ RUN mkdir -p /usr/local/build && \
     # unclear why I have to run cmake twice
     cmake -DCMAKE_BUILD_TYPE=${build_type} \
         -DCMAKE_INSTALL_PREFIX:PATH=/usr/local \ 
-        -DDripline_BUILD_EXAMPLES:BOOL=FALSE \
-        -DDripline_BUILD_PYTHON=TRUE \
+        -DDripline_BUILD_EXAMPLES:BOOL=${build_examples} \
+        -DDripline_ENABLE_TESTING:BOOL=${enable_testing} \
+        -DDripline_BUILD_PYTHON:BOOL=TRUE \
         -DPBUILDER_PY_INSTALL_IN_SITELIB=TRUE \
         ../src && \
     make -j3 install
