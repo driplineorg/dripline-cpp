@@ -8,7 +8,6 @@ stages:
     type = pull_request 
 - name: Images
   if: branch = main OR 
-    branch = hotfix/2.6.2 OR
     branch = develop OR 
     branch =~ /^v\d+\.\d+\.\d+(-S*)?$/
 - name: Documentation
