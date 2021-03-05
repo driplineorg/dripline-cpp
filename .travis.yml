@@ -3,7 +3,7 @@ language: cpp
 stages:
 - name: Test
   if: (branch IN (main, develop) OR 
-       branch =~ /^v\d+\.\d+\.\d+(-S*)?$/) OR 
+       branch =~ /.*\.(?i:build)$/) OR 
     type = pull_request 
 - name: Images
   if: (branch IN (main, develop) OR 
