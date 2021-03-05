@@ -3,8 +3,8 @@
 get_filename_component( Dripline_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH )
 
 include( CMakeFindDependencyMacro )
-find_dependency( SimpleAmqpClient REQUIRED PATHS ${Dripline_CMAKE_DIR}/SimpleAmqpClient ${Dripline_CMAKE_DIR}/external )
 find_dependency( Scarab REQUIRED PATHS ${Dripline_CMAKE_DIR}/Scarab @Scarab_BINARY_LOCATION@ )
+find_dependency( SimpleAmqpClient REQUIRED PATHS ${Dripline_CMAKE_DIR}/SimpleAmqpClient ${Dripline_CMAKE_DIR}/external )
 
 if( NOT TARGET Dripline::@Dripline_FULL_TARGET_NAME@ )
     if( TARGET @Dripline_FULL_TARGET_NAME@ )
