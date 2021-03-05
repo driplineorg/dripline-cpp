@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Building Dripline &#8212; Dripline-Cpp 2.6.0 documentation</title>
+    <title>Building Dripline &#8212; Dripline-Cpp 2.6.2 documentation</title>
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -42,26 +42,26 @@ or as a <a class="reference internal" href="#submodule-option"><span class="std 
 <span id="id1"></span><h2>Build Options<a class="headerlink" href="#build-options" title="Permalink to this headline">¶</a></h2>
 <p>Dripline build options include:</p>
 <dl class="glossary simple">
-<dt id="term-Dripline_BUILD_EXAMPLES-BOOL"><code class="docutils literal notranslate"><span class="pre">Dripline_BUILD_EXAMPLES</span></code> (BOOL)</dt><dd><p>if ON, builds the example applications</p>
+<dt id="term-Dripline_BUILD_EXAMPLES-BOOL"><code class="docutils literal notranslate"><span class="pre">Dripline_BUILD_EXAMPLES</span></code> (BOOL)<a class="headerlink" href="#term-Dripline_BUILD_EXAMPLES-BOOL" title="Permalink to this term">¶</a></dt><dd><p>if ON, builds the example applications</p>
 </dd>
-<dt id="term-0"><code class="docutils literal notranslate"><span class="pre">Dripline_BUILD_EXAMPLES</span></code> (BOOL)</dt><dd><p>if ON, builds the example applications</p>
+<dt id="term-0"><code class="docutils literal notranslate"><span class="pre">Dripline_BUILD_EXAMPLES</span></code> (BOOL)<a class="headerlink" href="#term-0" title="Permalink to this term">¶</a></dt><dd><p>if ON, builds the example applications</p>
 </dd>
-<dt id="term-Dripline_BUILD_PYTHON-BOOL"><code class="docutils literal notranslate"><span class="pre">Dripline_BUILD_PYTHON</span></code> (BOOL)</dt><dd><p>if ON, builds utilities used by the Python wrapping</p>
+<dt id="term-Dripline_BUILD_PYTHON-BOOL"><code class="docutils literal notranslate"><span class="pre">Dripline_BUILD_PYTHON</span></code> (BOOL)<a class="headerlink" href="#term-Dripline_BUILD_PYTHON-BOOL" title="Permalink to this term">¶</a></dt><dd><p>if ON, builds utilities used by the Python wrapping</p>
 </dd>
-<dt id="term-Dripline_ENABLE_EXECUTABLES-BOOL"><code class="docutils literal notranslate"><span class="pre">Dripline_ENABLE_EXECUTABLES</span></code> (BOOL)</dt><dd><p>if ON, builds the Dripline executables</p>
+<dt id="term-Dripline_ENABLE_EXECUTABLES-BOOL"><code class="docutils literal notranslate"><span class="pre">Dripline_ENABLE_EXECUTABLES</span></code> (BOOL)<a class="headerlink" href="#term-Dripline_ENABLE_EXECUTABLES-BOOL" title="Permalink to this term">¶</a></dt><dd><p>if ON, builds the Dripline executables</p>
 </dd>
-<dt id="term-Dripline_ENABLE_TESTING-BOOL"><code class="docutils literal notranslate"><span class="pre">Dripline_ENABLE_TESTING</span></code> (BOOL)</dt><dd><p>if ON, builds the testing application</p>
+<dt id="term-Dripline_ENABLE_TESTING-BOOL"><code class="docutils literal notranslate"><span class="pre">Dripline_ENABLE_TESTING</span></code> (BOOL)<a class="headerlink" href="#term-Dripline_ENABLE_TESTING-BOOL" title="Permalink to this term">¶</a></dt><dd><p>if ON, builds the testing application</p>
 </dd>
-<dt id="term-Dripline_MAX_PAYLOAD_SIZE-INT"><code class="docutils literal notranslate"><span class="pre">Dripline_MAX_PAYLOAD_SIZE</span></code> (INT)</dt><dd><p>Maximum payload size in bytes</p>
+<dt id="term-Dripline_MAX_PAYLOAD_SIZE-INT"><code class="docutils literal notranslate"><span class="pre">Dripline_MAX_PAYLOAD_SIZE</span></code> (INT)<a class="headerlink" href="#term-Dripline_MAX_PAYLOAD_SIZE-INT" title="Permalink to this term">¶</a></dt><dd><p>Maximum payload size in bytes</p>
 </dd>
-<dt id="term-Dripline_PYTHON_THROW_REPLY_KEYWORD"><code class="docutils literal notranslate"><span class="pre">Dripline_PYTHON_THROW_REPLY_KEYWORD</span></code></dt><dd><p>keyword used by the python wrapping that indicates that the thrown object is a reply message to be sent</p>
+<dt id="term-Dripline_PYTHON_THROW_REPLY_KEYWORD"><code class="docutils literal notranslate"><span class="pre">Dripline_PYTHON_THROW_REPLY_KEYWORD</span></code><a class="headerlink" href="#term-Dripline_PYTHON_THROW_REPLY_KEYWORD" title="Permalink to this term">¶</a></dt><dd><p>keyword used by the python wrapping that indicates that the thrown object is a reply message to be sent</p>
 </dd>
 </dl>
 <p>From the built-in CMake options, users may be interested in adjusting the build type
 to control the level of compiler optimization and terminal output.
 The CMake option and possible values are:</p>
 <dl class="glossary simple">
-<dt id="term-CMAKE_BUILD_TYPE-STRING-Debug-Release"><code class="docutils literal notranslate"><span class="pre">CMAKE_BUILD_TYPE</span></code> (STRING: [Debug || Release])</dt><dd><dl class="simple">
+<dt id="term-CMAKE_BUILD_TYPE-STRING-Debug-Release"><code class="docutils literal notranslate"><span class="pre">CMAKE_BUILD_TYPE</span></code> (STRING: [Debug || Release])<a class="headerlink" href="#term-CMAKE_BUILD_TYPE-STRING-Debug-Release" title="Permalink to this term">¶</a></dt><dd><dl class="simple">
 <dt><code class="docutils literal notranslate"><span class="pre">Debug</span></code></dt><dd><p>prints info and debug messages, and can print trace messages; low compiler optimization; debugging symbols included</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">Release</span></code></dt><dd><p>only prints warning and error messages; highly optimized, and no debugging symbols included</p>
@@ -71,7 +71,7 @@ The CMake option and possible values are:</p>
 </dl>
 <p>You can additionally define preprocessor macros that are used directly in the code:</p>
 <dl class="glossary simple">
-<dt id="term-DRIPLINE_AUTH_FILE-PATH"><code class="docutils literal notranslate"><span class="pre">DRIPLINE_AUTH_FILE</span></code> (PATH)</dt><dd><p>specifies the location and filename of the default authentication file</p>
+<dt id="term-DRIPLINE_AUTH_FILE-PATH"><code class="docutils literal notranslate"><span class="pre">DRIPLINE_AUTH_FILE</span></code> (PATH)<a class="headerlink" href="#term-DRIPLINE_AUTH_FILE-PATH" title="Permalink to this term">¶</a></dt><dd><p>specifies the location and filename of the default authentication file</p>
 </dd>
 </dl>
 </div>
@@ -199,7 +199,7 @@ The steps for this mode are:</p>
       &copy;2020, Dripline-Cpp Authors.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.4.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
