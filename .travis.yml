@@ -2,17 +2,18 @@ language: cpp
 
 stages:
 - name: Test
-  if: branch = main OR 
-    branch = develop OR 
-    branch =~ /.*\.(?i:build)$/ OR 
+  if: (branch IN (main, develop) OR 
+       branch =~ /^v\d+\.\d+\.\d+(-S*)?$/) OR 
     type = pull_request 
 - name: Images
-  if: branch = main OR 
-    branch = develop OR 
-    branch =~ /^v\d+\.\d+\.\d+(-S*)?$/
+  if: (branch IN (main, develop) OR 
+       branch =~ /^v\d+\.\d+\.\d+(-S*)?$/) AND
+    type = push AND
+    NOT type = pull_request
 - name: Documentation
-  if: branch = main OR 
-    branch = develop
+  if: branch IN (main, develop) AND
+    type = push AND
+    NOT type = pull_request
 # Removed these two conditions for build-images on 12/22/20 (NSO):
 #    branch =~ /.*\.(?i:build)$/ OR 
 #    type = pull_request OR 
