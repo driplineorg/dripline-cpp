@@ -36,7 +36,7 @@ jobs:
         with:
           context: .
           push: true
-          build-args: >
+          build-args: |
             img_repo=python, 
             img_tag=3.8.7-buster, 
             build_type=Release,
@@ -50,7 +50,7 @@ jobs:
         with:
           context: .
           push: true
-          build-args: >
+          build-args: |
             img_repo=python, 
             img_tag=3.8.7-buster, 
             build_type=Debug,
