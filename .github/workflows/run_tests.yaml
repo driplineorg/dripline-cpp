@@ -20,8 +20,8 @@ jobs:
       - name: Install dependencies
         run: |
           brew install \
-            rabbitmq-c
-            rapidjson
+            rabbitmq-c \
+            rapidjson \
             yaml-cpp
       - name: Configure
         run: |
