@@ -36,7 +36,12 @@ jobs:
         with:
           context: .
           push: true
-          build-args: img_repo=python,img_tag=3.8.7-buster,build_type=Release,build_examples=FALSE,enable_testing=FALSE
+          build-args:
+            - img_repo=python
+            - img_tag=3.8.7-buster
+            - build_type=Release
+            - build_examples=FALSE
+            - enable_testing=FALSE
           tags: driplineorg/dripline-cpp:gha_test  # todo: how to make this depend on the tag for releases
           platforms: linux/amd64 #,linux/arm7,linux/arm64
       - name: Build and push dev
@@ -45,7 +50,12 @@ jobs:
         with:
           context: .
           push: true
-          build-args: img_repo=python,img_tag=3.8.7-buster,build_type=Debug,build_examples=TRUE,enable_testing=TRUE
+          build-args: 
+            - img_repo=python
+            - img_tag=3.8.7-buster
+            - build_type=Debug
+            - build_examples=TRUE
+            - enable_testing=TRUE
           tags: driplineorg/dripline-cpp:gha_test-dev  # todo: how to make this depend on the tag for releases
           platforms: linux/amd64 #,linux/arm7,linux/arm64
       - name: Image digests
