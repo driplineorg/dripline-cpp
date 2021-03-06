@@ -26,6 +26,7 @@ jobs:
       - name: Configure
         run: |
           mkdir build
+          cd build
           cmake .. -DDripline_ENABLE_TESTING=TRUE
       - name: Build
         run: |
