@@ -19,18 +19,17 @@ jobs:
           submodules: recursive
       - name: Install dependencies
         run: |
-          sudo apt-get update &&\
-          DEBIAN_FRONTEND=noninteractive sudo apt-get install -y 
+          sudo apt-get update
+          DEBIAN_FRONTEND=noninteractive sudo apt-get install -y \
             build-essential \
             cmake \
             libboost-all-dev \
             librabbitmq-dev \
             rapidjson-dev \
-            libyaml-cpp-dev \
-            &&\
-          export CC=gcc-5 && export CXX=g++-5 &&\
-          mkdir build &&\
-          cd build &&\
-          cmake .. -DScarab_BUILD_PYTHON=FALSE -DDripline_ENABLE_TESTING=TRUE -DCMAKE_CXX_FLAGS=-pthread &&\
-          make -j2 install &&\
-          testing/run_tests &&\
+            libyaml-cpp-dev
+          export CC=gcc-5 && export CXX=g++-5
+          mkdir build
+          cd build
+          cmake .. -DScarab_BUILD_PYTHON=FALSE -DDripline_ENABLE_TESTING=TRUE -DCMAKE_CXX_FLAGS=-pthread
+          make -j2 install
+          testing/run_tests
