@@ -9,13 +9,15 @@ on:
 
 jobs:
 
-  build:
+  release:
 
     runs-on: ubuntu-20.04
 
     steps:
       - name: Checkout the repo 
         uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
@@ -30,8 +32,8 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Build and push release
-        id: release_build
+      - name: Build and push
+        id: build_push
         uses: docker/build-push-action@v2
         with:
           context: .
@@ -44,8 +46,35 @@ jobs:
             enable_testing=FALSE
           tags: driplineorg/dripline-cpp:gha_test  # todo: how to make this depend on the tag for releases
           platforms: linux/amd64 #,linux/arm7,linux/arm64
-      - name: Build and push dev
-        id: dev_build
+      - name: Image digest
+        run: >
+          echo ${{ steps.build_push.outputs.digest }}
+
+  dev:
+
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout the repo 
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        id: setup_buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          buildkitd-flags: --debug
+      - name: List platforms
+        run: echo ${{ steps.setup_buildx.outputs.platforms }}
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build and push
+        id: build_push
         uses: docker/build-push-action@v2
         with:
           context: .
@@ -58,7 +87,6 @@ jobs:
             enable_testing=TRUE
           tags: driplineorg/dripline-cpp:gha_test-dev  # todo: how to make this depend on the tag for releases
           platforms: linux/amd64 #,linux/arm7,linux/arm64
-      - name: Image digests
+      - name: Image digest
         run: >
-          echo ${{ steps.release_build.outputs.digest }}
-          echo ${{ steps.dev_build.outputs.digest }}
+          echo ${{ steps.build_push.outputs.digest }}
