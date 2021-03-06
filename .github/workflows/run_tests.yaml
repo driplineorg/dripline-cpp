@@ -27,7 +27,7 @@ jobs:
             librabbitmq-dev \
             rapidjson-dev \
             libyaml-cpp-dev
-          export CC=gcc-5 && export CXX=g++-5
+          export CC=gcc && export CXX=g++
           mkdir build
           cd build
           cmake .. -DScarab_BUILD_PYTHON=FALSE -DDripline_ENABLE_TESTING=TRUE -DCMAKE_CXX_FLAGS=-pthread
