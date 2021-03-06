@@ -1,0 +1,36 @@
+name: Run Tests
+
+on:
+  push:
+    branches: [ main, develop, '*.build' ]
+  pull_request:
+    branches: '*'
+
+  workflow_dispatch:
+
+jobs:
+
+  linux_gcc:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout the repo 
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Install dependencies
+        run: |
+          apt-get update &&\
+          DEBIAN_FRONTEND=noninteractive apt-get install -y 
+            build-essential \
+            cmake \
+            libboost-all-dev \
+            librabbitmq-dev \
+            rapidjson-dev \
+            libyaml-cpp-dev \
+            &&\
+          export CC=gcc-5 && export CXX=g++-5 &&\
+          mkdir build &&\
+          cd build &&\
+          cmake .. -DScarab_BUILD_PYTHON=FALSE -DDripline_ENABLE_TESTING=TRUE -DCMAKE_CXX_FLAGS=-pthread &&\
+          make -j2 install &&\
+          testing/run_tests &&\
