@@ -2,7 +2,7 @@ name: Publish
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, feature/ghactions ]
     tags: 'v*.*.*'
 
   workflow_dispatch:
@@ -10,7 +10,7 @@ on:
 jobs:
 
   release:
-
+    if: false
     runs-on: ubuntu-20.04
 
     steps:
@@ -51,7 +51,7 @@ jobs:
           echo ${{ steps.build_push.outputs.digest }}
 
   dev:
-
+    if: false
     runs-on: ubuntu-20.04
 
     steps:
@@ -90,3 +90,66 @@ jobs:
       - name: Image digest
         run: >
           echo ${{ steps.build_push.outputs.digest }}
+
+  docs:
+
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          DEBIAN_FRONTEND=noninteractive sudo apt-get install -y \
+            tree \
+            doxygen \
+            graphviz
+      - name: Key
+        run: |
+          openssl aes-256-cbc -K $encrypted_ef08ab9a7293_key -iv $encrypted_ef08ab9a7293_iv -in .deploy_key.enc -out .deploy_key -d
+          eval "$(ssh-agent -s)"
+          chmod 600 ./.deploy_key
+          ssh-add ./.deploy_key
+      - name: Build docs
+        run: |
+          pip install sphinx
+          OUTPUT_LOCATION="unknown"
+          if [[ "$GITHUB_REF" == "refs/heads/develop" ]]; then
+              OUTPUT_LOCATION="develop";
+          elif [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
+              OUTPUT_LOCATION="main";
+          elif [[ "$GITHUB_REF" == "refs/heads/*" ]]; then
+              OUTPUT_LOCATION="branches/$(${$GITHUB_REF#'refs/heads/'} | tr / _ | tr - .)";
+          elif [[ "$GITHUB_REF" == "refs/tags/*" ]]; then
+              OUTPUT_LOCATION="tags/${$GITHUB_REF#'refs/tags/'}";
+          fi
+          echo ${OUTPUT_LOCATION} > /tmp/output_location
+          more /tmp/output_location
+          #echo $(if [[ "$TRAVIS_BRANCH" == "develop" || "$TRAVIS_BRANCH" == "main" ]];
+          #           then echo "$TRAVIS_BRANCH"; elif [[ ! -z "$TRAVIS_TAG" ]]; then echo "tags/$TRAVIS_TAG";
+          #           else echo "branches/$(echo $TRAVIS_BRANCH | tr / _ | tr - .)"; fi) | tee /tmp/output_location
+          cd documentation
+          make html
+          ls ./build/html
+          mv ./build/html /tmp/build.html
+          cd ..
+          git checkout gh-pages
+          git clean -d -f -x
+          rm -rf SimpleAmqpClient
+          rm -rf scarab
+          ls
+          mkdir -p ./$(cat /tmp/output_location)
+          rsync -av --delete /tmp/build.html/ ./$(cat /tmp/output_location)
+          tree -L 3
+          git add $(cat /tmp/output_location)
+          git status
+          git diff --cached --quiet; export HAVE_STAGED_FILES=$?
+          echo $HAVE_STAGED_FILES
+          #if [[ "$HAVE_STAGED_FILES" != "0" ]]; then
+          #    git commit -m "built docs for ${GITHUB_REF}"
+          #    git remote -v
+          #    git remote set-url origin "git@github.com:${GITHUB_REPOSITORY}"
+          #    git remote -v
+          #    git push
+          #else
+          #    echo "No documentation updates to push"
+          #fi

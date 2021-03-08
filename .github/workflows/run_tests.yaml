@@ -2,7 +2,7 @@ name: Run Tests
 
 on:
   push:
-    branches: [ main, develop, '*.build', feature/ghactions ]
+    branches: [ main, develop, '*.build' ]
   pull_request:
     branches: '*'
 
