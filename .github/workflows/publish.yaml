@@ -114,21 +114,27 @@ jobs:
       #    eval "$(ssh-agent -s)"
       #    chmod 600 ./.deploy_key
       #    ssh-add ./.deploy_key
-      - name: Build docs
+      - name: Output location
         run: |
-          OUTPUT_LOCATION="unknown"
+          export OUTPUT_LOCATION="unknown"
           echo "Github ref: $GITHUB_REF"
           if [[ "$GITHUB_REF" == "refs/heads/develop" ]]; then
-              OUTPUT_LOCATION="develop";
+              echo "branch is develop"
+              export OUTPUT_LOCATION="develop"
           elif [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
-              OUTPUT_LOCATION="main";
+              echo "branch is main"
+              export OUTPUT_LOCATION="main"
           elif [[ "$GITHUB_REF" == "refs/heads/*" ]]; then
-              OUTPUT_LOCATION="branches/$(${$GITHUB_REF#'refs/heads/'} | tr / _ | tr - .)";
+              echo "branch is $GITHUB_REF, ${$GITHUB_REF#'refs/heads/'}"
+              export OUTPUT_LOCATION="branches/$(${$GITHUB_REF#'refs/heads/'} | tr / _ | tr - .)"
           elif [[ "$GITHUB_REF" == "refs/tags/*" ]]; then
-              OUTPUT_LOCATION="tags/${$GITHUB_REF#'refs/tags/'}";
+              echo "branch is tag, ${$GITHUB_REF#'refs/tags/'}"
+              export OUTPUT_LOCATION="tags/${$GITHUB_REF#'refs/tags/'}"
           fi
-          echo ${OUTPUT_LOCATION} > /tmp/output_location
-          cat /tmp/output_location
+          echo "Output location: $OUTPUT_LOCATION"
+      - name: Build docs
+        run: |
+          echo "Output location: $OUTPUT_LOCATION"
           #echo $(if [[ "$TRAVIS_BRANCH" == "develop" || "$TRAVIS_BRANCH" == "main" ]];
           #           then echo "$TRAVIS_BRANCH"; elif [[ ! -z "$TRAVIS_TAG" ]]; then echo "tags/$TRAVIS_TAG";
           #           else echo "branches/$(echo $TRAVIS_BRANCH | tr / _ | tr - .)"; fi) | tee /tmp/output_location
@@ -141,7 +147,7 @@ jobs:
         with:
           branch: gh-pages # The branch the action should deploy to.
           folder: /tmp/build.html # The folder the action should deploy.
-          target-folder: $(cat /tmp/output_location)
+          target-folder: ${{ env.OUTPUT_LOCATION }}
           dry-run: true
 
 
