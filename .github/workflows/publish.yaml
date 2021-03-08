@@ -130,7 +130,7 @@ jobs:
               echo "branch is $GITHUB_REF, $suffix"
               export OUTPUT_LOCATION=branches/$suffix
           elif [[ $GITHUB_REF == refs/tags/* ]]; then
-              suffx=${GITHUB_REF#"refs/tags/""}
+              suffx=${GITHUB_REF#"refs/tags/"}
               echo "branch is tag, $suffix"
               export OUTPUT_LOCATION=tags/$suffix
           fi
