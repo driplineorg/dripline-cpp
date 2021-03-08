@@ -1,0 +1,4 @@
+<map id="msg_alert" name="msg_alert">
+<area shape="rect" id="node1" title="Alert message class." alt="" coords="11,409,225,663"/>
+<area shape="rect" id="node2" href="$classdripline_1_1message.html" title="Contains all of the information common to all types of Dripline messages." alt="" coords="5,5,231,361"/>
+</map>
