@@ -117,6 +117,7 @@ jobs:
       - name: Build docs
         run: |
           OUTPUT_LOCATION="unknown"
+          echo "Github ref: $GITHUB_REF"
           if [[ "$GITHUB_REF" == "refs/heads/develop" ]]; then
               OUTPUT_LOCATION="develop";
           elif [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
@@ -134,11 +135,12 @@ jobs:
           cd documentation
           make html
           ls ./build/html
+          mv ./build/html /tmp/build.html
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@4.1.0
         with:
           branch: gh-pages # The branch the action should deploy to.
-          folder: build/html # The folder the action should deploy.
+          folder: /tmp/build.html # The folder the action should deploy.
           target-folder: $(cat /tmp/output_location)
           dry-run: true
 
