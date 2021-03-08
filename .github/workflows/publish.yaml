@@ -96,22 +96,28 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
+      - name: Checkout the repo 
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - name: Install dependencies
         run: |
           sudo apt-get update
           DEBIAN_FRONTEND=noninteractive sudo apt-get install -y \
             tree \
             doxygen \
+            python3 \
+            pipenv \
             graphviz
-      - name: Key
-        run: |
-          openssl aes-256-cbc -K $encrypted_ef08ab9a7293_key -iv $encrypted_ef08ab9a7293_iv -in .deploy_key.enc -out .deploy_key -d
-          eval "$(ssh-agent -s)"
-          chmod 600 ./.deploy_key
-          ssh-add ./.deploy_key
+          pip install sphinx
+      #- name: Key
+      #  run: |
+      #    openssl aes-256-cbc -K $encrypted_ef08ab9a7293_key -iv $encrypted_ef08ab9a7293_iv -in .deploy_key.enc -out .deploy_key -d
+      #    eval "$(ssh-agent -s)"
+      #    chmod 600 ./.deploy_key
+      #    ssh-add ./.deploy_key
       - name: Build docs
         run: |
-          pip install sphinx
           OUTPUT_LOCATION="unknown"
           if [[ "$GITHUB_REF" == "refs/heads/develop" ]]; then
               OUTPUT_LOCATION="develop";
@@ -123,33 +129,42 @@ jobs:
               OUTPUT_LOCATION="tags/${$GITHUB_REF#'refs/tags/'}";
           fi
           echo ${OUTPUT_LOCATION} > /tmp/output_location
-          more /tmp/output_location
+          cat /tmp/output_location
           #echo $(if [[ "$TRAVIS_BRANCH" == "develop" || "$TRAVIS_BRANCH" == "main" ]];
           #           then echo "$TRAVIS_BRANCH"; elif [[ ! -z "$TRAVIS_TAG" ]]; then echo "tags/$TRAVIS_TAG";
           #           else echo "branches/$(echo $TRAVIS_BRANCH | tr / _ | tr - .)"; fi) | tee /tmp/output_location
           cd documentation
           make html
           ls ./build/html
-          mv ./build/html /tmp/build.html
-          cd ..
-          git checkout gh-pages
-          git clean -d -f -x
-          rm -rf SimpleAmqpClient
-          rm -rf scarab
-          ls
-          mkdir -p ./$(cat /tmp/output_location)
-          rsync -av --delete /tmp/build.html/ ./$(cat /tmp/output_location)
-          tree -L 3
-          git add $(cat /tmp/output_location)
-          git status
-          git diff --cached --quiet; export HAVE_STAGED_FILES=$?
-          echo $HAVE_STAGED_FILES
-          #if [[ "$HAVE_STAGED_FILES" != "0" ]]; then
-          #    git commit -m "built docs for ${GITHUB_REF}"
-          #    git remote -v
-          #    git remote set-url origin "git@github.com:${GITHUB_REPOSITORY}"
-          #    git remote -v
-          #    git push
-          #else
-          #    echo "No documentation updates to push"
-          #fi
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@4.1.0
+        with:
+          branch: gh-pages # The branch the action should deploy to.
+          folder: build/html # The folder the action should deploy.
+          target-folder: $(cat /tmp/output_location)
+          dry-run: true
+
+
+          #mv ./build/html /tmp/build.html
+          #cd ..
+          #git checkout gh-pages
+          #git clean -d -f -x
+          #rm -rf SimpleAmqpClient
+          #rm -rf scarab
+          #ls
+          #mkdir -p ./$(cat /tmp/output_location)
+          #rsync -av --delete /tmp/build.html/ ./$(cat /tmp/output_location)
+          #tree -L 3
+          #git add $(cat /tmp/output_location)
+          #git status
+          #git diff --cached --quiet; export HAVE_STAGED_FILES=$?
+          #echo $HAVE_STAGED_FILES
+          ##if [[ "$HAVE_STAGED_FILES" != "0" ]]; then
+          ##    git commit -m "built docs for ${GITHUB_REF}"
+          ##    git remote -v
+          ##    git remote set-url origin "git@github.com:${GITHUB_REPOSITORY}"
+          ##    git remote -v
+          ##    git push
+          ##else
+          ##    echo "No documentation updates to push"
+          ##fi
