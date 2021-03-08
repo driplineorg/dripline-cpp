@@ -153,7 +153,7 @@ jobs:
           branch: gh-pages # The branch the action should deploy to.
           folder: /tmp/build.html # The folder the action should deploy.
           target-folder: ${{ env.OUTPUT_LOCATION }}
-          dry-run: true
+          dry-run: false
 
 
           #mv ./build/html /tmp/build.html
