@@ -125,11 +125,14 @@ jobs:
               echo "branch is main"
               export OUTPUT_LOCATION=main
           elif [[ $GITHUB_REF == refs/heads/* ]]; then
-              echo "branch is $GITHUB_REF, ${$GITHUB_REF#'refs/heads/'}"
-              export OUTPUT_LOCATION=branches/$(${$GITHUB_REF#"refs/heads/"} | tr / _ | tr - .)
+              suffix=${GITHUB_REF#"refs/heads/"}
+              suffix=$(echo $suffix | tr '/' '_')
+              echo "branch is $GITHUB_REF, $suffix"
+              export OUTPUT_LOCATION=branches/$suffix
           elif [[ $GITHUB_REF == refs/tags/* ]]; then
-              echo "branch is tag, ${$GITHUB_REF#'refs/tags/'}"
-              export OUTPUT_LOCATION=tags/${$GITHUB_REF#"refs/tags/"}
+              suffx=${GITHUB_REF#"refs/tags/""}
+              echo "branch is tag, $suffix"
+              export OUTPUT_LOCATION=tags/$suffix
           fi
           echo "Output location: $OUTPUT_LOCATION"
           # Persist the output location in future steps
