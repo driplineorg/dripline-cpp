@@ -117,23 +117,23 @@ jobs:
       - name: Output location
         run: |
           export OUTPUT_LOCATION="unknown"
-          echo "Github ref: ${GITHUB_REF}"
-          if [[ "${GITHUB_REF}" == "refs/heads/develop" ]]; then
+          echo "Github ref: $GITHUB_REF"
+          if [[ $GITHUB_REF == refs/heads/develop ]]; then
               echo "branch is develop"
-              export OUTPUT_LOCATION="develop"
-          elif [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+              export OUTPUT_LOCATION=develop
+          elif [[ $GITHUB_REF == refs/heads/main ]]; then
               echo "branch is main"
-              export OUTPUT_LOCATION="main"
-          elif [[ "${GITHUB_REF}" == "refs/heads/*" ]]; then
-              echo "branch is ${GITHUB_REF}, ${$GITHUB_REF#'refs/heads/'}"
-              export OUTPUT_LOCATION="branches/$(${$GITHUB_REF#'refs/heads/'} | tr / _ | tr - .)"
-          elif [[ "${GITHUB_REF}" == "refs/tags/*" ]]; then
+              export OUTPUT_LOCATION=main
+          elif [[ $GITHUB_REF == refs/heads/* ]]; then
+              echo "branch is $GITHUB_REF, ${$GITHUB_REF#'refs/heads/'}"
+              export OUTPUT_LOCATION=branches/$(${$GITHUB_REF#"refs/heads/"} | tr / _ | tr - .)
+          elif [[ $GITHUB_REF == refs/tags/* ]]; then
               echo "branch is tag, ${$GITHUB_REF#'refs/tags/'}"
-              export OUTPUT_LOCATION="tags/${$GITHUB_REF#'refs/tags/'}"
+              export OUTPUT_LOCATION=tags/${$GITHUB_REF#"refs/tags/"}
           fi
           echo "Output location: $OUTPUT_LOCATION"
           # Persist the output location in future steps
-          echo "::set-env name=OUTPUT_LOCATION::$OUTPUT_LOCATION"
+          echo "OUTPUT_LOCATION=$OUTPUT_LOCATION" >> $GITHUB_ENV
       - name: Build docs
         run: |
           echo "Output location: $OUTPUT_LOCATION"
