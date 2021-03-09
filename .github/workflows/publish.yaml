@@ -108,30 +108,24 @@ jobs:
             doxygen \
             python3-sphinx \
             graphviz
-      #- name: Key
-      #  run: |
-      #    openssl aes-256-cbc -K $encrypted_ef08ab9a7293_key -iv $encrypted_ef08ab9a7293_iv -in .deploy_key.enc -out .deploy_key -d
-      #    eval "$(ssh-agent -s)"
-      #    chmod 600 ./.deploy_key
-      #    ssh-add ./.deploy_key
       - name: Output location
         run: |
           export OUTPUT_LOCATION="unknown"
           echo "Github ref: $GITHUB_REF"
           if [[ $GITHUB_REF == refs/heads/develop ]]; then
-              echo "branch is develop"
+              echo "Branch is develop"
               export OUTPUT_LOCATION=develop
           elif [[ $GITHUB_REF == refs/heads/main ]]; then
-              echo "branch is main"
+              echo "Branch is main"
               export OUTPUT_LOCATION=main
           elif [[ $GITHUB_REF == refs/heads/* ]]; then
               suffix=${GITHUB_REF#"refs/heads/"}
               suffix=$(echo $suffix | tr '/' '_')
-              echo "branch is $GITHUB_REF, $suffix"
+              echo "Branch is $GITHUB_REF; directory will be $suffix"
               export OUTPUT_LOCATION=branches/$suffix
           elif [[ $GITHUB_REF == refs/tags/* ]]; then
               suffx=${GITHUB_REF#"refs/tags/"}
-              echo "branch is tag, $suffix"
+              echo "Tag is $GITHUB_REF; directory will be $suffix"
               export OUTPUT_LOCATION=tags/$suffix
           fi
           echo "Output location: $OUTPUT_LOCATION"
@@ -139,10 +133,6 @@ jobs:
           echo "OUTPUT_LOCATION=$OUTPUT_LOCATION" >> $GITHUB_ENV
       - name: Build docs
         run: |
-          echo "Output location: $OUTPUT_LOCATION"
-          #echo $(if [[ "$TRAVIS_BRANCH" == "develop" || "$TRAVIS_BRANCH" == "main" ]];
-          #           then echo "$TRAVIS_BRANCH"; elif [[ ! -z "$TRAVIS_TAG" ]]; then echo "tags/$TRAVIS_TAG";
-          #           else echo "branches/$(echo $TRAVIS_BRANCH | tr / _ | tr - .)"; fi) | tee /tmp/output_location
           cd documentation
           make html
           ls ./build/html
@@ -154,28 +144,3 @@ jobs:
           folder: /tmp/build.html # The folder the action should deploy.
           target-folder: ${{ env.OUTPUT_LOCATION }}
           dry-run: false
-
-
-          #mv ./build/html /tmp/build.html
-          #cd ..
-          #git checkout gh-pages
-          #git clean -d -f -x
-          #rm -rf SimpleAmqpClient
-          #rm -rf scarab
-          #ls
-          #mkdir -p ./$(cat /tmp/output_location)
-          #rsync -av --delete /tmp/build.html/ ./$(cat /tmp/output_location)
-          #tree -L 3
-          #git add $(cat /tmp/output_location)
-          #git status
-          #git diff --cached --quiet; export HAVE_STAGED_FILES=$?
-          #echo $HAVE_STAGED_FILES
-          ##if [[ "$HAVE_STAGED_FILES" != "0" ]]; then
-          ##    git commit -m "built docs for ${GITHUB_REF}"
-          ##    git remote -v
-          ##    git remote set-url origin "git@github.com:${GITHUB_REPOSITORY}"
-          ##    git remote -v
-          ##    git push
-          ##else
-          ##    echo "No documentation updates to push"
-          ##fi
