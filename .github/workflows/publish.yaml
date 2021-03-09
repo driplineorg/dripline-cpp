@@ -2,7 +2,7 @@ name: Publish
 
 on:
   push:
-    branches: [ main, develop, feature/ghactions ]
+    branches: [ main, develop ]
     tags: 'v*.*.*'
 
   workflow_dispatch:
@@ -10,7 +10,7 @@ on:
 jobs:
 
   release:
-    if: false
+
     runs-on: ubuntu-20.04
 
     steps:
@@ -51,7 +51,7 @@ jobs:
           echo ${{ steps.build_push.outputs.digest }}
 
   dev:
-    if: false
+
     runs-on: ubuntu-20.04
 
     steps:
