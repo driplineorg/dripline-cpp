@@ -137,7 +137,7 @@ jobs:
             build_examples=FALSE
             enable_testing=FALSE
           tags: driplineorg/dripline-cpp:gha_test  # todo: how to make this depend on the tag for releases
-          platforms: linux/amd64 #,linux/arm7,linux/arm64
+          platforms: linux/amd64,linux/arm/v7,linux/arm64
       - name: Image digest
         run: >
           echo ${{ steps.build_push.outputs.digest }}
@@ -177,7 +177,7 @@ jobs:
             build_examples=TRUE
             enable_testing=TRUE
           tags: driplineorg/dripline-cpp:gha_test-dev  # todo: how to make this depend on the tag for releases
-          platforms: linux/amd64 #,linux/arm7,linux/arm64
+          platforms: linux/amd64,linux/armv7,linux/arm64
       - name: Image digest
         run: >
           echo ${{ steps.build_push.outputs.digest }}
