@@ -25,13 +25,13 @@ jobs:
       - name: Build
         run: |
           cd /home/runner/work/dripline-cpp/dripline-cpp
-          docker build 
-            --build-arg img_repo=python 
-            --build-arg img_tag=3.8.7-buster 
-            --build-arg build_type=Debug 
-            --build-arg build_examples=TRUE 
-            --build-arg enable_testing=TRUE 
-            --tag driplineorg/dripline-cpp:test
+          docker build \
+            --build-arg img_repo=python \
+            --build-arg img_tag=3.8.7-buster \
+            --build-arg build_type=Debug \
+            --build-arg build_examples=TRUE \
+            --build-arg enable_testing=TRUE \
+            --tag driplineorg/dripline-cpp:test \
             .
           docker run driplineorg/dripline-cpp:test /usr/local/testing/run_tests
 #        id: build
