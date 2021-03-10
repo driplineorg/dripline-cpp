@@ -2,12 +2,38 @@ name: Publish
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, feature/ghactions ]
     tags: 'v*.*.*'
 
   workflow_dispatch:
 
 jobs:
+
+  test_docker:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout the repo 
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        id: setup_buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Build
+        id: build
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: false
+          build-args: |
+            img_repo=python
+            img_tag=3.8.7-buster
+            build_type=Release
+            build_examples=TRUE
+            enable_testing=FALSE
+          platforms: linux/amd64
 
   test_macos:
     runs-on: macos-10.15
@@ -104,7 +130,7 @@ jobs:
 
   release:
     runs-on: ubuntu-20.04
-    needs: [test_linux_clang, test_linux_gcc, test_macos]
+    needs: [test_docker, test_linux_clang, test_linux_gcc, test_macos]
     steps:
       - name: Checkout the repo 
         uses: actions/checkout@v2
@@ -116,7 +142,8 @@ jobs:
         with:
           images: driplineorg/dripline-cpp
           tag-sha: false
-          tag-semver: {{raw}}
+          tag-semver: |
+            {{raw}}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
@@ -151,7 +178,7 @@ jobs:
 
   dev:
     runs-on: ubuntu-20.04
-    needs: [test_linux_clang, test_linux_gcc, test_macos]
+    needs: [test_docker, test_linux_clang, test_linux_gcc, test_macos]
     steps:
       - name: Checkout the repo 
         uses: actions/checkout@v2
@@ -163,7 +190,8 @@ jobs:
         with:
           images: driplineorg/dripline-cpp
           tag-sha: false
-          tag-semver: {{raw}}
+          tag-semver: |
+            {{raw}}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
@@ -191,7 +219,7 @@ jobs:
             build_examples=TRUE
             enable_testing=TRUE
           tags: ${{ steps.docker_meta.outputs.tags }}
-          platforms: linux/amd64,linux/armv7,linux/arm64
+          platforms: linux/amd64,linux/arm/v7,linux/arm64
       - name: Image digest
         run: >
           echo ${{ steps.build_push.outputs.digest }}
@@ -224,7 +252,7 @@ jobs:
               export OUTPUT_LOCATION=main
           elif [[ $GITHUB_REF == refs/heads/* ]]; then
               suffix=${GITHUB_REF#"refs/heads/"}
-              suffix=$(echo $suffix | tr '/' '_')
+              suffix=$(echo $suffix | tr '/' '-')
               echo "Branch is $GITHUB_REF; directory will be $suffix"
               export OUTPUT_LOCATION=branches/$suffix
           elif [[ $GITHUB_REF == refs/tags/* ]]; then
