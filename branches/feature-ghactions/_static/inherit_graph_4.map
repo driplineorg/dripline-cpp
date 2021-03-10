@@ -1,0 +1,5 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" title=" " alt="" coords="5,31,129,57"/>
+<area shape="rect" id="node2" href="$classdripline_1_1connection__error.html" title="Error indicating a problem with the connection to the broker." alt="" coords="177,5,308,32"/>
+<area shape="rect" id="node3" href="$classdripline_1_1dripline__error.html" title="Dripline&#45;specific errors." alt="" coords="188,56,297,83"/>
+</map>

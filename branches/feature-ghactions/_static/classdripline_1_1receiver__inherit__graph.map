@@ -1,0 +1,6 @@
+<map id="receiver" name="receiver">
+<area shape="rect" id="node1" title="A receiver is able to collect Dripline message chunks and reassemble them into a complete Dripline me..." alt="" coords="5,131,231,413"/>
+<area shape="rect" id="node3" href="$classdripline_1_1concurrent__receiver.html" title="Receives and processes messages concurrently." alt="" coords="7,461,229,685"/>
+<area shape="rect" id="node2" title=" " alt="" coords="72,5,164,83"/>
+<area shape="rect" id="node4" href="$classdripline_1_1listener__receiver.html" title="Convenience class to bring together listener and concurrent_receiver." alt="" coords="40,733,196,869"/>
+</map>

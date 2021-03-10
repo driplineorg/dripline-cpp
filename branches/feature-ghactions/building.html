@@ -1,0 +1,208 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Building Dripline &#8212; Dripline-Cpp v?.?.? documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="shortcut icon" href="_static/DL3Logo.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Dripline Agent" href="dl_agent.html" />
+    <link rel="prev" title="Getting Started" href="getting_started.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="building-dripline">
+<span id="building"></span><h1>Building Dripline<a class="headerlink" href="#building-dripline" title="Permalink to this headline">¶</a></h1>
+<p>Dripline is typically built either in the <a class="reference internal" href="#standalone-option"><span class="std std-ref">Standalone</span></a> configuration,
+or as a <a class="reference internal" href="#submodule-option"><span class="std std-ref">Submodule</span></a>.</p>
+<p>For either build option, a number of <a class="reference internal" href="#build-options"><span class="std std-ref">build options</span></a> can be used to customize the build.</p>
+<div class="section" id="build-options">
+<span id="id1"></span><h2>Build Options<a class="headerlink" href="#build-options" title="Permalink to this headline">¶</a></h2>
+<p>Dripline build options include:</p>
+<dl class="glossary docutils">
+<dt id="term-dripline-build-examples-bool"><code class="docutils literal notranslate"><span class="pre">Dripline_BUILD_EXAMPLES</span></code> (BOOL)</dt>
+<dd>if ON, builds the example applications</dd>
+<dt id="term-1"><code class="docutils literal notranslate"><span class="pre">Dripline_BUILD_EXAMPLES</span></code> (BOOL)</dt>
+<dd>if ON, builds the example applications</dd>
+<dt id="term-dripline-build-python-bool"><code class="docutils literal notranslate"><span class="pre">Dripline_BUILD_PYTHON</span></code> (BOOL)</dt>
+<dd>if ON, builds utilities used by the Python wrapping</dd>
+<dt id="term-dripline-enable-executables-bool"><code class="docutils literal notranslate"><span class="pre">Dripline_ENABLE_EXECUTABLES</span></code> (BOOL)</dt>
+<dd>if ON, builds the Dripline executables</dd>
+<dt id="term-dripline-enable-testing-bool"><code class="docutils literal notranslate"><span class="pre">Dripline_ENABLE_TESTING</span></code> (BOOL)</dt>
+<dd>if ON, builds the testing application</dd>
+<dt id="term-dripline-max-payload-size-int"><code class="docutils literal notranslate"><span class="pre">Dripline_MAX_PAYLOAD_SIZE</span></code> (INT)</dt>
+<dd>Maximum payload size in bytes</dd>
+<dt id="term-dripline-python-throw-reply-keyword"><code class="docutils literal notranslate"><span class="pre">Dripline_PYTHON_THROW_REPLY_KEYWORD</span></code></dt>
+<dd>keyword used by the python wrapping that indicates that the thrown object is a reply message to be sent</dd>
+</dl>
+<p>From the built-in CMake options, users may be interested in adjusting the build type
+to control the level of compiler optimization and terminal output.
+The CMake option and possible values are:</p>
+<dl class="glossary docutils">
+<dt id="term-cmake-build-type-string-debug-release"><code class="docutils literal notranslate"><span class="pre">CMAKE_BUILD_TYPE</span></code> (STRING: [Debug || Release])</dt>
+<dd><dl class="first last docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">Debug</span></code></dt>
+<dd>prints info and debug messages, and can print trace messages; low compiler optimization; debugging symbols included</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">Release</span></code></dt>
+<dd>only prints warning and error messages; highly optimized, and no debugging symbols included</dd>
+</dl>
+</dd>
+</dl>
+<p>You can additionally define preprocessor macros that are used directly in the code:</p>
+<dl class="glossary docutils">
+<dt id="term-dripline-auth-file-path"><code class="docutils literal notranslate"><span class="pre">DRIPLINE_AUTH_FILE</span></code> (PATH)</dt>
+<dd>specifies the location and filename of the default authentication file</dd>
+</dl>
+</div>
+<div class="section" id="standalone-option">
+<span id="id2"></span><h2>Standalone Option<a class="headerlink" href="#standalone-option" title="Permalink to this headline">¶</a></h2>
+<p>In standalone mode, one compiles only the dripline-cpp repository and its dependencies.
+This option is best for testing, providing access to commandline tools, or when a derrived software product uses dripline-cpp as an external dependency.
+This is the approach used in the Dockerfile, which is included in the dripline-cpp repository and used to automatically build dripline-cpp container images.
+The steps are:</p>
+<ol class="arabic">
+<li><p class="first">Clone the repository:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">driplineorg</span><span class="o">/</span><span class="n">dripline</span><span class="o">-</span><span class="n">cpp</span> <span class="o">--</span><span class="n">recurse</span><span class="o">-</span><span class="n">submodules</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Create a build directory:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">dripline</span><span class="o">-</span><span class="n">cpp</span>
+<span class="n">mkdir</span> <span class="n">build</span>
+<span class="n">cd</span> <span class="n">build</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Run CMake:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cmake</span> <span class="o">..</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Build and install:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">install</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</div>
+<div class="section" id="submodule-option">
+<span id="id3"></span><h2>Submodule Option<a class="headerlink" href="#submodule-option" title="Permalink to this headline">¶</a></h2>
+<p>The submodule build configuration is for when the dripline-cpp is being include as a git submodule in some derived package’s repository.
+This option is best when you want to track and pin the exact dripline-cpp version to be used in another project and you want to build them together using cmake.
+This is the approach used in the dripline-python package, which builds a python library on top of dripline-cpp.
+The steps for this mode are:</p>
+<ol class="arabic">
+<li><p class="first">Go to the top-level directory of the parent pacakge in which you want to include dripline-cpp:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">my_package</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Add the submodule:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">submodule</span> <span class="n">add</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">driplineorg</span><span class="o">/</span><span class="n">dripline</span><span class="o">-</span><span class="n">cpp</span> <span class="p">[</span><span class="n">desired</span> <span class="n">path</span><span class="p">]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Set the desired dripline build options from the parent package’s CMakeLists.txt file.</p>
+</li>
+</ol>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/DL3Logo.png" alt="Logo"/>
+            </a></p>
+<h1 class="logo"><a href="index.html">Dripline-Cpp</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#build-options">Build Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#standalone-option">Standalone Option</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#submodule-option">Submodule Option</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dl_agent.html">Agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dl_mon.html">Monitor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="library.html">Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="offline.html">Offline &amp; No-Connection</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="getting_started.html" title="previous chapter">Getting Started</a></li>
+      <li>Next: <a href="dl_agent.html" title="next chapter">Dripline Agent</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Dripline-Cpp Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+      |
+      <a href="_sources/building.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

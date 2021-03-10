@@ -1,0 +1,269 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Dripline Library &#8212; Dripline-Cpp v?.?.? documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="shortcut icon" href="_static/DL3Logo.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Configuration" href="configuration.html" />
+    <link rel="prev" title="Dripline Monitor" href="dl_mon.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="dripline-library">
+<span id="library"></span><h1>Dripline Library<a class="headerlink" href="#dripline-library" title="Permalink to this headline">¶</a></h1>
+<p>The “end-user” aspects of the dripline-cpp API can be divided into core dripline implementations:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#agent"><span class="std std-ref">Agent</span></a>: sends messages (primarily used by the <a class="reference internal" href="#agent"><span class="std std-ref">Agent</span></a>)</li>
+<li><a class="reference internal" href="#endpoint"><span class="std std-ref">Endpoint</span></a>: receives messages and acts on them</li>
+<li><a class="reference internal" href="#service"><span class="std std-ref">Service</span></a>: primary connection with the broker; can have child endpoints and is an endpoint itself</li>
+<li><a class="reference internal" href="#messages"><span class="std std-ref">Messages</span></a>: concrete implementations of the request, reply, and alert message concepts</li>
+</ul>
+<p>and useful extensions:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#hub"><span class="std std-ref">Hub</span></a>: service that dispatches requests to C++ functions (or function-like objects)</li>
+<li><a class="reference internal" href="#monitor"><span class="std std-ref">Monitor</span></a>: listens to messages on a mesh (primarily used by the <a class="reference internal" href="#monitor"><span class="std std-ref">Monitor</span></a>)</li>
+<li><a class="reference internal" href="#relayer"><span class="std std-ref">Relayer</span></a>: asynchronously sends messages</li>
+</ul>
+<p>There are also a number of classes that implement various features of the above classes:</p>
+<ul class="simple">
+<li><a class="reference internal" href="#core"><span class="std std-ref">Core</span></a>: interface for the RabbitMQ client library; interface includes interacting with the broker and for sending and receiving messages</li>
+<li><a class="reference internal" href="#heartbeater"><span class="std std-ref">Heartbeater</span></a>: implements the heartbeat behavior</li>
+<li><a class="reference internal" href="#listeners"><span class="std std-ref">Listeners</span></a>: listen for AMQP messages (dripline message chunks or whole messages)</li>
+<li><a class="reference internal" href="#receivers"><span class="std std-ref">Receivers</span></a>: collect dripline message chunks and assembles them into complete messages</li>
+<li><a class="reference internal" href="#scheduler"><span class="std std-ref">Scheduler</span></a>: executes scheduled events</li>
+<li><a class="reference internal" href="#specifier"><span class="std std-ref">Specifier</span></a>: parses specifier strings</li>
+<li><a class="reference internal" href="#version-store"><span class="std std-ref">Version Store</span></a>: stores version information for a particular application context</li>
+</ul>
+<div class="section" id="core-behavior">
+<h2>Core Behavior<a class="headerlink" href="#core-behavior" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="agent">
+<span id="id1"></span><h3>Agent<a class="headerlink" href="#agent" title="Permalink to this headline">¶</a></h3>
+<p>An <code class="docutils literal notranslate"><span class="pre">agent</span></code> takes command-line arguments and sends messages accordingly.  It is primarily used
+for the <a class="reference internal" href="dl_agent.html#dl-agent"><span class="std std-ref">Dripline Agent</span></a> application.</p>
+</div>
+<div class="section" id="endpoint">
+<span id="id2"></span><h3>Endpoint<a class="headerlink" href="#endpoint" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">endpoint</span></code> is the basic dripline object capable of handling requests.</p>
+<p>An implementation of a particular endpoint should be a class that inherits from <code class="docutils literal notranslate"><span class="pre">endpoint</span></code>.</p>
+</div>
+<div class="section" id="service">
+<span id="id3"></span><h3>Service<a class="headerlink" href="#service" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">service</span></code> class implements the fundamental “service” concept in dripline:
+it’s the basic work unit in a dripline mesh.  It maintains the connection to the broker
+that’s used by one or more endpoints, and it is itself an endpoint.</p>
+<p>It’s range of capabilities are largely defined by the classes it inherits from:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">core</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">endpoint</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">listener_receiver</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">heartbeater</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">scheduler</span></code></li>
+</ul>
+<p>The interface for running a service consists of three functions:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">start()</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">listen()</span></code> (blocking)</li>
+<li><code class="docutils literal notranslate"><span class="pre">stop()</span></code></li>
+</ul>
+<p>A service can have both synchronous and asynchronous child endpoints.  With the former, requests are
+handled synchronously with the recieving of messages and with processing messages bound for itself.
+With the latter, requests are passed to the appropriate endpoint, which handles them in its own thread.</p>
+</div>
+<div class="section" id="messages">
+<span id="id4"></span><h3>Messages<a class="headerlink" href="#messages" title="Permalink to this headline">¶</a></h3>
+<p>The message classes encapsulate the information in dripline messages as C++ objects.</p>
+<p>The set of classes comprise the base class, <code class="docutils literal notranslate"><span class="pre">message</span></code>, and the concrete classes <code class="docutils literal notranslate"><span class="pre">msg_alert</span></code>,
+<code class="docutils literal notranslate"><span class="pre">msg_reply</span></code>, and <code class="docutils literal notranslate"><span class="pre">msg_request</span></code>.</p>
+<p>Message objects know how to convert between themselves and AMQP message objects.</p>
+</div>
+</div>
+<div class="section" id="useful-extensions">
+<h2>Useful Extensions<a class="headerlink" href="#useful-extensions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="hub">
+<span id="id5"></span><h3>Hub<a class="headerlink" href="#hub" title="Permalink to this headline">¶</a></h3>
+<p>A hub is a service that is setup to receive requests and maps specifiers to C++ handler functions.
+This allows you to, for example, receive requests intended for a variety of destinations within
+a single application and have the requests distributed accordingly.</p>
+<img alt="_images/HubDiagram.png" src="_images/HubDiagram.png" />
+</div>
+<div class="section" id="monitor">
+<span id="id6"></span><h3>Monitor<a class="headerlink" href="#monitor" title="Permalink to this headline">¶</a></h3>
+<p>A <code class="docutils literal notranslate"><span class="pre">monitor</span></code> listens for messages sent to a particular set of keys and prints them to the terminal.</p>
+<p>It is used primarily for the <a class="reference internal" href="dl_mon.html#dl-mon"><span class="std std-ref">Dripline Monitor</span></a> application.</p>
+</div>
+<div class="section" id="relayer">
+<span id="id7"></span><h3>Relayer<a class="headerlink" href="#relayer" title="Permalink to this headline">¶</a></h3>
+<p>A <code class="docutils literal notranslate"><span class="pre">relayer</span></code> allows a user to asynchronously send messages.  Replies can be waited on in a thread-safe way
+(either in the user’s thread or by setting up a thread to wait and then do something once it arrives)
+or ignored.</p>
+</div>
+</div>
+<div class="section" id="other-classes">
+<h2>Other Classes<a class="headerlink" href="#other-classes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="core">
+<span id="id8"></span><h3>Core<a class="headerlink" href="#core" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">core</span></code> class provides an interface for the basic AMQP functionality.  It wraps the
+more general RabbitMQ API in a dripline-specific interface.</p>
+<p>The class includes a number of static utility functions for interacting with the broker.</p>
+<p>It further includes a complete interface for sending messages.</p>
+</div>
+<div class="section" id="heartbeater">
+<span id="id9"></span><h3>Heartbeater<a class="headerlink" href="#heartbeater" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">heartbeater</span></code> class is used by <code class="docutils literal notranslate"><span class="pre">service</span></code> or any other client code
+to repeatedly sends a heartbeat on a particular time interval.</p>
+<p>The heartbeat is an alert sent to a pre-determined routing key, which is given as a parameter to the
+<code class="docutils literal notranslate"><span class="pre">execute()</span></code> function.  The interval for sending the heartbeats is <code class="docutils literal notranslate"><span class="pre">f_heartbeat_interval_s</span></code>,
+which is in seconds.  The default interval is 60 s.</p>
+</div>
+<div class="section" id="listeners">
+<span id="id10"></span><h3>Listeners<a class="headerlink" href="#listeners" title="Permalink to this headline">¶</a></h3>
+<p>A listener is a class capable of listening on an AMQP channel for AMQP messages,
+which represent either a dripline message chunk or an entire dripline message.
+The <code class="docutils literal notranslate"><span class="pre">listener</span></code> class provides the basic framework for doing that.</p>
+<p>The typical use case involves at least two threads:
+1. A listener gets messages from the AMQP channel (using <code class="docutils literal notranslate"><span class="pre">listen_on_queue()</span></code>,</p>
+<blockquote>
+<div>e.g. <code class="docutils literal notranslate"><span class="pre">service</span></code> or <code class="docutils literal notranslate"><span class="pre">endpoint_listener_receiver</span></code>) and
+calls <code class="docutils literal notranslate"><span class="pre">receiver::handle_message_chunk()</span></code></div></blockquote>
+<ol class="arabic simple" start="2">
+<li><dl class="first docutils">
+<dt>A receiver has a timing thread waiting for multiple message chunks (if relevant);</dt>
+<dd>when the message is complete, <code class="docutils literal notranslate"><span class="pre">receiver::process_message()</span></code> is called.</dd>
+</dl>
+</li>
+</ol>
+<p><code class="docutils literal notranslate"><span class="pre">listener_receiver</span></code> is a convenience class that brings together <code class="docutils literal notranslate"><span class="pre">listener</span></code> and <code class="docutils literal notranslate"><span class="pre">concurrent_receiver</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">endpoint_listener_receiver</span></code> is a decorator class for a “plain” endpoint:
+it adds <code class="docutils literal notranslate"><span class="pre">listener_receiver</span></code> capabilities, allowing it to act as an asynchronous endpoint of a <code class="docutils literal notranslate"><span class="pre">service</span></code>.</p>
+</div>
+<div class="section" id="receivers">
+<span id="id11"></span><h3>Receivers<a class="headerlink" href="#receivers" title="Permalink to this headline">¶</a></h3>
+<p>A receiver is able to collect Dripline message chunks and reassemble them into a complete dripline message.</p>
+<p>Dripline messages can be broken up into multiple chunks, each of which is transported as an AMQP message.
+A receiver is responsible for handling message chunks, storing incomplete dripline messages, and eventually
+processing complete dripline messages.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">receiver</span></code> class contains an interface specifically for users waiting to receive reply messages: <cite>wait_for_reply()</cite>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">concurrent_receiver</span></code> class allows client code to concurrently receive and process messages
+(i.e. in separate threads).</p>
+</div>
+<div class="section" id="scheduler">
+<span id="id12"></span><h3>Scheduler<a class="headerlink" href="#scheduler" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">scheduler</span></code> executes scheduled events.
+An event is an executable object (e.g. a std::function object, or a lambda)
+with the signature <cite>void ()</cite>.</p>
+<p>Events can be one-off, scheduled for a particular time, or they can be repeating,
+scheduled with an interval starting at a particular time.  The default start time for
+repeating events is “now.”</p>
+</div>
+<div class="section" id="specifier">
+<span id="id13"></span><h3>Specifier<a class="headerlink" href="#specifier" title="Permalink to this headline">¶</a></h3>
+<p>Message specifier strings of the form <code class="docutils literal notranslate"><span class="pre">&quot;my.favorite.command&quot;</span></code> are tokenized
+into an array of strings: <code class="docutils literal notranslate"><span class="pre">[&quot;my&quot;,</span> <span class="pre">&quot;favorite&quot;,</span> <span class="pre">&quot;command&quot;]</span></code>.</p>
+</div>
+<div class="section" id="version-store">
+<span id="id14"></span><h3>Version Store<a class="headerlink" href="#version-store" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">version_store</span></code> is a singleton class to store all version information relevant in any particular context.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/DL3Logo.png" alt="Logo"/>
+            </a></p>
+<h1 class="logo"><a href="index.html">Dripline-Cpp</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="building.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dl_agent.html">Agent</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dl_mon.html">Monitor</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Library</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#core-behavior">Core Behavior</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#useful-extensions">Useful Extensions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#other-classes">Other Classes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authentication.html">Authentication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="offline.html">Offline &amp; No-Connection</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="dl_mon.html" title="previous chapter">Dripline Monitor</a></li>
+      <li>Next: <a href="configuration.html" title="next chapter">Configuration</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Dripline-Cpp Authors.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+      |
+      <a href="_sources/library.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

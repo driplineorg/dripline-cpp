@@ -1,0 +1,9 @@
+<map id="core" name="core">
+<area shape="rect" id="node1" title="Basic AMQP interactions, including sending messages and interacting with AMQP channels." alt="" coords="275,5,449,391"/>
+<area shape="rect" id="node2" href="$classdripline_1_1monitor.html" title="Listens for messages sent to a particular set of keys and prints them." alt="" coords="5,490,231,729"/>
+<area shape="rect" id="node3" href="$classdripline_1_1relayer.html" title="Asynchronous message sending." alt="" coords="255,512,469,707"/>
+<area shape="rect" id="node4" href="$classdripline_1_1service.html" title="Consumer of Dripline messages on a particular queue." alt="" coords="493,439,719,780"/>
+<area shape="rect" id="node5" href="$classdripline_1_1hub.html" title="Service class aimed at adding a Dripline API to an existing codebase." alt="" coords="281,828,469,1125"/>
+<area shape="rect" id="node6" href="$classdripline_1_1oscillator__service__endpoints.html" title=" " alt="" coords="493,879,719,1074"/>
+<area shape="rect" id="node7" href="$classdripline_1_1simple__service.html" title=" " alt="" coords="743,887,899,1067"/>
+</map>
