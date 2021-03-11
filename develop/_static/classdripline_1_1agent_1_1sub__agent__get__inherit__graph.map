@@ -1,4 +1,5 @@
 <map id="agent::sub_agent_get" name="agent::sub_agent_get">
-<area shape="rect" id="node2" href="$classdripline_1_1agent_1_1sub__agent__request.html" title="{sub_agent_request\n||+ sub_agent_request()\l+ ~sub_agent_request()\l+ create_and_send_message()\l+ create_request()\l}" alt="" coords="5,204,228,325"/>
-<area shape="rect" id="node3" href="$classdripline_1_1agent_1_1sub__agent.html" title="{sub_agent\n|# f_agent\l|+ sub_agent()\l+ ~sub_agent()\l+ execute()\l+ execute()\l+ create_and_send_message()\l+ create_and_send_message()\l}" alt="" coords="5,5,228,156"/>
+<area shape="rect" id="node1" title=" " alt="" coords="35,373,198,480"/>
+<area shape="rect" id="node2" href="$classdripline_1_1agent_1_1sub__agent__request.html" title=" " alt="" coords="5,204,228,325"/>
+<area shape="rect" id="node3" href="$classdripline_1_1agent_1_1sub__agent.html" title=" " alt="" coords="5,5,228,156"/>
 </map>

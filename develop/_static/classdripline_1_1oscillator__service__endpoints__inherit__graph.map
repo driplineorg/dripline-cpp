@@ -1,8 +1,10 @@
 <map id="oscillator_service_endpoints" name="oscillator_service_endpoints">
-<area shape="rect" id="node2" href="$classdripline_1_1service.html" title="Consumer of Dripline messages on a particular queue. " alt="" coords="529,512,755,853"/>
-<area shape="rect" id="node3" href="$classdripline_1_1core.html" title="Basic AMQP interactions, including sending messages and interacting with AMQP channels. " alt="" coords="5,42,180,427"/>
-<area shape="rect" id="node4" href="$classdripline_1_1endpoint.html" title="Basic Dripline object capable of receiving and acting on messages. " alt="" coords="205,5,431,464"/>
-<area shape="rect" id="node5" href="$classdripline_1_1listener__receiver.html" title="Convenience class to bring together listener and concurrent_receiver. " alt="" coords="456,167,612,303"/>
-<area shape="rect" id="node6" href="$classdripline_1_1heartbeater.html" title="A heartbeater repeatedly sends an alert on a particular time interval. " alt="" coords="637,123,863,347"/>
-<area shape="rect" id="node7" href="$classdripline_1_1scheduler.html" title="{scheduler\&lt;\&gt;\n|+ f_scheduler_mutex\l+ f_executor_mutex\l+ f_cv\l+ f_scheduler_thread\l|+ scheduler()\l+ scheduler()\l+ scheduler()\l+ ~scheduler()\l+ operator=()\l+ operator=()\l+ schedule()\l+ schedule()\l+ unschedule()\l+ execute()\l+ snake_case_mv_accessible()\l+ snake_case_mv_accessible()\l+ snake_case_mv_referrable\l_const()\l+ snake_case_mv_referrable\l_const()\l}" alt="" coords="887,64,1114,405"/>
+<area shape="rect" id="node1" title=" " alt="" coords="525,901,751,1096"/>
+<area shape="rect" id="node2" href="$classdripline_1_1service.html" title="Consumer of Dripline messages on a particular queue." alt="" coords="525,512,751,853"/>
+<area shape="rect" id="node3" href="$classdripline_1_1core.html" title="Basic AMQP interactions, including sending messages and interacting with AMQP channels." alt="" coords="5,42,180,427"/>
+<area shape="rect" id="node4" href="$classdripline_1_1endpoint.html" title="Basic Dripline object capable of receiving and acting on messages." alt="" coords="204,5,429,464"/>
+<area shape="rect" id="node5" href="$classdripline_1_1listener__receiver.html" title="Convenience class to bring together listener and concurrent_receiver." alt="" coords="453,167,609,303"/>
+<area shape="rect" id="node6" href="$classdripline_1_1heartbeater.html" title="A heartbeater repeatedly sends an alert on a particular time interval." alt="" coords="633,123,859,347"/>
+<area shape="rect" id="node7" href="$classdripline_1_1scheduler.html" title=" " alt="" coords="883,64,1108,405"/>
+<area shape="rect" id="node8" title=" " alt="" coords="1131,189,1286,281"/>
 </map>

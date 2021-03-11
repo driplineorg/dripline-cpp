@@ -1,4 +1,5 @@
 <map id="oscillator_ep_quadrature" name="oscillator_ep_quadrature">
-<area shape="rect" id="node2" href="$classdripline_1_1oscillator__ep.html" title="{oscillator_ep\n|# f_osc_svc\l|+ oscillator_ep()\l+ ~oscillator_ep()\l}" alt="" coords="48,512,189,604"/>
-<area shape="rect" id="node3" href="$classdripline_1_1endpoint.html" title="Basic Dripline object capable of receiving and acting on messages. " alt="" coords="5,5,232,464"/>
+<area shape="rect" id="node1" title=" " alt="" coords="9,652,227,759"/>
+<area shape="rect" id="node2" href="$classdripline_1_1oscillator__ep.html" title=" " alt="" coords="47,512,189,604"/>
+<area shape="rect" id="node3" href="$classdripline_1_1endpoint.html" title="Basic Dripline object capable of receiving and acting on messages." alt="" coords="5,5,231,464"/>
 </map>

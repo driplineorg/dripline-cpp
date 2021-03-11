@@ -1,7 +1,16 @@
 <map id="relayer.cc" name="relayer.cc">
-<area shape="rect" id="node2" href="$relayer_8hh.html" title="relayer.hh" alt="" coords="261,80,347,107"/>
-<area shape="rect" id="node10" href="$dripline__exceptions_8hh.html" title="dripline_exceptions.hh" alt="" coords="499,80,669,107"/>
-<area shape="rect" id="node3" href="$core_8hh.html" title="core.hh" alt="" coords="131,155,202,181"/>
-<area shape="rect" id="node5" href="$receiver_8hh.html" title="receiver.hh" alt="" coords="342,155,437,181"/>
-<area shape="rect" id="node6" href="$dripline__api_8hh.html" title="dripline_api.hh" alt="" coords="579,229,698,256"/>
+<area shape="rect" id="node1" title=" " alt="" coords="692,5,777,32"/>
+<area shape="rect" id="node2" href="$relayer_8hh.html" title=" " alt="" coords="261,80,347,107"/>
+<area shape="rect" id="node10" href="$dripline__exceptions_8hh.html" title=" " alt="" coords="499,80,669,107"/>
+<area shape="rect" id="node12" title=" " alt="" coords="693,80,776,107"/>
+<area shape="rect" id="node13" title=" " alt="" coords="801,80,885,107"/>
+<area shape="rect" id="node14" title=" " alt="" coords="909,80,976,107"/>
+<area shape="rect" id="node3" href="$core_8hh.html" title=" " alt="" coords="131,155,202,181"/>
+<area shape="rect" id="node4" title=" " alt="" coords="5,229,69,256"/>
+<area shape="rect" id="node5" href="$receiver_8hh.html" title=" " alt="" coords="342,155,437,181"/>
+<area shape="rect" id="node7" title=" " alt="" coords="93,229,205,256"/>
+<area shape="rect" id="node8" title=" " alt="" coords="230,229,389,256"/>
+<area shape="rect" id="node9" title=" " alt="" coords="413,229,555,256"/>
+<area shape="rect" id="node6" href="$dripline__api_8hh.html" title=" " alt="" coords="579,229,698,256"/>
+<area shape="rect" id="node11" title=" " alt="" coords="621,155,765,181"/>
 </map>

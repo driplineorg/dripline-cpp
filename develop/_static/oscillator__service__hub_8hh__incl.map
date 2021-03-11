@@ -1,7 +1,13 @@
 <map id="oscillator_service_hub.hh" name="oscillator_service_hub.hh">
-<area shape="rect" id="node2" href="$hub_8hh.html" title="hub.hh" alt="" coords="150,95,217,121"/>
-<area shape="rect" id="node7" href="$oscillator_8hh.html" title="oscillator.hh" alt="" coords="471,95,573,121"/>
-<area shape="rect" id="node3" href="$service_8hh.html" title="service.hh" alt="" coords="5,169,95,196"/>
-<area shape="rect" id="node4" href="$dripline__exceptions_8hh.html" title="dripline_exceptions.hh" alt="" coords="48,244,217,271"/>
-<area shape="rect" id="node5" href="$dripline__api_8hh.html" title="dripline_api.hh" alt="" coords="173,319,292,345"/>
+<area shape="rect" id="node1" title=" " alt="" coords="225,5,361,47"/>
+<area shape="rect" id="node2" href="$hub_8hh.html" title=" " alt="" coords="150,95,217,121"/>
+<area shape="rect" id="node7" href="$oscillator_8hh.html" title=" " alt="" coords="471,95,573,121"/>
+<area shape="rect" id="node3" href="$service_8hh.html" title=" " alt="" coords="5,169,95,196"/>
+<area shape="rect" id="node4" href="$dripline__exceptions_8hh.html" title=" " alt="" coords="48,244,217,271"/>
+<area shape="rect" id="node6" title=" " alt="" coords="171,169,295,196"/>
+<area shape="rect" id="node5" href="$dripline__api_8hh.html" title=" " alt="" coords="173,319,292,345"/>
+<area shape="rect" id="node8" title=" " alt="" coords="371,169,535,196"/>
+<area shape="rect" id="node9" title=" " alt="" coords="559,169,626,196"/>
+<area shape="rect" id="node10" title=" " alt="" coords="651,169,729,196"/>
+<area shape="rect" id="node11" title=" " alt="" coords="753,169,813,196"/>
 </map>

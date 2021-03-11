@@ -1,3 +1,4 @@
 <map id="throw_reply" name="throw_reply">
+<area shape="rect" id="node1" title="Object that can be thrown while processing a request to send a reply." alt="" coords="5,5,160,259"/>
 <area shape="rect" id="node2" href="$classdripline_1_1reply__cache.html" title="A singleton throw_reply object used to transfer throw_reply information to C++ from other implementat..." alt="" coords="15,307,151,443"/>
 </map>
