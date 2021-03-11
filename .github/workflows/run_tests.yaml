@@ -33,7 +33,7 @@ jobs:
             --build-arg enable_testing=TRUE \
             --tag driplineorg/dripline-cpp:test \
             .
-          docker run driplineorg/dripline-cpp:test /usr/local/testing/run_tests
+          docker run driplineorg/dripline-cpp:test /usr/local/build/testing/run_tests
 #        id: build
 #        uses: docker/build-push-action@v2
 #        with:
