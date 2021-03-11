@@ -1,11 +1,11 @@
 ARG img_repo=python
 ARG img_tag=3.8-buster
 
+FROM ${img_repo}:${img_tag}
+
 ARG build_type=Release
 ARG build_examples=FALSE
 ARG enable_testing=FALSE
-
-FROM ${img_repo}:${img_tag}
 
 # Most dependencies
 
