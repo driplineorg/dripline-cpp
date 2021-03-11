@@ -55,6 +55,13 @@ add_definitions( -DDL_MAX_PAYLOAD_SIZE=${Dripline_MAX_PAYLOAD_SIZE} )
 set( PUBLIC_EXT_LIBS )
 set( PRIVATE_EXT_LIBS )
 
+# Threads are required by: test_scheduler
+if( Dripline_ENABLE_TESTING )
+    find_package( Threads REQUIRED )
+    list( APPEND PUBLIC_EXT_LIBS Threads::Threads )
+    set( THREADS_PREFER_PTHREAD_FLAG TRUE )
+endif()
+
 
 ####################
 # SimpleAmqpClient #
