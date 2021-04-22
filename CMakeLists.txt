@@ -6,7 +6,7 @@ cmake_minimum_required (VERSION 3.12)
 #########
 
 cmake_policy( SET CMP0048 NEW ) # version in project()
-project( Dripline VERSION 2.6.3 )
+project( Dripline VERSION 2.7.0 )
 
 list( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/scarab/cmake )
 
@@ -54,6 +54,13 @@ add_definitions( -DDL_MAX_PAYLOAD_SIZE=${Dripline_MAX_PAYLOAD_SIZE} )
 
 set( PUBLIC_EXT_LIBS )
 set( PRIVATE_EXT_LIBS )
+
+# Threads are required by: test_scheduler
+if( Dripline_ENABLE_TESTING )
+    find_package( Threads REQUIRED )
+    list( APPEND PUBLIC_EXT_LIBS Threads::Threads )
+    set( THREADS_PREFER_PTHREAD_FLAG TRUE )
+endif()
 
 
 ####################
