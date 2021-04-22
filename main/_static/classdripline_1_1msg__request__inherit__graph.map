@@ -1,3 +1,4 @@
 <map id="msg_request" name="msg_request">
-<area shape="rect" id="node2" href="$classdripline_1_1message.html" title="Contains all of the information common to all types of Dripline messages. " alt="" coords="5,5,232,361"/>
+<area shape="rect" id="node1" title="Request message class." alt="" coords="5,409,231,736"/>
+<area shape="rect" id="node2" href="$classdripline_1_1message.html" title="Contains all of the information common to all types of Dripline messages." alt="" coords="5,5,231,361"/>
 </map>

@@ -1,17 +1,19 @@
 
-<!DOCTYPE html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dripline Agent &#8212; Dripline-Cpp v2.6.3 documentation</title>
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Dripline Agent &#8212; Dripline-Cpp v?.?.? documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="shortcut icon" href="_static/DL3Logo.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -19,7 +21,6 @@
     <link rel="prev" title="Building Dripline" href="building.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  
   
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
@@ -29,8 +30,6 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <div class="section" id="dripline-agent">
@@ -39,8 +38,7 @@
 <div class="section" id="use">
 <h2>Use<a class="headerlink" href="#use" title="Permalink to this headline">¶</a></h2>
 <blockquote>
-<div><p><code class="docutils literal notranslate"><span class="pre">&gt;</span> <span class="pre">dl-agent</span> <span class="pre">[options]</span> <span class="pre">subcommand</span> <span class="pre">routing_key</span> <span class="pre">[value]</span> <span class="pre">[keyword</span> <span class="pre">arguments]</span></code></p>
-</div></blockquote>
+<div><code class="docutils literal notranslate"><span class="pre">&gt;</span> <span class="pre">dl-agent</span> <span class="pre">[options]</span> <span class="pre">subcommand</span> <span class="pre">routing_key</span> <span class="pre">[value]</span> <span class="pre">[keyword</span> <span class="pre">arguments]</span></code></div></blockquote>
 <p>The subcommand and routing key are required.</p>
 <p>Commonly-used options will include the broker (<code class="docutils literal notranslate"><span class="pre">-b,--broker</span></code>, if not specified in the
 authentication file), the specifier (<code class="docutils literal notranslate"><span class="pre">-s,--specifier</span></code>),
@@ -57,11 +55,11 @@ and the values (<code class="docutils literal notranslate"><span class="pre">-v,
 --auth-file TEXT              Set the authentication file path
 --requests-exchange TEXT      Set the name of the requests exchange
 --alerts-exchange TEXT        Set the name of the alerts exchange
---max-payload UINT            Set the maximum payload size <span class="o">(</span><span class="k">in</span> bytes<span class="o">)</span>
+--max-payload UINT            Set the maximum payload size <span class="o">(</span>in bytes<span class="o">)</span>
 --loop-timeout-msdripline.loop-timeout-ms UINT
 --message-wait-msdripline.message-wait-ms UINT
 --heartbeat-routing-key TEXT  Set the first token of heartbeat routing keys: <span class="o">[</span>token<span class="o">]</span>.<span class="o">[</span>origin<span class="o">]</span>
---heartbeat-interval-s UINT   Set the interval between heartbeats <span class="k">in</span> s
+--heartbeat-interval-s UINT   Set the interval between heartbeats in s
 -s,--specifier TEXT           Set the specifier
 -P,--payload TEXT ...         Add values to the payload
 --values TEXT ...             Add ordered values
@@ -81,11 +79,11 @@ and the values (<code class="docutils literal notranslate"><span class="pre">-v,
 <p>The five dripline subcommands correspond to the three request operations,
 and two other message types (reply and alert):</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">get</span></code>    Send an OP_GET request</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">set</span></code>    Send an OP_SET request</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cmd</span></code>    Send an OP_CMD request</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">reply</span></code>  Send a reply</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">alert</span></code>  Send an alert</p></li>
+<li><code class="docutils literal notranslate"><span class="pre">get</span></code>    Send an OP_GET request</li>
+<li><code class="docutils literal notranslate"><span class="pre">set</span></code>    Send an OP_SET request</li>
+<li><code class="docutils literal notranslate"><span class="pre">cmd</span></code>    Send an OP_CMD request</li>
+<li><code class="docutils literal notranslate"><span class="pre">reply</span></code>  Send a reply</li>
+<li><code class="docutils literal notranslate"><span class="pre">alert</span></code>  Send an alert</li>
 </ul>
 </div>
 <div class="section" id="routing-key">
@@ -117,7 +115,6 @@ For example, <code class="docutils literal notranslate"><span class="pre">my.val
 
 
           </div>
-          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -160,23 +157,17 @@ For example, <code class="docutils literal notranslate"><span class="pre">my.val
 </ul>
 </div>
 <div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
+  <h3>Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
-
-
-
-
-
-
-
-
+<script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -185,8 +176,8 @@ For example, <code class="docutils literal notranslate"><span class="pre">my.val
       &copy;2020, Dripline-Cpp Authors.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.5.1</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
       
       |
       <a href="_sources/dl_agent.rst.txt"

@@ -1,5 +1,8 @@
 <map id="hub.cc" name="hub.cc">
-<area shape="rect" id="node2" href="$hub_8hh.html" title="hub.hh" alt="" coords="99,80,166,107"/>
-<area shape="rect" id="node3" href="$service_8hh.html" title="service.hh" alt="" coords="5,155,95,181"/>
-<area shape="rect" id="node4" href="$dripline__exceptions_8hh.html" title="dripline_exceptions.hh" alt="" coords="7,229,176,256"/>
+<area shape="rect" id="node1" title=" " alt="" coords="150,5,214,32"/>
+<area shape="rect" id="node2" href="$hub_8hh.html" title=" " alt="" coords="99,80,166,107"/>
+<area shape="rect" id="node6" title=" " alt="" coords="190,80,273,107"/>
+<area shape="rect" id="node3" href="$service_8hh.html" title=" " alt="" coords="5,155,95,181"/>
+<area shape="rect" id="node4" href="$dripline__exceptions_8hh.html" title=" " alt="" coords="7,229,176,256"/>
+<area shape="rect" id="node5" title=" " alt="" coords="171,155,295,181"/>
 </map>

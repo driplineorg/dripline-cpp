@@ -1,3 +1,4 @@
 <map id="simple_executor" name="simple_executor">
-<area shape="rect" id="node2" href="$structdripline_1_1base__executor.html" title="Base class for executors. " alt="" coords="12,5,165,97"/>
+<area shape="rect" id="node1" title="Given an executable function object, uses operator() to execute it." alt="" coords="5,145,171,237"/>
+<area shape="rect" id="node2" href="$structdripline_1_1base__executor.html" title="Base class for executors." alt="" coords="12,5,164,97"/>
 </map>

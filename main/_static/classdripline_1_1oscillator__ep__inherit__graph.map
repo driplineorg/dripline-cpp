@@ -1,8 +1,9 @@
 <map id="oscillator_ep" name="oscillator_ep">
-<area shape="rect" id="node3" href="$classdripline_1_1oscillator__ep__amplitude.html" title="{oscillator_ep_amplitude\n||+ oscillator_ep_amplitude()\l+ ~oscillator_ep_amplitude()\l+ do_get_request()\l+ do_set_request()\l}" alt="" coords="5,652,220,773"/>
-<area shape="rect" id="node4" href="$classdripline_1_1oscillator__ep__frequency.html" title="{oscillator_ep_frequency\n||+ oscillator_ep_frequency()\l+ ~oscillator_ep_frequency()\l+ do_get_request()\l+ do_set_request()\l}" alt="" coords="245,652,458,773"/>
-<area shape="rect" id="node5" href="$classdripline_1_1oscillator__ep__in__phase.html" title="{oscillator_ep_in_phase\n||+ oscillator_ep_in_phase()\l+ ~oscillator_ep_in_phase()\l+ do_get_request()\l}" alt="" coords="483,659,689,766"/>
-<area shape="rect" id="node6" href="$classdripline_1_1oscillator__ep__iq.html" title="{oscillator_ep_iq\n||+ oscillator_ep_iq()\l+ ~oscillator_ep_iq()\l+ do_get_request()\l}" alt="" coords="714,659,874,766"/>
-<area shape="rect" id="node7" href="$classdripline_1_1oscillator__ep__quadrature.html" title="{oscillator_ep_quadrature\n||+ oscillator_ep_quadrature()\l+ ~oscillator_ep_quadrature()\l+ do_get_request()\l}" alt="" coords="898,659,1117,766"/>
-<area shape="rect" id="node2" href="$classdripline_1_1endpoint.html" title="Basic Dripline object capable of receiving and acting on messages. " alt="" coords="473,5,699,464"/>
+<area shape="rect" id="node1" title=" " alt="" coords="515,512,657,604"/>
+<area shape="rect" id="node3" href="$classdripline_1_1oscillator__ep__amplitude.html" title=" " alt="" coords="5,652,220,773"/>
+<area shape="rect" id="node4" href="$classdripline_1_1oscillator__ep__frequency.html" title=" " alt="" coords="245,652,458,773"/>
+<area shape="rect" id="node5" href="$classdripline_1_1oscillator__ep__in__phase.html" title=" " alt="" coords="483,659,689,766"/>
+<area shape="rect" id="node6" href="$classdripline_1_1oscillator__ep__iq.html" title=" " alt="" coords="714,659,874,766"/>
+<area shape="rect" id="node7" href="$classdripline_1_1oscillator__ep__quadrature.html" title=" " alt="" coords="898,659,1117,766"/>
+<area shape="rect" id="node2" href="$classdripline_1_1endpoint.html" title="Basic Dripline object capable of receiving and acting on messages." alt="" coords="473,5,699,464"/>
 </map>

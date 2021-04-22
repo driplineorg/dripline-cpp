@@ -1,7 +1,13 @@
 <map id="monitor.hh" name="monitor.hh">
-<area shape="rect" id="node2" href="$core_8hh.html" title="core.hh" alt="" coords="445,80,515,107"/>
-<area shape="rect" id="node9" href="$listener_8hh.html" title="listener.hh" alt="" coords="127,80,217,107"/>
-<area shape="rect" id="node10" href="$receiver_8hh.html" title="receiver.hh" alt="" coords="209,155,303,181"/>
-<area shape="rect" id="node3" href="$message_8hh.html" title="message.hh" alt="" coords="429,155,531,181"/>
-<area shape="rect" id="node5" href="$dripline__fwd_8hh.html" title="dripline_fwd.hh" alt="" coords="419,229,541,256"/>
+<area shape="rect" id="node1" title=" " alt="" coords="209,5,301,32"/>
+<area shape="rect" id="node2" href="$core_8hh.html" title=" " alt="" coords="443,80,514,107"/>
+<area shape="rect" id="node9" href="$listener_8hh.html" title=" " alt="" coords="125,80,216,107"/>
+<area shape="rect" id="node10" href="$receiver_8hh.html" title=" " alt="" coords="207,155,302,181"/>
+<area shape="rect" id="node3" href="$message_8hh.html" title=" " alt="" coords="428,155,529,181"/>
+<area shape="rect" id="node6" title=" " alt="" coords="596,229,647,256"/>
+<area shape="rect" id="node7" title=" " alt="" coords="553,155,617,181"/>
+<area shape="rect" id="node8" title=" " alt="" coords="141,229,205,256"/>
+<area shape="rect" id="node4" title=" " alt="" coords="230,229,394,256"/>
+<area shape="rect" id="node5" href="$dripline__fwd_8hh.html" title=" " alt="" coords="418,229,539,256"/>
+<area shape="rect" id="node11" title=" " alt="" coords="5,229,117,256"/>
 </map>
