@@ -9,7 +9,6 @@
 
 #include "receiver.hh"
 
-#include "core.hh"
 #include "dripline_exceptions.hh"
 #include "message.hh"
 
@@ -161,7 +160,6 @@ namespace dripline
         }
 
         auto t_now = std::chrono::system_clock::now();
-
         while( a_pack.f_conv.wait_until( t_lock, t_now + std::chrono::milliseconds(f_single_message_wait_ms) ) == std::cv_status::no_timeout )
         {
             // if the message is complete during the waiting period, submit it for processing
@@ -216,28 +214,38 @@ namespace dripline
 
     reply_ptr_t receiver::wait_for_reply( const sent_msg_pkg_ptr a_receive_reply, int a_timeout_ms )
     {
-        bool t_temp;
+        core::post_listen_status t_temp = core::post_listen_status::unknown;
         return wait_for_reply( a_receive_reply, t_temp, a_timeout_ms );
     }
 
-    reply_ptr_t receiver::wait_for_reply( const sent_msg_pkg_ptr a_receive_reply, bool& a_chan_valid, int a_timeout_ms )
+    reply_ptr_t receiver::wait_for_reply( const sent_msg_pkg_ptr a_receive_reply, core::post_listen_status& a_status, int a_timeout_ms )
     {
         if ( ! a_receive_reply->f_channel )
         {
             return reply_ptr_t();
         }
 
-        LDEBUG( dlog, "Waiting for a reply" );
+        LDEBUG( dlog, "Waiting for a reply (timeout: " << a_timeout_ms << " ms)" );
+
+        // Assign the chunk timeout time; it should be f_single_message_wait_ms unless a_timeout_ms is shorter than f_single_message_wait_ms
+        unsigned t_chunk_timeout_ms = 1000;
+        if( a_timeout_ms > 0 && a_timeout_ms < t_chunk_timeout_ms )
+        {
+            t_chunk_timeout_ms = a_timeout_ms;
+        }
+
+        // for checking the wait_for_reply timeout
+        auto t_timeout_time = std::chrono::system_clock::now() + std::chrono::milliseconds(a_timeout_ms);
 
         // wait for messages until either:
         //   1. the channel is no longer valid (return empty reply pointer; a_chan_valid will be false)
         //   2. listening times out (return empty reply pointer; a_chan_valid will be true)
         //   3. a full dripline message is received (return message)
         //   4. error processing a recieved amqp message (return empty reply pointer)
-        while( ! is_canceled() )
+        while( ! is_canceled() && std::chrono::system_clock::now() < t_timeout_time )
         {
             amqp_envelope_ptr t_envelope;
-            a_chan_valid = core::listen_for_message( t_envelope, a_receive_reply->f_channel, a_receive_reply->f_consumer_tag, a_timeout_ms, false );
+            core::listen_for_message( t_envelope, a_status, a_receive_reply->f_channel, a_receive_reply->f_consumer_tag, t_chunk_timeout_ms, false );
 
             // check whether we canceled while listening
             if( is_canceled() )
@@ -246,20 +254,39 @@ namespace dripline
                 return reply_ptr_t();
             }
 
-            // there was an error listening on the channel; no message received
-            if( ! a_chan_valid )
+            // there was a soft error listening on the channel; no message received
+            if( a_status == core::post_listen_status::soft_error )
             {
-                LDEBUG( dlog, "There was some error while listening on the channel; no message received" );
+                LWARN( dlog, "There was a soft error while listening for a reply; no message received" );
+                continue;
+            }
+
+            // there was a hard error listening on the channel; no message received
+            if( a_status == core::post_listen_status::hard_error )
+            {
+                LERROR( dlog, "There was a hard error error while listening for a reply; no message received" );
                 return reply_ptr_t();
             }
 
             // listening timed out
-            if( ! t_envelope )
+            if( a_status == core::post_listen_status::timeout )
             {
-                LDEBUG( dlog, "An empty envelope was returned from listening to a channel; listening may have timed out" );
+                LTRACE( dlog, "Listening for reply message chunks timed out" );
+                // continue to wait for message chunks
+                continue;
+            }
+
+            // unknown state; should not get here
+            if( a_status == core::post_listen_status::unknown )
+            {
+                LERROR( dlog, "An unknown status occurred while listening for messages" );
                 return reply_ptr_t();
             }
 
+            // because core::listen_for_message uses whether or not the envelope is empty to differentiate between a received message and a timeout, 
+            // we will never have an empty envelope and a status == message_received
+
+            // go ahead with message processing
             try
             {
                 amqp_message_ptr t_message = t_envelope->Message();
@@ -283,6 +310,7 @@ namespace dripline
                     {
                         return process_received_reply( t_pack, std::get<0>(t_parsed_message_id) );
                     }
+                    // else, need more chunks
                 }
                 else
                 {
@@ -317,9 +345,19 @@ namespace dripline
             catch( dripline_error& e )
             {
                 LERROR( dlog, "There was a problem processing the message: " << e.what() );
+                a_status = core::post_listen_status::soft_error;
                 return reply_ptr_t();
             }
-        } // end while( ! is_canceled() )
+
+        } // end while( ! is_canceled() && not timed out )
+
+        // check if listening timed out
+        if( ! is_canceled() && std::chrono::system_clock::now() > t_timeout_time )
+        {
+            LDEBUG( dlog, "Listening for reply message timed out" );
+            a_status = core::post_listen_status::timeout;
+            return reply_ptr_t();
+        }
 
         LDEBUG( dlog, "Receiver was canceled" );
         return reply_ptr_t();

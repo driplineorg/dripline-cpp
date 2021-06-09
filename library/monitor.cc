@@ -236,7 +236,8 @@ namespace dripline
         while( ! is_canceled()  )
         {
             amqp_envelope_ptr t_envelope;
-            bool t_channel_valid = core::listen_for_message( t_envelope, f_channel, f_consumer_tag, f_listen_timeout_ms );
+            core::post_listen_status t_post_listen_status = core::post_listen_status::unknown;
+            core::listen_for_message( t_envelope, t_post_listen_status, f_channel, f_consumer_tag, f_listen_timeout_ms );
 
             if( f_canceled.load() )
             {
@@ -244,19 +245,33 @@ namespace dripline
                 return true;
             }
 
-            if( ! t_envelope && t_channel_valid )
+            if( t_post_listen_status == core::post_listen_status::timeout )
             {
                 // we end up here every time the listen times out with no message received
                 continue;
             }
 
-            handle_message_chunk( t_envelope );
-
-            if( ! t_channel_valid )
+            if( t_post_listen_status == core::post_listen_status::soft_error )
             {
-                LERROR( dlog, "Channel is no longer valid for monitor <" << f_name << ">" );
+                LWARN( dlog, "A soft error ocurred while listening for messages for monitor <" << f_name << ">.  The channel is still valid" );
+                continue;
+            }
+
+            if( t_post_listen_status == core::post_listen_status::hard_error )
+            {
+                LERROR( dlog, "A hard error ocurred while listening for messages for monitor <" << f_name << ">.  The channel is no longer valid" );
                 return false;
             }
+
+            if( t_post_listen_status == core::post_listen_status::unknown )
+            {
+                LERROR( dlog, "An unknown status occurred while listening for messages for monitor <" << f_name << ">" );
+                return false;
+            }
+
+            // remaining status is core::post_listen_status::message_received
+
+            handle_message_chunk( t_envelope );
 
             if( f_canceled.load() )
             {

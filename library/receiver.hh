@@ -8,6 +8,7 @@
 #ifndef DRIPLINE_RECEIVER_HH_
 #define DRIPLINE_RECEIVER_HH_
 
+#include "core.hh"
 #include "dripline_api.hh"
 #include "dripline_fwd.hh"
 
@@ -122,7 +123,7 @@ namespace dripline
             @param[out] a_chan_valid Returns whether or not the channel is still valid for use after receiving a message.
             @return Reply message
             */
-            reply_ptr_t wait_for_reply( const sent_msg_pkg_ptr a_receive_reply, bool& a_chan_valid, int a_timeout_ms = 0 );
+            reply_ptr_t wait_for_reply( const sent_msg_pkg_ptr a_receive_reply, core::post_listen_status& a_status, int a_timeout_ms = 0 );
 
         protected:
             reply_ptr_t process_received_reply( incoming_message_pack& a_pack, const std::string& a_message_id );

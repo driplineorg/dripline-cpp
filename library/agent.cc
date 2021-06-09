@@ -215,11 +215,17 @@ namespace dripline
 
             // timed blocking call to wait for incoming message
             receiver t_msg_receiver;
+            core::post_listen_status t_post_listen_status = core::post_listen_status::unknown;
             scarab::signal_handler::add_cancelable_s( &t_msg_receiver );
-            dripline::reply_ptr_t t_reply = t_msg_receiver.wait_for_reply( t_receive_reply, f_agent->get_timeout() );
+            dripline::reply_ptr_t t_reply = t_msg_receiver.wait_for_reply( t_receive_reply, t_post_listen_status, f_agent->get_timeout() );
             scarab::signal_handler::remove_cancelable_s( &t_msg_receiver );
 
-            if( t_reply )
+            if( t_msg_receiver.is_canceled() )
+            {
+                LDEBUG( dlog, "Agent canceled while waiting for reply" );
+                f_agent->set_return( dl_success().rc_value() );
+            }
+            else if( t_reply )
             {
                 LINFO( dlog, "Response received" );
                 f_agent->set_return( t_reply->get_return_code() );
@@ -261,8 +267,23 @@ namespace dripline
             }
             else
             {
-                LWARN( dlog, "Timed out or error while waiting for reply" );
-                f_agent->set_return( dl_client_error_timeout().rc_value() );
+                if( t_post_listen_status == core::post_listen_status::timeout )
+                {
+                    LWARN( dlog, "Timed out or while waiting for reply" );
+                    f_agent->set_return( dl_client_error_timeout().rc_value() );
+                }
+                else
+                {
+                    if( t_post_listen_status == core::post_listen_status::hard_error ) 
+                    {
+                        LERROR( dlog, "Error while waiting for reply" );
+                    }
+                    else 
+                    {
+                        LERROR( dlog, "Unknown state while waiting for reply: " << (int)t_post_listen_status );
+                    }
+                    f_agent->set_return( dl_client_error().rc_value() );
+                }
             }
             f_agent->set_reply( t_reply );
         }
