@@ -153,9 +153,6 @@ namespace dripline
             /// Waits for AMQP messages arriving on the channel
             virtual bool listen_on_queue();
 
-            /// Submit a message for direct processing
-            virtual void submit_message( message_ptr_t a_message );
-
             /// Sends a reply message
             virtual void send_reply( reply_ptr_t a_reply ) const;
 
@@ -171,6 +168,9 @@ namespace dripline
             mv_referrable( std::string, broadcast_key );
 
         protected:
+            /// Implementation of submit_message (from concurrent_receiver)
+            virtual void submit_message( message_ptr_t a_message );
+
             virtual reply_ptr_t on_request_message( const request_ptr_t a_request );
 
         private:
