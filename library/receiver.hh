@@ -103,8 +103,11 @@ namespace dripline
 
             /// Stores the incomplete messages
             mv_referrable( incoming_message_map, incoming_messages );
-            /// Wait time for message chunks from a single message
+            /// Wait time for all message chunks from a single dripline message
             mv_accessible( unsigned, single_message_wait_ms );
+            /// Listen timeout for individual message chunks when waiting for replies
+            mv_accessible( unsigned, reply_listen_timeout_ms );
+
 
         public:
             /*!

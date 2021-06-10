@@ -46,7 +46,8 @@ namespace dripline
     receiver::receiver() :
             scarab::cancelable(),
             f_incoming_messages(),
-            f_single_message_wait_ms( 1000 )
+            f_single_message_wait_ms( 1000 ),
+            f_reply_listen_timeout_ms( 1000 )
     {}
 
     receiver::receiver( receiver&& a_orig ) :
@@ -227,8 +228,8 @@ namespace dripline
 
         LDEBUG( dlog, "Waiting for a reply (timeout: " << a_timeout_ms << " ms)" );
 
-        // Assign the chunk timeout time; it should be f_single_message_wait_ms unless a_timeout_ms is shorter than f_single_message_wait_ms
-        unsigned t_chunk_timeout_ms = 1000;
+        // Assign the chunk timeout time; it should be f_reply_listen_timeout_ms unless a_timeout_ms is shorter than f_reply_listen_timeout_ms
+        unsigned t_chunk_timeout_ms = f_reply_listen_timeout_ms;
         if( a_timeout_ms > 0 && a_timeout_ms < t_chunk_timeout_ms )
         {
             t_chunk_timeout_ms = a_timeout_ms;
