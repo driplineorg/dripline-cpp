@@ -68,6 +68,9 @@ namespace dripline
        * Async endpoint receiver -- same as above for each asynchronous endpoint
        * Heatbeater -- sends regular heartbeat messages
        * Scheduler -- executes scheduled events
+
+     In addition to receiving messages from the broker, a user or client code can give messages directly to the service 
+     using `process_message(message)`.
     */
     class DRIPLINE_API service :
             public core,
