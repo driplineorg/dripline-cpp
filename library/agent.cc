@@ -216,9 +216,9 @@ namespace dripline
             // timed blocking call to wait for incoming message
             receiver t_msg_receiver;
             core::post_listen_status t_post_listen_status = core::post_listen_status::unknown;
-            scarab::signal_handler::add_cancelable_s( &t_msg_receiver );
+            auto t_rec_cancel_wrap = wrap_cancelable( t_msg_receiver );
+            scarab::signal_handler::add_cancelable_s( t_rec_cancel_wrap );
             dripline::reply_ptr_t t_reply = t_msg_receiver.wait_for_reply( t_receive_reply, t_post_listen_status, f_agent->get_timeout() );
-            scarab::signal_handler::remove_cancelable_s( &t_msg_receiver );
 
             if( t_msg_receiver.is_canceled() )
             {
