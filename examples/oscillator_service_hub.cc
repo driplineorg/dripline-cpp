@@ -48,7 +48,8 @@ namespace dripline
     void oscillator_service_hub::execute()
     {
         scarab::signal_handler t_sig_hand;
-        t_sig_hand.add_cancelable( this );
+        auto t_cwrap = scarab::wrap_cancelable( *this );
+        t_sig_hand.add_cancelable( t_cwrap );
 
         try
         {
