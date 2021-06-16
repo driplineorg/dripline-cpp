@@ -33,3 +33,34 @@ TEST_CASE( "send_offline", "[core]" )
 
     REQUIRE_THROWS_AS( t_core.send( t_reply_ptr ), dripline::message_ptr_t );
 }
+
+TEST_CASE( "config_retcode", "[core]" )
+{
+    using scarab::param_ptr_t;
+    using scarab::param_node;
+    using scarab::param_array;
+
+    param_node t_code;
+    t_code.add( "name", "test_code" );
+    t_code.add( "value", 2000 );
+    t_code.add( "description", "test code" );
+
+    param_array t_ret_codes;
+    t_ret_codes.push_back( t_code );
+
+    param_ptr_t t_param( new param_node() );
+    param_node& t_config = t_param->as_node();
+    t_config.add( "return-codes", t_ret_codes );
+
+    auto t_factory = scarab::indexed_factory< unsigned, dripline::return_code >::get_instance();
+
+    // test adding a return code through a config
+    dripline::core t_core( t_config );
+    REQUIRE( t_factory->has_class( 2000 ) );
+
+    t_config["return-codes"][0]["value"]() = 2001;
+    t_config["return-codes"][0].as_node().erase("description");
+
+    // test adding a return code with an invalid config
+    REQUIRE_THROWS_AS( dripline::core( t_config ), dripline::dripline_error );
+}
