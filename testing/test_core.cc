@@ -42,7 +42,7 @@ TEST_CASE( "config_retcode", "[core]" )
 
     param_node t_code;
     t_code.add( "name", "test_code" );
-    t_code.add( "value", 2000 );
+    t_code.add( "value", 5000 );
     t_code.add( "description", "test code" );
 
     param_array t_ret_codes;
@@ -56,9 +56,9 @@ TEST_CASE( "config_retcode", "[core]" )
 
     // test adding a return code through a config
     dripline::core t_core( t_config );
-    REQUIRE( t_factory->has_class( 2000 ) );
+    REQUIRE( t_factory->has_class( 5000 ) );
 
-    t_config["return-codes"][0]["value"]() = 2001;
+    t_config["return-codes"][0]["value"]() = 5001;
     t_config["return-codes"][0].as_node().erase("description");
 
     // test adding a return code with an invalid config
