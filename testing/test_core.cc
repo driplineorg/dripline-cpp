@@ -6,9 +6,11 @@
  */
 
 
-#include "dripline_exceptions.hh"
 #include "core.hh"
+#include "dripline_exceptions.hh"
 #include "return_codes.hh"
+
+#include "param_codec.hh"
 
 #include "catch.hpp"
 
@@ -63,4 +65,39 @@ TEST_CASE( "config_retcode", "[core]" )
 
     // test adding a return code with an invalid config
     REQUIRE_THROWS_AS( dripline::core( t_config ), dripline::dripline_error );
+}
+
+TEST_CASE( "config_retcode_fromfile", "[core]" )
+{
+    using scarab::param_ptr_t;
+    using scarab::param_node;
+    using scarab::param_array;
+
+    param_node t_code;
+    t_code.add( "name", "test_code_fromfile" );
+    t_code.add( "value", 5100 );
+    t_code.add( "description", "test code from file" );
+
+    param_array t_ret_codes;
+    t_ret_codes.push_back( t_code );
+
+    // write the temporary file with the array of retcodes
+    scarab::param_translator t_translator;
+    std::string t_temp_filename( std::tmpnam(nullptr) );
+    t_temp_filename += ".yaml";
+    t_translator.write_file( t_ret_codes, t_temp_filename );
+
+    // the config object
+    param_ptr_t t_param( new param_node() );
+    param_node& t_config = t_param->as_node();
+    t_config.add( "return-codes", t_temp_filename );
+
+    auto t_factory = scarab::indexed_factory< unsigned, dripline::return_code >::get_instance();
+
+    // test adding a return code through a config
+    dripline::core t_core( t_config );
+    REQUIRE( t_factory->has_class( 5100 ) );
+
+    std::remove( t_temp_filename.c_str() );
+
 }
