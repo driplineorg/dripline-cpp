@@ -18,6 +18,7 @@ set( testing_SOURCES
     test_messages.cc
     test_return_codes.cc
     test_scheduler.cc
+    test_service.cc
     test_specifier.cc
     test_throw_reply.cc
     test_version_store.cc
