@@ -14,6 +14,9 @@
 
 #include "catch.hpp"
 
+#include <boost/filesystem.hpp>
+
+
 TEST_CASE( "send_offline", "[core]" )
 {
     using scarab::param_ptr_t;
@@ -83,7 +86,7 @@ TEST_CASE( "config_retcode_fromfile", "[core]" )
 
     // write the temporary file with the array of retcodes
     scarab::param_translator t_translator;
-    std::string t_temp_filename( std::tmpnam(nullptr) );
+    std::string t_temp_filename( boost::filesystem::unique_path().native() );
     t_temp_filename += ".yaml";
     t_translator.write_file( t_ret_codes, t_temp_filename );
 
