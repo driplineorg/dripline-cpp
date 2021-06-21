@@ -96,10 +96,10 @@ Inheritance diagram for service:</div>
 <div class="dyncontent">
 <div class="center"><img src="classdripline_1_1service__inherit__graph.png" border="0" usemap="#service_inherit__map" alt="Inheritance graph"/></div>
 <map name="service_inherit__map" id="service_inherit__map">
-<area shape="rect" title="Consumer of Dripline messages on a particular queue." alt="" coords="391,1268,616,1609"/>
-<area shape="rect" href="classdripline_1_1hub.html" title="Service class aimed at adding a Dripline API to an existing codebase." alt="" coords="179,1659,367,1956"/>
-<area shape="rect" href="classdripline_1_1oscillator__service__endpoints.html" title=" " alt="" coords="391,1710,616,1905"/>
-<area shape="rect" href="classdripline_1_1simple__service.html" title=" " alt="" coords="640,1717,796,1897"/>
+<area shape="rect" title="Consumer of Dripline messages on a particular queue." alt="" coords="391,1268,616,1624"/>
+<area shape="rect" href="classdripline_1_1hub.html" title="Service class aimed at adding a Dripline API to an existing codebase." alt="" coords="179,1673,367,1971"/>
+<area shape="rect" href="classdripline_1_1oscillator__service__endpoints.html" title=" " alt="" coords="391,1725,616,1919"/>
+<area shape="rect" href="classdripline_1_1simple__service.html" title=" " alt="" coords="640,1732,796,1912"/>
 <area shape="rect" href="classdripline_1_1core.html" title="Basic AMQP interactions, including sending messages and interacting with AMQP channels." alt="" coords="5,797,180,1182"/>
 <area shape="rect" href="classdripline_1_1endpoint.html" title="Basic Dripline object capable of receiving and acting on messages." alt="" coords="204,760,429,1219"/>
 <area shape="rect" href="classdripline_1_1listener__receiver.html" title="Convenience class to bring together listener and concurrent_receiver." alt="" coords="504,921,660,1057"/>
@@ -111,7 +111,7 @@ Inheritance diagram for service:</div>
 <area shape="rect" href="classdripline_1_1scheduler.html" title=" " alt="" coords="684,819,909,1160"/>
 <area shape="rect" title=" " alt="" coords="751,271,843,349"/>
 <area shape="rect" title=" " alt="" coords="933,943,1087,1035"/>
-<area shape="rect" href="classdripline_1_1oscillator__service__hub.html" title=" " alt="" coords="160,2005,385,2391"/>
+<area shape="rect" href="classdripline_1_1oscillator__service__hub.html" title=" " alt="" coords="160,2020,385,2405"/>
 </map>
 </div>
 <table class="memberdecls">
@@ -177,9 +177,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aeaea03e3d8d8a847b250f44e50f2cb33"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1service.html#aeaea03e3d8d8a847b250f44e50f2cb33">listen_on_queue</a> ()</td></tr>
 <tr class="memdesc:aeaea03e3d8d8a847b250f44e50f2cb33"><td class="mdescLeft">&#160;</td><td class="mdescRight">Waits for AMQP messages arriving on the channel.  <a href="classdripline_1_1service.html#aeaea03e3d8d8a847b250f44e50f2cb33">More...</a><br /></td></tr>
 <tr class="separator:aeaea03e3d8d8a847b250f44e50f2cb33"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac9279543538f7a350c63ecb07281f038"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1service.html#ac9279543538f7a350c63ecb07281f038">submit_message</a> (<a class="el" href="namespacedripline.html#a398f267374845fb92318ac53fd7d754c">message_ptr_t</a> a_message)</td></tr>
-<tr class="memdesc:ac9279543538f7a350c63ecb07281f038"><td class="mdescLeft">&#160;</td><td class="mdescRight">Submit a message for direct processing.  <a href="classdripline_1_1service.html#ac9279543538f7a350c63ecb07281f038">More...</a><br /></td></tr>
-<tr class="separator:ac9279543538f7a350c63ecb07281f038"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a333fc144e00981871a99be40e1b900ba"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1service.html#a333fc144e00981871a99be40e1b900ba">send_reply</a> (<a class="el" href="namespacedripline.html#a691e50784fa7b338976076f25620ae94">reply_ptr_t</a> a_reply) const</td></tr>
 <tr class="memdesc:a333fc144e00981871a99be40e1b900ba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sends a reply message.  <a href="classdripline_1_1service.html#a333fc144e00981871a99be40e1b900ba">More...</a><br /></td></tr>
 <tr class="separator:a333fc144e00981871a99be40e1b900ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -450,6 +447,9 @@ Protected Member Functions</h2></td></tr>
 <tr class="separator:a7a2b3a056b1c37d0a92d044f573116b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8ad0a642a612ba1c8da79be722da247e"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1service.html#a8ad0a642a612ba1c8da79be722da247e">remove_queue</a> ()</td></tr>
 <tr class="separator:a8ad0a642a612ba1c8da79be722da247e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9279543538f7a350c63ecb07281f038"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1service.html#ac9279543538f7a350c63ecb07281f038">submit_message</a> (<a class="el" href="namespacedripline.html#a398f267374845fb92318ac53fd7d754c">message_ptr_t</a> a_message)</td></tr>
+<tr class="memdesc:ac9279543538f7a350c63ecb07281f038"><td class="mdescLeft">&#160;</td><td class="mdescRight">Implementation of submit_message (from <a class="el" href="classdripline_1_1concurrent__receiver.html" title="Receives and processes messages concurrently.">concurrent_receiver</a>)  <a href="classdripline_1_1service.html#ac9279543538f7a350c63ecb07281f038">More...</a><br /></td></tr>
+<tr class="separator:ac9279543538f7a350c63ecb07281f038"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a015848f6b87186b2213152c582442d1d"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="namespacedripline.html#a691e50784fa7b338976076f25620ae94">reply_ptr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1service.html#a015848f6b87186b2213152c582442d1d">on_request_message</a> (const <a class="el" href="namespacedripline.html#ab1b3b1b44652d2d5d2063a1e5d9a7830">request_ptr_t</a> a_request)</td></tr>
 <tr class="memdesc:a015848f6b87186b2213152c582442d1d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Default request handler; passes request to initial request functions.  <a href="classdripline_1_1service.html#a015848f6b87186b2213152c582442d1d">More...</a><br /></td></tr>
 <tr class="separator:a015848f6b87186b2213152c582442d1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -537,9 +537,10 @@ Additional Inherited Members</h2></td></tr>
 <li>Service has asynchronous child endpoints. These endpoints each have their own AMQP queue and thread responsible for receiving and handling their messages.</li>
 </ol>
 <p>A service has a number of key characteristics (most of which come from its parent classes): <code>core</code> &ndash; Has all of the basic AMQP capabilities, sending messages, and making and manipulating connections <code>endpoint</code> &ndash; Handles Dripline messages <code><a class="el" href="classdripline_1_1listener__receiver.html" title="Convenience class to bring together listener and concurrent_receiver.">listener_receiver</a></code> &ndash; Asynchronously recieves AMQP messages and turns them into Dripline messages <code>heartbeater</code> &ndash; Sends periodic heartbeat messages <code>scheduler</code> &ndash; Can schedule events</p>
-<p>As is apparent from the above descriptions, a service is responsible for a number of threads when it executes: Listening &ndash; grabs AMQP messages off the channel when they arrive Message-wait &ndash; any incomplete multi-part Dripline message will setup a thread to wait until the message is complete, and then submits it for handling Receiver &ndash; grabs completed Dripline messages and handles it Async endpoint listening &ndash; same as abovefor each asynchronous endpoint Async endpoint message-wait &ndash; same as above for each asynchronous endpoint Async endpoint receiver &ndash; same as above for each asynchronous endpoint Heatbeater &ndash; sends regular heartbeat messages Scheduler &ndash; executes scheduled events </p>
+<p>As is apparent from the above descriptions, a service is responsible for a number of threads when it executes: Listening &ndash; grabs AMQP messages off the channel when they arrive Message-wait &ndash; any incomplete multi-part Dripline message will setup a thread to wait until the message is complete, and then submits it for handling Receiver &ndash; grabs completed Dripline messages and handles it Async endpoint listening &ndash; same as abovefor each asynchronous endpoint Async endpoint message-wait &ndash; same as above for each asynchronous endpoint Async endpoint receiver &ndash; same as above for each asynchronous endpoint Heatbeater &ndash; sends regular heartbeat messages Scheduler &ndash; executes scheduled events</p>
+<p>In addition to receiving messages from the broker, a user or client code can give messages directly to the service using <code>process_message(message)</code>. </p>
 
-<p class="definition">Definition at line <a class="el" href="service_8hh_source.html#l00072">72</a> of file <a class="el" href="service_8hh_source.html">service.hh</a>.</p>
+<p class="definition">Definition at line <a class="el" href="service_8hh_source.html#l00075">75</a> of file <a class="el" href="service_8hh_source.html">service.hh</a>.</p>
 </div><h2 class="groupheader">Member Typedef Documentation</h2>
 <a id="adeac2e73248f4878ceb319b2d8531ece"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#adeac2e73248f4878ceb319b2d8531ece">&#9670;&nbsp;</a></span>async_map_t</h2>
@@ -604,7 +605,7 @@ Additional Inherited Members</h2></td></tr>
 <tr><td class="fieldname"><a id="a015eb90e0de9f16e87bd149d4b9ce959a4374990dedc873c6a9417a355a2ac4cf"></a>processing&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="service_8hh_source.html#l00081">81</a> of file <a class="el" href="service_8hh_source.html">service.hh</a>.</p>
+<p class="definition">Definition at line <a class="el" href="service_8hh_source.html#l00084">84</a> of file <a class="el" href="service_8hh_source.html">service.hh</a>.</p>
 
 </div>
 </div>
@@ -1077,7 +1078,7 @@ Additional Inherited Members</h2></td></tr>
 
 <p>Reimplemented from <a class="el" href="classdripline_1_1core.html#a4ab0de947434e75371c2a9ab515c8f08">core</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="service_8hh_source.html#l00189">189</a> of file <a class="el" href="service_8hh_source.html">service.hh</a>.</p>
+<p class="definition">Definition at line <a class="el" href="service_8hh_source.html#l00192">192</a> of file <a class="el" href="service_8hh_source.html">service.hh</a>.</p>
 
 </div>
 </div>
@@ -1109,7 +1110,7 @@ Additional Inherited Members</h2></td></tr>
 
 <p>Reimplemented from <a class="el" href="classdripline_1_1core.html#accdd3f12b8c73c6c72fd5bb04e253540">core</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="service_8hh_source.html#l00183">183</a> of file <a class="el" href="service_8hh_source.html">service.hh</a>.</p>
+<p class="definition">Definition at line <a class="el" href="service_8hh_source.html#l00186">186</a> of file <a class="el" href="service_8hh_source.html">service.hh</a>.</p>
 
 </div>
 </div>
@@ -1141,7 +1142,7 @@ Additional Inherited Members</h2></td></tr>
 
 <p>Reimplemented from <a class="el" href="classdripline_1_1core.html#aef64261520c70e73be2734cd8428a0e2">core</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="service_8hh_source.html#l00177">177</a> of file <a class="el" href="service_8hh_source.html">service.hh</a>.</p>
+<p class="definition">Definition at line <a class="el" href="service_8hh_source.html#l00180">180</a> of file <a class="el" href="service_8hh_source.html">service.hh</a>.</p>
 
 </div>
 </div>
@@ -1485,12 +1486,12 @@ Additional Inherited Members</h2></td></tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
-<p>Submit a message for direct processing. </p>
+<p>Implementation of submit_message (from <a class="el" href="classdripline_1_1concurrent__receiver.html" title="Receives and processes messages concurrently.">concurrent_receiver</a>) </p>
 
 <p>Implements <a class="el" href="classdripline_1_1concurrent__receiver.html#a74780114964b54d802c484cda08e2173">concurrent_receiver</a>.</p>
 

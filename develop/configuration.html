@@ -41,42 +41,64 @@ In the source code, this is implemented as a <code class="docutils literal notra
 <div class="section" id="dripline-parameters">
 <h2>Dripline Parameters<a class="headerlink" href="#dripline-parameters" title="Permalink to this headline">¶</a></h2>
 <p>All dripline-based applications must have a common set of configuration parameters.
-These parameters are indicated by the key <code class="docutils literal notranslate"><span class="pre">amqp</span></code>.
-The defaults for all of these parameters are given in the class <code class="docutils literal notranslate"><span class="pre">dripline_config</span></code>:</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>amqp:</dt>
-<dd>auth-file: DRIPLINE_AUTH_FILE
-requests-exchange: requests
-alerts-exchange: alerts
-max-payload-size: DL_MAX_PAYLOAD_SIZE
-loop-timeout-ms: 1000
-message-wait-ms: 1000
-heartbeat-routing-key: heartbeat
-hearteat-interval-s: 60</dd>
-</dl>
-</div></blockquote>
-<p>Note that <code class="docutils literal notranslate"><span class="pre">auth-file</span></code> and <code class="docutils literal notranslate"><span class="pre">max-payload-size</span></code> are defined by preprocessor macros that
+These parameters are indicated by the key <code class="docutils literal notranslate"><span class="pre">dripline</span></code>.</p>
+<div class="section" id="explanation-of-parameters">
+<h3>Explanation of Parameters<a class="headerlink" href="#explanation-of-parameters" title="Permalink to this headline">¶</a></h3>
+<p>Here is the possible set of parameters for the <code class="docutils literal notranslate"><span class="pre">dripline</span></code> block, with a short description of each one:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">dripline</span><span class="p">:</span>
+    <span class="nt">auth-file</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">(string) path to the authentications file (absolute paths are recommended)</span>
+    <span class="nt">requests-exchange</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">(string) name of the requests exchange</span>
+    <span class="nt">alerts-exchange</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">(string) name of the alerts exchange</span>
+    <span class="nt">max-payload-size</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">(unsigned int) maximum payload size in bytes</span>
+    <span class="nt">loop-timeout-ms</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">(unsigned int) time used in loops for checking for application shutdown in milliseconds</span>
+    <span class="nt">message-wait-ms</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">(unsigned int) timeout for waiting for a message in milliseconds</span>
+    <span class="nt">heartbeat-routing-key</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">(string) routing key for sending and receiving heartbeat messages</span>
+    <span class="nt">hearteat-interval-s</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">(unsigned int) interval for sending heartbeats in seconds</span>
+    <span class="nt">return-codes</span><span class="p">:</span>
+      <span class="p p-Indicator">-</span> <span class="nt">name</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">(string) return-code name (must be unique)</span>
+        <span class="nt">value</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">(unsigned int) return-code value (must be unique)</span>
+        <span class="nt">description</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">(string) human-readable description of what the return-code means</span>
+      <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="default-parameters">
+<h3>Default Parameters<a class="headerlink" href="#default-parameters" title="Permalink to this headline">¶</a></h3>
+<p>The defaults for all of these parameters are given in the class <code class="docutils literal notranslate"><span class="pre">dripline_config</span></code>:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">dripline</span><span class="p">:</span>
+    <span class="nt">auth-file</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">DRIPLINE_AUTH_FILE</span>
+    <span class="nt">requests-exchange</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">requests</span>
+    <span class="nt">alerts-exchange</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">alerts</span>
+    <span class="nt">max-payload-size</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">DL_MAX_PAYLOAD_SIZE</span>
+    <span class="nt">loop-timeout-ms</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1000</span>
+    <span class="nt">message-wait-ms</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1000</span>
+    <span class="nt">heartbeat-routing-key</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">heartbeat</span>
+    <span class="nt">hearteat-interval-s</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">60</span>
+</pre></div>
+</div>
+<p>Note that the defaults for <code class="docutils literal notranslate"><span class="pre">auth-file</span></code> and <code class="docutils literal notranslate"><span class="pre">max-payload-size</span></code> are defined by preprocessor macros that
 should be defined before building dripline-cpp.  <code class="docutils literal notranslate"><span class="pre">DL_MAX_PAYLOAD_SIZE</span></code> has a default
-value, but <code class="docutils literal notranslate"><span class="pre">DRIPLINE_AUTH_FILE</span></code> must be defined by the client code/user, and
-must be a valid file at runtime for the default to be placed in the <code class="docutils literal notranslate"><span class="pre">amqp</span></code>.</p>
+value within dripline-cpp, but <code class="docutils literal notranslate"><span class="pre">DRIPLINE_AUTH_FILE</span></code> must be defined by the client code/user, and
+must be a valid file at runtime for the default to be placed in the <code class="docutils literal notranslate"><span class="pre">dripline</span></code> block.</p>
+<p>The default set of return codes are specified in <code class="docutils literal notranslate"><span class="pre">return_codes.cc</span></code>.  There are no default return codes
+in the class <code class="docutils literal notranslate"><span class="pre">dripline_config</span></code>.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">dripline_config.hh</span></code> header define the function <code class="docutils literal notranslate"><span class="pre">add_dripline_options()</span></code>
 that will add the common dripline command-line options within the scarab application framework.</p>
+</div>
 </div>
 <div class="section" id="application-parameters">
 <h2>Application Parameters<a class="headerlink" href="#application-parameters" title="Permalink to this headline">¶</a></h2>
 <p>Typically an application will have its own configuration parameters that will include
-the <code class="docutils literal notranslate"><span class="pre">amqp</span></code> block.  For example, <code class="docutils literal notranslate"><span class="pre">dl-agent</span></code> is configured from <code class="docutils literal notranslate"><span class="pre">agent_config</span></code>:</p>
-<blockquote>
-<div><p>timeout: 10
-amqp:</p>
-<blockquote>
-<div>auth-file: DRIPLINE_AUTH_FILE
-…</div></blockquote>
-</div></blockquote>
+the <code class="docutils literal notranslate"><span class="pre">dripline</span></code> block.  For example, <code class="docutils literal notranslate"><span class="pre">dl-agent</span></code> is configured from <code class="docutils literal notranslate"><span class="pre">agent_config</span></code>:</p>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">timeout</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>
+<span class="nt">dripline</span><span class="p">:</span>
+    <span class="nt">auth-file</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">DRIPLINE_AUTH_FILE</span>
+    <span class="l l-Scalar l-Scalar-Plain">. . .</span>
+</pre></div>
+</div>
 <p>The application configuration parameters can be arbitrarily complicated,
 according to the scarab application framework,
-and for dripline purposes they just need to contain the <code class="docutils literal notranslate"><span class="pre">amqp</span></code> framework.</p>
+and for dripline purposes they just need to contain the <code class="docutils literal notranslate"><span class="pre">dripline</span></code> framework.</p>
 </div>
 <div class="section" id="specifying-parameters">
 <h2>Specifying Parameters<a class="headerlink" href="#specifying-parameters" title="Permalink to this headline">¶</a></h2>
@@ -97,9 +119,10 @@ merged with the stage-2 configuration.</p>
 <div class="section" id="broker-and-broker-port">
 <h2>Broker and Broker Port<a class="headerlink" href="#broker-and-broker-port" title="Permalink to this headline">¶</a></h2>
 <p>In a dripline application, a few parameters can be specified from the <a class="reference internal" href="authentication.html#authentication"><span class="std std-ref">authentication</span></a> file:</p>
-<blockquote>
-<div>broker: [broker URL]
-broker-port: [broker port]</div></blockquote>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="nt">broker</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">broker URL</span><span class="p p-Indicator">]</span>
+<span class="nt">broker-port</span><span class="p">:</span> <span class="p p-Indicator">[</span><span class="nv">broker port</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
 <p>The values given in the authentications file form the default on top of which the master-config is applied.
 In other words, if <code class="docutils literal notranslate"><span class="pre">broker</span></code> or <code class="docutils literal notranslate"><span class="pre">broker-port</span></code> are specified in the master configuration, they override
 the values from the authentications file.  For that reason, <code class="docutils literal notranslate"><span class="pre">dripline_config</span></code> does not specify either of
