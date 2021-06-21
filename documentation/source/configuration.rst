@@ -11,10 +11,38 @@ Dripline Parameters
 ===================
 
 All dripline-based applications must have a common set of configuration parameters.  
-These parameters are indicated by the key ``amqp``.  
+These parameters are indicated by the key ``dripline``. 
+
+Explanation of Parameters
+-------------------------
+
+Here is the possible set of parameters for the ``dripline`` block, with a short description of each one:
+
+.. code-block:: YAML
+
+    dripline:
+        auth-file: (string) path to the authentications file (absolute paths are recommended)
+        requests-exchange: (string) name of the requests exchange
+        alerts-exchange: (string) name of the alerts exchange
+        max-payload-size: (unsigned int) maximum payload size in bytes
+        loop-timeout-ms: (unsigned int) time used in loops for checking for application shutdown in milliseconds
+        message-wait-ms: (unsigned int) timeout for waiting for a message in milliseconds
+        heartbeat-routing-key: (string) routing key for sending and receiving heartbeat messages
+        hearteat-interval-s: (unsigned int) interval for sending heartbeats in seconds
+        return-codes:
+          - name: (string) return-code name (must be unique)
+            value: (unsigned int) return-code value (must be unique)
+            description: (string) human-readable description of what the return-code means
+          - ...
+
+Default Parameters
+------------------
+
 The defaults for all of these parameters are given in the class ``dripline_config``:
 
-    amqp:
+.. code-block:: YAML
+
+    dripline:
         auth-file: DRIPLINE_AUTH_FILE
         requests-exchange: requests
         alerts-exchange: alerts
@@ -24,10 +52,13 @@ The defaults for all of these parameters are given in the class ``dripline_confi
         heartbeat-routing-key: heartbeat
         hearteat-interval-s: 60
 
-Note that ``auth-file`` and ``max-payload-size`` are defined by preprocessor macros that 
+Note that the defaults for ``auth-file`` and ``max-payload-size`` are defined by preprocessor macros that 
 should be defined before building dripline-cpp.  ``DL_MAX_PAYLOAD_SIZE`` has a default 
-value, but ``DRIPLINE_AUTH_FILE`` must be defined by the client code/user, and 
-must be a valid file at runtime for the default to be placed in the ``amqp``.
+value within dripline-cpp, but ``DRIPLINE_AUTH_FILE`` must be defined by the client code/user, and 
+must be a valid file at runtime for the default to be placed in the ``dripline`` block.
+
+The default set of return codes are specified in ``return_codes.cc``.  There are no default return codes 
+in the class ``dripline_config``.
 
 The ``dripline_config.hh`` header define the function ``add_dripline_options()`` 
 that will add the common dripline command-line options within the scarab application framework.
@@ -36,16 +67,18 @@ Application Parameters
 ======================
 
 Typically an application will have its own configuration parameters that will include 
-the ``amqp`` block.  For example, ``dl-agent`` is configured from ``agent_config``:
+the ``dripline`` block.  For example, ``dl-agent`` is configured from ``agent_config``:
+
+.. code-block:: YAML
 
     timeout: 10
-    amqp:
+    dripline:
         auth-file: DRIPLINE_AUTH_FILE
         . . .
 
 The application configuration parameters can be arbitrarily complicated, 
 according to the scarab application framework, 
-and for dripline purposes they just need to contain the ``amqp`` framework.
+and for dripline purposes they just need to contain the ``dripline`` framework.
 
 Specifying Parameters
 =====================
@@ -67,6 +100,8 @@ Broker and Broker Port
 ======================
 
 In a dripline application, a few parameters can be specified from the :ref:`authentication  <authentication>` file:
+
+.. code-block:: YAML
 
     broker: [broker URL]
     broker-port: [broker port]
