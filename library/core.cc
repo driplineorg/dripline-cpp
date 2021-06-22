@@ -14,6 +14,7 @@
 
 #include "authentication.hh"
 #include "logger.hh"
+#include "param_codec.hh"
 
 
 namespace dripline
@@ -108,6 +109,58 @@ namespace dripline
         // parameters override config file, auth file, and defaults
         if( ! a_broker_address.empty() ) f_address = a_broker_address;
         if( a_port != 0 ) f_port = a_port;
+
+        // additional return codes
+        if( a_config.has( "return-codes" ) )
+        {
+            // define a function for extracting return codes from a param_array so that we can use it in a couple places
+            auto t_extract_codes = [](const scarab::param_array& a_codes)
+            {
+                LDEBUG( dlog, "Adding return codes:\n" << a_codes );
+                for( auto t_code_it = a_codes.begin(); t_code_it != a_codes.end(); ++t_code_it )
+                {
+                    try
+                    {
+                        const scarab::param_node& t_a_node = t_code_it->as_node();
+                        if( check_and_add_return_code( t_a_node["value"]().as_uint(), t_a_node["name"]().as_string(), t_a_node["description"]().as_string() ) )
+                        {
+                            LDEBUG( dlog, "Added return code <" << t_a_node["name"]().as_string() << " (" << t_a_node["value"]().as_uint() << ")>: " << t_a_node["description"]().as_string() );
+                        }
+                    }
+                    catch( const scarab::error& e )
+                    {
+                        throw dripline_error() << "Invalid configuration for a return code:\n" << *t_code_it << '\n' << e.what();
+                    }
+                    catch( const std::out_of_range& e )
+                    {
+                        throw dripline_error() << "Missing configuration parameter for a return code:\n" << *t_code_it;
+                    }
+                }
+                return;
+            };
+
+            if( a_config["return-codes"].is_value() && a_config["return-codes"]().is_string() )
+            {
+                // then it's a filename; load YAML
+                std::string t_filename( a_config["return-codes"]().as_string() );
+                scarab::param_translator t_translator;
+                scarab::param_ptr_t t_ret_codes = t_translator.read_file( t_filename );
+                if( ! t_ret_codes || ! t_ret_codes->is_array() )
+                {
+                    throw dripline_error() << "Could not find or open return-code config file, or the config does not contain an array: " << t_filename;
+                }
+                t_extract_codes( t_ret_codes->as_array() );
+            }
+            else if( a_config["return-codes"].is_array() )
+            {
+                // then individual codes are specified
+                t_extract_codes( a_config["return-codes"].as_array() );
+            }
+            else
+            {
+                throw dripline_error() << "Return code configuration is invalid:\n" << a_config["return-codes"];
+            }
+        }
     }
 
     core::core( const bool a_make_connection, const scarab::param_node& a_config ) :

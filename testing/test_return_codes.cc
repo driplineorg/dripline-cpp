@@ -13,6 +13,7 @@
 
 #include "catch.hpp"
 
+#include <algorithm>
 #include <sstream>
 
 LOGGER( testlog, "test_return_codes" );
@@ -100,7 +101,8 @@ TEST_CASE( "return_codes", "[exceptions]" )
     // test get_return_code_values()
     auto t_rc_values = dripline::get_return_code_values();
     REQUIRE( t_rc_values[0] == 0 );
-    REQUIRE( t_rc_values.back() == 2010 );
+    auto t_find_result = std::find( begin(t_rc_values), end(t_rc_values), 2010 );
+    REQUIRE_FALSE( t_find_result == end(t_rc_values) );
 
     // test get_return_codes_map()
     auto t_rc_map = dripline::get_return_codes_map();
