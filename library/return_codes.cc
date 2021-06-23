@@ -111,7 +111,7 @@ namespace dripline
     {
         std::vector< unsigned > return_codes;
         scarab::indexed_factory< unsigned, return_code >* the_factory = scarab::indexed_factory< unsigned, return_code >::get_instance();
-        LDEBUG( rclog, "factory is at: " << the_factory );
+        //LDEBUG( rclog, "factory is at: " << the_factory );
         for( auto code_entry = the_factory->begin(); code_entry != the_factory->end(); ++code_entry )
         {
             return_codes.push_back( code_entry->first );
