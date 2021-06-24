@@ -226,7 +226,14 @@ namespace dripline
             return reply_ptr_t();
         }
 
-        LDEBUG( dlog, "Waiting for a reply (timeout: " << a_timeout_ms << " ms)" );
+        if( a_timeout_ms != 0 ) 
+        {
+            LDEBUG( dlog, "Waiting for a reply (timeout: " << a_timeout_ms << " ms)" );
+        }
+        else
+        {
+            LDEBUG( dlog, "Waiting for a reply (no timeout)" );
+        }
 
         // Assign the chunk timeout time; it should be f_reply_listen_timeout_ms unless a_timeout_ms is shorter than f_reply_listen_timeout_ms
         unsigned t_chunk_timeout_ms = f_reply_listen_timeout_ms;
@@ -243,7 +250,7 @@ namespace dripline
         //   2. listening times out (return empty reply pointer; a_chan_valid will be true)
         //   3. a full dripline message is received (return message)
         //   4. error processing a recieved amqp message (return empty reply pointer)
-        while( ! is_canceled() && std::chrono::system_clock::now() < t_timeout_time )
+        while( ! is_canceled() && (a_timeout_ms == 0 || std::chrono::system_clock::now() < t_timeout_time) )
         {
             amqp_envelope_ptr t_envelope;
             core::listen_for_message( t_envelope, a_status, a_receive_reply->f_channel, a_receive_reply->f_consumer_tag, t_chunk_timeout_ms, false );
