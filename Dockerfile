@@ -22,9 +22,19 @@ RUN apt-get update && \
         librabbitmq-dev \
         libyaml-cpp-dev \
         rapidjson-dev \
-        pybind11-dev \
+#        pybind11-dev \
         wget && \
     rm -rf /var/lib/apt/lists/*
+
+RUN cd /usr/local && \
+    git clone https://github.com/pybind/pybind11.git && \
+    cd pybind11 && \
+    git checkout master && \
+    mkdir build && \
+    cd build && \
+    cmake -DPYBIND11_TEST=FALSE .. && \
+    make -j3 install
+
 
 # note that the build dir is *not* in source, this is so that the source can me mounted onto the container without covering the build target
 
