@@ -26,10 +26,12 @@ RUN apt-get update && \
         wget && \
     rm -rf /var/lib/apt/lists/*
 
+# use pybind11_checkout to specify a tag or branch name to checkout
+ARG pybind11_checkout=v2.6.2
 RUN cd /usr/local && \
     git clone https://github.com/pybind/pybind11.git && \
     cd pybind11 && \
-    git checkout master && \
+    git checkout ${pybind11_checkout} && \
     mkdir build && \
     cd build && \
     cmake -DPYBIND11_TEST=FALSE .. && \
