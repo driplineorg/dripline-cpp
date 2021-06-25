@@ -86,10 +86,10 @@ namespace dripline
             This can be called multiple times to receive multiple replies.
             @param[in] a_receive_reply The sent-message package from the request.
             @param[in] a_timeout_ms Timeout for waiting for a reply; if it's 0, there will be no timeout.
-            @param[out] a_chan_valid Returns whether or not the channel is still valid for use after receiving a message.
+            @param[out] a_status Returns the output status after receiving a message (or failing to do so).
             @return Reply message
             */
-            reply_ptr_t wait_for_reply( const wait_for_send_pkg_ptr a_receive_reply, bool& a_chan_valid, int a_timeout_ms = 0 );
+            reply_ptr_t wait_for_reply( const wait_for_send_pkg_ptr a_receive_reply, core::post_listen_status& a_status, int a_timeout_ms = 0 );
 
         private:
             void do_cancellation( int a_code );

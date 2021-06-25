@@ -549,11 +549,12 @@ namespace dripline
         }
     }
 
-    bool core::listen_for_message( amqp_envelope_ptr& a_envelope, amqp_channel_ptr a_channel, const std::string& a_consumer_tag, int a_timeout_ms, bool a_do_ack )
+    void core::listen_for_message( amqp_envelope_ptr& a_envelope, core::post_listen_status& a_status, amqp_channel_ptr a_channel, const std::string& a_consumer_tag, int a_timeout_ms, bool a_do_ack )
     {
         if( s_offline || ! a_channel )
         {
-            return false;
+            a_status = core::post_listen_status::unknown;
+            return;
         }
 
         while( true )
@@ -568,38 +569,52 @@ namespace dripline
                 {
                     a_envelope = a_channel->BasicConsumeMessage( a_consumer_tag );
                 }
-                if( a_envelope && a_do_ack ) a_channel->BasicAck( a_envelope );
-                return true;
+                if( a_envelope )
+                {
+                    if( a_do_ack )  a_channel->BasicAck( a_envelope );
+                    a_status = post_listen_status::message_received;
+                }
+                else
+                {
+                    a_status = post_listen_status::timeout;
+                }
+                return;
             }
             catch( AmqpClient::ConnectionClosedException& e )
             {
                 LERROR( dlog, "Fatal AMQP exception encountered: " << e.what() );
-                return false;
+                a_status = post_listen_status::hard_error;
+                return;
             }
             catch( AmqpClient::ConsumerCancelledException& e )
             {
                 LERROR( dlog, "Fatal AMQP exception encountered: " << e.what() );
-                return false;
+                a_status = post_listen_status::hard_error;
+                return;
             }
             catch( AmqpClient::AmqpException& e )
             {
                 if( e.is_soft_error() )
                 {
                     LWARN( dlog, "Non-fatal AMQP exception encountered: " << e.reply_text() );
-                    return true;
+                    a_status = post_listen_status::soft_error;
+                    return;
                 }
                 LERROR( dlog, "Fatal AMQP exception encountered: " << e.reply_text() );
-                return false;
+                a_status = post_listen_status::hard_error;
+                return;
             }
             catch( std::exception& e )
             {
                 LERROR( dlog, "Standard exception caught: " << e.what() );
-                return false;
+                a_status = post_listen_status::hard_error;
+                return;
             }
             catch(...)
             {
                 LERROR( dlog, "Unknown exception caught" );
-                return false;
+                a_status = post_listen_status::hard_error;
+                return;
             }
         }
     }

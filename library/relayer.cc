@@ -124,11 +124,11 @@ namespace dripline
 
     reply_ptr_t relayer::wait_for_reply( const wait_for_send_pkg_ptr a_receive_reply, int a_timeout_ms )
     {
-        bool t_temp;
+        core::post_listen_status t_temp = core::post_listen_status::unknown;
         return wait_for_reply( a_receive_reply, t_temp, a_timeout_ms );
     }
 
-    reply_ptr_t relayer::wait_for_reply( const wait_for_send_pkg_ptr a_receive_reply, bool& a_chan_valid, int a_timeout_ms )
+    reply_ptr_t relayer::wait_for_reply( const wait_for_send_pkg_ptr a_receive_reply, core::post_listen_status& a_status, int a_timeout_ms )
     {
         std::unique_lock< std::mutex > t_lock( a_receive_reply->f_mutex );
         auto t_deadline = std::chrono::system_clock::now() + std::chrono::milliseconds( a_timeout_ms );
@@ -141,7 +141,7 @@ namespace dripline
                 return reply_ptr_t();
             }
         }
-        return f_msg_receiver.wait_for_reply( a_receive_reply->f_sent_msg_pkg_ptr, a_chan_valid, a_timeout_ms );
+        return f_msg_receiver.wait_for_reply( a_receive_reply->f_sent_msg_pkg_ptr, a_status, a_timeout_ms );
     }
 
 }
