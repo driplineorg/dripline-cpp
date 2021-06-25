@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['processing_1083',['processing',['../classdripline_1_1service.html#a015eb90e0de9f16e87bd149d4b9ce959a4374990dedc873c6a9417a355a2ac4cf',1,'dripline::service']]]
+  ['message_5freceived_1089',['message_received',['../classdripline_1_1core.html#a5d0602644bdd5baa27d8a5264bf5c3e2a6787fac2a420ccef74091b10b0754a61',1,'dripline::core']]]
 ];

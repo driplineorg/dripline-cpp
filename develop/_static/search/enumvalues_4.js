@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['json_1080',['json',['../classdripline_1_1message.html#ab1000d1f2ea9878f60bc119650013894a466deec76ecdf5fca6d38571f6324d54',1,'dripline::message']]]
+  ['hard_5ferror_1086',['hard_error',['../classdripline_1_1core.html#a5d0602644bdd5baa27d8a5264bf5c3e2ae6104c40a32482154a19b69cf23ced90',1,'dripline::core']]]
 ];

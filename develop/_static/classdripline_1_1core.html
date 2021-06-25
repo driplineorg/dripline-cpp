@@ -76,6 +76,7 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pub-static-attribs">Static Public Attributes</a> &#124;
@@ -107,6 +108,19 @@ Inheritance diagram for core:</div>
 </map>
 </div>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:a5d0602644bdd5baa27d8a5264bf5c3e2"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1core.html#a5d0602644bdd5baa27d8a5264bf5c3e2">post_listen_status</a> { <br />
+&#160;&#160;<a class="el" href="classdripline_1_1core.html#a5d0602644bdd5baa27d8a5264bf5c3e2aad921d60486366258809553a3db49a4a">unknown</a>, 
+<a class="el" href="classdripline_1_1core.html#a5d0602644bdd5baa27d8a5264bf5c3e2a6787fac2a420ccef74091b10b0754a61">message_received</a>, 
+<a class="el" href="classdripline_1_1core.html#a5d0602644bdd5baa27d8a5264bf5c3e2a90272dda245ae1fb3cf197e91a8689dc">timeout</a>, 
+<a class="el" href="classdripline_1_1core.html#a5d0602644bdd5baa27d8a5264bf5c3e2abeb7374d9f479806f2f4c75c68a29694">soft_error</a>, 
+<br />
+&#160;&#160;<a class="el" href="classdripline_1_1core.html#a5d0602644bdd5baa27d8a5264bf5c3e2ae6104c40a32482154a19b69cf23ced90">hard_error</a>
+<br />
+ }</td></tr>
+<tr class="separator:a5d0602644bdd5baa27d8a5264bf5c3e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a0d057b559c4cef1b4eed420ba10e3887"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1core.html#a0d057b559c4cef1b4eed420ba10e3887">core</a> (const scarab::param_node &amp;a_config=scarab::param_node(), const std::string &amp;a_broker_address=&quot;&quot;, unsigned a_port=0, const std::string &amp;a_auth_file=&quot;&quot;, const bool a_make_connection=true)</td></tr>
@@ -150,9 +164,9 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a95d35ef02cbe241430ea96f5fe0b658f"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1core.html#a95d35ef02cbe241430ea96f5fe0b658f">listen_for_message</a> (<a class="el" href="namespacedripline.html#ab5b24bea022bf08c954eeb5591768808">amqp_envelope_ptr</a> &amp;a_envelope, <a class="el" href="namespacedripline.html#a0c202910c468babb84c6fe6262e4f68c">amqp_channel_ptr</a> a_channel, const std::string &amp;a_consumer_tag, int a_timeout_ms=0, bool a_do_ack=true)</td></tr>
-<tr class="memdesc:a95d35ef02cbe241430ea96f5fe0b658f"><td class="mdescLeft">&#160;</td><td class="mdescRight">return: if false, channel is no longer useable; if true, may be reused  <a href="classdripline_1_1core.html#a95d35ef02cbe241430ea96f5fe0b658f">More...</a><br /></td></tr>
-<tr class="separator:a95d35ef02cbe241430ea96f5fe0b658f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a572a7b38ab4d8710ae4228624991e1d6"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1core.html#a572a7b38ab4d8710ae4228624991e1d6">listen_for_message</a> (<a class="el" href="namespacedripline.html#ab5b24bea022bf08c954eeb5591768808">amqp_envelope_ptr</a> &amp;a_envelope, <a class="el" href="classdripline_1_1core.html#a5d0602644bdd5baa27d8a5264bf5c3e2">post_listen_status</a> &amp;a_status, <a class="el" href="namespacedripline.html#a0c202910c468babb84c6fe6262e4f68c">amqp_channel_ptr</a> a_channel, const std::string &amp;a_consumer_tag, int a_timeout_ms=0, bool a_do_ack=true)</td></tr>
+<tr class="memdesc:a572a7b38ab4d8710ae4228624991e1d6"><td class="mdescLeft">&#160;</td><td class="mdescRight">listen for a single AMQP message  <a href="classdripline_1_1core.html#a572a7b38ab4d8710ae4228624991e1d6">More...</a><br /></td></tr>
+<tr class="separator:a572a7b38ab4d8710ae4228624991e1d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
@@ -201,7 +215,44 @@ Friends</h2></td></tr>
  Classes wishing to take advantage of those functions should inherit from <code>core</code>. </p>
 
 <p class="definition">Definition at line <a class="el" href="core_8hh_source.html#l00072">72</a> of file <a class="el" href="core_8hh_source.html">core.hh</a>.</p>
-</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+</div><h2 class="groupheader">Member Enumeration Documentation</h2>
+<a id="a5d0602644bdd5baa27d8a5264bf5c3e2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5d0602644bdd5baa27d8a5264bf5c3e2">&#9670;&nbsp;</a></span>post_listen_status</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="classdripline_1_1core.html#a5d0602644bdd5baa27d8a5264bf5c3e2">post_listen_status</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a5d0602644bdd5baa27d8a5264bf5c3e2aad921d60486366258809553a3db49a4a"></a>unknown&#160;</td><td class="fielddoc"><p>Initialized or unknown status. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a5d0602644bdd5baa27d8a5264bf5c3e2a6787fac2a420ccef74091b10b0754a61"></a>message_received&#160;</td><td class="fielddoc"><p>A message was received, and the channel is still valid. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a5d0602644bdd5baa27d8a5264bf5c3e2a90272dda245ae1fb3cf197e91a8689dc"></a>timeout&#160;</td><td class="fielddoc"><p>A timeout occurred, and the channel is still valid. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a5d0602644bdd5baa27d8a5264bf5c3e2abeb7374d9f479806f2f4c75c68a29694"></a>soft_error&#160;</td><td class="fielddoc"><p>An error occurred, but the channel should still be valid. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a5d0602644bdd5baa27d8a5264bf5c3e2ae6104c40a32482154a19b69cf23ced90"></a>hard_error&#160;</td><td class="fielddoc"><p>An error occurred, and the channel is no longer valid. </p>
+</td></tr>
+</table>
+
+<p class="definition">Definition at line <a class="el" href="core_8hh_source.html#l00077">77</a> of file <a class="el" href="core_8hh_source.html">core.hh</a>.</p>
+
+</div>
+</div>
+<h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a0d057b559c4cef1b4eed420ba10e3887"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0d057b559c4cef1b4eed420ba10e3887">&#9670;&nbsp;</a></span>core() <span class="overload">[1/4]</span></h2>
 
@@ -443,8 +494,8 @@ Friends</h2></td></tr>
 
 </div>
 </div>
-<a id="a95d35ef02cbe241430ea96f5fe0b658f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a95d35ef02cbe241430ea96f5fe0b658f">&#9670;&nbsp;</a></span>listen_for_message()</h2>
+<a id="a572a7b38ab4d8710ae4228624991e1d6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a572a7b38ab4d8710ae4228624991e1d6">&#9670;&nbsp;</a></span>listen_for_message()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -453,10 +504,16 @@ Friends</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool listen_for_message </td>
+          <td class="memname">void listen_for_message </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="namespacedripline.html#ab5b24bea022bf08c954eeb5591768808">amqp_envelope_ptr</a> &amp;&#160;</td>
           <td class="paramname"><em>a_envelope</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classdripline_1_1core.html#a5d0602644bdd5baa27d8a5264bf5c3e2">core::post_listen_status</a> &amp;&#160;</td>
+          <td class="paramname"><em>a_status</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -495,7 +552,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>return: if false, channel is no longer useable; if true, may be reused </p>
+<p>listen for a single AMQP message </p>
 
 <p class="definition">Definition at line <a class="el" href="core_8cc_source.html#l00551">551</a> of file <a class="el" href="core_8cc_source.html">core.cc</a>.</p>
 
@@ -1202,7 +1259,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="core_8hh_source.html#l00119">119</a> of file <a class="el" href="core_8hh_source.html">core.hh</a>.</p>
+<p class="definition">Definition at line <a class="el" href="core_8hh_source.html#l00128">128</a> of file <a class="el" href="core_8hh_source.html">core.hh</a>.</p>
 
 </div>
 </div>

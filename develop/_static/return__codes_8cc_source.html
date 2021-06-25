@@ -192,7 +192,7 @@ $(function() {
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    {</div>
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;        std::vector&lt; unsigned &gt; return_codes;</div>
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;        scarab::indexed_factory&lt; unsigned, return_code &gt;* the_factory = scarab::indexed_factory&lt; unsigned, return_code &gt;::get_instance();</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;        LDEBUG( <a class="code" href="return__codes_8cc.html#a76ddc349114be5c9dff3a113eacab446">rclog</a>, <span class="stringliteral">&quot;factory is at: &quot;</span> &lt;&lt; the_factory );</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;        <span class="comment">//LDEBUG( rclog, &quot;factory is at: &quot; &lt;&lt; the_factory );</span></div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;        <span class="keywordflow">for</span>( <span class="keyword">auto</span> code_entry = the_factory-&gt;begin(); code_entry != the_factory-&gt;end(); ++code_entry )</div>
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;        {</div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;            return_codes.push_back( code_entry-&gt;first );</div>
