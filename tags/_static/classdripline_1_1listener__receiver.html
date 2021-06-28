@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="DL3Logo.png"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Dripline-Cpp
-   &#160;<span id="projectnumber">v2.7.0</span>
+   &#160;<span id="projectnumber">v2.8.0</span>
    </div>
    <div id="projectbrief">Dripline Implementation in C++</div>
   </td>
@@ -92,17 +92,17 @@ Inheritance diagram for listener_receiver:</div>
 <div class="dyncontent">
 <div class="center"><img src="classdripline_1_1listener__receiver__inherit__graph.png" border="0" usemap="#listener__receiver_inherit__map" alt="Inheritance graph"/></div>
 <map name="listener__receiver_inherit__map" id="listener__receiver_inherit__map">
-<area shape="rect" title="Convenience class to bring together listener and concurrent_receiver." alt="" coords="286,733,442,869"/>
-<area shape="rect" href="classdripline_1_1endpoint__listener__receiver.html" title="Decorator class for a plain endpoint: adds listener_receiver capabilities." alt="" coords="5,983,227,1193"/>
-<area shape="rect" href="classdripline_1_1monitor.html" title="Listens for messages sent to a particular set of keys and prints them." alt="" coords="251,969,477,1207"/>
-<area shape="rect" href="classdripline_1_1service.html" title="Consumer of Dripline messages on a particular queue." alt="" coords="501,917,726,1259"/>
-<area shape="rect" href="classdripline_1_1listener.html" title="A listener is a class capable of listening for AMQP messages on an AMQP channel. This class provides ..." alt="" coords="127,461,353,685"/>
+<area shape="rect" title="Convenience class to bring together listener and concurrent_receiver." alt="" coords="286,748,442,884"/>
+<area shape="rect" href="classdripline_1_1endpoint__listener__receiver.html" title="Decorator class for a plain endpoint: adds listener_receiver capabilities." alt="" coords="5,1005,227,1215"/>
+<area shape="rect" href="classdripline_1_1monitor.html" title="Listens for messages sent to a particular set of keys and prints them." alt="" coords="251,991,477,1229"/>
+<area shape="rect" href="classdripline_1_1service.html" title="Consumer of Dripline messages on a particular queue." alt="" coords="501,932,726,1288"/>
+<area shape="rect" href="classdripline_1_1listener.html" title="A listener is a class capable of listening for AMQP messages on an AMQP channel. This class provides ..." alt="" coords="127,476,353,700"/>
 <area shape="rect" title=" " alt="" coords="318,5,410,83"/>
-<area shape="rect" href="classdripline_1_1receiver.html" title="A receiver is able to collect Dripline message chunks and reassemble them into a complete Dripline me..." alt="" coords="350,131,575,413"/>
-<area shape="rect" href="classdripline_1_1concurrent__receiver.html" title="Receives and processes messages concurrently." alt="" coords="377,461,599,685"/>
-<area shape="rect" href="classdripline_1_1hub.html" title="Service class aimed at adding a Dripline API to an existing codebase." alt="" coords="289,1307,477,1604"/>
-<area shape="rect" href="classdripline_1_1oscillator__service__endpoints.html" title=" " alt="" coords="501,1358,726,1553"/>
-<area shape="rect" href="classdripline_1_1simple__service.html" title=" " alt="" coords="750,1365,906,1545"/>
+<area shape="rect" href="classdripline_1_1receiver.html" title="A receiver is able to collect Dripline message chunks and reassemble them into a complete Dripline me..." alt="" coords="350,131,575,428"/>
+<area shape="rect" href="classdripline_1_1concurrent__receiver.html" title="Receives and processes messages concurrently." alt="" coords="377,476,599,700"/>
+<area shape="rect" href="classdripline_1_1hub.html" title="Service class aimed at adding a Dripline API to an existing codebase." alt="" coords="289,1336,477,1633"/>
+<area shape="rect" href="classdripline_1_1oscillator__service__endpoints.html" title=" " alt="" coords="501,1387,726,1582"/>
+<area shape="rect" href="classdripline_1_1simple__service.html" title=" " alt="" coords="750,1395,906,1575"/>
 </map>
 </div>
 <table class="memberdecls">
@@ -184,12 +184,15 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a0213489f20ab67555c77e52962663c5f inherit pub_methods_classdripline_1_1receiver"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stores the incomplete messages.  <a href="classdripline_1_1receiver.html#a0213489f20ab67555c77e52962663c5f">More...</a><br /></td></tr>
 <tr class="separator:a0213489f20ab67555c77e52962663c5f inherit pub_methods_classdripline_1_1receiver"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a27778c25a8c550da212b6602f2b74a10 inherit pub_methods_classdripline_1_1receiver"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1receiver.html#a27778c25a8c550da212b6602f2b74a10">snake_case_mv_accessible</a> (unsigned, single_message_wait_ms)</td></tr>
-<tr class="memdesc:a27778c25a8c550da212b6602f2b74a10 inherit pub_methods_classdripline_1_1receiver"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait time for message chunks from a single message.  <a href="classdripline_1_1receiver.html#a27778c25a8c550da212b6602f2b74a10">More...</a><br /></td></tr>
+<tr class="memdesc:a27778c25a8c550da212b6602f2b74a10 inherit pub_methods_classdripline_1_1receiver"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait time for all message chunks from a single dripline message.  <a href="classdripline_1_1receiver.html#a27778c25a8c550da212b6602f2b74a10">More...</a><br /></td></tr>
 <tr class="separator:a27778c25a8c550da212b6602f2b74a10 inherit pub_methods_classdripline_1_1receiver"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a27920c2ac2d60b332337342679612d54 inherit pub_methods_classdripline_1_1receiver"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1receiver.html#a27920c2ac2d60b332337342679612d54">snake_case_mv_accessible</a> (unsigned, reply_listen_timeout_ms)</td></tr>
+<tr class="memdesc:a27920c2ac2d60b332337342679612d54 inherit pub_methods_classdripline_1_1receiver"><td class="mdescLeft">&#160;</td><td class="mdescRight">Listen timeout for individual message chunks when waiting for replies.  <a href="classdripline_1_1receiver.html#a27920c2ac2d60b332337342679612d54">More...</a><br /></td></tr>
+<tr class="separator:a27920c2ac2d60b332337342679612d54 inherit pub_methods_classdripline_1_1receiver"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab3fb2bb6fe4e3654650a263bb082e4a9 inherit pub_methods_classdripline_1_1receiver"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacedripline.html#a691e50784fa7b338976076f25620ae94">reply_ptr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1receiver.html#ab3fb2bb6fe4e3654650a263bb082e4a9">wait_for_reply</a> (const <a class="el" href="namespacedripline.html#a548c9b3973b284ae7a15952ab0cecd3e">sent_msg_pkg_ptr</a> a_receive_reply, int a_timeout_ms=0)</td></tr>
 <tr class="separator:ab3fb2bb6fe4e3654650a263bb082e4a9 inherit pub_methods_classdripline_1_1receiver"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afe8b2adcfd1aa8b59ebabb814a5b2918 inherit pub_methods_classdripline_1_1receiver"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacedripline.html#a691e50784fa7b338976076f25620ae94">reply_ptr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1receiver.html#afe8b2adcfd1aa8b59ebabb814a5b2918">wait_for_reply</a> (const <a class="el" href="namespacedripline.html#a548c9b3973b284ae7a15952ab0cecd3e">sent_msg_pkg_ptr</a> a_receive_reply, bool &amp;a_chan_valid, int a_timeout_ms=0)</td></tr>
-<tr class="separator:afe8b2adcfd1aa8b59ebabb814a5b2918 inherit pub_methods_classdripline_1_1receiver"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a74feb66109161ca4ca87650925fd1a5b inherit pub_methods_classdripline_1_1receiver"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacedripline.html#a691e50784fa7b338976076f25620ae94">reply_ptr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1receiver.html#a74feb66109161ca4ca87650925fd1a5b">wait_for_reply</a> (const <a class="el" href="namespacedripline.html#a548c9b3973b284ae7a15952ab0cecd3e">sent_msg_pkg_ptr</a> a_receive_reply, <a class="el" href="classdripline_1_1core.html#a5d0602644bdd5baa27d8a5264bf5c3e2">core::post_listen_status</a> &amp;a_status, int a_timeout_ms=0)</td></tr>
+<tr class="separator:a74feb66109161ca4ca87650925fd1a5b inherit pub_methods_classdripline_1_1receiver"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
 Additional Inherited Members</h2></td></tr>

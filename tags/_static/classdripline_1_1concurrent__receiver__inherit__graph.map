@@ -1,9 +1,9 @@
 <map id="concurrent_receiver" name="concurrent_receiver">
-<area shape="rect" id="node1" title="Receives and processes messages concurrently." alt="" coords="253,461,475,685"/>
-<area shape="rect" id="node4" href="$classdripline_1_1listener__receiver.html" title="Convenience class to bring together listener and concurrent_receiver." alt="" coords="286,733,442,869"/>
-<area shape="rect" id="node2" href="$classdripline_1_1receiver.html" title="A receiver is able to collect Dripline message chunks and reassemble them into a complete Dripline me..." alt="" coords="251,131,477,413"/>
+<area shape="rect" id="node1" title="Receives and processes messages concurrently." alt="" coords="253,476,475,700"/>
+<area shape="rect" id="node4" href="$classdripline_1_1listener__receiver.html" title="Convenience class to bring together listener and concurrent_receiver." alt="" coords="286,748,442,884"/>
+<area shape="rect" id="node2" href="$classdripline_1_1receiver.html" title="A receiver is able to collect Dripline message chunks and reassemble them into a complete Dripline me..." alt="" coords="251,131,477,428"/>
 <area shape="rect" id="node3" title=" " alt="" coords="318,5,410,83"/>
-<area shape="rect" id="node5" href="$classdripline_1_1endpoint__listener__receiver.html" title="Decorator class for a plain endpoint: adds listener_receiver capabilities." alt="" coords="5,983,227,1193"/>
-<area shape="rect" id="node6" href="$classdripline_1_1monitor.html" title="Listens for messages sent to a particular set of keys and prints them." alt="" coords="251,969,477,1207"/>
-<area shape="rect" id="node7" href="$classdripline_1_1service.html" title="Consumer of Dripline messages on a particular queue." alt="" coords="501,917,726,1259"/>
+<area shape="rect" id="node5" href="$classdripline_1_1endpoint__listener__receiver.html" title="Decorator class for a plain endpoint: adds listener_receiver capabilities." alt="" coords="5,1005,227,1215"/>
+<area shape="rect" id="node6" href="$classdripline_1_1monitor.html" title="Listens for messages sent to a particular set of keys and prints them." alt="" coords="251,991,477,1229"/>
+<area shape="rect" id="node7" href="$classdripline_1_1service.html" title="Consumer of Dripline messages on a particular queue." alt="" coords="501,932,726,1288"/>
 </map>
