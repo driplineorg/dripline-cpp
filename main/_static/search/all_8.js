@@ -17,10 +17,11 @@ var searchData=
   ['handle_5funlock_5frequest_191',['handle_unlock_request',['../classdripline_1_1endpoint.html#a33f7fcaf939e900ef1df7febdbf75135',1,'dripline::endpoint']]],
   ['handler_5ffunc_5ft_192',['handler_func_t',['../classdripline_1_1hub.html#a5a355475dd8734cbb570a37f7b782d31',1,'dripline::hub']]],
   ['handler_5ffuncs_5ft_193',['handler_funcs_t',['../classdripline_1_1hub.html#aa444cc66cfc26c7d5bd146f6d4ee2c26',1,'dripline::hub']]],
-  ['heartbeater_194',['heartbeater',['../classdripline_1_1heartbeater.html',1,'heartbeater'],['../classdripline_1_1heartbeater.html#ab1fddcd545b0c0b52c9ccb02d5e59f0b',1,'dripline::heartbeater::heartbeater(service_ptr_t a_service=service_ptr_t())'],['../classdripline_1_1heartbeater.html#a2d977496f33d44326da33452ac1a2a39',1,'dripline::heartbeater::heartbeater(const heartbeater &amp;)=delete'],['../classdripline_1_1heartbeater.html#ac1bf29db0a53abaae568cfd00db09701',1,'dripline::heartbeater::heartbeater(heartbeater &amp;&amp;a_orig)']]],
-  ['heartbeater_2ecc_195',['heartbeater.cc',['../heartbeater_8cc.html',1,'']]],
-  ['heartbeater_2ehh_196',['heartbeater.hh',['../heartbeater_8hh.html',1,'']]],
-  ['hub_197',['hub',['../classdripline_1_1hub.html',1,'hub'],['../classdripline_1_1hub.html#a4303147923090c281f760ec52e4405f0',1,'dripline::hub::hub()']]],
-  ['hub_2ecc_198',['hub.cc',['../hub_8cc.html',1,'']]],
-  ['hub_2ehh_199',['hub.hh',['../hub_8hh.html',1,'']]]
+  ['hard_5ferror_194',['hard_error',['../classdripline_1_1core.html#a5d0602644bdd5baa27d8a5264bf5c3e2ae6104c40a32482154a19b69cf23ced90',1,'dripline::core']]],
+  ['heartbeater_195',['heartbeater',['../classdripline_1_1heartbeater.html',1,'heartbeater'],['../classdripline_1_1heartbeater.html#ab1fddcd545b0c0b52c9ccb02d5e59f0b',1,'dripline::heartbeater::heartbeater(service_ptr_t a_service=service_ptr_t())'],['../classdripline_1_1heartbeater.html#a2d977496f33d44326da33452ac1a2a39',1,'dripline::heartbeater::heartbeater(const heartbeater &amp;)=delete'],['../classdripline_1_1heartbeater.html#ac1bf29db0a53abaae568cfd00db09701',1,'dripline::heartbeater::heartbeater(heartbeater &amp;&amp;a_orig)']]],
+  ['heartbeater_2ecc_196',['heartbeater.cc',['../heartbeater_8cc.html',1,'']]],
+  ['heartbeater_2ehh_197',['heartbeater.hh',['../heartbeater_8hh.html',1,'']]],
+  ['hub_198',['hub',['../classdripline_1_1hub.html',1,'hub'],['../classdripline_1_1hub.html#a4303147923090c281f760ec52e4405f0',1,'dripline::hub::hub()']]],
+  ['hub_2ecc_199',['hub.cc',['../hub_8cc.html',1,'']]],
+  ['hub_2ehh_200',['hub.hh',['../hub_8hh.html',1,'']]]
 ];

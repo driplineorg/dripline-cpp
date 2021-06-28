@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['unknown_1089',['unknown',['../namespacedripline.html#a239d3dacfc52ca4d3f06ae1c20ce9d1aaad921d60486366258809553a3db49a4a',1,'dripline::unknown()'],['../namespacedripline.html#ac1a394a65b0f88ca7223174f49eb1c67aad921d60486366258809553a3db49a4a',1,'dripline::unknown()']]]
+  ['reply_1094',['reply',['../namespacedripline.html#ac1a394a65b0f88ca7223174f49eb1c67ae84afaab83ecb301b3d97ce4174d2773',1,'dripline']]],
+  ['request_1095',['request',['../namespacedripline.html#ac1a394a65b0f88ca7223174f49eb1c67a10573b873d2fa5a365d558a45e328e47',1,'dripline']]]
 ];

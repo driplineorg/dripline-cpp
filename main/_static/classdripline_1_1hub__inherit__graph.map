@@ -1,7 +1,7 @@
 <map id="hub" name="hub">
-<area shape="rect" id="node1" title="Service class aimed at adding a Dripline API to an existing codebase." alt="" coords="544,901,732,1199"/>
-<area shape="rect" id="node9" href="$classdripline_1_1oscillator__service__hub.html" title=" " alt="" coords="525,1247,751,1632"/>
-<area shape="rect" id="node2" href="$classdripline_1_1service.html" title="Consumer of Dripline messages on a particular queue." alt="" coords="525,512,751,853"/>
+<area shape="rect" id="node1" title="Service class aimed at adding a Dripline API to an existing codebase." alt="" coords="544,916,732,1213"/>
+<area shape="rect" id="node9" href="$classdripline_1_1oscillator__service__hub.html" title=" " alt="" coords="525,1261,751,1647"/>
+<area shape="rect" id="node2" href="$classdripline_1_1service.html" title="Consumer of Dripline messages on a particular queue." alt="" coords="525,512,751,868"/>
 <area shape="rect" id="node3" href="$classdripline_1_1core.html" title="Basic AMQP interactions, including sending messages and interacting with AMQP channels." alt="" coords="5,42,180,427"/>
 <area shape="rect" id="node4" href="$classdripline_1_1endpoint.html" title="Basic Dripline object capable of receiving and acting on messages." alt="" coords="204,5,429,464"/>
 <area shape="rect" id="node5" href="$classdripline_1_1listener__receiver.html" title="Convenience class to bring together listener and concurrent_receiver." alt="" coords="453,167,609,303"/>

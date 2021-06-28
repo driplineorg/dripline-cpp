@@ -107,6 +107,17 @@ Inheritance diagram for monitor:</div>
 Public Types</h2></td></tr>
 <tr class="memitem:a036d86f066884b6f6008bfaf83794982"><td class="memItemLeft" align="right" valign="top">typedef std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1monitor.html#a036d86f066884b6f6008bfaf83794982">keys_t</a></td></tr>
 <tr class="separator:a036d86f066884b6f6008bfaf83794982"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_types_classdripline_1_1core"><td colspan="2" onclick="javascript:toggleInherit('pub_types_classdripline_1_1core')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="classdripline_1_1core.html">core</a></td></tr>
+<tr class="memitem:a5d0602644bdd5baa27d8a5264bf5c3e2 inherit pub_types_classdripline_1_1core"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1core.html#a5d0602644bdd5baa27d8a5264bf5c3e2">post_listen_status</a> { <br />
+&#160;&#160;<a class="el" href="classdripline_1_1core.html#a5d0602644bdd5baa27d8a5264bf5c3e2aad921d60486366258809553a3db49a4a">unknown</a>, 
+<a class="el" href="classdripline_1_1core.html#a5d0602644bdd5baa27d8a5264bf5c3e2a6787fac2a420ccef74091b10b0754a61">message_received</a>, 
+<a class="el" href="classdripline_1_1core.html#a5d0602644bdd5baa27d8a5264bf5c3e2a90272dda245ae1fb3cf197e91a8689dc">timeout</a>, 
+<a class="el" href="classdripline_1_1core.html#a5d0602644bdd5baa27d8a5264bf5c3e2abeb7374d9f479806f2f4c75c68a29694">soft_error</a>, 
+<br />
+&#160;&#160;<a class="el" href="classdripline_1_1core.html#a5d0602644bdd5baa27d8a5264bf5c3e2ae6104c40a32482154a19b69cf23ced90">hard_error</a>
+<br />
+ }</td></tr>
+<tr class="separator:a5d0602644bdd5baa27d8a5264bf5c3e2 inherit pub_types_classdripline_1_1core"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -266,12 +277,15 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a0213489f20ab67555c77e52962663c5f inherit pub_methods_classdripline_1_1receiver"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stores the incomplete messages.  <a href="classdripline_1_1receiver.html#a0213489f20ab67555c77e52962663c5f">More...</a><br /></td></tr>
 <tr class="separator:a0213489f20ab67555c77e52962663c5f inherit pub_methods_classdripline_1_1receiver"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a27778c25a8c550da212b6602f2b74a10 inherit pub_methods_classdripline_1_1receiver"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1receiver.html#a27778c25a8c550da212b6602f2b74a10">snake_case_mv_accessible</a> (unsigned, single_message_wait_ms)</td></tr>
-<tr class="memdesc:a27778c25a8c550da212b6602f2b74a10 inherit pub_methods_classdripline_1_1receiver"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait time for message chunks from a single message.  <a href="classdripline_1_1receiver.html#a27778c25a8c550da212b6602f2b74a10">More...</a><br /></td></tr>
+<tr class="memdesc:a27778c25a8c550da212b6602f2b74a10 inherit pub_methods_classdripline_1_1receiver"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait time for all message chunks from a single dripline message.  <a href="classdripline_1_1receiver.html#a27778c25a8c550da212b6602f2b74a10">More...</a><br /></td></tr>
 <tr class="separator:a27778c25a8c550da212b6602f2b74a10 inherit pub_methods_classdripline_1_1receiver"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a27920c2ac2d60b332337342679612d54 inherit pub_methods_classdripline_1_1receiver"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1receiver.html#a27920c2ac2d60b332337342679612d54">snake_case_mv_accessible</a> (unsigned, reply_listen_timeout_ms)</td></tr>
+<tr class="memdesc:a27920c2ac2d60b332337342679612d54 inherit pub_methods_classdripline_1_1receiver"><td class="mdescLeft">&#160;</td><td class="mdescRight">Listen timeout for individual message chunks when waiting for replies.  <a href="classdripline_1_1receiver.html#a27920c2ac2d60b332337342679612d54">More...</a><br /></td></tr>
+<tr class="separator:a27920c2ac2d60b332337342679612d54 inherit pub_methods_classdripline_1_1receiver"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab3fb2bb6fe4e3654650a263bb082e4a9 inherit pub_methods_classdripline_1_1receiver"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacedripline.html#a691e50784fa7b338976076f25620ae94">reply_ptr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1receiver.html#ab3fb2bb6fe4e3654650a263bb082e4a9">wait_for_reply</a> (const <a class="el" href="namespacedripline.html#a548c9b3973b284ae7a15952ab0cecd3e">sent_msg_pkg_ptr</a> a_receive_reply, int a_timeout_ms=0)</td></tr>
 <tr class="separator:ab3fb2bb6fe4e3654650a263bb082e4a9 inherit pub_methods_classdripline_1_1receiver"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afe8b2adcfd1aa8b59ebabb814a5b2918 inherit pub_methods_classdripline_1_1receiver"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacedripline.html#a691e50784fa7b338976076f25620ae94">reply_ptr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1receiver.html#afe8b2adcfd1aa8b59ebabb814a5b2918">wait_for_reply</a> (const <a class="el" href="namespacedripline.html#a548c9b3973b284ae7a15952ab0cecd3e">sent_msg_pkg_ptr</a> a_receive_reply, bool &amp;a_chan_valid, int a_timeout_ms=0)</td></tr>
-<tr class="separator:afe8b2adcfd1aa8b59ebabb814a5b2918 inherit pub_methods_classdripline_1_1receiver"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a74feb66109161ca4ca87650925fd1a5b inherit pub_methods_classdripline_1_1receiver"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacedripline.html#a691e50784fa7b338976076f25620ae94">reply_ptr_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1receiver.html#a74feb66109161ca4ca87650925fd1a5b">wait_for_reply</a> (const <a class="el" href="namespacedripline.html#a548c9b3973b284ae7a15952ab0cecd3e">sent_msg_pkg_ptr</a> a_receive_reply, <a class="el" href="classdripline_1_1core.html#a5d0602644bdd5baa27d8a5264bf5c3e2">core::post_listen_status</a> &amp;a_status, int a_timeout_ms=0)</td></tr>
+<tr class="separator:a74feb66109161ca4ca87650925fd1a5b inherit pub_methods_classdripline_1_1receiver"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-types"></a>
 Protected Types</h2></td></tr>
@@ -313,9 +327,9 @@ Protected Member Functions</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
 <tr class="inherit_header pub_static_methods_classdripline_1_1core"><td colspan="2" onclick="javascript:toggleInherit('pub_static_methods_classdripline_1_1core')"><img src="closed.png" alt="-"/>&#160;Static Public Member Functions inherited from <a class="el" href="classdripline_1_1core.html">core</a></td></tr>
-<tr class="memitem:a95d35ef02cbe241430ea96f5fe0b658f inherit pub_static_methods_classdripline_1_1core"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1core.html#a95d35ef02cbe241430ea96f5fe0b658f">listen_for_message</a> (<a class="el" href="namespacedripline.html#ab5b24bea022bf08c954eeb5591768808">amqp_envelope_ptr</a> &amp;a_envelope, <a class="el" href="namespacedripline.html#a0c202910c468babb84c6fe6262e4f68c">amqp_channel_ptr</a> a_channel, const std::string &amp;a_consumer_tag, int a_timeout_ms=0, bool a_do_ack=true)</td></tr>
-<tr class="memdesc:a95d35ef02cbe241430ea96f5fe0b658f inherit pub_static_methods_classdripline_1_1core"><td class="mdescLeft">&#160;</td><td class="mdescRight">return: if false, channel is no longer useable; if true, may be reused  <a href="classdripline_1_1core.html#a95d35ef02cbe241430ea96f5fe0b658f">More...</a><br /></td></tr>
-<tr class="separator:a95d35ef02cbe241430ea96f5fe0b658f inherit pub_static_methods_classdripline_1_1core"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a572a7b38ab4d8710ae4228624991e1d6 inherit pub_static_methods_classdripline_1_1core"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1core.html#a572a7b38ab4d8710ae4228624991e1d6">listen_for_message</a> (<a class="el" href="namespacedripline.html#ab5b24bea022bf08c954eeb5591768808">amqp_envelope_ptr</a> &amp;a_envelope, <a class="el" href="classdripline_1_1core.html#a5d0602644bdd5baa27d8a5264bf5c3e2">post_listen_status</a> &amp;a_status, <a class="el" href="namespacedripline.html#a0c202910c468babb84c6fe6262e4f68c">amqp_channel_ptr</a> a_channel, const std::string &amp;a_consumer_tag, int a_timeout_ms=0, bool a_do_ack=true)</td></tr>
+<tr class="memdesc:a572a7b38ab4d8710ae4228624991e1d6 inherit pub_static_methods_classdripline_1_1core"><td class="mdescLeft">&#160;</td><td class="mdescRight">listen for a single AMQP message  <a href="classdripline_1_1core.html#a572a7b38ab4d8710ae4228624991e1d6">More...</a><br /></td></tr>
+<tr class="separator:a572a7b38ab4d8710ae4228624991e1d6 inherit pub_static_methods_classdripline_1_1core"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_static_attribs_classdripline_1_1core"><td colspan="2" onclick="javascript:toggleInherit('pub_static_attribs_classdripline_1_1core')"><img src="closed.png" alt="-"/>&#160;Static Public Attributes inherited from <a class="el" href="classdripline_1_1core.html">core</a></td></tr>
 <tr class="memitem:a1cdfeb4e775b5e09fc9e3f489033d712 inherit pub_static_attribs_classdripline_1_1core"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1core.html#a1cdfeb4e775b5e09fc9e3f489033d712">s_offline</a> = false</td></tr>
 <tr class="separator:a1cdfeb4e775b5e09fc9e3f489033d712 inherit pub_static_attribs_classdripline_1_1core"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -513,7 +527,7 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="monitor_8cc_source.html#l00215">215</a> of file <a class="el" href="monitor_8cc_source.html">monitor.cc</a>.</p>
+<p class="definition">Definition at line <a class="el" href="monitor_8cc_source.html#l00216">216</a> of file <a class="el" href="monitor_8cc_source.html">monitor.cc</a>.</p>
 
 </div>
 </div>
@@ -565,7 +579,7 @@ Additional Inherited Members</h2></td></tr>
 
 <p>Implements <a class="el" href="classdripline_1_1listener.html#aca504df1d8606a6a66ac9ce34901a183">listener</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="monitor_8cc_source.html#l00232">232</a> of file <a class="el" href="monitor_8cc_source.html">monitor.cc</a>.</p>
+<p class="definition">Definition at line <a class="el" href="monitor_8cc_source.html#l00233">233</a> of file <a class="el" href="monitor_8cc_source.html">monitor.cc</a>.</p>
 
 </div>
 </div>
@@ -830,7 +844,7 @@ Additional Inherited Members</h2></td></tr>
 
 <p>Stops listening for messages and closes the AMQP connection. </p>
 
-<p class="definition">Definition at line <a class="el" href="monitor_8cc_source.html#l00190">190</a> of file <a class="el" href="monitor_8cc_source.html">monitor.cc</a>.</p>
+<p class="definition">Definition at line <a class="el" href="monitor_8cc_source.html#l00191">191</a> of file <a class="el" href="monitor_8cc_source.html">monitor.cc</a>.</p>
 
 </div>
 </div>
@@ -861,7 +875,7 @@ Additional Inherited Members</h2></td></tr>
 
 <p>Implements <a class="el" href="classdripline_1_1concurrent__receiver.html#a74780114964b54d802c484cda08e2173">concurrent_receiver</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="monitor_8cc_source.html#l00270">270</a> of file <a class="el" href="monitor_8cc_source.html">monitor.cc</a>.</p>
+<p class="definition">Definition at line <a class="el" href="monitor_8cc_source.html#l00286">286</a> of file <a class="el" href="monitor_8cc_source.html">monitor.cc</a>.</p>
 
 </div>
 </div>
