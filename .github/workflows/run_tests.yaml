@@ -143,7 +143,7 @@ jobs:
         run: |
           mkdir -p build\Debug
           cd build
-          cmake -DDripline_ENABLE_TESTING=TRUE -G "Visual Studio 16 2019" -A x64 ..
+          cmake -DDripline_ENABLE_TESTING=TRUE -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake -G "Visual Studio 16 2019" -A x64 ..
       - name: Build
         run: |
           cd build
