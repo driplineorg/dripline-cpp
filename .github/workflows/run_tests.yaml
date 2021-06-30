@@ -134,11 +134,10 @@ jobs:
           submodules: recursive
       - name: Install dependencies
         run: |
-          vcpkg install ^
-            boost ^
-            librabbitmq ^
-            rapidjson ^
-            yaml-cpp 
+          vcpkg install boost
+          vcpkg install librabbitmq
+          vcpkg install rapidjson
+          vcpkg install yaml-cpp
       - name: Configure
         run: |
           mkdir -p build\Debug
