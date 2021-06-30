@@ -122,3 +122,29 @@ jobs:
         run: |
           cd build/testing
           ./run_tests
+
+  test_windows:
+    runs-on: windows-2019
+    steps:
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.0.2
+      - name: Checkout the repo 
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Install dependencies
+        run: |
+          vcpkg install 
+            boost
+            librabbitmq
+            rapidjson
+            yaml-cpp
+      - name: Configure
+        run: |
+          mkdir -p build\Debug
+          cd build
+          cmake -DDripline_ENABLE_TESTING=TRUE -G "Visual Studio 16 2019" -A x64 ..
+      - name: Build
+        run: |
+          cd build
+          cmake --build . --config Debug --parallel 1 --target install
