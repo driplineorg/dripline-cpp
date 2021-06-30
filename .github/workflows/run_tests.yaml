@@ -134,7 +134,8 @@ jobs:
           submodules: recursive
       - name: Install dependencies
         run: |
-          vcpkg install boost
+          choco install boost-msvc-14.2
+#          vcpkg install boost
           vcpkg install librabbitmq
           vcpkg install rapidjson
           vcpkg install yaml-cpp
