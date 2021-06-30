@@ -138,6 +138,7 @@ jobs:
           vcpkg install librabbitmq
           vcpkg install rapidjson
           vcpkg install yaml-cpp
+          vcpkg integrate install
       - name: Configure
         run: |
           mkdir -p build\Debug
