@@ -135,7 +135,6 @@ jobs:
       - name: Install dependencies
         run: |
           choco install boost-msvc-14.2
-#          vcpkg install boost
           vcpkg install librabbitmq
           vcpkg install rapidjson
           vcpkg install yaml-cpp
