@@ -139,14 +139,24 @@ jobs:
           vcpkg install rapidjson
           vcpkg install yaml-cpp
           vcpkg integrate install
+      - name: Cache vcpkg packages
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-dlcpp-vcpkg
+        with:
+          key: ${{ runner.os }}-build-${{ env.cache-name }}
+          path: |
+              C:\vcpkg
       - name: Configure
+        env:
+          CMAKE_PREFIX_PATH: 'C:\vcpkg\installed\x86-windows'
         run: |
           mkdir -p build\Debug
           cd build
           cmake -DDripline_ENABLE_TESTING=TRUE -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake -G "Visual Studio 16 2019" -A x64 ..
-      - name: Setup tmate session
-        if: ${{ failure() }}
-        uses: mxschmitt/action-tmate@v3
+#      - name: Setup tmate session
+#        if: ${{ failure() }}
+#        uses: mxschmitt/action-tmate@v3
       - name: Build
         run: |
           cd build
