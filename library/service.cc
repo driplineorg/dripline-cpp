@@ -13,6 +13,7 @@
 
 #include "authentication.hh"
 #include "logger.hh"
+#include "signal_handler.hh"
 
 using scarab::authentication;
 using scarab::param_node;
@@ -224,15 +225,23 @@ namespace dripline
 
             f_receiver_thread = std::thread( &concurrent_receiver::execute, this );
 
+            // lambda to cancel everything on an error from listener::listen_on_queue()
+            auto t_cancel_on_listen_error = [](listener& a_listener) {
+                if( ! a_listener.listen_on_queue() )
+                {
+                    scarab::signal_handler::cancel_all(RETURN_ERROR);
+                }
+            };
+
             for( async_map_t::iterator t_child_it = f_async_children.begin();
                     t_child_it != f_async_children.end();
                     ++t_child_it )
             {
                 t_child_it->second->receiver_thread() = std::thread( &concurrent_receiver::execute, static_cast< listener_receiver* >(t_child_it->second.get()) );
-                t_child_it->second->listener_thread() = std::thread( &listener::listen_on_queue, t_child_it->second.get() );
+                t_child_it->second->listener_thread() = std::thread( t_cancel_on_listen_error, std::ref(*t_child_it->second.get()) );
             }
 
-            listen_on_queue();
+            t_cancel_on_listen_error( *this );
 
             for( async_map_t::iterator t_child_it = f_async_children.begin();
                     t_child_it != f_async_children.end();

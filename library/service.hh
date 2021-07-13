@@ -151,6 +151,7 @@ namespace dripline
 
         public:
             /// Waits for AMQP messages arriving on the channel
+            /// Returns false if the return is due to an error in this function; returns true otherwise (namely because it was canceled)
             virtual bool listen_on_queue();
 
             /// Sends a reply message

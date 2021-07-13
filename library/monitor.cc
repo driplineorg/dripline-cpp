@@ -164,7 +164,10 @@ namespace dripline
         {
             f_receiver_thread = std::thread( &concurrent_receiver::execute, this );
 
-            listen_on_queue();
+            if( ! listen_on_queue() )
+            {
+                scarab::signal_handler::cancel_all(RETURN_ERROR);
+            }
 
             f_receiver_thread.join();
         }
