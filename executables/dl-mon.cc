@@ -61,11 +61,16 @@ int main( int argc, char** argv )
 
         auto the_monitor = std::make_shared< monitor >( the_main.primary_config() );
 
-        if( ! the_monitor->start() ) return;
+        // run each phase of the operation, while checking for errors
+        if ( ! the_monitor->start() || 
+             ! the_monitor->listen() ||
+             ! the_monitor->stop() )
+        {
+            scarab::signal_handler::cancel_all( RETURN_ERROR );
+        }
 
-        if( ! the_monitor->listen() ) return;
-
-        if( ! the_monitor->stop() ) return;
+        // brief pause to ensure that the cancellation goes through
+        std::this_thread::sleep_for( std::chrono::milliseconds(100) );
 
         the_return = scarab::signal_handler::get_exited() ? 
                 scarab::signal_handler::get_return_code() : dl_success().rc_value() / 100;

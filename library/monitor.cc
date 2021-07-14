@@ -166,7 +166,7 @@ namespace dripline
 
             if( ! listen_on_queue() )
             {
-                scarab::signal_handler::cancel_all(RETURN_ERROR);
+                throw dripline_error() << "Something went wrong while listening for messages";
             }
 
             f_receiver_thread.join();
