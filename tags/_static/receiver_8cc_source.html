@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="DL3Logo.png"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Dripline-Cpp
-   &#160;<span id="projectnumber">v2.8.0</span>
+   &#160;<span id="projectnumber">v2.8.1</span>
    </div>
    <div id="projectbrief">Dripline Implementation in C++</div>
   </td>
@@ -534,7 +534,7 @@ $(function() {
 <div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;        {</div>
 <div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;            <span class="comment">// shutdown gracefully on an exception</span></div>
 <div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;            LERROR( <a class="code" href="namespacedripline.html#a31824502fdabed7ce86e48f7108e5737">dlog</a>, <span class="stringliteral">&quot;Exception caught; shutting down.\n&quot;</span> &lt;&lt; <span class="stringliteral">&quot;\t&quot;</span> &lt;&lt; e.what() );</div>
-<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;            scarab::signal_handler::cancel_all( 1 );</div>
+<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;            scarab::signal_handler::cancel_all( RETURN_ERROR );</div>
 <div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;        }</div>
 <div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;    }</div>
 <div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160; </div>

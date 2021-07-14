@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="DL3Logo.png"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Dripline-Cpp
-   &#160;<span id="projectnumber">v2.8.0</span>
+   &#160;<span id="projectnumber">v2.8.1</span>
    </div>
    <div id="projectbrief">Dripline Implementation in C++</div>
   </td>
@@ -116,6 +116,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a479f6de8a4b7c3da0ec048dcf59d996e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classdripline_1_1listener.html">listener</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1listener.html#a479f6de8a4b7c3da0ec048dcf59d996e">operator=</a> (<a class="el" href="classdripline_1_1listener.html">listener</a> &amp;&amp;a_orig)</td></tr>
 <tr class="separator:a479f6de8a4b7c3da0ec048dcf59d996e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aca504df1d8606a6a66ac9ce34901a183"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1listener.html#aca504df1d8606a6a66ac9ce34901a183">listen_on_queue</a> ()=0</td></tr>
+<tr class="memdesc:aca504df1d8606a6a66ac9ce34901a183"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns false if the return is due to an error in this function; returns true otherwise (namely because it was canceled)  <a href="classdripline_1_1listener.html#aca504df1d8606a6a66ac9ce34901a183">More...</a><br /></td></tr>
 <tr class="separator:aca504df1d8606a6a66ac9ce34901a183"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a58852204c84d2e619713482efd7bdc4d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1listener.html#a58852204c84d2e619713482efd7bdc4d">snake_case_mv_referrable</a> (<a class="el" href="namespacedripline.html#a0c202910c468babb84c6fe6262e4f68c">amqp_channel_ptr</a>, channel)</td></tr>
 <tr class="separator:a58852204c84d2e619713482efd7bdc4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -129,9 +130,9 @@ Public Member Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A listener is a class capable of listening for AMQP messages on an AMQP channel. This class provides the basic framework for doing that. </p>
 <dl class="section author"><dt>Author</dt><dd>N.S. Oblath</dd></dl>
-<p>The listener class is a mix-in class that provides the interface for listening for messages: the pure virtual function <code><a class="el" href="classdripline_1_1listener.html#aca504df1d8606a6a66ac9ce34901a183">listen_on_queue()</a></code>. This function should be run in the thread provided by this class. However, it needs to be implemented by the inheriting class.</p>
+<p>The listener class is a mix-in class that provides the interface for listening for messages: the pure virtual function <code><a class="el" href="classdripline_1_1listener.html#aca504df1d8606a6a66ac9ce34901a183" title="Returns false if the return is due to an error in this function; returns true otherwise (namely becau...">listen_on_queue()</a></code>. This function should be run in the thread provided by this class. However, it needs to be implemented by the inheriting class.</p>
 <p>The typical use case involves at least two threads:</p><ol type="1">
-<li>A listener gets messages from the AMQP channel (using <code><a class="el" href="classdripline_1_1listener.html#aca504df1d8606a6a66ac9ce34901a183">listen_on_queue()</a>, e.g. @ref service or @ref <a class="el" href="classdripline_1_1endpoint__listener__receiver.html" title="Decorator class for a plain endpoint: adds listener_receiver capabilities.">endpoint_listener_receiver</a>) and calls</code><a class="el" href="classdripline_1_1receiver.html#a7b0ec80ef4739200425a66423dac357e">receiver::handle_message_chunk()</a>`</li>
+<li>A listener gets messages from the AMQP channel (using <code><a class="el" href="classdripline_1_1listener.html#aca504df1d8606a6a66ac9ce34901a183" title="Returns false if the return is due to an error in this function; returns true otherwise (namely becau...">listen_on_queue()</a>, e.g. @ref service or @ref <a class="el" href="classdripline_1_1endpoint__listener__receiver.html" title="Decorator class for a plain endpoint: adds listener_receiver capabilities.">endpoint_listener_receiver</a>) and calls</code><a class="el" href="classdripline_1_1receiver.html#a7b0ec80ef4739200425a66423dac357e">receiver::handle_message_chunk()</a>`</li>
 <li>A receiver has a timing thread waiting for multiple message chunks (if relevant); when the message is complete, <code><a class="el" href="classdripline_1_1receiver.html#a7d117a90deb57e80ff7660426684432f">receiver::process_message()</a></code> is called.</li>
 </ol>
 <p>This class also provides the objects and information needed for listening on a queue: The AMQP channel A consumer tag A timeout (in ms) The thread object for listening </p>
@@ -253,6 +254,8 @@ Public Member Functions</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+<p>Returns false if the return is due to an error in this function; returns true otherwise (namely because it was canceled) </p>
 
 <p>Implemented in <a class="el" href="classdripline_1_1service.html#aeaea03e3d8d8a847b250f44e50f2cb33">service</a>, <a class="el" href="classdripline_1_1endpoint__listener__receiver.html#aeaea03e3d8d8a847b250f44e50f2cb33">endpoint_listener_receiver</a>, and <a class="el" href="classdripline_1_1monitor.html#aeaea03e3d8d8a847b250f44e50f2cb33">monitor</a>.</p>
 

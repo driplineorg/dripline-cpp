@@ -30,7 +30,7 @@
   <td id="projectlogo"><img alt="Logo" src="DL3Logo.png"/></td>
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Dripline-Cpp
-   &#160;<span id="projectnumber">v2.8.0</span>
+   &#160;<span id="projectnumber">v2.8.1</span>
    </div>
    <div id="projectbrief">Dripline Implementation in C++</div>
   </td>
@@ -134,65 +134,66 @@ $(function() {
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;        {</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;            LERROR( <a class="code" href="namespacedripline.html#a31824502fdabed7ce86e48f7108e5737">dlog</a>, <span class="stringliteral">&quot;Exception caught: &quot;</span> &lt;&lt; e.what() );</div>
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;            f_return = <a class="code" href="structdripline_1_1dl__service__error.html">dl_service_error</a>().<a class="code" href="structdripline_1_1dl__service__error.html#ae6d88690d553457f9abcb31b705a0709">rc_value</a>() / 100;</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;        }</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160; </div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        <span class="keywordflow">if</span>( scarab::signal_handler::get_exited() )</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;        {</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;            f_return = scarab::signal_handler::get_return_code();</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;        }</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160; </div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;        <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    }</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160; </div>
-<div class="line"><a name="l00066"></a><span class="lineno"><a class="line" href="classdripline_1_1simple__service.html#a3d067cc0d23a681daa827ae6b41bebcc">   66</a></span>&#160;    <a class="code" href="namespacedripline.html#a691e50784fa7b338976076f25620ae94">reply_ptr_t</a> <a class="code" href="classdripline_1_1simple__service.html#a3d067cc0d23a681daa827ae6b41bebcc">simple_service::do_cmd_request</a>( <span class="keyword">const</span> <a class="code" href="namespacedripline.html#ab1b3b1b44652d2d5d2063a1e5d9a7830">request_ptr_t</a> a_request )</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    {</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;        <span class="keywordflow">if</span>( a_request-&gt;parsed_specifier().empty() )</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;        {</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;            <span class="keywordflow">return</span> a_request-&gt;reply( <a class="code" href="structdripline_1_1dl__service__error__invalid__specifier.html">dl_service_error_invalid_specifier</a>(), <span class="stringliteral">&quot;No specifier provided&quot;</span> );</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        }</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160; </div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        std::string t_specifier = a_request-&gt;parsed_specifier().front();</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;        a_request-&gt;parsed_specifier().pop_front();</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160; </div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;        <span class="keywordflow">if</span>( t_specifier == <span class="stringliteral">&quot;echo&quot;</span> )</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;        {</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;            <a class="code" href="namespacedripline.html#a691e50784fa7b338976076f25620ae94">reply_ptr_t</a> t_reply = a_request-&gt;reply( <a class="code" href="structdripline_1_1dl__success.html">dl_success</a>(), <span class="stringliteral">&quot;Echoed payload&quot;</span> );</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;            LDEBUG( <a class="code" href="namespacedripline.html#a31824502fdabed7ce86e48f7108e5737">dlog</a>, <span class="stringliteral">&quot;Echoing payload: \n&quot;</span> &lt;&lt; a_request-&gt;payload() );</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;            t_reply-&gt;set_payload( a_request-&gt;payload().clone() );</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;            <span class="keywordflow">return</span> t_reply;</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;        }</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;        <span class="keywordflow">else</span> <span class="keywordflow">if</span>( t_specifier == <span class="stringliteral">&quot;error&quot;</span> )</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;        {</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;            <span class="keywordflow">throw</span> std::runtime_error( <span class="stringliteral">&quot;An error occurred in the endpoint!  (Note: this is a test, this is only a test)&quot;</span> );</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;        }</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;        <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;        {</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;            <span class="keywordflow">return</span> a_request-&gt;reply( <a class="code" href="structdripline_1_1dl__service__error__invalid__specifier.html">dl_service_error_invalid_specifier</a>(), <span class="stringliteral">&quot;Unknown specifier: &quot;</span> + t_specifier );</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;        }</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    }</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160; </div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;            scarab::signal_handler::cancel_all( f_return );</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;        }</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160; </div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;        <span class="keywordflow">if</span>( scarab::signal_handler::get_exited() )</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;        {</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;            f_return = scarab::signal_handler::get_return_code();</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;        }</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160; </div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;        <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    }</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160; </div>
+<div class="line"><a name="l00067"></a><span class="lineno"><a class="line" href="classdripline_1_1simple__service.html#a3d067cc0d23a681daa827ae6b41bebcc">   67</a></span>&#160;    <a class="code" href="namespacedripline.html#a691e50784fa7b338976076f25620ae94">reply_ptr_t</a> <a class="code" href="classdripline_1_1simple__service.html#a3d067cc0d23a681daa827ae6b41bebcc">simple_service::do_cmd_request</a>( <span class="keyword">const</span> <a class="code" href="namespacedripline.html#ab1b3b1b44652d2d5d2063a1e5d9a7830">request_ptr_t</a> a_request )</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    {</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;        <span class="keywordflow">if</span>( a_request-&gt;parsed_specifier().empty() )</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        {</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;            <span class="keywordflow">return</span> a_request-&gt;reply( <a class="code" href="structdripline_1_1dl__service__error__invalid__specifier.html">dl_service_error_invalid_specifier</a>(), <span class="stringliteral">&quot;No specifier provided&quot;</span> );</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        }</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160; </div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;        std::string t_specifier = a_request-&gt;parsed_specifier().front();</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;        a_request-&gt;parsed_specifier().pop_front();</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160; </div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;        <span class="keywordflow">if</span>( t_specifier == <span class="stringliteral">&quot;echo&quot;</span> )</div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;        {</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;            <a class="code" href="namespacedripline.html#a691e50784fa7b338976076f25620ae94">reply_ptr_t</a> t_reply = a_request-&gt;reply( <a class="code" href="structdripline_1_1dl__success.html">dl_success</a>(), <span class="stringliteral">&quot;Echoed payload&quot;</span> );</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;            LDEBUG( <a class="code" href="namespacedripline.html#a31824502fdabed7ce86e48f7108e5737">dlog</a>, <span class="stringliteral">&quot;Echoing payload: \n&quot;</span> &lt;&lt; a_request-&gt;payload() );</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;            t_reply-&gt;set_payload( a_request-&gt;payload().clone() );</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;            <span class="keywordflow">return</span> t_reply;</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;        }</div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;        <span class="keywordflow">else</span> <span class="keywordflow">if</span>( t_specifier == <span class="stringliteral">&quot;error&quot;</span> )</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;        {</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;            <span class="keywordflow">throw</span> std::runtime_error( <span class="stringliteral">&quot;An error occurred in the endpoint!  (Note: this is a test, this is only a test)&quot;</span> );</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;        }</div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;        <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;        {</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;            <span class="keywordflow">return</span> a_request-&gt;reply( <a class="code" href="structdripline_1_1dl__service__error__invalid__specifier.html">dl_service_error_invalid_specifier</a>(), <span class="stringliteral">&quot;Unknown specifier: &quot;</span> + t_specifier );</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;        }</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    }</div>
 <div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160; </div>
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160; </div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;} <span class="comment">/* namespace dripline */</span></div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160; </div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;} <span class="comment">/* namespace dripline */</span></div>
 </div><!-- fragment --></div><!-- contents -->
 <div class="ttc" id="astructdripline_1_1dl__service__error_html"><div class="ttname"><a href="structdripline_1_1dl__service__error.html">dripline::dl_service_error</a></div><div class="ttdef"><b>Definition:</b> <a href="return__codes_8hh_source.html#l00140">return_codes.hh:140</a></div></div>
 <div class="ttc" id="anamespacedripline_html_a691e50784fa7b338976076f25620ae94"><div class="ttname"><a href="namespacedripline.html#a691e50784fa7b338976076f25620ae94">dripline::reply_ptr_t</a></div><div class="ttdeci">std::shared_ptr&lt; msg_reply &gt; reply_ptr_t</div><div class="ttdef"><b>Definition:</b> <a href="dripline__fwd_8hh_source.html#l00024">dripline_fwd.hh:24</a></div></div>
 <div class="ttc" id="anamespacedripline_html"><div class="ttname"><a href="namespacedripline.html">dripline</a></div><div class="ttdef"><b>Definition:</b> <a href="agent_8cc_source.html#l00039">agent.cc:39</a></div></div>
-<div class="ttc" id="aclassdripline_1_1service_html_a68a350717fe6bf9012843e7c977d87b2"><div class="ttname"><a href="classdripline_1_1service.html#a68a350717fe6bf9012843e7c977d87b2">dripline::service::stop</a></div><div class="ttdeci">bool stop()</div><div class="ttdef"><b>Definition:</b> <a href="service_8cc_source.html#l00275">service.cc:275</a></div></div>
-<div class="ttc" id="aclassdripline_1_1simple__service_html_a3d067cc0d23a681daa827ae6b41bebcc"><div class="ttname"><a href="classdripline_1_1simple__service.html#a3d067cc0d23a681daa827ae6b41bebcc">dripline::simple_service::do_cmd_request</a></div><div class="ttdeci">virtual reply_ptr_t do_cmd_request(const request_ptr_t a_request)</div><div class="ttdef"><b>Definition:</b> <a href="simple__service_8cc_source.html#l00066">simple_service.cc:66</a></div></div>
+<div class="ttc" id="aclassdripline_1_1service_html_a68a350717fe6bf9012843e7c977d87b2"><div class="ttname"><a href="classdripline_1_1service.html#a68a350717fe6bf9012843e7c977d87b2">dripline::service::stop</a></div><div class="ttdeci">bool stop()</div><div class="ttdef"><b>Definition:</b> <a href="service_8cc_source.html#l00288">service.cc:288</a></div></div>
+<div class="ttc" id="aclassdripline_1_1simple__service_html_a3d067cc0d23a681daa827ae6b41bebcc"><div class="ttname"><a href="classdripline_1_1simple__service.html#a3d067cc0d23a681daa827ae6b41bebcc">dripline::simple_service::do_cmd_request</a></div><div class="ttdeci">virtual reply_ptr_t do_cmd_request(const request_ptr_t a_request)</div><div class="ttdef"><b>Definition:</b> <a href="simple__service_8cc_source.html#l00067">simple_service.cc:67</a></div></div>
 <div class="ttc" id="astructdripline_1_1dl__service__error_html_ae6d88690d553457f9abcb31b705a0709"><div class="ttname"><a href="structdripline_1_1dl__service__error.html#ae6d88690d553457f9abcb31b705a0709">dripline::dl_service_error::rc_value</a></div><div class="ttdeci">virtual unsigned rc_value() const</div><div class="ttdef"><b>Definition:</b> <a href="return__codes_8hh_source.html#l00140">return_codes.hh:140</a></div></div>
 <div class="ttc" id="adripline__exceptions_8hh_html"><div class="ttname"><a href="dripline__exceptions_8hh.html">dripline_exceptions.hh</a></div></div>
 <div class="ttc" id="anamespacedripline_html_ab1b3b1b44652d2d5d2063a1e5d9a7830"><div class="ttname"><a href="namespacedripline.html#ab1b3b1b44652d2d5d2063a1e5d9a7830">dripline::request_ptr_t</a></div><div class="ttdeci">std::shared_ptr&lt; msg_request &gt; request_ptr_t</div><div class="ttdef"><b>Definition:</b> <a href="dripline__fwd_8hh_source.html#l00023">dripline_fwd.hh:23</a></div></div>
 <div class="ttc" id="aclassdripline_1_1simple__service_html_a61af3e60b94ae3e748f6fbac1e794af7"><div class="ttname"><a href="classdripline_1_1simple__service.html#a61af3e60b94ae3e748f6fbac1e794af7">dripline::simple_service::execute</a></div><div class="ttdeci">void execute()</div><div class="ttdef"><b>Definition:</b> <a href="simple__service_8cc_source.html#l00038">simple_service.cc:38</a></div></div>
 <div class="ttc" id="asimple__service_8cc_html_aac37a8d08b0607c4db1ad591ed4036df"><div class="ttname"><a href="simple__service_8cc.html#aac37a8d08b0607c4db1ad591ed4036df">dlog</a></div><div class="ttdeci">static scarab::logger dlog(&quot;simple_service&quot;)</div></div>
 <div class="ttc" id="anamespacedripline_html_a31824502fdabed7ce86e48f7108e5737"><div class="ttname"><a href="namespacedripline.html#a31824502fdabed7ce86e48f7108e5737">dripline::dlog</a></div><div class="ttdeci">static scarab::logger dlog(&quot;agent&quot;)</div></div>
-<div class="ttc" id="aclassdripline_1_1service_html_aad5997aaaa2d622f0ca57f8b24a51a7b"><div class="ttname"><a href="classdripline_1_1service.html#aad5997aaaa2d622f0ca57f8b24a51a7b">dripline::service::start</a></div><div class="ttdeci">bool start()</div><div class="ttdef"><b>Definition:</b> <a href="service_8cc_source.html#l00157">service.cc:157</a></div></div>
+<div class="ttc" id="aclassdripline_1_1service_html_aad5997aaaa2d622f0ca57f8b24a51a7b"><div class="ttname"><a href="classdripline_1_1service.html#aad5997aaaa2d622f0ca57f8b24a51a7b">dripline::service::start</a></div><div class="ttdeci">bool start()</div><div class="ttdef"><b>Definition:</b> <a href="service_8cc_source.html#l00158">service.cc:158</a></div></div>
 <div class="ttc" id="astructdripline_1_1dl__success_html"><div class="ttname"><a href="structdripline_1_1dl__success.html">dripline::dl_success</a></div><div class="ttdef"><b>Definition:</b> <a href="return__codes_8hh_source.html#l00123">return_codes.hh:123</a></div></div>
 <div class="ttc" id="anamespacescarab_html"><div class="ttname"><a href="namespacescarab.html">scarab</a></div><div class="ttdef"><b>Definition:</b> <a href="core_8hh_source.html#l00017">core.hh:17</a></div></div>
 <div class="ttc" id="astructdripline_1_1dl__service__error__invalid__specifier_html"><div class="ttname"><a href="structdripline_1_1dl__service__error__invalid__specifier.html">dripline::dl_service_error_invalid_specifier</a></div><div class="ttdef"><b>Definition:</b> <a href="return__codes_8hh_source.html#l00149">return_codes.hh:149</a></div></div>
 <div class="ttc" id="aclassdripline_1_1simple__service_html_aec12765dbc414bdcf947332bdb1b221b"><div class="ttname"><a href="classdripline_1_1simple__service.html#aec12765dbc414bdcf947332bdb1b221b">dripline::simple_service::~simple_service</a></div><div class="ttdeci">virtual ~simple_service()</div><div class="ttdef"><b>Definition:</b> <a href="simple__service_8cc_source.html#l00034">simple_service.cc:34</a></div></div>
 <div class="ttc" id="aclassdripline_1_1service_html"><div class="ttname"><a href="classdripline_1_1service.html">dripline::service</a></div><div class="ttdoc">Consumer of Dripline messages on a particular queue.</div><div class="ttdef"><b>Definition:</b> <a href="service_8hh_source.html#l00075">service.hh:75</a></div></div>
-<div class="ttc" id="aclassdripline_1_1service_html_aacce0c4cb7d3288f07570ca1b7201045"><div class="ttname"><a href="classdripline_1_1service.html#aacce0c4cb7d3288f07570ca1b7201045">dripline::service::listen</a></div><div class="ttdeci">bool listen()</div><div class="ttdef"><b>Definition:</b> <a href="service_8cc_source.html#l00195">service.cc:195</a></div></div>
+<div class="ttc" id="aclassdripline_1_1service_html_aacce0c4cb7d3288f07570ca1b7201045"><div class="ttname"><a href="classdripline_1_1service.html#aacce0c4cb7d3288f07570ca1b7201045">dripline::service::listen</a></div><div class="ttdeci">bool listen()</div><div class="ttdef"><b>Definition:</b> <a href="service_8cc_source.html#l00196">service.cc:196</a></div></div>
 <div class="ttc" id="aclassdripline_1_1dripline__error_html"><div class="ttname"><a href="classdripline_1_1dripline__error.html">dripline::dripline_error</a></div><div class="ttdoc">Dripline-specific errors.</div><div class="ttdef"><b>Definition:</b> <a href="dripline__exceptions_8hh_source.html#l00030">dripline_exceptions.hh:30</a></div></div>
 <div class="ttc" id="asimple__service_8hh_html"><div class="ttname"><a href="simple__service_8hh.html">simple_service.hh</a></div></div>
 <!-- start footer part -->
