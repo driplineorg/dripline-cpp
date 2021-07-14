@@ -128,26 +128,31 @@ $(function() {
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160; </div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;        <span class="keyword">auto</span> the_monitor = std::make_shared&lt; monitor &gt;( the_main.primary_config() );</div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160; </div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;        <span class="keywordflow">if</span>( ! the_monitor-&gt;start() ) <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160; </div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;        <span class="keywordflow">if</span>( ! the_monitor-&gt;listen() ) <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160; </div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;        <span class="keywordflow">if</span>( ! the_monitor-&gt;stop() ) <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160; </div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        the_return = scarab::signal_handler::get_exited() ? </div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;                scarab::signal_handler::get_return_code() : <a class="code" href="structdripline_1_1dl__success.html">dl_success</a>().<a class="code" href="structdripline_1_1dl__success.html#ae6d88690d553457f9abcb31b705a0709">rc_value</a>() / 100;</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    };</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160; </div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    the_main.callback( t_callback );</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160; </div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <span class="comment">// Parse CL options and run the application</span></div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    CLI11_PARSE( the_main, argc, argv );</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;        <span class="comment">// run each phase of the operation, while checking for errors</span></div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;        <span class="keywordflow">if</span> ( ! the_monitor-&gt;start() || </div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;             ! the_monitor-&gt;listen() ||</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;             ! the_monitor-&gt;stop() )</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;        {</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;            scarab::signal_handler::cancel_all( RETURN_ERROR );</div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        }</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160; </div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        <span class="comment">// brief pause to ensure that the cancellation goes through</span></div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        std::this_thread::sleep_for( std::chrono::milliseconds(100) );</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160; </div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;        the_return = scarab::signal_handler::get_exited() ? </div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;                scarab::signal_handler::get_return_code() : <a class="code" href="structdripline_1_1dl__success.html">dl_success</a>().<a class="code" href="structdripline_1_1dl__success.html#ae6d88690d553457f9abcb31b705a0709">rc_value</a>() / 100;</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    };</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160; </div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="keywordflow">return</span> the_return;</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;}</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160; </div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160; </div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    the_main.callback( t_callback );</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160; </div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <span class="comment">// Parse CL options and run the application</span></div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    CLI11_PARSE( the_main, argc, argv );</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160; </div>
+<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    <span class="keywordflow">return</span> the_return;</div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;}</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160; </div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160; </div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160; </div>
 </div><!-- fragment --></div><!-- contents -->
 <div class="ttc" id="aversion__store_8hh_html"><div class="ttname"><a href="version__store_8hh.html">version_store.hh</a></div></div>
 <div class="ttc" id="astructdripline_1_1dl__client__error_html"><div class="ttname"><a href="structdripline_1_1dl__client__error.html">dripline::dl_client_error</a></div><div class="ttdef"><b>Definition:</b> <a href="return__codes_8hh_source.html#l00151">return_codes.hh:151</a></div></div>

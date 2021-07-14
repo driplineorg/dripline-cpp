@@ -159,7 +159,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a68a350717fe6bf9012843e7c977d87b2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stops listening for messages and closes the AMQP connection.  <a href="classdripline_1_1monitor.html#a68a350717fe6bf9012843e7c977d87b2">More...</a><br /></td></tr>
 <tr class="separator:a68a350717fe6bf9012843e7c977d87b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeaea03e3d8d8a847b250f44e50f2cb33"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1monitor.html#aeaea03e3d8d8a847b250f44e50f2cb33">listen_on_queue</a> ()</td></tr>
-<tr class="memdesc:aeaea03e3d8d8a847b250f44e50f2cb33"><td class="mdescLeft">&#160;</td><td class="mdescRight">Waits for a single AMQP message and processes it.  <a href="classdripline_1_1monitor.html#aeaea03e3d8d8a847b250f44e50f2cb33">More...</a><br /></td></tr>
 <tr class="separator:aeaea03e3d8d8a847b250f44e50f2cb33"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac9279543538f7a350c63ecb07281f038"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classdripline_1_1monitor.html#ac9279543538f7a350c63ecb07281f038">submit_message</a> (<a class="el" href="namespacedripline.html#a398f267374845fb92318ac53fd7d754c">message_ptr_t</a> a_message)</td></tr>
 <tr class="separator:ac9279543538f7a350c63ecb07281f038"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -527,7 +526,7 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="monitor_8cc_source.html#l00216">216</a> of file <a class="el" href="monitor_8cc_source.html">monitor.cc</a>.</p>
+<p class="definition">Definition at line <a class="el" href="monitor_8cc_source.html#l00219">219</a> of file <a class="el" href="monitor_8cc_source.html">monitor.cc</a>.</p>
 
 </div>
 </div>
@@ -574,12 +573,11 @@ Additional Inherited Members</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-
-<p>Waits for a single AMQP message and processes it. </p>
+<p>Waits for a single AMQP message and processes it. Returns false if the return is due to an error in this function; returns true otherwise (namely because it was canceled) </p>
 
 <p>Implements <a class="el" href="classdripline_1_1listener.html#aca504df1d8606a6a66ac9ce34901a183">listener</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="monitor_8cc_source.html#l00233">233</a> of file <a class="el" href="monitor_8cc_source.html">monitor.cc</a>.</p>
+<p class="definition">Definition at line <a class="el" href="monitor_8cc_source.html#l00236">236</a> of file <a class="el" href="monitor_8cc_source.html">monitor.cc</a>.</p>
 
 </div>
 </div>
@@ -844,7 +842,7 @@ Additional Inherited Members</h2></td></tr>
 
 <p>Stops listening for messages and closes the AMQP connection. </p>
 
-<p class="definition">Definition at line <a class="el" href="monitor_8cc_source.html#l00191">191</a> of file <a class="el" href="monitor_8cc_source.html">monitor.cc</a>.</p>
+<p class="definition">Definition at line <a class="el" href="monitor_8cc_source.html#l00194">194</a> of file <a class="el" href="monitor_8cc_source.html">monitor.cc</a>.</p>
 
 </div>
 </div>
@@ -875,7 +873,7 @@ Additional Inherited Members</h2></td></tr>
 
 <p>Implements <a class="el" href="classdripline_1_1concurrent__receiver.html#a74780114964b54d802c484cda08e2173">concurrent_receiver</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="monitor_8cc_source.html#l00286">286</a> of file <a class="el" href="monitor_8cc_source.html">monitor.cc</a>.</p>
+<p class="definition">Definition at line <a class="el" href="monitor_8cc_source.html#l00289">289</a> of file <a class="el" href="monitor_8cc_source.html">monitor.cc</a>.</p>
 
 </div>
 </div>
