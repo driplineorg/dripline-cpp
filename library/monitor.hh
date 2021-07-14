@@ -93,6 +93,7 @@ namespace DRIPLINE_API dripline
 
         public:
             /// Waits for a single AMQP message and processes it.
+            /// Returns false if the return is due to an error in this function; returns true otherwise (namely because it was canceled)
             virtual bool listen_on_queue();
 
             /// Handles a single Dripline message by printing it to stdout.

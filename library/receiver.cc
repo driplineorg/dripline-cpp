@@ -453,7 +453,7 @@ namespace dripline
         {
             // shutdown gracefully on an exception
             LERROR( dlog, "Exception caught; shutting down.\n" << "\t" << e.what() );
-            scarab::signal_handler::cancel_all( 1 );
+            scarab::signal_handler::cancel_all( RETURN_ERROR );
         }
     }
 
