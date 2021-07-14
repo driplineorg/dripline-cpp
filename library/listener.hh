@@ -55,6 +55,7 @@ namespace dripline
             listener& operator=( const listener& ) = delete;
             listener& operator=( listener&& a_orig );
 
+            /// Returns false if the return is due to an error in this function; returns true otherwise (namely because it was canceled)
             virtual bool listen_on_queue() = 0;
 
             mv_referrable( amqp_channel_ptr, channel );
@@ -113,6 +114,7 @@ namespace dripline
             endpoint_listener_receiver& operator=( endpoint_listener_receiver&& a_orig );
 
             /// Listens for AMQP messages and then passes them to be handled as Dripline message chunks
+            /// Returns false if the return is due to an error in this function; returns true otherwise (namely because it was canceled)
             virtual bool listen_on_queue();
 
         protected:

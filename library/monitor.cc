@@ -164,7 +164,10 @@ namespace dripline
         {
             f_receiver_thread = std::thread( &concurrent_receiver::execute, this );
 
-            listen_on_queue();
+            if( ! listen_on_queue() )
+            {
+                throw dripline_error() << "Something went wrong while listening for messages";
+            }
 
             f_receiver_thread.join();
         }

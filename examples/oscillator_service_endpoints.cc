@@ -174,6 +174,7 @@ namespace dripline
         {
             LERROR( dlog, "Exception caught: " << e.what() );
             f_return = dl_service_error().rc_value() / 100;
+            scarab::signal_handler::cancel_all( f_return );
         }
 
         if( scarab::signal_handler::get_exited() )
