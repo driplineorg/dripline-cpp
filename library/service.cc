@@ -226,10 +226,12 @@ namespace dripline
             f_receiver_thread = std::thread( &concurrent_receiver::execute, this );
 
             // lambda to cancel everything on an error from listener::listen_on_queue()
-            auto t_cancel_on_listen_error = [](listener& a_listener) {
+            bool t_listen_error = false;
+            auto t_cancel_on_listen_error = [&t_listen_error, this](listener& a_listener) {
                 if( ! a_listener.listen_on_queue() )
                 {
-                    scarab::signal_handler::cancel_all(RETURN_ERROR);
+                    t_listen_error = true;
+                    this->cancel( RETURN_ERROR );
                 }
             };
 
@@ -261,6 +263,8 @@ namespace dripline
             {
                 f_scheduler_thread.join();
             }
+
+            if( t_listen_error) throw dripline_error() << "Something went wrong while listening for messages";
         }
         catch( std::system_error& e )
         {

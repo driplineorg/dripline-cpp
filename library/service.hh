@@ -126,14 +126,17 @@ namespace dripline
         public:
             /// Creates a channel to the broker and establishes the queue for receiving messages.
             /// If no queue name was given, this does nothing.
+            /// If this returns false, the service should quit with an error
             bool start();
 
             /// Starts listening on the queue for receiving messages.
             /// If no queue was created, this does nothing.
+            /// If this returns false, the service should quit with an error
             bool listen();
 
             /// Stops receiving messages and closes the connection to the broker.
             /// If no queue was created, this does nothing.
+            /// If this returns false, the service should quit with an error
             bool stop();
 
         protected:
