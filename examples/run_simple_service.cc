@@ -18,6 +18,9 @@ LOGGER( dlog, "simple_service" );
 
 int main( int argc, char** argv )
 {
+    // Start handling signals
+    scarab::signal_handler t_sig_hand;
+
     scarab::main_app the_main;
 
     the_main.set_version( version_store::get_instance()->versions().at( "dripline-cpp" ) );

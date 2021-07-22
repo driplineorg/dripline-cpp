@@ -37,9 +37,8 @@ namespace dripline
 
     void simple_service::execute()
     {
-        scarab::signal_handler t_sig_hand;
         auto t_cwrap = scarab::wrap_cancelable( *this );
-        t_sig_hand.add_cancelable( t_cwrap );
+        scarab::signal_handler::add_cancelable( t_cwrap );
 
         try
         {
