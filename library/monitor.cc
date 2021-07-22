@@ -149,7 +149,7 @@ namespace dripline
     bool monitor::listen()
     {
         auto t_cancel_wrap = scarab::wrap_cancelable( *this );
-        scarab::signal_handler::t_sig_hand.add_cancelable( t_cancel_wrap );
+        scarab::signal_handler::add_cancelable( t_cancel_wrap );
 
         if( f_status != status::consuming )
         {
