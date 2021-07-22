@@ -12,6 +12,7 @@
 
 #include "application.hh"
 #include "logger.hh"
+#include "signal_handler.hh"
 
 using namespace dripline;
 

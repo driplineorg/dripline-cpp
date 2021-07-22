@@ -9,6 +9,7 @@
 #include "dripline_constants.hh"
 #include "application.hh"
 #include "logger.hh"
+#include "signal_handler.hh"
 #include "version_store.hh"
 #include "simple_service.hh"
 
