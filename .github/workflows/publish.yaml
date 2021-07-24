@@ -85,7 +85,7 @@ jobs:
 
   release:
     runs-on: ubuntu-20.04
-    needs: [test_docker, test_linux_clang, test_linux_gcc, test_macos]
+    needs: [test_docker, test_builds]
     steps:
       - name: Checkout the repo 
         uses: actions/checkout@v2
@@ -133,7 +133,7 @@ jobs:
 
   dev:
     runs-on: ubuntu-20.04
-    needs: [test_docker, test_linux_clang, test_linux_gcc, test_macos]
+    needs: [test_docker, test_builds]
     steps:
       - name: Checkout the repo 
         uses: actions/checkout@v2
