@@ -217,7 +217,7 @@ namespace dripline
             receiver t_msg_receiver;
             core::post_listen_status t_post_listen_status = core::post_listen_status::unknown;
             auto t_rec_cancel_wrap = wrap_cancelable( t_msg_receiver );
-            scarab::signal_handler::add_cancelable_s( t_rec_cancel_wrap );
+            scarab::signal_handler::add_cancelable( t_rec_cancel_wrap );
             dripline::reply_ptr_t t_reply = t_msg_receiver.wait_for_reply( t_receive_reply, t_post_listen_status, f_agent->get_timeout() );
 
             if( t_msg_receiver.is_canceled() )

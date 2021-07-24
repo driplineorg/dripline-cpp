@@ -4,19 +4,22 @@ on:
   push:
     branches: [ '*.build' ]
   pull_request:
-    branches: '*'
 
   workflow_dispatch:
 
 jobs:
 
   test_docker:
+
     runs-on: ubuntu-20.04
+
     steps:
+
       - name: Checkout the repo 
         uses: actions/checkout@v2
         with:
           submodules: recursive
+
       - name: Build and run
         run: |
           cd /home/runner/work/dripline-cpp/dripline-cpp
@@ -30,95 +33,53 @@ jobs:
             .
           docker run driplineorg/dripline-cpp:test /usr/local/build/testing/run_tests
 
-  test_macos:
-    runs-on: macos-10.15
+  test_builds:
+
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, macos-10.15]
+
     steps:
+
       - name: Checkout the repo 
         uses: actions/checkout@v2
         with:
           submodules: recursive
-      - name: Install dependencies
+
+      - name: Install dependencies -- Mac
+        if: startsWith(matrix.os, 'macos')
         run: |
           brew install \
             boost \
             rabbitmq-c \
             rapidjson \
             yaml-cpp
+
+      - name: Install dependencies -- Linux
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get update
+          DEBIAN_FRONTEND=noninteractive sudo apt-get install -y \
+            libboost-all-dev \
+            librabbitmq-dev \
+            rapidjson-dev \
+            libyaml-cpp-dev
+            
       - name: Configure
         run: |
           mkdir build
           cd build
-          cmake .. -DDripline_ENABLE_TESTING=TRUE
+          cmake -DScarab_BUILD_PYTHON=FALSE -DDripline_ENABLE_TESTING=TRUE .. 
+
       - name: Build
         run: |
           cd build
           make -j2 install
+
       - name: Run tests
         run: |
           cd build/testing
           ./run_tests
           
-  test_linux_gcc:
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Checkout the repo 
-        uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          DEBIAN_FRONTEND=noninteractive sudo apt-get install -y \
-            build-essential \
-            cmake \
-            libboost-all-dev \
-            librabbitmq-dev \
-            rapidjson-dev \
-            libyaml-cpp-dev
-      - name: Configure
-        run: |
-          export CC=gcc && export CXX=g++
-          mkdir build
-          cd build
-          cmake .. -DScarab_BUILD_PYTHON=FALSE -DDripline_ENABLE_TESTING=TRUE -DCMAKE_CXX_FLAGS=-pthread
-      - name: Build
-        run: |
-          cd build
-          make -j2 install
-      - name: Run tests
-        run: |
-          cd build/testing
-          ./run_tests
-
-  test_linux_clang:
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Checkout the repo 
-        uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          DEBIAN_FRONTEND=noninteractive sudo apt-get install -y \
-            build-essential \
-            clang \
-            cmake \
-            libboost-all-dev \
-            librabbitmq-dev \
-            rapidjson-dev \
-            libyaml-cpp-dev
-      - name: Configure
-        run: |
-          export CC=clang && export CXX=clang++
-          mkdir build
-          cd build
-          cmake .. -DScarab_BUILD_PYTHON=FALSE -DDripline_ENABLE_TESTING=TRUE -DCMAKE_CXX_FLAGS=-pthread
-      - name: Build
-        run: |
-          cd build
-          make -j2 install
-      - name: Run tests
-        run: |
-          cd build/testing
-          ./run_tests
