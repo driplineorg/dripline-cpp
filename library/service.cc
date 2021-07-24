@@ -13,7 +13,6 @@
 
 #include "authentication.hh"
 #include "logger.hh"
-#include "signal_handler.hh"
 
 using scarab::authentication;
 using scarab::param_node;
