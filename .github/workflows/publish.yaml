@@ -9,6 +9,10 @@ on:
 
   workflow_dispatch:
 
+env:
+  BASE_IMAGE_REPO: python
+  BASE_IMAGE_TAG: '3.8.7-buster'
+
 jobs:
 
   test_docker:
@@ -26,8 +30,8 @@ jobs:
         run: |
           cd /home/runner/work/dripline-cpp/dripline-cpp
           docker build \
-            --build-arg img_repo=python \
-            --build-arg img_tag=3.8.7-buster \
+            --build-arg img_repo=${BASE_IMAGE_REPO} \
+            --build-arg img_tag=${BASE_IMAGE_TAG} \
             --build-arg build_type=Debug \
             --build-arg build_examples=TRUE \
             --build-arg enable_testing=TRUE \
@@ -90,7 +94,7 @@ jobs:
     runs-on: ubuntu-20.04
 
     if: ! (github.event == pull_request)
-    
+
     needs: [test_docker, test_builds]
 
     strategy:
@@ -149,8 +153,8 @@ jobs:
           context: .
           push: true
           build-args: |
-            img_repo=python
-            img_tag=3.8.7-buster
+            img_repo=${BASE_IMAGE_REPO}
+            img_tag=${BASE_IMAGE_TAG}
             build_type=${{ matrix.build-type }}
             build_examples=${{ matrix.build-examples }}
             enable_testing=${{ matrix.build-tests }}
