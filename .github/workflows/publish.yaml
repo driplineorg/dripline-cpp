@@ -93,7 +93,7 @@ jobs:
 
     runs-on: ubuntu-20.04
 
-    if: '! (github.event == pull_request)'
+    if: github.event != 'pull_request'
 
     needs: [test_docker, test_builds]
 
