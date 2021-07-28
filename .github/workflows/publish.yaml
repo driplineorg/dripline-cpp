@@ -5,7 +5,13 @@ on:
     branches: [ main, develop ]
     tags: ['v*.*.*']
 
+  pull_request:
+
   workflow_dispatch:
+
+env:
+  BASE_IMAGE_REPO: python
+  BASE_IMAGE_TAG: '3.8.7-buster'
 
 jobs:
 
@@ -24,8 +30,8 @@ jobs:
         run: |
           cd /home/runner/work/dripline-cpp/dripline-cpp
           docker build \
-            --build-arg img_repo=python \
-            --build-arg img_tag=3.8.7-buster \
+            --build-arg img_repo=${BASE_IMAGE_REPO} \
+            --build-arg img_tag=${BASE_IMAGE_TAG} \
             --build-arg build_type=Debug \
             --build-arg build_examples=TRUE \
             --build-arg enable_testing=TRUE \
@@ -83,14 +89,36 @@ jobs:
           cd build/testing
           ./run_tests
 
-  release:
+  build_and_push:
+
     runs-on: ubuntu-20.04
+
+    if: github.event_name != 'pull_request'
+
     needs: [test_docker, test_builds]
+
+    strategy:
+      matrix:
+        build: [dev, release]
+        include:
+          - build: dev
+            build-type: DEBUG
+            build-examples: 'TRUE'
+            build-test: 'TRUE'
+            tag-suffix: '-dev'
+          - build: release
+            build-type: RELEASE
+            build-examples: 'FALSE'
+            build-test: 'FALSE'
+            tag-suffix: ''
+
     steps:
+
       - name: Checkout the repo 
         uses: actions/checkout@v2
         with:
           submodules: recursive
+
       - name: Docker meta
         id: docker_meta
         uses: crazy-max/ghaction-docker-meta@v1
@@ -99,20 +127,22 @@ jobs:
           tag-sha: false
           tag-semver: |
             {{raw}}
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
+
       - name: Set up Docker Buildx
         id: setup_buildx
         uses: docker/setup-buildx-action@v1
         with:
           buildkitd-flags: --debug
-      - name: List platforms
-        run: echo ${{ steps.setup_buildx.outputs.platforms }}
+
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+
       - name: Build and push
         id: build_push
         uses: docker/build-push-action@v2
@@ -120,68 +150,21 @@ jobs:
           context: .
           push: true
           build-args: |
-            img_repo=python
-            img_tag=3.8.7-buster
-            build_type=Release
-            build_examples=FALSE
-            enable_testing=FALSE
-          tags: ${{ steps.docker_meta.outputs.tags }}
+            img_repo=${{ env.BASE_IMAGE_REPO }}
+            img_tag=${{ env.BASE_IMAGE_TAG }}
+            build_type=${{ matrix.build-type }}
+            build_examples=${{ matrix.build-examples }}
+            enable_testing=${{ matrix.build-tests }}
+          tags: ${{ steps.docker_meta.outputs.tags }}${{ matrix.tag-suffix }}
           platforms: linux/amd64,linux/arm/v7,linux/arm64
-      - name: Image digest
-        run: >
-          echo ${{ steps.build_push.outputs.digest }}
 
-  dev:
-    runs-on: ubuntu-20.04
-    needs: [test_docker, test_builds]
-    steps:
-      - name: Checkout the repo 
-        uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - name: Docker meta
-        id: docker_meta
-        uses: crazy-max/ghaction-docker-meta@v1
-        with:
-          images: driplineorg/dripline-cpp
-          tag-sha: false
-          tag-semver: |
-            {{raw}}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-      - name: Set up Docker Buildx
-        id: setup_buildx
-        uses: docker/setup-buildx-action@v1
-        with:
-          buildkitd-flags: --debug
-      - name: List platforms
-        run: echo ${{ steps.setup_buildx.outputs.platforms }}
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Build and push
-        id: build_push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          push: true
-          build-args: | 
-            img_repo=python
-            img_tag=3.8.7-buster
-            build_type=Debug
-            build_examples=TRUE
-            enable_testing=TRUE
-          tags: ${{ steps.docker_meta.outputs.tags }}-dev
-          platforms: linux/amd64,linux/arm/v7,linux/arm64
       - name: Image digest
         run: >
           echo ${{ steps.build_push.outputs.digest }}
 
   docs:
     runs-on: ubuntu-20.04
-    needs: [release]
+    needs: [build_and_push]
     steps:
       - name: Checkout the repo 
         uses: actions/checkout@v2
