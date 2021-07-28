@@ -104,12 +104,12 @@ jobs:
           - build: dev
             build-type: DEBUG
             build-examples: 'TRUE'
-            build-test: 'TRUE'
+            enable-testing: 'TRUE'
             tag-suffix: '-dev'
           - build: release
             build-type: RELEASE
             build-examples: 'FALSE'
-            build-test: 'FALSE'
+            enable-testing: 'FALSE'
             tag-suffix: ''
 
     steps:
@@ -154,7 +154,7 @@ jobs:
             img_tag=${{ env.BASE_IMAGE_TAG }}
             build_type=${{ matrix.build-type }}
             build_examples=${{ matrix.build-examples }}
-            enable_testing=${{ matrix.build-tests }}
+            enable_testing=${{ matrix.enable-testing }}
           tags: ${{ steps.docker_meta.outputs.tags }}${{ matrix.tag-suffix }}
           platforms: linux/amd64,linux/arm/v7,linux/arm64
 
