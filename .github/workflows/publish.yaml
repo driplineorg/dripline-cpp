@@ -158,10 +158,6 @@ jobs:
           tags: ${{ steps.docker_meta.outputs.tags }}${{ matrix.tag-suffix }}
           platforms: linux/amd64,linux/arm/v7,linux/arm64
 
-      - name: Image digest
-        run: >
-          echo ${{ steps.build_push.outputs.digest }}
-
   docs:
     runs-on: ubuntu-20.04
     needs: [build_and_push]
