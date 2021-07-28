@@ -17,6 +17,7 @@ env:
 jobs:
 
   test_docker:
+    if: ${{ false }}  # temporarily disable
 
     runs-on: ubuntu-20.04
 
@@ -43,7 +44,7 @@ jobs:
           docker run driplineorg/dripline-cpp:test /usr/local/build/testing/run_tests
 
   test_builds:
-
+    if: ${{ false }}  # temporarily disable
     runs-on: ${{ matrix.os }}
 
     # This job runs for all events that trigger this workflow
@@ -101,10 +102,10 @@ jobs:
     # This job runs on push (limited above to develop, main and tags) and pull_requests marked read_for_review
     # Pushing images is limited below to push events
     if: |
-      github.event_name == 'push' ||
-      (github.event_name == 'pull_request' && github.event.type == 'ready_for_review')
+      github.event_name == 'push' || github.event_name == 'pull_request'
+#      (github.event_name == 'pull_request' && github.event.type == 'ready_for_review')
 
-    needs: [test_docker, test_builds]
+    #needs: [test_docker, test_builds]
 
     strategy:
       matrix:
@@ -133,8 +134,12 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: driplineorg/dripline-cpp
+          flavor: |
+            latest: auto
+            suffix: ${{ matrix.tag-suffix }},onlatest=true
           tags: |
-            type=semver,pattern={{raw}},suffix=${{ matrix.tag-suffix }}
+            type=semver,pattern={{raw}}
+            type=ref,event=branch
             type=ref,event=pr
 
       - name: Set up QEMU
@@ -164,7 +169,7 @@ jobs:
             build_type=${{ matrix.build-type }}
             build_examples=${{ matrix.build-examples }}
             enable_testing=${{ matrix.enable-testing }}
-          tags: ${{ steps.docker_meta.outputs.tags }}${{ matrix.tag-suffix }}
+          tags: ${{ steps.docker_meta.outputs.tags }}
           platforms: linux/amd64,linux/arm/v7,linux/arm64
 
   docs:
