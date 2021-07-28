@@ -129,12 +129,12 @@ jobs:
 
       - name: Docker meta
         id: docker_meta
-        uses: crazy-max/ghaction-docker-meta@v1
+        uses: docker/metadata-action@v3
         with:
           images: driplineorg/dripline-cpp
-          tag-sha: false
-          tag-semver: |
-            {{raw}}
+          tags: |
+            type=semver,pattern={{raw}},suffix=${{ matrix.tag-suffix }}
+            type=ref,event=pr
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
