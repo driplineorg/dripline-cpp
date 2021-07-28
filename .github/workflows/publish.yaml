@@ -93,7 +93,7 @@ jobs:
 
     runs-on: ubuntu-20.04
 
-    if: github.event != 'pull_request'
+    if: github.event_name != 'pull_request'
 
     needs: [test_docker, test_builds]
 
@@ -113,6 +113,9 @@ jobs:
             tag-suffix: ''
 
     steps:
+
+      - name: Print event
+        run: echo ${{ github.event_name }}
 
       - name: Checkout the repo 
         uses: actions/checkout@v2
@@ -153,8 +156,8 @@ jobs:
           context: .
           push: true
           build-args: |
-            img_repo=${BASE_IMAGE_REPO}
-            img_tag=${BASE_IMAGE_TAG}
+            img_repo=${{ env.BASE_IMAGE_REPO }}
+            img_tag=${{ env.BASE_IMAGE_TAG }}
             build_type=${{ matrix.build-type }}
             build_examples=${{ matrix.build-examples }}
             enable_testing=${{ matrix.build-tests }}
