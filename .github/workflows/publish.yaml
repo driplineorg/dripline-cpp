@@ -129,6 +129,10 @@ jobs:
         with:
           submodules: recursive
 
+      - name: print
+        run: |
+          echo "${{ toJSON(github.event) }}"
+
       - name: Docker meta
         id: docker_meta
         uses: docker/metadata-action@v3
