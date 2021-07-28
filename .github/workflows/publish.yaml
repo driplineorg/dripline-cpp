@@ -135,8 +135,8 @@ jobs:
         with:
           images: driplineorg/dripline-cpp
           flavor: |
-            latest: auto
-            suffix: ${{ matrix.tag-suffix }},onlatest=true
+            latest=auto
+            suffix=${{ matrix.tag-suffix }},onlatest=true
           tags: |
             type=semver,pattern={{raw}}
             type=ref,event=branch
