@@ -17,7 +17,6 @@ env:
 jobs:
 
   test_docker:
-    if: ${{ false }}  # temporarily disable
 
     runs-on: ubuntu-20.04
 
@@ -44,7 +43,7 @@ jobs:
           docker run driplineorg/dripline-cpp:test /usr/local/build/testing/run_tests
 
   test_builds:
-    if: ${{ false }}  # temporarily disable
+
     runs-on: ${{ matrix.os }}
 
     # This job runs for all events that trigger this workflow
@@ -105,7 +104,7 @@ jobs:
       github.event_name == 'push' ||
       (github.event_name == 'pull_request' && github.event.pull_request.draft == false)
 
-    #needs: [test_docker, test_builds]
+    needs: [test_docker, test_builds]
 
     strategy:
       matrix:
