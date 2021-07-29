@@ -102,8 +102,8 @@ jobs:
     # This job runs on push (limited above to develop, main and tags) and pull_requests marked read_for_review
     # Pushing images is limited below to push events
     if: |
-      github.event_name == 'push' || github.event_name == 'pull_request'
-#      (github.event_name == 'pull_request' && github.event.type == 'ready_for_review')
+      github.event_name == 'push' ||
+      (github.event_name == 'pull_request' && github.event.pull_request.draft == false)
 
     #needs: [test_docker, test_builds]
 
