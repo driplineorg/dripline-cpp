@@ -1,11 +1,13 @@
-version: '2'
+version: '3'
 
 services:
-    # a rabbit broker
-    rabbit_broker:
-        image: rabbitmq:3-management
-        ports:
-          - "127.0.0.1:8888:15672"
-        ports:
-          - "5672:5672"
-          - "15672:15672"
+  # a rabbit broker
+  rabbit_broker:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  simple:
+    image: driplineorg/dripline-cpp:main-dev
+    command: /usr/local/bin/run_simple_service -h

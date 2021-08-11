@@ -1,0 +1,48 @@
+name: Integration Test
+
+on:
+  push:
+    branches: [ main, develop, feature/gha-int-test ]
+    tags: 
+
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+  workflow_dispatch:
+
+env:
+  BASE_IMAGE_REPO: python
+  BASE_IMAGE_TAG: '3.8.7-buster'
+
+jobs:
+
+  integration_test:
+
+    runs-on: ubuntu-20.04
+
+    steps:
+
+      - name: Checkout the repo 
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Run compose
+        run: |
+          cd testing
+          docker-compose up --exit-code-from simple
+          echo $?
+
+#      - name: Build and run
+#        run: |
+#          cd /home/runner/work/dripline-cpp/dripline-cpp
+#          docker build \
+#            --build-arg img_repo=${BASE_IMAGE_REPO} \
+#            --build-arg img_tag=${BASE_IMAGE_TAG} \
+#            --build-arg build_type=Debug \
+#            --build-arg build_examples=TRUE \
+#            --build-arg enable_testing=TRUE \
+#            --tag driplineorg/dripline-cpp:test \
+#            .
+#          docker run driplineorg/dripline-cpp:test /usr/local/build/testing/run_tests
+
