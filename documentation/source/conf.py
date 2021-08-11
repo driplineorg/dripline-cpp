@@ -67,7 +67,9 @@ else:
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = []
+extensions = [
+      'sphinx_multiversion',
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -141,6 +143,13 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
+# -- Sphinx-Multiversion configuration ---------------------------------------
+
+smv_tag_whitelist = r'^v\d+\.\d+\.\d+$'            # Include tags like "v2.1.0"
+#smv_tag_whitelist = r'^.*$'                        # Include all tags
+#smv_branch_whitelist = r'^(?!master).*$'           # Include all branches
+smv_branch_whitelist = r'^(main|develop)$'
+smv_remote_whitelist = r'^(origin)$'               # Use branches from origin
 
 # -- Options for HTML output ----------------------------------------------
 
@@ -184,7 +193,15 @@ html_static_path = ['_static']
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
+html_sidebars = {
+  '**': [
+    'globaltoc.html',
+    'relations.html',
+    'sourcelink.html',
+    'searchbox.html',
+    'versioning.html',
+  ],
+}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
