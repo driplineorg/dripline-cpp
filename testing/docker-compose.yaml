@@ -9,5 +9,22 @@ services:
       - "15672:15672"
 
   simple:
-    image: driplineorg/dripline-cpp:main-dev
-    command: /usr/local/bin/run_simple_service -h
+    #image: driplineorg/dripline-cpp:main-dev
+    image: driplineorg/dripline-cpp:int-test
+    command: /usr/local/bin/run_simple_service -vv -b rabbit_broker --auth-file /root/authentication.json
+    volumes:
+      - type: bind
+        source: ./authentication.json
+        target: /root/authentication.json
+
+  tests:
+    #image: driplineorg/dripline-cpp:main-dev
+    image: driplineorg/dripline-cpp:int-test
+    command: /root/int_test_get.sh
+    volumes:
+      - type: bind
+        source: ./authentication.json
+        target: /root/authentication.json
+      - type: bind
+        source: ./int_test_get.sh
+        target: /root/int_test_get.sh
