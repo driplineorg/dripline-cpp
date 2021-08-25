@@ -13,6 +13,7 @@
 #include "message.hh"
 
 #include "authentication.hh"
+#include "exponential_backoff.hh"
 #include "logger.hh"
 #include "param_codec.hh"
 
@@ -353,32 +354,47 @@ namespace dripline
             return amqp_channel_ptr();
             //throw dripline_error() << "Should not call open_channel when offline";
         }
-        try
+
+        amqp_channel_ptr t_connection;
+
+        // callback to be used by the exponential backoff
+        auto t_connect_fcn = [this, &t_connection]()->bool
         {
-            LDEBUG( dlog, "Opening AMQP connection and creating channel to " << f_address << ":" << f_port );
-            LDEBUG( dlog, "Using broker authentication: " << f_username << ":" << f_password );
-            return AmqpClient::Channel::Create( f_address, f_port, f_username, f_password );
-        }
-        catch( amqp_exception& e )
-        {
-            LERROR( dlog, "AMQP exception caught while opening channel: (" << e.reply_code() << ") " << e.reply_text() );
-            return amqp_channel_ptr();
-        }
-        catch( amqp_lib_exception& e )
-        {
-            LERROR( dlog, "AMQP Library Exception caught while creating channel: (" << e.ErrorCode() << ") " << e.what() );
-            if( e.ErrorCode() == -9 )
+            try
             {
-                LERROR( dlog, "This error means the client could not connect to the broker.\n\t" <<
-                        "Check that you have the address and port correct, and that the broker is running.")
+                LDEBUG( dlog, "Opening AMQP connection and creating channel to " << f_address << ":" << f_port );
+                LDEBUG( dlog, "Using broker authentication: " << f_username << ":" << f_password );
+                t_connection = AmqpClient::Channel::Create( f_address, f_port, f_username, f_password );
+                return true;
             }
-            return amqp_channel_ptr();
-        }
-        catch( std::exception& e )
-        {
-            LERROR( dlog, "Standard exception caught while creating channel: " << e.what() );
-            return amqp_channel_ptr();
-        }
+            catch( amqp_exception& e )
+            {
+                LERROR( dlog, "AMQP exception caught while opening channel: (" << e.reply_code() << ") " << e.reply_text() );
+                return false;
+            }
+            catch( amqp_lib_exception& e )
+            {
+                LERROR( dlog, "AMQP Library Exception caught while creating channel: (" << e.ErrorCode() << ") " << e.what() );
+                if( e.ErrorCode() == -9 )
+                {
+                    LERROR( dlog, "This error means the client could not connect to the broker.\n\t" <<
+                            "Check that you have the address and port correct, and that the broker is running.")
+                }
+                return false;
+            }
+            catch( std::exception& e )
+            {
+                LERROR( dlog, "Standard exception caught while creating channel: " << e.what() );
+                return false;
+            }
+        };
+
+        scarab::exponential_backoff<> t_exp_back( t_connect_fcn );
+
+        // make the connection using exponential backoff
+        t_exp_back.go();
+
+        return t_connection;
     }
 
     bool core::setup_exchange( amqp_channel_ptr a_channel, const std::string& a_exchange )
