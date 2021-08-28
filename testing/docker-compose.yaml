@@ -21,7 +21,7 @@ services:
     #image: driplineorg/dripline-cpp:main-dev
     image: driplineorg/dripline-cpp:int-test
     environment:
-      TERM: dumb
+      TERM: xterm
     command: /root/int_test_get.sh
     volumes:
       - type: bind
