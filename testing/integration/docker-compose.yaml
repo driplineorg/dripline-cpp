@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  # a rabbit broker
+  rabbit_broker:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  int_tests:
+    image: driplineorg/dripline-cpp:int-test
+    command: /usr/local/build/testing/integration/run_int_tests
+    volumes:
+      - type: bind
+        source: ../authentication.json
+        target: /root/authentication.json
+

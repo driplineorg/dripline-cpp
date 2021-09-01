@@ -183,6 +183,7 @@ endif()
 
 if( Dripline_ENABLE_TESTING )
     add_subdirectory( testing )
+    add_subdirectory( testing/integration )
 endif()
 
 ##################
