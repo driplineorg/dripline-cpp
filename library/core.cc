@@ -369,22 +369,25 @@ namespace dripline
             }
             catch( amqp_exception& e )
             {
-                LERROR( dlog, "AMQP exception caught while opening channel: (" << e.reply_code() << ") " << e.reply_text() );
+                LINFO( dlog, "Connection attempt failed" );
+                LDEBUG( dlog, "AMQP exception caught while opening channel: (" << e.reply_code() << ") " << e.reply_text() );
                 return false;
             }
             catch( amqp_lib_exception& e )
             {
-                LERROR( dlog, "AMQP Library Exception caught while creating channel: (" << e.ErrorCode() << ") " << e.what() );
+                LINFO( dlog, "Connection attempt failed" );
+                LDEBUG( dlog, "AMQP Library Exception caught while creating channel: (" << e.ErrorCode() << ") " << e.what() );
                 if( e.ErrorCode() == -9 )
                 {
-                    LERROR( dlog, "This error means the client could not connect to the broker.\n\t" <<
+                    LDEBUG( dlog, "This error means the client could not connect to the broker.\n\t" <<
                             "Check that you have the address and port correct, and that the broker is running.")
                 }
                 return false;
             }
             catch( std::exception& e )
             {
-                LERROR( dlog, "Standard exception caught while creating channel: " << e.what() );
+                LINFO( dlog, "Connection attempt failed" );
+                LDEBUG( dlog, "Standard exception caught while creating channel: " << e.what() );
                 return false;
             }
         };
@@ -392,7 +395,10 @@ namespace dripline
         scarab::exponential_backoff<> t_exp_back( t_connect_fcn );
 
         // make the connection using exponential backoff
-        t_exp_back.go();
+        if( t_exp_back.go() == 0 )
+        {
+            LERROR( dlog, "Connection failed" );
+        }
 
         return t_connection;
     }
