@@ -48,12 +48,12 @@ TEST_CASE( "amqp_table", "[amqp]" )
         // uint
         t_value.set< uint64_t >( 50U );
         t_conv_table_value = dripline::param_to_table( t_value );
-        REQUIRE( t_conv_table_value.GetType() == AmqpClient::TableValue::VT_uint64 );
-        REQUIRE( t_conv_table_value.GetUint64() == t_value.as_uint() );
+        REQUIRE( t_conv_table_value.GetType() == AmqpClient::TableValue::VT_int64 );
+        REQUIRE( t_conv_table_value.GetInt64() == t_value.as_uint() );
         
         t_conv2_param = dripline::table_to_param( t_conv_table_value );
         REQUIRE( t_conv2_param->is_value() );
-        REQUIRE( t_conv2_param->as_value().is_uint() );
+        REQUIRE( t_conv2_param->as_value().is_int() );
         REQUIRE( t_conv2_param->as_value().as_uint() == t_value.as_uint() );
 
         // double
@@ -83,7 +83,7 @@ TEST_CASE( "amqp_table", "[amqp]" )
         REQUIRE( t_conv_table.size() == t_node.size() );
         REQUIRE( t_conv_table["value0"].GetBool() == t_node["value0"]().as_bool() );
         REQUIRE( t_conv_table["value1"].GetInt64() == t_node["value1"]().as_int() );
-        REQUIRE( t_conv_table["value2"].GetUint64() == t_node["value2"]().as_uint() );
+        REQUIRE( t_conv_table["value2"].GetInt64() == t_node["value2"]().as_uint() );
         REQUIRE( t_conv_table["value3"].GetDouble() == t_node["value3"]().as_double() );
 
         scarab::param_ptr_t t_conv2_param = dripline::table_to_param( t_conv_table );
@@ -112,7 +112,7 @@ TEST_CASE( "amqp_table", "[amqp]" )
         REQUIRE( t_conv_array.size() == t_array.size() );
         REQUIRE( t_conv_array[0].GetBool() == t_array[0]().as_bool() );
         REQUIRE( t_conv_array[1].GetInt64() == t_array[1]().as_int() );
-        REQUIRE( t_conv_array[2].GetUint64() == t_array[2]().as_uint() );
+        REQUIRE( t_conv_array[2].GetInt64() == t_array[2]().as_uint() );
         REQUIRE( t_conv_array[3].GetDouble() == t_array[3]().as_double() );
 
         scarab::param_ptr_t t_conv2_param = dripline::table_to_param( t_conv_array );
@@ -157,25 +157,25 @@ TEST_CASE( "amqp_table", "[amqp]" )
         REQUIRE( t_conv_table_value.GetType() == AmqpClient::TableValue::VT_table );
 
         REQUIRE( t_conv_table_value.GetTable()["null1"].GetType() == AmqpClient::TableValue::VT_void );
-        REQUIRE( t_conv_table_value.GetTable()["value1"].GetType() == AmqpClient::TableValue::VT_uint64 );
+        REQUIRE( t_conv_table_value.GetTable()["value1"].GetType() == AmqpClient::TableValue::VT_int64 );
         REQUIRE( t_conv_table_value.GetTable()["array1"].GetType() == AmqpClient::TableValue::VT_array );
         REQUIRE( t_conv_table_value.GetTable()["node1"].GetType() == AmqpClient::TableValue::VT_table );
 
-        REQUIRE( t_conv_table_value.GetTable()["array1"].GetArray()[0].GetType() == AmqpClient::TableValue::VT_uint64 );
+        REQUIRE( t_conv_table_value.GetTable()["array1"].GetArray()[0].GetType() == AmqpClient::TableValue::VT_int64 );
         REQUIRE( t_conv_table_value.GetTable()["array1"].GetArray()[1].GetType() == AmqpClient::TableValue::VT_array );
         REQUIRE( t_conv_table_value.GetTable()["array1"].GetArray()[2].GetType() == AmqpClient::TableValue::VT_table );
 
-        REQUIRE( t_conv_table_value.GetTable()["array1"].GetArray()[1].GetArray()[0].GetType() == AmqpClient::TableValue::VT_uint64 );
+        REQUIRE( t_conv_table_value.GetTable()["array1"].GetArray()[1].GetArray()[0].GetType() == AmqpClient::TableValue::VT_int64 );
 
-        REQUIRE( t_conv_table_value.GetTable()["array1"].GetArray()[2].GetTable()["value3"].GetType() == AmqpClient::TableValue::VT_uint64 );
+        REQUIRE( t_conv_table_value.GetTable()["array1"].GetArray()[2].GetTable()["value3"].GetType() == AmqpClient::TableValue::VT_int64 );
         
-        REQUIRE( t_conv_table_value.GetTable()["node1"].GetTable()["value2"].GetType() == AmqpClient::TableValue::VT_uint64 );
+        REQUIRE( t_conv_table_value.GetTable()["node1"].GetTable()["value2"].GetType() == AmqpClient::TableValue::VT_int64 );
         REQUIRE( t_conv_table_value.GetTable()["node1"].GetTable()["array2"].GetType() == AmqpClient::TableValue::VT_array );
         REQUIRE( t_conv_table_value.GetTable()["node1"].GetTable()["node2"].GetType() == AmqpClient::TableValue::VT_table );
         
-        REQUIRE( t_conv_table_value.GetTable()["node1"].GetTable()["array2"].GetArray()[0].GetType() == AmqpClient::TableValue::VT_uint64 );
+        REQUIRE( t_conv_table_value.GetTable()["node1"].GetTable()["array2"].GetArray()[0].GetType() == AmqpClient::TableValue::VT_int64 );
 
-        REQUIRE( t_conv_table_value.GetTable()["node1"].GetTable()["node2"].GetTable()["value3"].GetType() == AmqpClient::TableValue::VT_uint64 );
+        REQUIRE( t_conv_table_value.GetTable()["node1"].GetTable()["node2"].GetTable()["value3"].GetType() == AmqpClient::TableValue::VT_int64 );
 
         // return conversion to a param object
         scarab::param_ptr_t t_conv2_param = dripline::table_to_param( t_conv_table_value );

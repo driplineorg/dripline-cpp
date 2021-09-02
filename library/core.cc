@@ -364,7 +364,12 @@ namespace dripline
             {
                 LDEBUG( dlog, "Opening AMQP connection and creating channel to " << f_address << ":" << f_port );
                 LDEBUG( dlog, "Using broker authentication: " << f_username << ":" << f_password );
-                t_connection = AmqpClient::Channel::Create( f_address, f_port, f_username, f_password );
+                AmqpClient::Channel::OpenOpts t_opts;
+                t_opts.host = f_address;
+                t_opts.port = f_port;
+                t_opts.auth = AmqpClient::Channel::OpenOpts::BasicAuth( f_username, f_password );
+                // .vhost defaults to "/"
+                t_connection = AmqpClient::Channel::Open( t_opts );
                 return true;
             }
             catch( amqp_exception& e )

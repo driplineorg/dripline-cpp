@@ -3,6 +3,28 @@
  *
  *  Created on: Sep 25, 2019
  *      Author: N.S. Oblath
+ * 
+ * A note on integer handling:
+ * 
+ * According to a commit message from SimpleAmqpClient v2.5.0, in RabbitMQ uint64 is not supported.  
+ * Therefore the largest integer handling we can get is with int64.  Even for unsigned values, this 
+ * provides half of 64-bit handling, which is far better than the largest unsigned integer handling, 32 bit.  
+ * 
+ * Therefore, in translating between the AmqpClient::Table's integers and param's integers, we choose 
+ * to always use param's int64 type.  
+ * 
+ * The full commit message from SimpleAmqpClient follows: 
+ * 
+ *   lib: add support for table timestamp values & remove broken support for uint64 values.
+ * 
+ *   uint64_t table values aren't supported by RabbitMQ: they cause
+ *   connection errors in older versions of RabbitMQ, and newer brokers
+ *   silently convert them to int64_t.
+ * 
+ *   Timestamps are still represented using uin64_t, so this adds an API that
+ *   supports setting Timestamps. The interface is a bit different as
+ *   std::time_t is a typedef of another integral type and will conflict with
+ *   other overloads in existing overload sets.
  */
 
 #define DRIPLINE_API_EXPORTS
@@ -81,8 +103,8 @@ namespace dripline
             case TableValue::ValueType::VT_uint32:
                 return scarab::param_ptr_t( new scarab::param_value( a_value.GetUint32() ) );
                 break;
-            case TableValue::ValueType::VT_uint64:
-                return scarab::param_ptr_t( new scarab::param_value( a_value.GetUint64() ) );
+            case TableValue::ValueType::VT_timestamp:
+                return scarab::param_ptr_t( new scarab::param_value( a_value.GetTimestamp() ) );
                 break;
             default:
                 throw std::domain_error( "Invalid SimpleAMQPClient TableValue type" );
@@ -115,7 +137,7 @@ namespace dripline
     {
         if( a_value.is_bool() ) return AmqpClient::TableValue( a_value.as_bool() );
         if( a_value.is_int() ) return AmqpClient::TableValue( a_value.as_int() );
-        if( a_value.is_uint() ) return AmqpClient::TableValue( a_value.as_uint() );
+        if( a_value.is_uint() ) return AmqpClient::TableValue( a_value.as_int() );
         if( a_value.is_double() ) return AmqpClient::TableValue( a_value.as_double() );
         if( a_value.is_string() ) return AmqpClient::TableValue( a_value.as_string() );
         throw std::domain_error( "Invalid param value type" );
