@@ -69,14 +69,12 @@ TEST_CASE( "channel" )
     REQUIRE( t_channel );
 
     REQUIRE( test_core::setup_exchange( t_channel, "requests" ) );
-    std::cerr << ">>>> pausing for 30 second" << std::endl;
-    std::this_thread::sleep_for( std::chrono::seconds(10) );
+    //std::this_thread::sleep_for( std::chrono::seconds(10) );
     // for some reason i get an error when i run this command, though everything seems to be working correctly
     //REQUIRE( t_channel->CheckExchangeExists( "requests" ) );
 
     REQUIRE( test_core::setup_queue( t_channel, "test_queue" ) );
-    std::cerr << ">>>> pausing for 60 second" << std::endl;
-    std::this_thread::sleep_for( std::chrono::seconds(10) );
+    std::this_thread::sleep_for( std::chrono::seconds(5) );
     // for some reason i get an error when i run this command, though everything seems to be working correctly
     //REQUIRE( t_channel->CheckQueueExists( "test_queue" ) );
 
@@ -92,7 +90,3 @@ TEST_CASE( "channel" )
     // for some reason i get an error when i run this command, though everything seems to be working correctly
     //REQUIRE_FALSE( t_channel->CheckQueueExists( "test_queue" ) );
 }
-
-
-
-
