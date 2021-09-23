@@ -16,6 +16,12 @@ jobs:
 
     runs-on: ubuntu-20.04
 
+    services:
+
+      rabbit_broker:
+        image: rabbitmq:3.9.5-management
+        ports: ["5672:5672"]
+
     steps:
 
       - name: Checkout the repo 
@@ -23,22 +29,25 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Run compose
-        run: |
-          cd testing/integration
-          docker-compose up --exit-code-from int_tests
-          echo $?
-
-#      - name: Build and run
+#      - name: Run compose
 #        run: |
-#          cd /home/runner/work/dripline-cpp/dripline-cpp
-#          docker build \
-#            --build-arg img_repo=${BASE_IMAGE_REPO} \
-#            --build-arg img_tag=${BASE_IMAGE_TAG} \
-#            --build-arg build_type=Debug \
-#            --build-arg build_examples=TRUE \
-#            --build-arg enable_testing=TRUE \
-#            --tag driplineorg/dripline-cpp:test \
-#            .
-#          docker run driplineorg/dripline-cpp:test /usr/local/build/testing/run_tests
+#          cd testing/integration
+#          docker-compose up --exit-code-from int_tests
+#          echo $?
+
+      - name: Build and run
+        run: |
+          cd /home/runner/work/dripline-cpp/dripline-cpp
+          docker build \
+            --build-arg img_repo=${BASE_IMAGE_REPO} \
+            --build-arg img_tag=${BASE_IMAGE_TAG} \
+            --build-arg build_type=Debug \
+            --build-arg build_examples=TRUE \
+            --build-arg enable_testing=TRUE \
+            --tag driplineorg/dripline-cpp:test \
+            .
+          docker run \
+            -v /home/runner/work/dripline-cpp/dripline-cpp/testing/authentication.json:/root/authentication.json \
+            driplineorg/dripline-cpp:test \
+            /usr/local/build/testing/run_tests
 
