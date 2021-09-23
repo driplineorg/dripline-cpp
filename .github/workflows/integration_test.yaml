@@ -10,6 +10,12 @@ on:
 
   workflow_dispatch:
 
+
+env:
+  BASE_IMAGE_REPO: python
+  BASE_IMAGE_TAG: '3.8.7-buster'
+
+
 jobs:
 
   integration_test:
