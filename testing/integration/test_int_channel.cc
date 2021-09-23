@@ -1,5 +1,5 @@
 /*
- * test_int_connection.cc
+ * test_int_channel.cc
  *
  *  Created on: Aug 31, 2021
  *      Author: N.S. Oblath

@@ -9,7 +9,8 @@
 
 set( testing_SOURCES
     use_catch.cc
-    test_int_connection.cc
+    test_int_channel.cc
+    test_int_service.cc
 )
 
 set( testing_LIBS 
