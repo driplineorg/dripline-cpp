@@ -90,11 +90,14 @@ function get_current_line
 
 function move_cursor_right
 {
-  local cur_line=$( get_current_line )
-  local cols=$(tput cols)
-  ((cur_line=cur_line-1))
-  [ "$cols" -gt "$MAX_WIDTH" ] && cols=$(($MAX_WIDTH-5)) || cols=$((cols-5))
-  tput cup $cur_line $cols
+#  local cur_line=$( get_current_line )
+#  printf "A"
+#  local cols=$(tput cols)
+#  ((cur_line=cur_line-1))
+#  [ "$cols" -gt "$MAX_WIDTH" ] && cols=$(($MAX_WIDTH-5)) || cols=$((cols-5))
+#  printf "B[${cur_line}][${cols}]"
+#  tput cup $cur_line $cols
+  printf "\t"
 }
 
 function print_line
@@ -333,9 +336,9 @@ function assert_equal
 {
   # parse input labels - if labels 3 or 4 provided then use in echo
   if [[ $4 ]]; then
-    printf "${ASSERT_STR} '$3' equal to '$4' "
+    printf "${ASSERT_STR} '$3'=$1 equal to '$4'=$2 "
   else
-    [[ $3 ]] && printf "${ASSERT_STR} '$3' equal to $2 " ||  printf "${ASSERT_STR} $1 equal to $2 "
+    [[ $3 ]] && printf "${ASSERT_STR} '$3'=$1 equal to $2 " ||  printf "${ASSERT_STR} $1 equal to $2 "
   fi
 
   if [ "$1" = "$2" ]; then
@@ -588,6 +591,7 @@ function run
     { { time { strace -e tgkill -o _strace $1 1>_out 2>_err;}; echo $?>_returnval;} 2>_time; } >/dev/null 2>&1
   fi
   [[ "$count_threads_pid" ]] && get_n_threads
+  echo "@@@@@@@@ retval=$(<_returnval)"; 
   returnval=$(<_returnval)
   output=$(<_out)
   error=$(<_err)

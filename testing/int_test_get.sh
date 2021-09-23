@@ -12,6 +12,7 @@ function setup
 function test_get
 {
     dl-agent -vv -b rabbit_broker --auth-file /root/authentication.json get simple
+    echo $?
 
     assert_terminated_normally
     assert_exit_success
