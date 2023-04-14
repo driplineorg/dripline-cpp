@@ -81,9 +81,6 @@ namespace dripline
             case TableValue::ValueType::VT_uint32:
                 return scarab::param_ptr_t( new scarab::param_value( a_value.GetUint32() ) );
                 break;
-            case TableValue::ValueType::VT_uint64:
-                return scarab::param_ptr_t( new scarab::param_value( a_value.GetUint64() ) );
-                break;
             default:
                 throw std::domain_error( "Invalid SimpleAMQPClient TableValue type" );
         }
@@ -115,7 +112,7 @@ namespace dripline
     {
         if( a_value.is_bool() ) return AmqpClient::TableValue( a_value.as_bool() );
         if( a_value.is_int() ) return AmqpClient::TableValue( a_value.as_int() );
-        if( a_value.is_uint() ) return AmqpClient::TableValue( a_value.as_uint() );
+        if( a_value.is_uint() ) return AmqpClient::TableValue( (uint32_t)a_value.as_uint() );
         if( a_value.is_double() ) return AmqpClient::TableValue( a_value.as_double() );
         if( a_value.is_string() ) return AmqpClient::TableValue( a_value.as_string() );
         throw std::domain_error( "Invalid param value type" );
