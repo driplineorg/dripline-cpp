@@ -1,7 +1,7 @@
 # This script sets environment variables that are used by Doxygen
 
 import os
-from subprocess import check_output
+from subprocess import call, check_output
 
 # version
 this_version = 'v?.?.?'
@@ -23,3 +23,7 @@ os.environ['DOXYGEN_INPUT'] = '../doxfiles ../../library ../../executables ../..
 os.environ['DOXYGEN_EXCLUDE'] = ''
 # directories outside of DOXYGEN_INPUT that you want the C preprocessor to look in for macro definitions (e.g. if there's a submodule not included that has relevant macros); string with space-separated directories
 os.environ['PREPROC_INCLUDE_PATH'] = '../../scarab/library/utility ../../scarab/library/logger'
+
+# Doxygen
+call(['doxygen', './scarab/documentation/cpp/Doxyfile'])
+call(['mv', './user_doxygen_out/html', '$READTHEDOCS_OUTPUT/html/_static'])

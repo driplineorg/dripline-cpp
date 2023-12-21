@@ -17,16 +17,17 @@ build:
   apt_packages:
     - doxygen
     - graphviz
+    - tree
   jobs:
     pre_build:
       - git submodule update --init --recursive
+      - mkdir -p $READTHEDOCS_OUTPUT/html
       - python ./documentation/source/pre_doxygen.py
       - env
       - pwd
       - tree
-      - doxygen ./scarab/documentation/cpp/Doxyfile
-      - mkdir -p $READTHEDOCS_OUTPUT/html
-      - mv ./user_doxygen_out/html $READTHEDOCS_OUTPUT/html/_static
+#      - doxygen ./scarab/documentation/cpp/Doxyfile
+#      - mv ./user_doxygen_out/html $READTHEDOCS_OUTPUT/html/_static
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
