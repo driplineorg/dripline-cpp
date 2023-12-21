@@ -23,6 +23,7 @@ build:
       - git submodule update --init --recursive
       - mkdir -p $READTHEDOCS_OUTPUT/html
       - python ./documentation/source/run_doxygen.py
+      - tree
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
