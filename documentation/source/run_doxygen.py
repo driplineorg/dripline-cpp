@@ -26,4 +26,3 @@ os.environ['PREPROC_INCLUDE_PATH'] = './scarab/library/utility ./scarab/library/
 
 # Doxygen
 call(['doxygen', './scarab/documentation/cpp/Doxyfile'])
-call(['mv', './user_doxygen_out/html', '$READTHEDOCS_OUTPUT/html/_static'])

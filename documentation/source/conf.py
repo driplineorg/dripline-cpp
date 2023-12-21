@@ -17,9 +17,7 @@
 #  * the project, copyright, and author variables
 #  * the arguments used to assign variables htmlhelp_basename, latex_documents, man_pages, and texinfo_documents
 
-import sys
-import os
-from subprocess import call, check_output
+from subprocess import check_output
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the

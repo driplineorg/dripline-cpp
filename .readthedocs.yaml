@@ -21,8 +21,9 @@ build:
   jobs:
     pre_build:
       - git submodule update --init --recursive
-      - mkdir -p $READTHEDOCS_OUTPUT/html
       - python ./documentation/source/run_doxygen.py
+      - mkdir -p $READTHEDOCS_OUTPUT/html
+      - mv ./user_doxygen_out/html $READTHEDOCS_OUTPUT/html/_static
       - tree
 
 # Build documentation in the "docs/" directory with Sphinx
