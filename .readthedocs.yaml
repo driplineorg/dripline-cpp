@@ -19,8 +19,12 @@ build:
     - graphviz
   jobs:
     pre_build:
-      - python documentation/source/pre_doxygen.py
-      - doxygen scarab/documentation/cpp/Doxyfile
+      - git submodule update --init --recursive
+      - python ./documentation/source/pre_doxygen.py
+      - env
+      - pwd
+      - tree
+      - doxygen ./scarab/documentation/cpp/Doxyfile
       - mkdir -p $READTHEDOCS_OUTPUT/html
       - mv ./user_doxygen_out/html $READTHEDOCS_OUTPUT/html/_static
 
