@@ -15,7 +15,7 @@ os.environ['PROJECT_NAME'] = 'Dripline-Cpp'
 os.environ['PROJECT_NUMBER'] = this_version
 os.environ['PROJECT_BRIEF_DESC'] = 'Dripline Implementation in C++'
 # located in your documentation directory, or give the relative path from the documentation directory
-os.environ['PROJECT_LOGO'] = './documentation/images/DL3Logo.png'
+os.environ['PROJECT_LOGO'] = './documentation/images/DL3Logog_55x55.png'
 
 # directories in which doxygen should look for source files; if you have a `doxfiles` directory in your documentation, that should go here; string with space-separated directories
 os.environ['DOXYGEN_INPUT'] = './documentation/doxfiles ./library ./executables ./examples'
