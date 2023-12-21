@@ -52,11 +52,11 @@ call(['doxygen', '../../scarab/documentation/cpp/Doxyfile'])
 call(['mv', './user_doxygen_out/html', './_static'])
 
 
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-if on_rtd:
-  html_theme = 'default'
-else:
-  html_theme = 'alabaster'
+#on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+#if on_rtd:
+#  html_theme = 'default'
+#else:
+html_theme = 'alabaster'
 
 
 # -- General configuration ------------------------------------------------

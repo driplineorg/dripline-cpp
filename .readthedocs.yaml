@@ -17,10 +17,16 @@ build:
   apt_packages:
     - doxygen
     - graphviz
+  jobs:
+    pre_build:
+      - doxygen
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
    configuration: documentation/source/conf.py
+
+submodules:
+  recursive: true
 
 # Optionally build your docs in additional formats such as PDF and ePub
 # formats:
