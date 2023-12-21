@@ -22,12 +22,7 @@ build:
     pre_build:
       - git submodule update --init --recursive
       - mkdir -p $READTHEDOCS_OUTPUT/html
-      - python ./documentation/source/pre_doxygen.py
-      - env
-      - pwd
-      - tree
-#      - doxygen ./scarab/documentation/cpp/Doxyfile
-#      - mv ./user_doxygen_out/html $READTHEDOCS_OUTPUT/html/_static
+      - python ./documentation/source/run_doxygen.py
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
