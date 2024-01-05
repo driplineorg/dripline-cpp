@@ -12,6 +12,7 @@ project( DriplineExternal VERSION 0.0.0 )
 # SimpleAmqpClient
 ##################
 
+option( BUILD_API_DOCS "" OFF )
 add_subdirectory( SimpleAmqpClient )
 
 # Because the SimpleAmqpClient CMake build doesn't take care of this stuff, we have to do it ourselves

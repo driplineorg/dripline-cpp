@@ -27,7 +27,7 @@ namespace dripline
      It should be used in the manner of any typical C++ exception, whenever the current
      function doesn't know how to handle a problem it encounters.
     */
-    class DRIPLINE_API dripline_error : public scarab::base_exception< dripline_error >
+    class DRIPLINE_API dripline_error : public scarab::typed_exception< dripline_error >
     {
         public:
             dripline_error() = default;
@@ -40,7 +40,7 @@ namespace dripline
      @author N.S. Oblath
      @brief Error indicating a problem with the connection to the broker
     */
-    class DRIPLINE_API connection_error : public scarab::base_exception< connection_error >
+    class DRIPLINE_API connection_error : public scarab::typed_exception< connection_error >
     {
         public:
             connection_error() = default;
