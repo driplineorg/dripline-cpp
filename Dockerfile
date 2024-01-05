@@ -6,6 +6,7 @@ FROM ${img_repo}:${img_tag}
 ARG build_type=Release
 ARG build_examples=FALSE
 ARG enable_testing=FALSE
+ARG narg=2
 
 # Most dependencies
 
@@ -63,6 +64,6 @@ RUN mkdir -p /usr/local/build && \
         -DDripline_BUILD_PYTHON:BOOL=TRUE \
         -DPBUILDER_PY_INSTALL_IN_SITELIB=TRUE \
         ../src && \
-    make -j3 install
+    make -j${narg} install
 
 # TODO: rm -rf /usr/local/src
