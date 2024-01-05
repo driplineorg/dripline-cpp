@@ -357,7 +357,11 @@ namespace dripline
         {
             LDEBUG( dlog, "Opening AMQP connection and creating channel to " << f_address << ":" << f_port );
             LDEBUG( dlog, "Using broker authentication: " << f_username << ":" << f_password );
-            return AmqpClient::Channel::Create( f_address, f_port, f_username, f_password );
+            struct AmqpClient::Channel::OpenOpts opts;
+            opts.host = f_address;
+            opts.port = f_port;
+            opts.auth = AmqpClient::Channel::OpenOpts::BasicAuth(f_username, f_password);
+            return AmqpClient::Channel::Open( opts );
         }
         catch( amqp_exception& e )
         {
