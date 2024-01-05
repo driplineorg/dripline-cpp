@@ -33,7 +33,7 @@ set ( Dripline_PYTHON_THROW_REPLY_KEYWORD "ThrowReply" CACHE STRING "Keyword use
 
 set( Dripline_MAX_PAYLOAD_SIZE "10000" CACHE STRING "Maximum payload size (bytes)" )
 
-# always use C++11
+# always use C++17
 set( CMAKE_CXX_STANDARD 17 )
 
 
