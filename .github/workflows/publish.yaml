@@ -12,11 +12,17 @@ env:
   BASE_IMAGE_REPO: python
   BASE_IMAGE_TAG: '3.8.7-buster'
 
+# narg/NARG (number-of-CPU argument to pass to the builds) are based on OS-specific CPU counts in the GitHub-hosted GHA runners.
+# checked 1/4/2024: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+
 jobs:
 
   test_docker:
 
     runs-on: ubuntu-latest
+
+    env:
+      NARG: 2
 
     # This job runs for all events that trigger this workflow
 
@@ -36,6 +42,7 @@ jobs:
             --build-arg build_type=Debug \
             --build-arg build_examples=TRUE \
             --build-arg enable_testing=TRUE \
+            --build-arg narg=${NARG} \
             --tag driplineorg/dripline-cpp:test \
             .
           docker run driplineorg/dripline-cpp:test /usr/local/build/testing/run_tests
@@ -49,8 +56,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        # narg are based on os-specific CPU counts
-        # checked 1/4/2024: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
         include:
           - os: ubuntu-latest
             narg: 2
