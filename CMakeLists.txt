@@ -55,6 +55,20 @@ add_definitions( -DDL_MAX_PAYLOAD_SIZE=${Dripline_MAX_PAYLOAD_SIZE} )
 set( PUBLIC_EXT_LIBS )
 set( PRIVATE_EXT_LIBS )
 
+# Pybind11
+if( Dripline_BUILD_PYTHON )
+    find_package( Python3 REQUIRED COMPONENTS Interpreter Development )
+    set(PYBIND11_PYTHON_VERSION ${Python3_VERSION} CACHE STRING "")
+    find_package( pybind11 REQUIRED )
+    #if( TARGET Python3::Python )
+    #    message( STATUS "%%%%% Found Python::Python" )
+    #else()
+    #    message( STATUS "%%%%% Did NOT find Python::Python" )
+    #endif()
+    include_directories( ${Python3_INCLUDE_DIRS} )
+    list( APPEND PUBLIC_EXT_LIBS pybind11::module )
+endif( Dripline_BUILD_PYTHON )
+
 # Threads are required by: test_scheduler
 if( Dripline_ENABLE_TESTING )
     find_package( Threads REQUIRED )
