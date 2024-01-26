@@ -1,7 +1,7 @@
 ARG img_repo=python
 ARG img_tag=3.8-buster
 
-FROM ${img_repo}:${img_tag}
+FROM ${img_repo}:${img_tag} as base
 
 ARG build_type=Release
 ARG build_examples=FALSE
@@ -36,8 +36,11 @@ RUN cd /usr/local && \
     mkdir build && \
     cd build && \
     cmake -DPYBIND11_TEST=FALSE .. && \
-    make -j3 install
+    make -j3 install && \
+    cd / && \
+    rm -rf /usr/local/pybind11
 
+FROM base
 
 # note that the build dir is *not* in source, this is so that the source can me mounted onto the container without covering the build target
 
