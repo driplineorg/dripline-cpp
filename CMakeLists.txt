@@ -203,6 +203,7 @@ endif()
 # Package Config #
 ##################
 
-configure_file( ${PROJECT_SOURCE_DIR}/DriplineConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/DriplineConfig.cmake @ONLY )
-
-pbuilder_do_package_config()
+pbuilder_do_package_config(
+    INPUT_FILE ${PROJECT_SOURCE_DIR}/DriplineConfig.cmake.in
+    OUTPUT_FILE DriplineConfig.cmake
+)
