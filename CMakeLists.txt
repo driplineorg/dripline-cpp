@@ -61,7 +61,7 @@ if( Dripline_BUILD_PYTHON )
     set(PYBIND11_PYTHON_VERSION ${Python3_VERSION} CACHE STRING "")
     find_package( pybind11 REQUIRED )
     include_directories( ${Python3_INCLUDE_DIRS} )
-    list( APPEND PUBLIC_EXT_LIBS pybind11::module )
+    list( APPEND PUBLIC_EXT_LIBS pybind11::module pybind11::embed )
 endif( Dripline_BUILD_PYTHON )
 
 # Threads are required by: test_scheduler
