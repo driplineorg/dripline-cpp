@@ -6,7 +6,7 @@ cmake_minimum_required (VERSION 3.12)
 #########
 
 cmake_policy( SET CMP0048 NEW ) # version in project()
-project( Dripline VERSION 2.8.7 )
+project( Dripline VERSION 2.8.8 )
 
 list( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/scarab/cmake )
 
@@ -54,6 +54,15 @@ add_definitions( -DDL_MAX_PAYLOAD_SIZE=${Dripline_MAX_PAYLOAD_SIZE} )
 
 set( PUBLIC_EXT_LIBS )
 set( PRIVATE_EXT_LIBS )
+
+# Pybind11
+if( Dripline_BUILD_PYTHON )
+    find_package( Python3 REQUIRED COMPONENTS Interpreter Development )
+    set(PYBIND11_PYTHON_VERSION ${Python3_VERSION} CACHE STRING "")
+    find_package( pybind11 REQUIRED )
+    include_directories( ${Python3_INCLUDE_DIRS} )
+    list( APPEND PUBLIC_EXT_LIBS pybind11::module pybind11::embed )
+endif( Dripline_BUILD_PYTHON )
 
 # Threads are required by: test_scheduler
 if( Dripline_ENABLE_TESTING )
@@ -189,6 +198,7 @@ endif()
 # Package Config #
 ##################
 
-configure_file( ${PROJECT_SOURCE_DIR}/DriplineConfig.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/DriplineConfig.cmake @ONLY )
-
-pbuilder_do_package_config()
+pbuilder_do_package_config(
+    INPUT_FILE ${PROJECT_SOURCE_DIR}/DriplineConfig.cmake.in
+    OUTPUT_FILE DriplineConfig.cmake
+)

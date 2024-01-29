@@ -1,7 +1,8 @@
 ARG img_repo=python
-ARG img_tag=3.8-buster
+ARG img_tag=3.12.1-slim-bookworm
 
-FROM ${img_repo}:${img_tag}
+# This FROM line includes a label so that the dependencies can be built by themselves by using the `--target` argument of `docker build`
+FROM ${img_repo}:${img_tag} as base
 
 ARG build_type=Release
 ARG build_examples=FALSE
@@ -15,20 +16,20 @@ RUN apt-get update && \
     apt-get --fix-missing  -y install \
         build-essential \
         cmake \
-        gdb \
+#        gdb \
         git \
         libboost-chrono-dev \
         libboost-filesystem-dev \
         libboost-system-dev \
         librabbitmq-dev \
         libyaml-cpp-dev \
-        rapidjson-dev \
+        rapidjson-dev && \
 #        pybind11-dev \
-        wget && \
+#        wget && \
     rm -rf /var/lib/apt/lists/*
 
 # use pybind11_checkout to specify a tag or branch name to checkout
-ARG pybind11_checkout=v2.6.2
+ARG pybind11_checkout=v2.11.1
 RUN cd /usr/local && \
     git clone https://github.com/pybind/pybind11.git && \
     cd pybind11 && \
@@ -36,8 +37,11 @@ RUN cd /usr/local && \
     mkdir build && \
     cd build && \
     cmake -DPYBIND11_TEST=FALSE .. && \
-    make -j3 install
+    make -j3 install && \
+    cd / && \
+    rm -rf /usr/local/pybind11
 
+FROM base
 
 # note that the build dir is *not* in source, this is so that the source can me mounted onto the container without covering the build target
 
