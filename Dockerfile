@@ -23,7 +23,7 @@ RUN apt-get update && \
         libboost-system-dev \
         librabbitmq-dev \
         libyaml-cpp-dev \
-        rapidjson-dev \
+        rapidjson-dev && \
 #        pybind11-dev \
 #        wget && \
     rm -rf /var/lib/apt/lists/*
