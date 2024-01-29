@@ -1,6 +1,7 @@
 ARG img_repo=python
 ARG img_tag=3.8-buster
 
+# This FROM line includes a label so that the dependencies can be built by themselves by using the `--target` argument of `docker build`
 FROM ${img_repo}:${img_tag} as base
 
 ARG build_type=Release
