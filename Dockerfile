@@ -1,5 +1,5 @@
 ARG img_repo=python
-ARG img_tag=3.8-buster
+ARG img_tag=3.12-bookworm
 
 # This FROM line includes a label so that the dependencies can be built by themselves by using the `--target` argument of `docker build`
 FROM ${img_repo}:${img_tag} as base
