@@ -1,5 +1,5 @@
 ARG img_repo=python
-ARG img_tag=3.12-bookworm
+ARG img_tag=3.12.1-slim-bookworm
 
 # This FROM line includes a label so that the dependencies can be built by themselves by using the `--target` argument of `docker build`
 FROM ${img_repo}:${img_tag} as base
@@ -16,7 +16,7 @@ RUN apt-get update && \
     apt-get --fix-missing  -y install \
         build-essential \
         cmake \
-        gdb \
+#        gdb \
         git \
         libboost-chrono-dev \
         libboost-filesystem-dev \
@@ -25,7 +25,7 @@ RUN apt-get update && \
         libyaml-cpp-dev \
         rapidjson-dev \
 #        pybind11-dev \
-        wget && \
+#        wget && \
     rm -rf /var/lib/apt/lists/*
 
 # use pybind11_checkout to specify a tag or branch name to checkout
