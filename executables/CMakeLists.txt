@@ -26,4 +26,5 @@ pbuilder_executables(
 pbuilder_component_install_and_export( 
     COMPONENT Executables
     EXETARGETS ${dripline_exe_PROGRAMS}
+    NAMESPACE Dripline::
 )

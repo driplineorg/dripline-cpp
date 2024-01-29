@@ -95,6 +95,7 @@ pbuilder_library(
 pbuilder_component_install_and_export( 
     COMPONENT Library
     LIBTARGETS Dripline
+    NAMESPACE Dripline::
 )
 
 pbuilder_install_headers( ${dripline_HEADERS} )
