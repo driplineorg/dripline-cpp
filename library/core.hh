@@ -123,6 +123,7 @@ namespace dripline
             mv_accessible( unsigned, max_payload_size );
 
             mv_accessible( bool, make_connection );
+            mv_accessible( unsigned, max_connection_attempts );
 
         protected:
             friend class receiver;
