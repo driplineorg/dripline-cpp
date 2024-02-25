@@ -14,5 +14,6 @@ services:
       - ./authentications.json:/root/authentications.json
     command:
       - run_simple_service 
+      - -v
       - --auth-file 
       - /root/authentications.json
