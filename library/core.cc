@@ -16,6 +16,7 @@
 #include "exponential_backoff.hh"
 #include "logger.hh"
 #include "param_codec.hh"
+#include "signal_handler.hh"
 
 
 namespace dripline
@@ -375,7 +376,7 @@ namespace dripline
         {
             try
             {
-                LDEBUG( dlog, "Opening AMQP connection and creating channel to " << f_address << ":" << f_port );
+                LINFO( dlog, "Opening AMQP connection and creating channel to " << f_address << ":" << f_port );
                 LDEBUG( dlog, "Using broker authentication: " << f_username << ":" << f_password );
                 struct AmqpClient::Channel::OpenOpts opts;
                 opts.host = f_address;
@@ -408,6 +409,9 @@ namespace dripline
         };
 
         scarab::exponential_backoff<> t_open_conn_backoff( t_open_conn_fcn, f_max_connection_attempts );
+        auto t_exp_cancel_wrap = wrap_cancelable( t_open_conn_backoff );
+        scarab::signal_handler::add_cancelable( t_exp_cancel_wrap );
+
         try
         {
             LDEBUG( dlog, "Attempting to open channel; will make up to " << f_max_connection_attempts << " attempts" );
