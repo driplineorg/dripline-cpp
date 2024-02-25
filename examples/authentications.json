@@ -1,0 +1,7 @@
+{
+    "amqp": {
+        "host": "rabbit_broker",
+        "username": "dripline",
+        "password": "dripline"
+    }
+}
