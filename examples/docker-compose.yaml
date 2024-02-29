@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+
+  rabbit-broker:
+    image: rabbitmq:3-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=dripline
+      - RABBITMQ_DEFAULT_PASS=dripline
+
+  simple-service:
+    image: ghcr.io/driplineorg/dripline-cpp:test
+    volumes:
+      - ./authentications.json:/root/authentications.json
+    command:
+      - run_simple_service 
+      - -v
+      - --auth-file 
+      - /root/authentications.json
