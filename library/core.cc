@@ -238,25 +238,25 @@ namespace dripline
         return *this;
     }
 
-    sent_msg_pkg_ptr core::send( request_ptr_t a_request ) const
+    sent_msg_pkg_ptr core::send( request_ptr_t a_request, amqp_channel_ptr a_channel ) const
     {
         LDEBUG( dlog, "Sending request with routing key <" << a_request->routing_key() << ">" );
-        return do_send( std::static_pointer_cast< message >( a_request ), f_requests_exchange, true );
+        return do_send( std::static_pointer_cast< message >( a_request ), f_requests_exchange, true, a_channel );
     }
 
-    sent_msg_pkg_ptr core::send( reply_ptr_t a_reply ) const
+    sent_msg_pkg_ptr core::send( reply_ptr_t a_reply, amqp_channel_ptr a_channel ) const
     {
         LDEBUG( dlog, "Sending reply with routing key <" << a_reply->routing_key() << ">" );
-        return do_send( std::static_pointer_cast< message >( a_reply ), f_requests_exchange, false );
+        return do_send( std::static_pointer_cast< message >( a_reply ), f_requests_exchange, false, a_channel );
     }
 
-    sent_msg_pkg_ptr core::send( alert_ptr_t a_alert ) const
+    sent_msg_pkg_ptr core::send( alert_ptr_t a_alert, amqp_channel_ptr a_channel ) const
     {
         LDEBUG( dlog, "Sending alert with routing key <" << a_alert->routing_key() << ">" );
-        return do_send( std::static_pointer_cast< message >( a_alert ), f_alerts_exchange, false );
+        return do_send( std::static_pointer_cast< message >( a_alert ), f_alerts_exchange, false, a_channel );
     }
 
-    sent_msg_pkg_ptr core::do_send( message_ptr_t a_message, const std::string& a_exchange, bool a_expect_reply ) const
+    sent_msg_pkg_ptr core::do_send( message_ptr_t a_message, const std::string& a_exchange, bool a_expect_reply, amqp_channel_ptr a_channel ) const
     {
         // throws connection_error if it could not connect with the broker
         // throws dripline_error if there's a problem with the exchange or creating the AMQP message object(s)
@@ -275,7 +275,7 @@ namespace dripline
             //throw dripline_error() << "cannot send reply when make_connection is false";
         }
 
-        amqp_channel_ptr t_channel = open_channel();
+        amqp_channel_ptr t_channel = a_channel ? a_channel : open_channel();
         if( ! t_channel )
         {
             throw connection_error() << "Unable to open channel to send message\n" << t_diagnostic_string_maker();

@@ -97,6 +97,7 @@ execute_process(
                     -D LIB_INSTALL_DIR:STRING=${LIB_INSTALL_DIR}
                     -D BIN_INSTALL_DIR:STRING=${BIN_INSTALL_DIR}
                     -D CMAKE_BUILD_TYPE=RELEASE
+                    -D CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
                     ${PROJECT_SOURCE_DIR}/external
     WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/external
 )
