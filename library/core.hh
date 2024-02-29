@@ -100,15 +100,18 @@ namespace dripline
         public:
             /// Sends a request message and returns a channel on which to listen for a reply.
             /// Default exchange is "requests"
-            virtual sent_msg_pkg_ptr send( request_ptr_t a_request ) const;
+            /// Caller can supply a channel; if one is not supplied, a new channel will be established
+            virtual sent_msg_pkg_ptr send( request_ptr_t a_request, amqp_channel_ptr a_channel = amqp_channel_ptr() ) const;
 
             /// Sends a reply message
             /// Default exchange is "requests"
-            virtual sent_msg_pkg_ptr send( reply_ptr_t a_reply ) const;
+            /// Caller can supply a channel; if one is not supplied, a new channel will be established
+            virtual sent_msg_pkg_ptr send( reply_ptr_t a_reply, amqp_channel_ptr a_channel = amqp_channel_ptr() ) const;
 
             /// Sends an alert message
             /// Default exchange is "alerts"
-            virtual sent_msg_pkg_ptr send( alert_ptr_t a_alert ) const;
+            /// Caller can supply a channel; if one is not supplied, a new channel will be established
+            virtual sent_msg_pkg_ptr send( alert_ptr_t a_alert, amqp_channel_ptr a_channel = amqp_channel_ptr() ) const;
 
             mv_referrable( std::string, address );
             mv_accessible( unsigned, port );
@@ -123,11 +126,12 @@ namespace dripline
             mv_accessible( unsigned, max_payload_size );
 
             mv_accessible( bool, make_connection );
+            mv_accessible( unsigned, max_connection_attempts );
 
         protected:
             friend class receiver;
 
-            sent_msg_pkg_ptr do_send( message_ptr_t a_message, const std::string& a_exchange, bool a_expect_reply ) const;
+            sent_msg_pkg_ptr do_send( message_ptr_t a_message, const std::string& a_exchange, bool a_expect_reply, amqp_channel_ptr a_channel = amqp_channel_ptr() ) const;
 
             amqp_channel_ptr send_withreply( message_ptr_t a_message, std::string& a_reply_consumer_tag, const std::string& a_exchange ) const;
 
