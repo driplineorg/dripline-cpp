@@ -11,7 +11,7 @@ env:
   REGISTRY: ghcr.io
   REGISTRY_OLD: docker.io
   BASE_IMAGE_REPO: python
-  BASE_IMAGE_TAG: '3.8.7-buster'
+  BASE_IMAGE_TAG: '3.12.1-slim-bookworm'
 
 # narg/NARG (number-of-CPU argument to pass to the builds) are based on OS-specific CPU counts in the GitHub-hosted GHA runners.
 # checked 1/4/2024: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
@@ -107,9 +107,9 @@ jobs:
           ./run_tests
 
 # For debugging
-      - name: Setup tmate session
-        if: ${{ ! success() }}
-        uses: mxschmitt/action-tmate@v3
+#      - name: Setup tmate session
+#        if: ${{ ! success() }}
+#        uses: mxschmitt/action-tmate@v3
 
 
   build_and_push:
