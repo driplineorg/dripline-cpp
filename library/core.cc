@@ -13,8 +13,10 @@
 #include "message.hh"
 
 #include "authentication.hh"
+#include "exponential_backoff.hh"
 #include "logger.hh"
 #include "param_codec.hh"
+#include "signal_handler.hh"
 
 
 namespace dripline
@@ -53,7 +55,8 @@ namespace dripline
             f_alerts_exchange( "alerts" ),
             f_heartbeat_routing_key( "heartbeat" ),
             f_max_payload_size( DL_MAX_PAYLOAD_SIZE ),
-            f_make_connection( a_make_connection )
+            f_make_connection( a_make_connection ),
+            f_max_connection_attempts( 10 )
     {
         // auth file passed as a parameter overrides a file passed in the config
         std::string t_auth_file( a_auth_file );
@@ -104,6 +107,7 @@ namespace dripline
             f_heartbeat_routing_key = a_config.get_value( "heartbeat-routing-key", f_heartbeat_routing_key );
             f_max_payload_size = a_config.get_value( "max-payload-size", f_max_payload_size );
             f_make_connection = a_config.get_value( "make-connection", f_make_connection );
+            f_max_connection_attempts = a_config.get_value( "max-connection-attempts", f_max_connection_attempts );
         }
 
         // parameters override config file, auth file, and defaults
@@ -179,7 +183,8 @@ namespace dripline
             f_alerts_exchange( a_orig.f_alerts_exchange ),
             f_heartbeat_routing_key( a_orig.f_heartbeat_routing_key ),
             f_max_payload_size( a_orig.f_max_payload_size ),
-            f_make_connection( a_orig.f_make_connection )
+            f_make_connection( a_orig.f_make_connection ),
+            f_max_connection_attempts( a_orig.f_max_connection_attempts )
     {}
 
     core::core( core&& a_orig ) :
@@ -191,7 +196,8 @@ namespace dripline
             f_alerts_exchange( std::move(a_orig.f_alerts_exchange) ),
             f_heartbeat_routing_key( std::move(a_orig.f_heartbeat_routing_key) ),
             f_max_payload_size( a_orig.f_max_payload_size ),
-            f_make_connection( std::move(a_orig.f_make_connection) )
+            f_make_connection( std::move(a_orig.f_make_connection) ),
+            f_max_connection_attempts( std::move(a_orig.f_max_connection_attempts) )
     {
         a_orig.f_port = 0;
         a_orig.f_max_payload_size = DL_MAX_PAYLOAD_SIZE;
@@ -211,6 +217,7 @@ namespace dripline
         f_heartbeat_routing_key = a_orig.f_heartbeat_routing_key;
         f_max_payload_size = a_orig.f_max_payload_size;
         f_make_connection = a_orig.f_make_connection;
+        f_max_connection_attempts = a_orig.f_max_connection_attempts;
         return *this;
     }
 
@@ -227,28 +234,29 @@ namespace dripline
         f_max_payload_size = a_orig.f_max_payload_size;
         a_orig.f_max_payload_size = DL_MAX_PAYLOAD_SIZE;
         f_make_connection = std::move( a_orig.f_make_connection );
+        f_max_connection_attempts = std::move( a_orig.f_max_connection_attempts );
         return *this;
     }
 
-    sent_msg_pkg_ptr core::send( request_ptr_t a_request ) const
+    sent_msg_pkg_ptr core::send( request_ptr_t a_request, amqp_channel_ptr a_channel ) const
     {
         LDEBUG( dlog, "Sending request with routing key <" << a_request->routing_key() << ">" );
-        return do_send( std::static_pointer_cast< message >( a_request ), f_requests_exchange, true );
+        return do_send( std::static_pointer_cast< message >( a_request ), f_requests_exchange, true, a_channel );
     }
 
-    sent_msg_pkg_ptr core::send( reply_ptr_t a_reply ) const
+    sent_msg_pkg_ptr core::send( reply_ptr_t a_reply, amqp_channel_ptr a_channel ) const
     {
         LDEBUG( dlog, "Sending reply with routing key <" << a_reply->routing_key() << ">" );
-        return do_send( std::static_pointer_cast< message >( a_reply ), f_requests_exchange, false );
+        return do_send( std::static_pointer_cast< message >( a_reply ), f_requests_exchange, false, a_channel );
     }
 
-    sent_msg_pkg_ptr core::send( alert_ptr_t a_alert ) const
+    sent_msg_pkg_ptr core::send( alert_ptr_t a_alert, amqp_channel_ptr a_channel ) const
     {
         LDEBUG( dlog, "Sending alert with routing key <" << a_alert->routing_key() << ">" );
-        return do_send( std::static_pointer_cast< message >( a_alert ), f_alerts_exchange, false );
+        return do_send( std::static_pointer_cast< message >( a_alert ), f_alerts_exchange, false, a_channel );
     }
 
-    sent_msg_pkg_ptr core::do_send( message_ptr_t a_message, const std::string& a_exchange, bool a_expect_reply ) const
+    sent_msg_pkg_ptr core::do_send( message_ptr_t a_message, const std::string& a_exchange, bool a_expect_reply, amqp_channel_ptr a_channel ) const
     {
         // throws connection_error if it could not connect with the broker
         // throws dripline_error if there's a problem with the exchange or creating the AMQP message object(s)
@@ -267,7 +275,7 @@ namespace dripline
             //throw dripline_error() << "cannot send reply when make_connection is false";
         }
 
-        amqp_channel_ptr t_channel = open_channel();
+        amqp_channel_ptr t_channel = a_channel ? a_channel : open_channel();
         if( ! t_channel )
         {
             throw connection_error() << "Unable to open channel to send message\n" << t_diagnostic_string_maker();
@@ -348,41 +356,79 @@ namespace dripline
 
     amqp_channel_ptr core::open_channel() const
     {
+        // Exceptions that can be encountered while opening a channel
+        //   SimpleAmqpClient::Channel::Open(opts)
+        //       std::runtime_error -- options are invalid; auth not specified
+        //       std::logic_error -- unhandled auth type
+        //       std::bad_alloc -- connection is null
+        //       amqp_exception -- unsure of what would cause this
+        //       amqp_lib_exception -- unable to make connection to the broker; maybe other things
+
         if ( ! f_make_connection || core::s_offline )
         {
             return amqp_channel_ptr();
             //throw dripline_error() << "Should not call open_channel when offline";
         }
+
+        amqp_channel_ptr t_ret_ptr = amqp_channel_ptr();
+
+        auto t_open_conn_fcn = [&]()->bool
+        {
+            try
+            {
+                LINFO( dlog, "Opening AMQP connection and creating channel to " << f_address << ":" << f_port );
+                LDEBUG( dlog, "Using broker authentication: " << f_username << ":" << f_password );
+                struct AmqpClient::Channel::OpenOpts opts;
+                opts.host = f_address;
+                opts.port = f_port;
+                opts.auth = AmqpClient::Channel::OpenOpts::BasicAuth(f_username, f_password);
+                t_ret_ptr = AmqpClient::Channel::Open( opts );
+                return true;
+            }
+            catch( amqp_exception& e )
+            {
+                if( e.is_soft_error() ) 
+                {
+                    LWARN( dlog, "Recoverable AMQP exception caught while opening channel: (" << e.reply_code() << ") " << e.reply_text() );
+                    return false;
+                }
+                // otherwise error is non-recoverable
+                throw;
+            }
+            catch( amqp_lib_exception& e )
+            {
+                LERROR( dlog, "AMQP Library Exception caught while creating channel: (" << e.ErrorCode() << ") " << e.what() );
+                if( e.ErrorCode() == -9 )
+                {
+                    LERROR( dlog, "This error means the client could not connect to the broker.\n\t" <<
+                            "Check that you have the address and port correct, and that the broker is running.")
+                }
+                return false;
+            }
+            // std::exceptions are non-recoverable, so don't catch them
+        };
+
+        scarab::exponential_backoff<> t_open_conn_backoff( t_open_conn_fcn, f_max_connection_attempts );
+        auto t_exp_cancel_wrap = wrap_cancelable( t_open_conn_backoff );
+        scarab::signal_handler::add_cancelable( t_exp_cancel_wrap );
+
         try
         {
-            LDEBUG( dlog, "Opening AMQP connection and creating channel to " << f_address << ":" << f_port );
-            LDEBUG( dlog, "Using broker authentication: " << f_username << ":" << f_password );
-            struct AmqpClient::Channel::OpenOpts opts;
-            opts.host = f_address;
-            opts.port = f_port;
-            opts.auth = AmqpClient::Channel::OpenOpts::BasicAuth(f_username, f_password);
-            return AmqpClient::Channel::Open( opts );
+            LDEBUG( dlog, "Attempting to open channel; will make up to " << f_max_connection_attempts << " attempts" );
+            t_open_conn_backoff.go();
+            // either succeeded or failed after multiple attempts
         }
         catch( amqp_exception& e )
         {
-            LERROR( dlog, "AMQP exception caught while opening channel: (" << e.reply_code() << ") " << e.reply_text() );
-            return amqp_channel_ptr();
+            LERROR( dlog, "Unrecoverable AMQP exception caught while opening channel: (" << e.reply_code() << ") " << e.reply_text() );
         }
-        catch( amqp_lib_exception& e )
+        catch(const std::exception& e)
         {
-            LERROR( dlog, "AMQP Library Exception caught while creating channel: (" << e.ErrorCode() << ") " << e.what() );
-            if( e.ErrorCode() == -9 )
-            {
-                LERROR( dlog, "This error means the client could not connect to the broker.\n\t" <<
-                        "Check that you have the address and port correct, and that the broker is running.")
-            }
-            return amqp_channel_ptr();
-        }
-        catch( std::exception& e )
-        {
+            // unrecoverable error causing a std::exception
             LERROR( dlog, "Standard exception caught while creating channel: " << e.what() );
-            return amqp_channel_ptr();
         }
+        
+        return t_ret_ptr;
     }
 
     bool core::setup_exchange( amqp_channel_ptr a_channel, const std::string& a_exchange )

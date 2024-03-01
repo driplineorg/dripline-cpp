@@ -6,7 +6,7 @@ cmake_minimum_required (VERSION 3.12)
 #########
 
 cmake_policy( SET CMP0048 NEW ) # version in project()
-project( Dripline VERSION 2.8.8 )
+project( Dripline VERSION 2.9.0 )
 
 list( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/scarab/cmake )
 
@@ -97,6 +97,7 @@ execute_process(
                     -D LIB_INSTALL_DIR:STRING=${LIB_INSTALL_DIR}
                     -D BIN_INSTALL_DIR:STRING=${BIN_INSTALL_DIR}
                     -D CMAKE_BUILD_TYPE=RELEASE
+                    -D CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
                     ${PROJECT_SOURCE_DIR}/external
     WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/external
 )
