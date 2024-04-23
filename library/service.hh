@@ -184,19 +184,25 @@ namespace dripline
     inline sent_msg_pkg_ptr service::send( request_ptr_t a_request ) const
     {
         a_request->sender_service_name() = f_name;
-        return core::send( a_request, f_channel );
+        // we don't use f_channel on this core::send command because a channel can only be used in a single thread, 
+        // and f_channel is primarily meant for listening with the listener thread.
+        return core::send( a_request );
     }
 
     inline sent_msg_pkg_ptr service::send( reply_ptr_t a_reply ) const
     {
         a_reply->sender_service_name() = f_name ;
-        return core::send( a_reply, f_channel );
+        // we don't use f_channel on this core::send command because a channel can only be used in a single thread, 
+        // and f_channel is primarily meant for listening with the listener thread.
+        return core::send( a_reply );
     }
 
     inline sent_msg_pkg_ptr service::send( alert_ptr_t a_alert ) const
     {
         a_alert->sender_service_name() = f_name;
-        return core::send( a_alert, f_channel );
+        // we don't use f_channel on this core::send command because a channel can only be used in a single thread, 
+        // and f_channel is primarily meant for listening with the listener thread.
+        return core::send( a_alert );
     }
 
 } /* namespace dripline */
