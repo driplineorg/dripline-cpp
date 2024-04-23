@@ -2,18 +2,18 @@
 
 ## Docker Container
 
-This directory contains a Dockerfile that adds a few utilities used in the integration testing to the dripline-python image.
-We recommend you tag the image with something like `ghcr.io/driplineorg/dripline-python:[version tag]-test`:
+This directory contains a Dockerfile that adds a few utilities used in the integration testing to the dripline-cpp image.
+If you build the image, we recommend you tag the image with something like `ghcr.io/driplineorg/dripline-cpp:[version tag]-test`:
 
-    > docker build --build-arg img_tag=[version tag]-dev -t ghcr.io/driplineorg/dripline-python:[version tag]-test .
+    > docker build --build-arg img_tag=[version tag]-dev -t ghcr.io/driplineorg/dripline-cpp:[version tag]-test .
 
 ## The Tests
 
 The integration tests are specified in `run-tests.sh`.  They're run using the [bats framework](https://bats-core.readthedocs.io/en/stable/index.html). Currently the tests include:
 
-* `dl-agent cmd ping -s my_store`
-* `dl-agent get peaches`
-* `dl-agent set peaches 500`
+* `dl-agent cmd ping -s simple`
+* `dl-agent get simple`
+* `dl-agent set simple 500`
 
 ## Run the Tests
 
@@ -36,6 +36,6 @@ Note that the terminal output is suppressed using the `do-testing.sh` script.  O
 * To include the test docker-compose extension, add a second -f argument:
     > docker compose -f docker-compose.yaml -f docker-compose-test.yaml up
 * Specify the docker image tag by setting an environment variable when you run, e.g.
-    > IMG_TAG=v4.7.0-dev docker compose -f docker-compose.yaml up
+    > IMG_TAG=v2.9.1-dev docker compose -f docker-compose.yaml up
   * There's a default tag (latest-dev), so if this isn't specified, everything should still run.
 
