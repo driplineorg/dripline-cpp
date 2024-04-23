@@ -24,6 +24,10 @@ jobs:
 
     env:
       NARG: 2
+      TAG: gha-test
+      INT_TAG: gha-int-test
+      DL_CPP_TAG: ${{ env.REGISTRY }}/${{ github.repository }}:gha-test
+      DL_CPP_INT_TAG: ${{ env.REGISTRY }}/${{ github.repository }}:gha-test-int
 
     # This job runs for all events that trigger this workflow
 
@@ -42,20 +46,6 @@ jobs:
         uses: docker/setup-buildx-action@v3
         with:
           driver: docker
-
-      - name: Docker meta
-        id: docker_meta
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            ${{ env.REGISTRY_OLD }}/${{ github.repository }}
-            ${{ env.REGISTRY }}/${{ github.repository }}
-          flavor: |
-            latest=auto
-            suffix=testing,onlatest=true
-          tags: |
-            type=semver,pattern={{raw}}
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads{0}', 'main') }}
 
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -80,32 +70,32 @@ jobs:
             enable_testing=TRUE
             narg=${{ env.NARG }}
           platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository }}:gha-test
+          tags: ${{ env.DL_CPP_TAG }}
 
       - name: Build Integration Tests
         id: build_int_tests
         uses: docker/build-push-action@v5
         with:
           context: ./testing/integration
-          push: true
-          load: false
+          push: false
+          load: true
           build-args: |
-            img_user=${{ env.BASE_IMAGE_USER }}
+            img_user=${{ env.REGISTRY }}/driplineorg
             img_repo=dripline-cpp
-            img_tag=gha-test
+            img_tag=${{ env.TAG }}
           platforms: linux/amd64
-          tags: ghcr.io/${{ github.repository }}:gha-int-test
+          tags: ${{ env.DL_CPP_INT_TAG }}
 
       - name: Unit Tests
         run: |
-          docker run --rm ghcr.io/${{ github.repository }}:gha-int-test bash -c "
+          docker run --rm ${{ env.DL_CPP_INT_TAG }} bash -c "
             cd /usr/local/build/testing
             ./run_tests"
 
       - name: Integration Tests
         run: |
           cd tests/integration
-          ./do-testing.sh gha-int-test
+          ./do-testing.sh ${{ env.INT_TAG }}
 
 # For debugging
       - name: Setup tmate session
