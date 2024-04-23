@@ -97,7 +97,7 @@ jobs:
 
       - name: Integration Tests
         run: |
-          cd tests/integration
+          cd testing/integration
           ./do-testing.sh ${{ env.INT_TAG }}
 
 # For debugging
