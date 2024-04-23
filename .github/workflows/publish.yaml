@@ -34,19 +34,97 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Build and run
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        id: setup_buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker
+
+      - name: Docker meta
+        id: docker_meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY_OLD }}/${{ github.repository }}
+            ${{ env.REGISTRY }}/${{ github.repository }}
+          flavor: |
+            latest=auto
+            suffix=testing,onlatest=true
+          tags: |
+            type=semver,pattern={{raw}}
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads{0}', 'main') }}
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          load: true
+          build-args: |
+            img_user=${{ env.BASE_IMAGE_USER }}
+            img_repo=${{ env.BASE_IMAGE_REPO }}
+            img_tag=${{ env.BASE_IMAGE_TAG }}
+            build_type=Debug
+            build_examples=TRUE
+            enable_testing=TRUE
+            narg=${{ env.NARG }}
+          platforms: linux/amd64
+          tags: ghcr.io/${{ github.repository }}:gha-test
+
+      - name: Build Integration Tests
+        id: build_int_tests
+        uses: docker/build-push-action@v5
+        with:
+          context: ./tests/integration
+          push: true
+          load: false
+          build-args: |
+            img_user=${{ env.BASE_IMAGE_USER }}
+            img_repo=dripline-cpp
+            img_tag=gha-test
+          platforms: linux/amd64
+          tags: ghcr.io/${{ github.repository }}:gha-int-test
+
+      - name: Unit Tests
         run: |
-          cd /home/runner/work/dripline-cpp/dripline-cpp
-          docker build \
-            --build-arg img_repo=${BASE_IMAGE_REPO} \
-            --build-arg img_tag=${BASE_IMAGE_TAG} \
-            --build-arg build_type=Debug \
-            --build-arg build_examples=TRUE \
-            --build-arg enable_testing=TRUE \
-            --build-arg narg=${NARG} \
-            --tag driplineorg/dripline-cpp:test \
-            .
-          docker run driplineorg/dripline-cpp:test /usr/local/build/testing/run_tests
+          docker run --rm ghcr.io/${{ github.repository }}:gha-int-test bash -c "
+            cd /usr/local/build/testing
+            ./run_tests"
+
+      - name: Integration Tests
+        run: |
+          cd tests/integration
+          ./do-testing.sh gha-int-test
+
+# For debugging
+      - name: Setup tmate session
+        if: ${{ ! success() }}
+        uses: mxschmitt/action-tmate@v3
+
+#      - name: Build and run
+#        run: |
+#          cd /home/runner/work/dripline-cpp/dripline-cpp
+#          docker build \
+#            --build-arg img_repo=${BASE_IMAGE_REPO} \
+#            --build-arg img_tag=${BASE_IMAGE_TAG} \
+#            --build-arg build_type=Debug \
+#            --build-arg build_examples=TRUE \
+#            --build-arg enable_testing=TRUE \
+#            --build-arg narg=${NARG} \
+#            --tag driplineorg/dripline-cpp:test \
+#            .
+#          docker run driplineorg/dripline-cpp:test /usr/local/build/testing/run_tests
 
   test_builds:
 
