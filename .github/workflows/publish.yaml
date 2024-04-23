@@ -26,12 +26,15 @@ jobs:
       NARG: 2
       TAG: gha-test
       INT_TAG: gha-int-test
-      DL_CPP_TAG: ${{ env.REGISTRY }}/${{ github.repository }}:gha-test
-      DL_CPP_INT_TAG: ${{ env.REGISTRY }}/${{ github.repository }}:gha-test-int
 
     # This job runs for all events that trigger this workflow
 
     steps:
+
+      - name: Concatenate env variables
+        run: |
+          echo "DL_CPP_TAG=${{ env.REGISTRY }}/${{ github.repository }}:${{ env.TAG }}" >> $GITHUB_ENV
+          echo "DL_CPP_INT_TAG=${{ env.REGISTRY }}/${{ github.repository }}:${{ env.INT_TAG }}" >> $GITHUB_ENV
 
       - name: Checkout the repo 
         uses: actions/checkout@v4
