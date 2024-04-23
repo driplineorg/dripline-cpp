@@ -187,11 +187,15 @@ jobs:
             build-examples: 'TRUE'
             enable-testing: 'TRUE'
             tag-suffix: '-dev'
+            do-integration: true
+            int-tag-suffix: '-int-test'
           - build: release
             build-type: RELEASE
             build-examples: 'FALSE'
             enable-testing: 'FALSE'
             tag-suffix: ''
+            do-integration: false
+            int-tag-suffix: ''
 
     steps:
 
@@ -210,6 +214,22 @@ jobs:
           flavor: |
             latest=auto
             suffix=${{ matrix.tag-suffix }},onlatest=true
+          tags: |
+            type=semver,pattern={{raw}}
+            type=ref,event=branch
+            type=ref,event=pr
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads{0}', 'main') }}
+
+      - name: Docker meta - integration
+        id: docker_meta_integration
+        if: ${{ matrix.do-integration }}
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.REGISTRY }}/${{ github.repository }}
+          flavor: |
+            latest=auto
+            suffix=${{ matrix.int-tag-suffix }},onlatest=true
           tags: |
             type=semver,pattern={{raw}}
             type=ref,event=branch
@@ -253,7 +273,21 @@ jobs:
             enable_testing=${{ matrix.enable-testing }}
             narg=${{env.NARG }}
           tags: ${{ steps.docker_meta.outputs.tags }}
-          platforms: linux/amd64,linux/arm/v7,linux/arm64
+          platforms: linux/amd64,linux/arm64
+
+      - name: Build and push - integration
+        id: build_push_integration
+        if: ${{ matrix.do-integration }}
+        uses: docker/build-push-action@v5
+        with:
+          context: ./testing/integration
+          push: ${{ github.event_name == 'push' }}  # limited to develop, main, and tags; don't push on PR
+          build-args: |
+            img_user=${{ env.REGISTRY }}/driplineorg
+            img_repo=dripline-cpp
+            img_tag=latest-dev
+          tags: ${{ steps.docker_meta_integration.outputs.tags }}
+          platforms: linux/amd64,linux/arm64
 
       - name: Release
         uses: softprops/action-gh-release@v1
