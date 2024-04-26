@@ -7,5 +7,8 @@ FROM ${img_user}/${img_repo}:${img_tag}
 RUN apt-get update && \
     apt-get clean && \
     apt-get --fix-missing  -y install \
+        npm \
+        curl \
         bats && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    npm install -g newman

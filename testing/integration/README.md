@@ -9,11 +9,27 @@ If you build the image, we recommend you tag the image with something like `ghcr
 
 ## The Tests
 
-The integration tests are specified in `run-tests.sh`.  They're run using the [bats framework](https://bats-core.readthedocs.io/en/stable/index.html). Currently the tests include:
+### Broker Setup
+
+The first tests run demonstrate that the RabbitMQ broker has been configured correctly once the services are connected.  We check that the expected exchanges and queues are in place by sending HTTP requests to the broker and validating the responses.  The `newman` CLI application is used to run a Postman collection.
+
+The command to run the collection is:
+
+    > newman run /path/to/rabbitmq_for_dl_collection.json
+
+The collection file is setup to run in the Docker compose environment, where the broker is addressed at `rabbit-broker`.  If you want to run it on a host machine on which the Docker setup is running and port 15672 has been opened, you can change instances of `rabbit-broker` in the JSON file to `localhost`, and use the same command.
+
+### Dripline Services
+
+We test use of Dripline services by sending requests to those services and validating the results.  The tests are specified in `dl-tests.sh`.  They're run and checked using the [bats framework](https://bats-core.readthedocs.io/en/stable/index.html). Currently the tests include:
 
 * `dl-agent cmd ping -s simple`
 * `dl-agent get simple`
 * `dl-agent set simple 500`
+
+You can run these tests directly by executing the script:
+
+    > /path/to/dl-tests.sh
 
 ## Run the Tests
 

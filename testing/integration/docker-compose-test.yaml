@@ -7,9 +7,11 @@ services:
       - rabbit-broker
       - simple-service
     volumes:
-      - ./run-tests.sh:/root/run-tests.sh
+      - ./dl-tests.sh:/root/dl-tests.sh
+      - ./rabbitmq_for_dl_collection.json:/root/rabbitmq_for_dl_collection.json
     command: >
       bash -c "sleep 1 &&
-              /root/run-tests.sh"
+              newman run /root/rabbitmq_for_dl_collection.json &&
+              /root/dl-tests.sh"
     configs:
       - auths.json
