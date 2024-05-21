@@ -154,8 +154,7 @@ jobs:
 
       - name: Run tests
         run: |
-          cd build/testing
-          ./run_tests
+          bin/run_tests
 
 # For debugging
 #      - name: Setup tmate session
