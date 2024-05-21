@@ -39,6 +39,9 @@ int main( int argc, char** argv )
     // Default configuration
     the_main.default_config() = monitor_config();
 
+    // Dripline authentication specification
+    add_dripline_auth_spec( the_main );
+
     try
     {
         // Command line options
@@ -62,7 +65,7 @@ int main( int argc, char** argv )
     auto t_callback = [&](){
         the_return = dl_client_error().rc_value() / 100;
 
-        auto the_monitor = std::make_shared< monitor >( the_main.primary_config() );
+        auto the_monitor = std::make_shared< monitor >( the_main.primary_config(), the_main.auth() );
 
         // run each phase of the operation, while checking for errors
         if ( ! the_monitor->start() || 

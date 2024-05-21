@@ -14,6 +14,10 @@
 #include "param.hh"
 
 
+namespace scarab
+{
+    class authentication;
+}
 namespace dripline
 {
     class core;
@@ -69,8 +73,8 @@ namespace dripline
                     sub_agent( agent* an_agent ) : f_agent( an_agent ) {};
                     virtual ~sub_agent() {};
 
-                    void execute( const scarab::param_node& a_config );
-                    void execute( const scarab::param_node& a_config, const scarab::param_array& a_ord_args );
+                    void execute( const scarab::param_node& a_config, const scarab::authentication& a_auth );
+                    void execute( const scarab::param_node& a_config, const scarab::param_array& a_ord_args, const scarab::authentication& a_auth );
 
                     virtual void create_and_send_message( scarab::param_node& a_config, const core& a_core ) = 0;
                     virtual void create_and_send_message( const core& a_core );
@@ -149,9 +153,9 @@ namespace dripline
             virtual ~agent();
 
             template< typename sub_agent_type >
-            void execute( const scarab::param_node& a_config );
+            void execute( const scarab::param_node& a_config, const scarab::authentication& a_auth );
             template< typename sub_agent_type >
-            void execute( const scarab::param_node& a_config, const scarab::param_array& a_ord_args );
+            void execute( const scarab::param_node& a_config, const scarab::param_array& a_ord_args, const scarab::authentication& a_auth );
 
             mv_accessible( bool, is_dry_run );
 
@@ -180,19 +184,19 @@ namespace dripline
     };
 
     template< typename sub_agent_type >
-    void agent::execute( const scarab::param_node& a_config )
+    void agent::execute( const scarab::param_node& a_config, const scarab::authentication& a_auth )
     {
         sub_agent_type t_sub_agent( this );
         scarab::param_array t_ord_args;
-        t_sub_agent.execute( a_config, t_ord_args );
+        t_sub_agent.execute( a_config, t_ord_args, a_auth );
         return;
     }
 
     template< typename sub_agent_type >
-    void agent::execute( const scarab::param_node& a_config, const scarab::param_array& a_ord_args )
+    void agent::execute( const scarab::param_node& a_config, const scarab::param_array& a_ord_args, const scarab::authentication& a_auth )
     {
         sub_agent_type t_sub_agent( this );
-        t_sub_agent.execute( a_config, a_ord_args );
+        t_sub_agent.execute( a_config, a_ord_args, a_auth );
         return;
     }
 

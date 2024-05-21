@@ -18,6 +18,8 @@
 #include "param_codec.hh"
 #include "signal_handler.hh"
 
+#include <array>
+
 
 namespace dripline
 {
@@ -46,73 +48,35 @@ namespace dripline
 
     bool core::s_offline = false;
 
-    core::core( const scarab::param_node& a_config, const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file, const bool a_make_connection ) :
-            f_address( "localhost" ),
-            f_port( 5672 ),
-            f_username( "guest" ),
-            f_password( "guest" ),
-            f_requests_exchange( "requests" ),
-            f_alerts_exchange( "alerts" ),
-            f_heartbeat_routing_key( "heartbeat" ),
-            f_max_payload_size( DL_MAX_PAYLOAD_SIZE ),
+    core::core( const scarab::param_node& a_config, const scarab::authentication& a_auth, const bool a_make_connection ) :
+            f_address( a_config.get_value("broker", "localhost") ),
+            f_port( a_config.get_value("broker-port", 5672) ),
+            f_username( a_auth.get("dripline", "user", "guest") ),
+            f_password( a_auth.get("dripline", "password", "guest") ),
+            f_requests_exchange( a_config.get_value("requests-exchange", "requests") ),
+            f_alerts_exchange( a_config.get_value("alerts-exchange", "alerts") ),
+            f_heartbeat_routing_key( a_config.get_value("heartbeat-routing-key", "heartbeat") ),
+            f_max_payload_size( a_config.get_value("max-payload-size", DL_MAX_PAYLOAD_SIZE) ),
             f_make_connection( a_make_connection ),
-            f_max_connection_attempts( 10 )
+            f_max_connection_attempts( a_config.get_value("max-connection-attempts", 10) )
     {
-        // auth file passed as a parameter overrides a file passed in the config
-        std::string t_auth_file( a_auth_file );
-        if( t_auth_file.empty() ) t_auth_file = a_config.get_value( "auth-file", "" );
-
-        // get auth file contents and override defaults
-        if( ! t_auth_file.empty() )
+/* DO WE WANT TO USE ALTERNATIVE AUTH GROUPS?
+        std::array< std::string > t_potential_groups{"dripline", "amqp", "rabbitmq"};
+        std::string t_auth_group;
+        for( const auto& i_gr : t_potential_goups )
         {
-            LDEBUG( dlog, "Using authentication file <" << t_auth_file << ">" );
-
-            scarab::authentication t_auth( t_auth_file );
-            if( ! t_auth.get_is_loaded() )
+            if( a_auth.has( i_gr ) )
             {
-                throw dripline_error() << "Authentication file <" << a_auth_file << "> could not be loaded";
-            }
-
-            if( ! t_auth.has( "amqp" ) )
-            {
-                throw dripline_error() << "No \"amqp\" authentication information present in <" << a_auth_file << ">";
-            }
-
-            const scarab::param_node& t_amqp_auth = t_auth["amqp"].as_node();
-            if( ! t_amqp_auth.has( "username" ) || ! t_amqp_auth.has( "password" ) )
-            {
-                throw dripline_error() <<  "AMQP authentication is not available or is not complete";
-            }
-            f_username = t_amqp_auth["username"]().as_string();
-            f_password = t_amqp_auth["password"]().as_string();
-
-            // Override the default values for broker and broker port with those specified in the auth file, if they're there
-            if( t_amqp_auth.has( "broker" ) )
-            {
-                f_address = t_amqp_auth["broker"]().as_string();
-            }
-            if( t_amqp_auth.has( "broker-port" ) )
-            {
-                f_port = t_amqp_auth["broker-port"]().as_uint();
+                t_auth_group = i_gr;
+                break;
             }
         }
+        LDEBUG( dlog, "Using auth group <" << t_auth_group << ">" );
 
-        // config file overrides defaults (and auth file, for broker and broker-port)
-        if( ! a_config.empty() )
-        {
-            f_address = a_config.get_value( "broker", f_address );
-            f_port = a_config.get_value( "broker-port", f_port );
-            f_requests_exchange = a_config.get_value( "requests-exchange", f_requests_exchange );
-            f_alerts_exchange = a_config.get_value( "alerts-exchange", f_alerts_exchange );
-            f_heartbeat_routing_key = a_config.get_value( "heartbeat-routing-key", f_heartbeat_routing_key );
-            f_max_payload_size = a_config.get_value( "max-payload-size", f_max_payload_size );
-            f_make_connection = a_config.get_value( "make-connection", f_make_connection );
-            f_max_connection_attempts = a_config.get_value( "max-connection-attempts", f_max_connection_attempts );
-        }
+        f_username = t_auth.get( t_auth_group, "username", f_username );
+        f_password = t_auth.get( t_auth_group, "password", f_password );
+*/
 
-        // parameters override config file, auth file, and defaults
-        if( ! a_broker_address.empty() ) f_address = a_broker_address;
-        if( a_port != 0 ) f_port = a_port;
 
         // additional return codes
         if( a_config.has( "return-codes" ) )
@@ -166,14 +130,14 @@ namespace dripline
             }
         }
     }
-
+/*
     core::core( const bool a_make_connection, const scarab::param_node& a_config ) :
             core::core( a_config )
     {
         // this constructor overrides the default value of make_connection
         f_make_connection = a_make_connection;
     }
-
+*/
     core::core( const core& a_orig ) :
             f_address( a_orig.f_address ),
             f_port( a_orig.f_port ),

@@ -36,5 +36,8 @@ namespace dripline
     /// Add basic AMQP options to an app object
     void add_dripline_options( scarab::main_app& an_app );
 
+    /// Add default authentication specification
+    void add_dripline_auth_spec( scarab::main_app& an_app );
+
 } /* namespace dripline */
 #endif /* DRIPLINE_DRIPLINE_CONFIG_HH_ */

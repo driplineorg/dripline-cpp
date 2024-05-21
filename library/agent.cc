@@ -61,13 +61,13 @@ namespace dripline
     {
     }
 
-    void agent::sub_agent::execute( const scarab::param_node& a_config )
+    void agent::sub_agent::execute( const scarab::param_node& a_config, const scarab::authentication& a_auth )
     {
         const scarab::param_array a_ord_args;
-        execute( a_config, a_ord_args );
+        execute( a_config, a_ord_args, a_auth );
     }
 
-    void agent::sub_agent::execute( const scarab::param_node& a_config, const scarab::param_array& a_ord_args )
+    void agent::sub_agent::execute( const scarab::param_node& a_config, const scarab::param_array& a_ord_args, const scarab::authentication& a_auth )
     {
         LINFO( dlog, "Creating message" );
 
@@ -80,7 +80,7 @@ namespace dripline
             t_dripline_node = std::move(t_config.remove( "dripline" )->as_node());
         }
 
-        core t_core( t_dripline_node );
+        core t_core( t_dripline_node, a_auth );
 
         f_agent->set_timeout( t_config.get_value( "timeout", 10U ) * 1000 ); // convert seconds (dripline agent user interface) to milliseconds (expected by SimpleAmqpClient)
         t_config.erase( "timeout" );
