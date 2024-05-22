@@ -47,13 +47,13 @@ add_library( Catch INTERFACE )
 target_include_directories( Catch INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/catch )
 
 pbuilder_executable( 
-    EXECUTABLE run_tests
+    EXECUTABLE run_dl_tests
     SOURCES ${testing_SOURCES}
     PROJECT_LIBRARIES ${testing_LIBS}
 )
-target_link_libraries( run_tests PUBLIC Catch )
+target_link_libraries( run_dl_tests PUBLIC Catch )
 
-list( APPEND programs "run_tests" )
+list( APPEND programs "run_dl_tests" )
 
 message(STATUS "##### programs: ${programs}")
 pbuilder_component_install_and_export( 
