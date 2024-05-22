@@ -85,8 +85,8 @@ jobs:
       - name: Unit Tests
         run: |
           docker run --rm ${{ env.DL_CPP_INT_TAG }} bash -c "
-            cd /usr/local/build/testing
-            ./run_tests"
+            cd /usr/local/bin
+            ./run_dl_tests"
 
       - name: Integration Tests
         run: |
@@ -154,7 +154,8 @@ jobs:
 
       - name: Run tests
         run: |
-          run_dl_tests
+          cd build/testing
+          ./run_dl_tests
 
 # For debugging
 #      - name: Setup tmate session
