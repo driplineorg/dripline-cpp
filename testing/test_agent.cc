@@ -35,7 +35,7 @@ TEST_CASE( "agent_configuration", "[agent]" )
     REQUIRE( the_main.default_config()["dripline"].is_node() );
 
     REQUIRE( the_main.default_config().has("auth-groups") );
-    REQUIRE_THAT( the_main.default_config()["auth-groups"]["dripline"]["user"]["default"]().as_string(), Equals("guest") );
+    REQUIRE_THAT( the_main.default_config()["auth-groups"]["dripline"]["username"]["default"]().as_string(), Equals("guest") );
     REQUIRE_THAT( the_main.default_config()["auth-groups"]["dripline"]["password"]["default"]().as_string(), Equals("guest") );
 
     // pre_callback() runs the configuration stages and authentication step
@@ -44,7 +44,7 @@ TEST_CASE( "agent_configuration", "[agent]" )
     REQUIRE( the_main.primary_config()["timeout"]().as_int() == 10 );
     REQUIRE( the_main.primary_config()["dripline"].is_node() );
     REQUIRE( the_main.primary_config().has("auth-groups") );
-    REQUIRE_THAT( the_main.primary_config()["auth-groups"]["dripline"]["user"]["default"]().as_string(), Equals("guest") );
+    REQUIRE_THAT( the_main.primary_config()["auth-groups"]["dripline"]["username"]["default"]().as_string(), Equals("guest") );
     REQUIRE_THAT( the_main.primary_config()["auth-groups"]["dripline"]["password"]["default"]().as_string(), Equals("guest") );
 }
 
