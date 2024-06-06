@@ -51,7 +51,7 @@ namespace dripline
     core::core( const scarab::param_node& a_config, const scarab::authentication& a_auth, const bool a_make_connection ) :
             f_address( a_config.get_value("broker", "localhost") ),
             f_port( a_config.get_value("broker-port", 5672) ),
-            f_username( a_auth.get("dripline", "user", "guest") ),
+            f_username( a_auth.get("dripline", "username", "guest") ),
             f_password( a_auth.get("dripline", "password", "guest") ),
             f_requests_exchange( a_config.get_value("requests-exchange", "requests") ),
             f_alerts_exchange( a_config.get_value("alerts-exchange", "alerts") ),

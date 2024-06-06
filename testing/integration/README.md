@@ -9,6 +9,8 @@ If you build the image, we recommend you tag the image with something like `ghcr
 
 ## The Tests
 
+The next two sub-sections detail the tests that are run.  Skip to [the next section](#run-the-tests) to actually run the tests.
+
 ### Broker Setup
 
 The first tests run demonstrate that the RabbitMQ broker has been configured correctly once the services are connected.  We check that the expected exchanges and queues are in place by sending HTTP requests to the broker and validating the responses.  The `newman` CLI application is used to run a Postman collection.
