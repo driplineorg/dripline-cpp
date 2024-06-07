@@ -43,9 +43,15 @@ namespace dripline
 
     void add_dripline_options( scarab::main_app& an_app )
     {
+        // authentication for the broker
+        an_app.add_config_option< std::string >( "-u,--username", "auth-groups.dripline.username.override", "Specify the username for the rabbitmq broker" );
+        an_app.add_config_option< std::string >( "--password", "auth-groups.dripline.password.override", "Specify a password for the rabbitmq broker -- NOTE: this will be plain text on the command line and may end up in your command history!" );
+        an_app.add_config_option< std::string >( "--password-file", "auth-groups.dripline.password.override-file", "Specify a file (e.g. a secrets file) to be read in as the rabbitmq broker password" );
+        an_app.add_config_option< std::string >( "--auth-file", "auth-file", "Set the authentication file path" );
+
+        // other dripline things
         an_app.add_config_option< std::string >( "-b,--broker", "dripline.broker", "Set the dripline broker address" );
         an_app.add_config_option< unsigned >( "-p,--port", "dripline.broker-port", "Set the port for communication with the dripline broker" );
-        an_app.add_config_option< std::string >( "--auth-file", "auth-file", "Set the authentication file path" );
         an_app.add_config_option< std::string >( "--requests-exchange", "dripline.requests-exchange", "Set the name of the requests exchange" );
         an_app.add_config_option< std::string >( "--alerts-exchange", "dripline.alerts-exchange", "Set the name of the alerts exchange" );
         an_app.add_config_option< unsigned >( "--max-payload", "dripline.max-payload-size", "Set the maximum payload size (in bytes)" );
