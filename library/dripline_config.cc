@@ -60,26 +60,29 @@ namespace dripline
 
     void add_dripline_auth_spec( scarab::main_app& an_app, bool a_use_auth_file )
     {
+        // This is setup as an either-or feature:
+        //   You're defaults are either the auth-specification or an auth file
         // The use of an auth file is being maintained for backwards compatibility, 
         // but is not the preferred method of handling authentication
         if( a_use_auth_file )
         {
             an_app.set_default_auth_file( "authentications.json" );
-            return;
         }
-
-        an_app.add_default_auth_spec_group( "dripline",
-            scarab::param_node( 
-                "username"_a=scarab::param_node(
-                    "default"_a="guest",
-                    "env"_a="DRIPLINE_USER"
-                ),
-                "password"_a=scarab::param_node(
-                    "default"_a="guest",
-                    "env"_a="DRIPLINE_PASSWORD"
+        else
+        {
+            an_app.add_default_auth_spec_group( "dripline",
+                scarab::param_node( 
+                    "username"_a=scarab::param_node(
+                        "default"_a="guest",
+                        "env"_a="DRIPLINE_USER"
+                    ),
+                    "password"_a=scarab::param_node(
+                        "default"_a="guest",
+                        "env"_a="DRIPLINE_PASSWORD"
+                    )
                 )
-            )
-        );
+            );
+        }
         return;
     }
 
