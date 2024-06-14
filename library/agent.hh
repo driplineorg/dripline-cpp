@@ -43,13 +43,19 @@ namespace dripline
      {
          "[operation: run, get, set, cmd, alert, reply] : "",
          "rk" : "[routing key]",
-         "amqp" : {
+         "dripline" : {
              "broker" : "[address]",
              "broker-port" : [port],
              "exchange" : "[exchange]",
-             "auth-file" : "[authentication file]",  // optional; must live in the user's home directory
              "reply-timeout-ms": [ms] // optional; default is 10000
          },
+         "auth-file" : "[filename]" // optional, if using an auth file
+         "auth-groups" : {
+            "dripline": {
+                "username": {[username specification]}
+                "password": {[password specification]}
+            }
+         }
          "lockout-key" : "[uuid]",  // optional
          "save" : "[filename]"  // optional
          "load" : "[filename]"  // optional; only used for cmd

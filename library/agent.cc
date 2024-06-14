@@ -82,6 +82,9 @@ namespace dripline
 
         core t_core( t_dripline_node, a_auth );
 
+        t_config.remove( "auth-file" );
+        t_config.remove( "auth-groups" );
+
         f_agent->set_timeout( t_config.get_value( "timeout", 10U ) * 1000 ); // convert seconds (dripline agent user interface) to milliseconds (expected by SimpleAmqpClient)
         t_config.erase( "timeout" );
         f_agent->set_json_print( t_config.get_value( "json-print", f_agent->get_json_print() ) );
