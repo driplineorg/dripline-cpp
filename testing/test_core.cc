@@ -10,6 +10,7 @@
 #include "dripline_exceptions.hh"
 #include "return_codes.hh"
 
+#include "authentication.hh"
 #include "param_codec.hh"
 
 #include "catch.hpp"
@@ -19,12 +20,14 @@
 
 TEST_CASE( "send_offline", "[core]" )
 {
+    using scarab::authentication;
     using scarab::param_ptr_t;
     using scarab::param;
+    using scarab::param_node;
 
     dripline::core::s_offline = true;
 
-    dripline::core t_core( true );
+    dripline::core t_core( param_node(), authentication(), true );
 
     dripline::alert_ptr_t t_alert_ptr = dripline::msg_alert::create( param_ptr_t(new param()), "" );
 
@@ -41,6 +44,7 @@ TEST_CASE( "send_offline", "[core]" )
 
 TEST_CASE( "config_retcode", "[core]" )
 {
+    using scarab::authentication;
     using scarab::param_ptr_t;
     using scarab::param_node;
     using scarab::param_array;
@@ -60,18 +64,19 @@ TEST_CASE( "config_retcode", "[core]" )
     auto t_factory = scarab::indexed_factory< unsigned, dripline::return_code >::get_instance();
 
     // test adding a return code through a config
-    dripline::core t_core( t_config );
+    dripline::core t_core( t_config, authentication() );
     REQUIRE( t_factory->has_class( 5000 ) );
 
     t_config["return-codes"][0]["value"]() = 5001;
     t_config["return-codes"][0].as_node().erase("description");
 
     // test adding a return code with an invalid config
-    REQUIRE_THROWS_AS( dripline::core( t_config ), dripline::dripline_error );
+    REQUIRE_THROWS_AS( dripline::core( t_config, authentication() ), dripline::dripline_error );
 }
 
 TEST_CASE( "config_retcode_fromfile", "[core]" )
 {
+    using scarab::authentication;
     using scarab::param_ptr_t;
     using scarab::param_node;
     using scarab::param_array;
@@ -98,7 +103,7 @@ TEST_CASE( "config_retcode_fromfile", "[core]" )
     auto t_factory = scarab::indexed_factory< unsigned, dripline::return_code >::get_instance();
 
     // test adding a return code through a config
-    dripline::core t_core( t_config );
+    dripline::core t_core( t_config, authentication() );
     REQUIRE( t_factory->has_class( 5100 ) );
 
     std::remove( t_temp_filename.c_str() );

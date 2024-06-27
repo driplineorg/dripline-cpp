@@ -9,11 +9,9 @@
 
 #include "agent_config.hh"
 
-#include "logger.hh"
+//#include "logger.hh"
 
-using std::string;
-
-LOGGER( dlog, "agent_config" );
+//LOGGER( dlog, "agent_config" );
 
 namespace dripline
 {

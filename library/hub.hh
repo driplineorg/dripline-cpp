@@ -73,7 +73,7 @@ namespace dripline
             typedef std::function< reply_ptr_t( const dripline::request_ptr_t ) > handler_func_t;
 
         public:
-            hub( const scarab::param_node& a_config = scarab::param_node(), const std::string& a_queue_name = "",  const std::string& a_broker_address = "", unsigned a_port = 0, const std::string& a_auth_file = "" , const bool a_make_connection = true );
+            hub( const scarab::param_node& a_config, const scarab::authentication& a_auth, const std::string& a_queue_name = "", const bool a_make_connection = true );
             virtual ~hub();
 
             /// Sets the run request handler function

@@ -1,5 +1,3 @@
-version: '3'
-
 services:
 
   rabbit-broker:
@@ -18,7 +16,7 @@ services:
       rabbit-broker:
         condition: service_healthy
     command: >
-      bash -c "run_simple_service -vvv --auth-file /auths.json"
+      bash -c "run_simple_service -vvv -b rabbit-broker --auth-file /auths.json"
     configs:
       - auths.json
 

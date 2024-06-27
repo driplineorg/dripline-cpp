@@ -26,9 +26,9 @@ namespace dripline
 {
     LOGGER( dlog, "service" );
 
-    service::service( const scarab::param_node& a_config, const string& a_queue_name,  const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file, const bool a_make_connection ) :
+    service::service( const scarab::param_node& a_config, const scarab::authentication& a_auth, const string& a_queue_name, const bool a_make_connection ) :
             scarab::cancelable(),
-            core( a_config, a_broker_address, a_port, a_auth_file, a_make_connection ),
+            core( a_config, a_auth, a_make_connection ),
             // logic for setting the name:
             //   a_queue_name if provided
             //   otherwise a_config["queue"] if it exists
@@ -51,11 +51,11 @@ namespace dripline
         f_single_message_wait_ms = a_config.get_value( "message-wait-ms", f_single_message_wait_ms );
         f_heartbeat_interval_s = a_config.get_value( "heartbeat-interval-s", f_heartbeat_interval_s );
 
-        // override if specified as a separate argument
-        if( ! a_queue_name.empty() ) f_name = a_queue_name;
+//        // override if specified as a separate argument
+//        if( ! a_queue_name.empty() ) f_name = a_queue_name;
     }
-
-    service::service( const bool a_make_connection, const scarab::param_node& a_config ) :
+/*
+    service::service( const bool a_make_connection, const scarab::param_node& a_config, const scarab::authentication& a_auth ) :
             scarab::cancelable(),
             core( a_make_connection, a_config ),
             endpoint( "" ),
@@ -71,7 +71,7 @@ namespace dripline
             f_broadcast_key()
     {
     }
-
+*/
     service::service( service&& a_orig ) :
             scarab::cancelable(),
             core( std::move(a_orig) ),

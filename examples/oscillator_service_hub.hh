@@ -18,7 +18,7 @@ namespace dripline
     class DRIPLINE_EXAMPLES_API oscillator_service_hub : public hub
     {
         public:
-            oscillator_service_hub( const scarab::param_node& a_config = scarab::param_node() );
+            oscillator_service_hub( const scarab::param_node& a_config, const scarab::authentication& a_auth );
             virtual ~oscillator_service_hub();
 
             void execute();

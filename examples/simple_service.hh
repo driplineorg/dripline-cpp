@@ -16,7 +16,7 @@ namespace dripline
     class DRIPLINE_EXAMPLES_API simple_service : public service
     {
         public:
-            simple_service( const scarab::param_node& a_config = scarab::param_node() );
+            simple_service( const scarab::param_node& a_config, const scarab::authentication& a_auth );
             virtual ~simple_service();
 
             void execute();

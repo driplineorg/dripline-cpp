@@ -23,6 +23,10 @@
 #include <set>
 #include <vector>
 
+namespace scarab
+{
+    class authentication;
+}
 namespace dripline
 {
 
@@ -94,8 +98,8 @@ namespace dripline
             };
 
         public:
-            service( const scarab::param_node& a_config = scarab::param_node(), const std::string& a_queue_name = "",  const std::string& a_broker_address = "", unsigned a_port = 0, const std::string& a_auth_file = "", const bool a_make_connection = true );
-            service( const bool a_make_connection, const scarab::param_node& a_config = scarab::param_node() );
+            service( const scarab::param_node& a_config, const scarab::authentication& a_auth, const std::string& a_queue_name = "",  const bool a_make_connection = true );
+//            service( const bool a_make_connection, const scarab::param_node& a_config = scarab::param_node(), const scarab::authentication& a_auth = scarab::authentication() );
             service( const service& ) = delete;
             service( service&& a_orig );
             virtual ~service();

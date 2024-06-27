@@ -30,10 +30,12 @@ int main( int argc, char** argv )
 
     add_dripline_options( the_main );
 
+    add_dripline_auth_spec( the_main );
+
     int the_return = -1;
 
     auto t_service_callback = [&](){
-        auto the_service = std::make_shared< simple_service >( the_main.primary_config()["dripline"].as_node() );
+        auto the_service = std::make_shared< simple_service >( the_main.primary_config()["dripline"].as_node(), the_main.auth() );
 
         the_service->execute();
 

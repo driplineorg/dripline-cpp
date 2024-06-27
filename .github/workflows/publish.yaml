@@ -85,8 +85,8 @@ jobs:
       - name: Unit Tests
         run: |
           docker run --rm ${{ env.DL_CPP_INT_TAG }} bash -c "
-            cd /usr/local/build/testing
-            ./run_tests"
+            cd /usr/local/bin
+            ./run_dl_tests"
 
       - name: Integration Tests
         run: |
@@ -94,9 +94,9 @@ jobs:
           ./do-testing.sh ${{ env.INT_TAG }}
 
 # For debugging
-#      - name: Setup tmate session
-#        if: ${{ ! success() }}
-#        uses: mxschmitt/action-tmate@v3
+      - name: Setup tmate session
+        if: ${{ ! success() }}
+        uses: mxschmitt/action-tmate@v3
 
 
   test_builds:
@@ -155,12 +155,12 @@ jobs:
       - name: Run tests
         run: |
           cd build/testing
-          ./run_tests
+          ./run_dl_tests
 
 # For debugging
-#      - name: Setup tmate session
-#        if: ${{ ! success() }}
-#        uses: mxschmitt/action-tmate@v3
+      - name: Setup tmate session
+        if: ${{ ! success() }}
+        uses: mxschmitt/action-tmate@v3
 
 
   build_and_push:

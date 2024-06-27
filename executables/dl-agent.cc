@@ -52,35 +52,38 @@ int main( int argc, char** argv )
     scarab::config_decorator* t_agent_get = the_main.add_config_subcommand( "get", "Send an OP_GET request" );
     t_agent_get->add_config_option< std::string >( "routing_key", "rk", "Set the routing key" )->required();
     t_agent_get->this_app()->callback(
-            [&]() { the_agent.execute< agent::sub_agent_get >( the_main.primary_config(), the_main.nonoption_ord_args() ); }
+            [&]() { the_agent.execute< agent::sub_agent_get >( the_main.primary_config(), the_main.nonoption_ord_args(), the_main.auth() ); }
     );
 
     scarab::config_decorator* t_agent_set = the_main.add_config_subcommand( "set", "Send an OP_SET request" );
     t_agent_set->add_config_option< std::string >( "routing_key", "rk", "Set the routing key" )->required();
     t_agent_set->this_app()->callback(
-            [&]() { the_agent.execute< agent::sub_agent_set >( the_main.primary_config(), the_main.nonoption_ord_args() ); }
+            [&]() { the_agent.execute< agent::sub_agent_set >( the_main.primary_config(), the_main.nonoption_ord_args(), the_main.auth() ); }
     );
 
     scarab::config_decorator* t_agent_cmd = the_main.add_config_subcommand( "cmd", "Send an OP_CMD request" );
     t_agent_cmd->add_config_option< std::string >( "routing_key", "rk", "Set the routing key" )->required();
     t_agent_cmd->this_app()->callback(
-            [&]() { the_agent.execute< agent::sub_agent_cmd>( the_main.primary_config(), the_main.nonoption_ord_args() ); }
+            [&]() { the_agent.execute< agent::sub_agent_cmd>( the_main.primary_config(), the_main.nonoption_ord_args(), the_main.auth() ); }
     );
 
     scarab::config_decorator* t_agent_reply = the_main.add_config_subcommand( "reply", "Send a reply message" );
     t_agent_reply->add_config_option< std::string >( "routing_key", "rk", "Set the routing key" )->required();
     t_agent_reply->this_app()->callback(
-            [&]() { the_agent.execute< agent::sub_agent_reply>( the_main.primary_config(), the_main.nonoption_ord_args() ); }
+            [&]() { the_agent.execute< agent::sub_agent_reply>( the_main.primary_config(), the_main.nonoption_ord_args(), the_main.auth() ); }
     );
 
     scarab::config_decorator* t_agent_alert = the_main.add_config_subcommand( "alert", "Send an alert message" );
     t_agent_alert->add_config_option< std::string >( "routing_key", "rk", "Set the routing key" )->required();
     t_agent_alert->this_app()->callback(
-            [&]() { the_agent.execute< agent::sub_agent_alert>( the_main.primary_config(), the_main.nonoption_ord_args() ); }
+            [&]() { the_agent.execute< agent::sub_agent_alert>( the_main.primary_config(), the_main.nonoption_ord_args(), the_main.auth() ); }
     );
 
     // Default configuration
     the_main.default_config() = agent_config();
+
+    // Dripline authentication specification
+    add_dripline_auth_spec( the_main );
 
     // Command line options
     add_dripline_options( the_main );

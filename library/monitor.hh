@@ -12,6 +12,11 @@
 #include "listener.hh"
 #include "receiver.hh"
 
+namespace scarab
+{
+    class authentication;
+}
+
 namespace DRIPLINE_API dripline
 {
 
@@ -53,7 +58,7 @@ namespace DRIPLINE_API dripline
             };
 
         public:
-            monitor( const scarab::param_node& a_config = scarab::param_node() );
+            monitor( const scarab::param_node& a_config, const scarab::authentication& a_auth );
             monitor( const monitor& ) = delete;
             monitor( monitor&& a_orig );
             virtual ~monitor();

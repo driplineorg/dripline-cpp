@@ -37,7 +37,7 @@ namespace dripline
     class DRIPLINE_API relayer : public core, public scarab::cancelable
     {
         public:
-            relayer( const scarab::param_node& a_config = scarab::param_node(), const std::string& a_broker_address = "", unsigned a_port = 0, const std::string& a_auth_file = "" );
+            relayer( const scarab::param_node& a_config, const scarab::authentication& a_auth );
             virtual ~relayer();
 
         public:

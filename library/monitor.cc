@@ -20,9 +20,9 @@ LOGGER( dlog, "monitor" );
 namespace dripline
 {
 
-    monitor::monitor( const scarab::param_node& a_config ) :
+    monitor::monitor( const scarab::param_node& a_config, const scarab::authentication& a_auth ) :
             scarab::cancelable(),
-            core( a_config.has( "dripline" ) ? a_config["dripline"].as_node() : scarab::param_node() ),
+            core( a_config.has( "dripline" ) ? a_config["dripline"].as_node() : scarab::param_node(), a_auth ),
             listener_receiver(),
             f_status( status::nothing ),
             f_name( std::string("monitor_") + string_from_uuid(generate_random_uuid()) ),
