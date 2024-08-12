@@ -26,33 +26,29 @@ namespace dripline
 {
     LOGGER( dlog, "service" );
 
-    service::service( const scarab::param_node& a_config, const scarab::authentication& a_auth, const string& a_queue_name, const bool a_make_connection ) :
+    service::service( const scarab::param_node& a_config, const scarab::authentication& a_auth, const bool a_make_connection ) :
             scarab::cancelable(),
             core( a_config, a_auth, a_make_connection ),
-            // logic for setting the name:
-            //   a_queue_name if provided
-            //   otherwise a_config["queue"] if it exists
-            //   otherwise "dlcpp_service"
-            endpoint( a_queue_name.empty() ? a_config.get_value( "queue", "dlcpp_service" ) : a_queue_name ),
+            endpoint( a_config.get_value( "queue", "dlcpp_service" ) ),
             listener_receiver(),
             heartbeater(),
             scheduler<>(),
             std::enable_shared_from_this< service >(),
             f_status( status::nothing ),
-            f_enable_scheduling( a_config.get_value("enable-scheduling", false ) ),
+            f_enable_scheduling( a_config.get_value( "enable-scheduling", false ) ),
             f_id( generate_random_uuid() ),
             f_sync_children(),
             f_async_children(),
-            f_broadcast_key( "broadcast" )
+            f_broadcast_key( a_config.get_value( "broadcast-key", "broadcast" ) )
     {
-        // get values from the config
+        // get more values from the config
+        // default of f_listen_timeout_ms is in the listener class
         f_listen_timeout_ms = a_config.get_value( "loop-timeout-ms", f_listen_timeout_ms );
         heartbeater::f_check_timeout_ms = f_listen_timeout_ms;
+        // default of f_single_message_wait_ms is in the receiver class
         f_single_message_wait_ms = a_config.get_value( "message-wait-ms", f_single_message_wait_ms );
+        // default of f_heartbeat_interval_s is in the heartbeater class
         f_heartbeat_interval_s = a_config.get_value( "heartbeat-interval-s", f_heartbeat_interval_s );
-
-//        // override if specified as a separate argument
-//        if( ! a_queue_name.empty() ) f_name = a_queue_name;
     }
 /*
     service::service( const bool a_make_connection, const scarab::param_node& a_config, const scarab::authentication& a_auth ) :

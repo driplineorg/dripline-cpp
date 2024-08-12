@@ -19,9 +19,9 @@ namespace dripline
     LOGGER( dlog, "hub" );
 
 
-    hub::hub( const scarab::param_node& a_config, const scarab::authentication& a_auth, const string& a_queue_name, const bool a_make_connection) :
+    hub::hub( const scarab::param_node& a_config, const scarab::authentication& a_auth, const bool a_make_connection) :
             scarab::cancelable(),
-            service( a_config, a_auth, a_queue_name, a_make_connection ),
+            service( a_config, a_auth, a_make_connection ),
             f_run_handler(),
             f_get_handlers(),
             f_set_handlers(),
