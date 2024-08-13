@@ -34,7 +34,7 @@ namespace dripline
      @class service
      @author N.S. Oblath
 
-     @brief Consumer of Dripline messages on a particular queue
+     @brief Primary unit of software that connects to a broker and typically provides an interface with an instrument or other software.
 
      @details
      The service class is the implementation of the "service" concept in Dripline.

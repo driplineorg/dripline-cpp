@@ -19,7 +19,7 @@
 
 TEST_CASE( "process_message", "[service]" )
 {
-    dripline::service t_service( scarab::param_node(), scarab::authentication(), "", false);
+    dripline::service t_service( scarab::param_node(), scarab::authentication(), false);
 
     dripline::request_ptr_t t_request_ptr = dripline::msg_request::create( scarab::param_ptr_t( new scarab::param() ), dripline::op_t::get, "dlcpp_service", "", "" );
 
