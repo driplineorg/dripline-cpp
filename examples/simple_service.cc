@@ -26,7 +26,7 @@ namespace dripline
 
     simple_service::simple_service( const scarab::param_node& a_config, const scarab::authentication& a_auth ) :
             scarab::cancelable(),
-            service( a_config, a_auth, "simple" ),
+            service( a_config, a_auth ),
             f_return( dl_success().rc_value() )
     {
     }

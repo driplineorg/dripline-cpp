@@ -120,7 +120,7 @@ namespace dripline
 
     oscillator_service_endpoints::oscillator_service_endpoints( const scarab::param_node& a_config, const scarab::authentication& a_auth ) :
             scarab::cancelable(),
-            service( a_config, a_auth, "osc_svc_ep" ),
+            service( a_config, a_auth ),
             f_oscillator(),
             f_return( dl_success().rc_value() )
     {

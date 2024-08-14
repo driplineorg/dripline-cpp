@@ -29,7 +29,7 @@ namespace dripline
     service::service( const scarab::param_node& a_config, const scarab::authentication& a_auth, const bool a_make_connection ) :
             scarab::cancelable(),
             core( a_config, a_auth, a_make_connection ),
-            endpoint( a_config.get_value( "queue", "dlcpp_service" ) ),
+            endpoint( a_config.get_value( "name", "dlcpp_service" ) ),
             listener_receiver(),
             heartbeater(),
             scheduler<>(),
