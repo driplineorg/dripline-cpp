@@ -25,5 +25,10 @@ namespace dripline
         version_store::get_instance()->add_version( a_name, a_version_ptr );
     }
 
+    DRIPLINE_API scarab::version_semantic_ptr_t get_version( const std::string& a_name )
+    {
+        return version_store::get_instance()->versions().at( a_name );
+    }
+
 
 } /* namespace dripline */
