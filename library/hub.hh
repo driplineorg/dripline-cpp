@@ -98,7 +98,12 @@ namespace dripline
                @param a_make_connection Flag for whether or not to contact a broker; if true, this object operates in "dry-run" mode
              */
             hub( const scarab::param_node& a_config, const scarab::authentication& a_auth, const bool a_make_connection = true );
-            virtual ~hub();
+            hub( const hub& ) = delete;
+            hub( hub&& ) = default;
+            virtual ~hub() = default;
+
+            hub& operator=( const hub& ) = delete;
+            hub& operator=( hub&& );
 
             /// Sets the run request handler function
             void set_run_handler( const handler_func_t& a_func );

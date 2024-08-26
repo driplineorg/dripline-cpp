@@ -28,24 +28,13 @@ namespace dripline
             f_listener_thread()
     {}
 
-    listener::listener( listener&& a_orig ) :
-            cancelable( std::move(a_orig) ),
-            f_channel( std::move(a_orig.f_channel) ),
-            f_consumer_tag( std::move(a_orig.f_consumer_tag) ),
-            f_listen_timeout_ms( std::move(a_orig.f_listen_timeout_ms) ),
-            f_listener_thread( std::move(a_orig.f_listener_thread) )
-    {}
-
-    listener::~listener()
-    {}
-
     listener& listener::operator=( listener&& a_orig )
     {
         cancelable::operator=( std::move(a_orig) );
-        f_channel = std::move(a_orig.f_channel);
-        f_consumer_tag = std::move(a_orig.f_consumer_tag);
-        f_consumer_tag = std::move(a_orig.f_listen_timeout_ms);
-        f_listener_thread = std::move(a_orig.f_listener_thread);
+        f_channel = std::move( a_orig.f_channel );
+        f_consumer_tag = std::move( a_orig.f_consumer_tag );
+        f_listen_timeout_ms = a_orig.f_listen_timeout_ms;
+        f_listener_thread = std::move( a_orig.f_listener_thread );
         return *this;
     }
 

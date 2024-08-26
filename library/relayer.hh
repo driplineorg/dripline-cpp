@@ -38,7 +38,12 @@ namespace dripline
     {
         public:
             relayer( const scarab::param_node& a_config, const scarab::authentication& a_auth );
-            virtual ~relayer();
+            relayer( const relayer& ) = delete;
+            relayer( relayer&& ) = default;
+            virtual ~relayer() = default;
+
+            relayer& operator=( const relayer& ) = delete;
+            relayer& operator=( relayer&& );
 
         public:
             //*****************

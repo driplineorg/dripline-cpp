@@ -18,11 +18,17 @@ namespace dripline
             scarab::cancelable(),
             f_queue(),
             f_msg_receiver()
-    {
-    }
+    {}
 
-    relayer::~relayer()
+    relayer& relayer::operator=( relayer&& a_orig )
     {
+        core::operator=( std::move(a_orig) );
+        cancelable::operator=( std::move(a_orig) );
+
+        f_queue = std::move( a_orig.f_queue );
+        f_msg_receiver = std::move( a_orig.f_msg_receiver );
+
+        return *this;
     }
 
     void relayer::execute_relayer()

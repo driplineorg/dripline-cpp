@@ -125,7 +125,7 @@ namespace dripline
             service( const scarab::param_node& a_config, const scarab::authentication& a_auth, const bool a_make_connection = true );
 //            service( const bool a_make_connection, const scarab::param_node& a_config = scarab::param_node(), const scarab::authentication& a_auth = scarab::authentication() );
             service( const service& ) = delete;
-            service( service&& a_orig );
+            service( service&& a_orig ) = default;
             virtual ~service();
 
             service& operator=( const service& ) = delete;

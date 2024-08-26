@@ -26,11 +26,19 @@ namespace dripline
             f_get_handlers(),
             f_set_handlers(),
             f_cmd_handlers()
-    {
-    }
+    {}
 
-    hub::~hub()
+    hub& hub::operator=( hub&& a_orig )
     {
+        cancelable::operator=( std::move(a_orig) );
+        service::operator=( std::move(a_orig) );
+
+        f_run_handler = std::move( a_orig.f_run_handler );
+        f_get_handlers = std::move( a_orig.f_get_handlers );
+        f_set_handlers = std::move( a_orig.f_set_handlers );
+        f_cmd_handlers = std::move( a_orig.f_cmd_handlers );
+
+        return *this;
     }
 
     void hub::set_run_handler( const handler_func_t& a_func )

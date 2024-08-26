@@ -49,8 +49,8 @@ namespace dripline
         public:
             listener();
             listener( const listener& ) = delete;
-            listener( listener&& a_orig );
-            virtual ~listener();
+            listener( listener&& a_orig ) = default;
+            virtual ~listener() = default;
 
             listener& operator=( const listener& ) = delete;
             listener& operator=( listener&& a_orig );

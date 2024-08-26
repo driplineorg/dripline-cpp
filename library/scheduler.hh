@@ -38,7 +38,12 @@ namespace dripline
     */
     struct DRIPLINE_API base_executor
     {
-        virtual ~base_executor() {}
+        base_executor() {}
+        base_executor( const base_executor& ) = default;
+        base_executor( base_executor&& ) = default;
+        virtual ~base_executor() = default;
+        base_executor& operator=( const base_executor& ) = default;
+        base_executor& operator=( base_executor&& ) = default;
         virtual void operator()( std::function< void() > ) = 0;
     };
 
@@ -50,7 +55,12 @@ namespace dripline
     */
     struct DRIPLINE_API simple_executor : base_executor
     {
-        virtual ~simple_executor() {}
+        simple_executor() : base_executor() {}
+        simple_executor( const simple_executor& ) = default;
+        simple_executor( simple_executor&& ) = default;
+        virtual ~simple_executor() = default;
+        simple_executor& operator=( const simple_executor& ) = default;
+        simple_executor& operator=( simple_executor&& ) = default;
         virtual void operator()( std::function< void() > an_executable )
         {
             LDEBUG( dlog_sh, "executing" );
@@ -112,10 +122,10 @@ namespace dripline
             scheduler();
             scheduler( const scheduler& ) = delete;
             scheduler( scheduler&& );
-            virtual ~scheduler();
+            virtual ~scheduler() = default;
 
             scheduler& operator=( const scheduler& ) = delete;
-            scheduler& operator=( scheduler&& );
+            scheduler& operator=( scheduler&& a_orig );
 
             /*!
              Schedule a one-off event
@@ -171,6 +181,7 @@ namespace dripline
 
     template< typename executor, typename clock >
     scheduler< executor, clock >::scheduler() :
+            cancelable(),
             f_exe_buffer( std::chrono::milliseconds(50) ),
             f_cycle_time( std::chrono::milliseconds(500) ),
             f_the_executor(),
@@ -182,20 +193,26 @@ namespace dripline
     {}
 
     template< typename executor, typename clock >
-    scheduler< executor, clock>::scheduler( scheduler< executor, clock >&& a_orig ) :
-        f_exe_buffer( std::move(a_orig.f_exe_buffer) ),
-        f_cycle_time( std::move(a_orig.f_cycle_time) ),
-        f_the_executor(),
-        f_events( std::move(a_orig.f_events) ),
-        f_scheduler_mutex(),
-        f_executor_mutex(),
-        f_cv(),
-        f_scheduler_thread( std::move(a_orig.f_scheduler_thread) )
-    {}
+    scheduler< executor, clock >::scheduler( scheduler< executor, clock >&& a_orig ) :
+            cancelable(),
+            f_exe_buffer(),
+            f_cycle_time(),
+            f_the_executor(),
+            f_events(),
+            f_scheduler_mutex(),
+            f_executor_mutex(),
+            f_cv(),
+            f_scheduler_thread()
+    {
+        std::unique_lock< std::recursive_mutex >t_this_lock( f_scheduler_mutex );
+        std::unique_lock< std::recursive_mutex >t_orig_lock( a_orig.f_scheduler_mutex );
 
-    template< typename executor, typename clock >
-    scheduler< executor, clock >::~scheduler()
-    {}
+        cancelable::operator=( std::move(a_orig) );
+        f_exe_buffer = std::move(a_orig.f_exe_buffer);
+        f_cycle_time = std::move(a_orig.f_cycle_time);
+        f_events = std::move(a_orig.f_events);
+        f_scheduler_thread = std::move(a_orig.f_scheduler_thread);
+    }
 
     template< typename executor, typename clock >
     scheduler< executor, clock>& scheduler< executor, clock >::operator=( scheduler< executor, clock >&& a_orig )
@@ -203,6 +220,7 @@ namespace dripline
         std::unique_lock< std::recursive_mutex >t_this_lock( f_scheduler_mutex );
         std::unique_lock< std::recursive_mutex >t_orig_lock( a_orig.f_scheduler_mutex );
 
+        cancelable::operator=( std::move(a_orig) );
         f_exe_buffer = std::move(a_orig.f_exe_buffer);
         f_cycle_time = std::move(a_orig.f_cycle_time);
         f_events = std::move(a_orig.f_events);
