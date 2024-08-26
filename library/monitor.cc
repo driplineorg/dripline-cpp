@@ -68,22 +68,6 @@ namespace dripline
         }
     }
 
-    monitor::monitor( monitor&& a_orig ) :
-            scarab::cancelable( std::move(a_orig) ),
-            core( std::move(a_orig) ),
-            listener_receiver( std::move(a_orig) ),
-            f_status( a_orig.f_status ),
-            f_name( std::move(a_orig.f_name) ),
-            f_json_print( a_orig.f_json_print ),
-            f_pretty_print( a_orig.f_pretty_print ),
-            f_requests_keys( std::move(a_orig.f_requests_keys) ),
-            f_alerts_keys( std::move(a_orig.f_alerts_keys) )
-    {
-        a_orig.f_status = status::nothing;
-        a_orig.f_json_print = false;
-        a_orig.f_pretty_print = false;
-    }
-
     monitor::~monitor()
     {
         if( f_status >= status::listening )
@@ -92,19 +76,6 @@ namespace dripline
             std::this_thread::sleep_for( std::chrono::milliseconds(1100) );
         }
         if( f_status > status::exchange_declared ) stop();
-    }
-
-    monitor& monitor::operator=( monitor&& a_orig )
-    {
-        core::operator=( std::move(a_orig) );
-        listener::operator=( std::move(a_orig) );
-        concurrent_receiver::operator=( std::move(a_orig) );
-        f_status = a_orig.f_status;
-        a_orig.f_status = status::nothing;
-        f_name = std::move(a_orig.f_name);
-        f_requests_keys = std::move(a_orig.f_requests_keys);
-        f_alerts_keys = std::move(a_orig.f_alerts_keys);
-        return *this;
     }
 
     bool monitor::start()

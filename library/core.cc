@@ -138,69 +138,6 @@ namespace dripline
         f_make_connection = a_make_connection;
     }
 */
-    core::core( const core& a_orig ) :
-            f_address( a_orig.f_address ),
-            f_port( a_orig.f_port ),
-            f_username( a_orig.f_username ),
-            f_password( a_orig.f_password ),
-            f_requests_exchange( a_orig.f_requests_exchange ),
-            f_alerts_exchange( a_orig.f_alerts_exchange ),
-            f_heartbeat_routing_key( a_orig.f_heartbeat_routing_key ),
-            f_max_payload_size( a_orig.f_max_payload_size ),
-            f_make_connection( a_orig.f_make_connection ),
-            f_max_connection_attempts( a_orig.f_max_connection_attempts )
-    {}
-
-    core::core( core&& a_orig ) :
-            f_address( std::move(a_orig.f_address) ),
-            f_port( a_orig.f_port ),
-            f_username( std::move(a_orig.f_username) ),
-            f_password( std::move(a_orig.f_password) ),
-            f_requests_exchange( std::move(a_orig.f_requests_exchange) ),
-            f_alerts_exchange( std::move(a_orig.f_alerts_exchange) ),
-            f_heartbeat_routing_key( std::move(a_orig.f_heartbeat_routing_key) ),
-            f_max_payload_size( a_orig.f_max_payload_size ),
-            f_make_connection( std::move(a_orig.f_make_connection) ),
-            f_max_connection_attempts( std::move(a_orig.f_max_connection_attempts) )
-    {
-        a_orig.f_port = 0;
-        a_orig.f_max_payload_size = DL_MAX_PAYLOAD_SIZE;
-    }
-
-    core::~core()
-    {}
-
-    core& core::operator=( const core& a_orig )
-    {
-        f_address = a_orig.f_address;
-        f_port = a_orig.f_port;
-        f_username = a_orig.f_username;
-        f_password = a_orig.f_password;
-        f_requests_exchange = a_orig.f_requests_exchange;
-        f_alerts_exchange = a_orig.f_alerts_exchange;
-        f_heartbeat_routing_key = a_orig.f_heartbeat_routing_key;
-        f_max_payload_size = a_orig.f_max_payload_size;
-        f_make_connection = a_orig.f_make_connection;
-        f_max_connection_attempts = a_orig.f_max_connection_attempts;
-        return *this;
-    }
-
-    core& core::operator=( core&& a_orig )
-    {
-        f_address = std::move( a_orig.f_address );
-        f_port = a_orig.f_port;
-        a_orig.f_port = 0;
-        f_username = std::move( a_orig.f_username );
-        f_password = std::move( a_orig.f_password );
-        f_requests_exchange = std::move( a_orig.f_requests_exchange );
-        f_alerts_exchange = std::move( a_orig.f_alerts_exchange );
-        f_heartbeat_routing_key = std::move( a_orig.f_heartbeat_routing_key );
-        f_max_payload_size = a_orig.f_max_payload_size;
-        a_orig.f_max_payload_size = DL_MAX_PAYLOAD_SIZE;
-        f_make_connection = std::move( a_orig.f_make_connection );
-        f_max_connection_attempts = std::move( a_orig.f_max_connection_attempts );
-        return *this;
-    }
 
     sent_msg_pkg_ptr core::send( request_ptr_t a_request, amqp_channel_ptr a_channel ) const
     {

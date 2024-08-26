@@ -24,8 +24,4 @@ namespace dripline
 
     }
 
-    monitor_config::~monitor_config()
-    {
-    }
-
 } /* namespace dripline */

@@ -25,8 +25,8 @@ namespace dripline
         add( "name", a_name ); // seconds
     }
 
-    service_config::~service_config()
-    {
-    }
+    //service_config::~service_config()
+    //{
+    //}
 
 } /* namespace dripline */

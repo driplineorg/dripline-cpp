@@ -44,9 +44,11 @@ namespace dripline
             throw_reply();
             throw_reply( const return_code& a_code, scarab::param_ptr_t a_payload_ptr = scarab::param_ptr_t(new scarab::param()) );
             throw_reply( const throw_reply& a_orig );
-            virtual ~throw_reply() noexcept;
+            throw_reply( throw_reply&& ) = default;
+            virtual ~throw_reply() noexcept = default;
 
             throw_reply& operator=( const throw_reply& a_orig );
+            throw_reply& operator=( throw_reply&& ) = default;
 
             template< class x_streamable >
             throw_reply& operator<<( x_streamable a_fragment );

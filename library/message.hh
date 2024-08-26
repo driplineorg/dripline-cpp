@@ -60,7 +60,12 @@ namespace dripline
 
        public:
             message();
-            virtual ~message();
+            message( const message& ) = delete;
+            message( message&& ) = default;
+            virtual ~message() = default;
+
+            message& operator=( const message& ) = delete;
+            message& operator=( message&& ) = default;
 
             virtual bool is_request() const = 0;
             virtual bool is_reply() const = 0;
@@ -175,7 +180,12 @@ namespace dripline
     {
         public:
             msg_request();
-            virtual ~msg_request();
+            msg_request( const msg_request& ) = delete;
+            msg_request( msg_request&& ) = default;
+            virtual ~msg_request() = default;
+
+            msg_request& operator=( const msg_request& ) = delete;
+            msg_request& operator=( msg_request&& ) = default;
 
             /// Create a request message
             static request_ptr_t create( scarab::param_ptr_t a_payload, op_t a_msg_op, const std::string& a_routing_key, const std::string& a_specifier = "", const std::string& a_reply_to = "", message::encoding a_encoding = encoding::json );
@@ -230,7 +240,12 @@ namespace dripline
     {
         public:
             msg_reply();
-            virtual ~msg_reply();
+            msg_reply( const msg_reply& ) = delete;
+            msg_reply( msg_reply&& ) = default;
+            virtual ~msg_reply() = default;
+
+            msg_reply& operator=( const msg_reply& ) = delete;
+            msg_reply& operator=( msg_reply&& ) = default;
 
             /// Create a reply message using a return_code object and manually specifying the destination
             static reply_ptr_t create( const return_code& a_return_code, const std::string& a_ret_msg, scarab::param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier = "", message::encoding a_encoding = encoding::json );
@@ -285,7 +300,12 @@ namespace dripline
     {
         public:
             msg_alert();
-            virtual ~msg_alert();
+            msg_alert( const msg_alert& ) = delete;
+            msg_alert( msg_alert&& ) = default;
+            virtual ~msg_alert() = default;
+
+            msg_alert& operator=( const msg_alert& ) = delete;
+            msg_alert& operator=( msg_alert&& ) = default;
 
             /// Creates an alert message
             static alert_ptr_t create( scarab::param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier = "", message::encoding a_encoding = encoding::json );

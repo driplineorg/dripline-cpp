@@ -23,7 +23,12 @@ namespace dripline
     {
         public:
             monitor_config();
-            virtual ~monitor_config();
+            monitor_config( const monitor_config& ) = default;
+            monitor_config( monitor_config&& ) = default;
+            virtual ~monitor_config() = default;
+
+            monitor_config& operator=( const monitor_config& ) = default;
+            monitor_config& operator=( monitor_config&& ) = default;
     };
 
 } /* namespace dripline */

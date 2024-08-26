@@ -37,10 +37,6 @@ namespace dripline
         add( "max-connection-attempts", 10 );
     }
 
-    dripline_config::~dripline_config()
-    {
-    }
-
     void add_dripline_options( scarab::main_app& an_app )
     {
         // authentication for the broker

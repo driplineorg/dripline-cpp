@@ -35,41 +35,6 @@ namespace dripline
     {
     }
 
-    endpoint::endpoint( const endpoint& a_orig ) :
-            f_name( a_orig.f_name ),
-            f_service( a_orig.f_service ),
-            f_lockout_tag( a_orig.f_lockout_tag ),
-            f_lockout_key( a_orig.f_lockout_key )
-    {}
-
-    endpoint::endpoint( endpoint&& a_orig ) :
-            f_name( std::move(a_orig.f_name) ),
-            f_service( std::move(a_orig.f_service) ),
-            f_lockout_tag( std::move(a_orig.f_lockout_tag) ),
-            f_lockout_key( std::move(a_orig.f_lockout_key) )
-    {}
-
-    endpoint::~endpoint()
-    {}
-
-    endpoint& endpoint::operator=( const endpoint& a_orig )
-    {
-        f_name = a_orig.f_name;
-        f_service = a_orig.f_service;
-        f_lockout_tag = a_orig.f_lockout_tag;
-        f_lockout_key = a_orig.f_lockout_key;
-        return *this;
-    }
-
-    endpoint& endpoint::operator=( endpoint&& a_orig )
-    {
-        f_name = std::move(a_orig.f_name);
-        f_service = std::move(a_orig.f_service);
-        f_lockout_tag = std::move(a_orig.f_lockout_tag);
-        f_lockout_key = std::move(a_orig.f_lockout_key);
-        return *this;
-    }
-
     reply_ptr_t endpoint::submit_request_message( const request_ptr_t a_request_ptr)
     {
         return this->on_request_message( a_request_ptr );;

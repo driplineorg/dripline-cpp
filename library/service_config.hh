@@ -24,7 +24,12 @@ namespace dripline
         public:
             /// Constructor: name is available as a parameter since it needs to be unique for each service
             service_config( const std::string& a_name = "a_service" );
-            virtual ~service_config();
+            service_config( const service_config& ) = default;
+            service_config( service_config&& ) = default;
+            virtual ~service_config() = default;
+
+            service_config& operator=( const service_config& ) = default;
+            service_config& operator=( service_config&& ) = default;
     };
 
 } /* namespace dripline */

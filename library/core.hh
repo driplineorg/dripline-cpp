@@ -102,13 +102,13 @@ namespace dripline
              */
             core( const scarab::param_node& a_config, const scarab::authentication& a_auth, const bool a_make_connection = true );
 //            core( const bool a_make_connection, const scarab::param_node& a_config = scarab::param_node(), const scarab::authentication& a_auth = scarab::authentication() );
-            core( const core& a_orig );
-            core( core&& a_orig );
+            core( const core& a_orig ) = default;
+            core( core&& a_orig ) = default;
             //core( const scarab::param_node* a_config = nullptr );
-            virtual ~core();
+            virtual ~core() = default;
 
-            core& operator=( const core& a_orig );
-            core& operator=( core&& a_orig );
+            core& operator=( const core& a_orig ) = default;
+            core& operator=( core&& a_orig ) = default;
 
         public:
             /// Sends a request message and returns a channel on which to listen for a reply.

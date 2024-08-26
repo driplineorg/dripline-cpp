@@ -25,8 +25,4 @@ namespace dripline
         add( "timeout", 10 ); // seconds
     }
 
-    agent_config::~agent_config()
-    {
-    }
-
 } /* namespace dripline */

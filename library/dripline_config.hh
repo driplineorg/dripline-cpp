@@ -30,7 +30,12 @@ namespace dripline
     {
         public:
             dripline_config();
-            virtual ~dripline_config();
+            dripline_config( const dripline_config& ) = default;
+            dripline_config( dripline_config&& ) = default;
+            virtual ~dripline_config() = default;
+
+            dripline_config& operator=( const dripline_config& ) = default;
+            dripline_config& operator=( dripline_config&& ) = default;
     };
 
     /// Add basic AMQP options to an app object

@@ -57,10 +57,6 @@ namespace dripline
     {
     }
 
-    agent::~agent()
-    {
-    }
-
     void agent::sub_agent::execute( const scarab::param_node& a_config, const scarab::authentication& a_auth )
     {
         const scarab::param_array a_ord_args;

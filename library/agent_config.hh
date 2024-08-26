@@ -23,7 +23,12 @@ namespace dripline
     {
         public:
             agent_config();
-            virtual ~agent_config();
+            agent_config( const agent_config& ) = default;
+            agent_config( agent_config&& ) = default;
+            virtual ~agent_config() = default;
+
+            agent_config& operator=( const agent_config& ) = default;
+            agent_config& operator=( agent_config&& ) = default;
     };
 
 } /* namespace dripline */

@@ -32,19 +32,10 @@ namespace dripline
         f_commit = TOSTRING(@Dripline_GIT_COMMIT@);
     }
 
-    version::~version()
-    {
-    }
-
     version_dripline_protocol::version_dripline_protocol() :
             scarab::version_semantic( TOSTRING(@DRIPLINE_PROTOCOL_VERSION@) )
     {
     }
-
-    version_dripline_protocol::~version_dripline_protocol()
-    {
-    }
-
 
 } /* namespace dripline */
 
