@@ -60,6 +60,20 @@ namespace dripline
         return;
     }
 
+    scarab::param_node create_dripline_auth_spec()
+    {
+        return scarab::param_node( 
+            "username"_a=scarab::param_node(
+                "default"_a="guest",
+                "env"_a="DRIPLINE_USER"
+            ),
+            "password"_a=scarab::param_node(
+                "default"_a="guest",
+                "env"_a="DRIPLINE_PASSWORD"
+            )
+        );
+    }
+
     void add_dripline_auth_spec( scarab::main_app& an_app, bool a_use_auth_file )
     {
         // This is setup as an either-or feature:
@@ -72,18 +86,7 @@ namespace dripline
         }
         else
         {
-            an_app.add_default_auth_spec_group( "dripline",
-                scarab::param_node( 
-                    "username"_a=scarab::param_node(
-                        "default"_a="guest",
-                        "env"_a="DRIPLINE_USER"
-                    ),
-                    "password"_a=scarab::param_node(
-                        "default"_a="guest",
-                        "env"_a="DRIPLINE_PASSWORD"
-                    )
-                )
-            );
+            an_app.add_default_auth_spec_group( "dripline", create_dripline_auth_spec() );
         }
         return;
     }

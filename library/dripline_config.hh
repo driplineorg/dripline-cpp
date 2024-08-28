@@ -39,14 +39,17 @@ namespace dripline
     };
 
     /// Add basic AMQP options to an app object
-    void add_dripline_options( scarab::main_app& an_app );
+    void DRIPLINE_API add_dripline_options( scarab::main_app& an_app );
+
+    /// Create a param_node with the default dripline authentication specification
+    scarab::param_node DRIPLINE_API create_dripline_auth_spec();
 
     /// Add default authentication specification
     /// This can either be done with an authentication specification group or with an auth file, as determined by the a_use_auth_file flag.
     /// The use of an auth file is being maintained for backwards compatibility, but is not preferred.
     /// For these defaults, it will either specify an auth file or an auth-spec group, but not both.
     /// If an auth-spec group is the default, but the user provides an auth file, the latter will override the former.
-    void add_dripline_auth_spec( scarab::main_app& an_app, bool a_use_auth_file=false );
+    void DRIPLINE_API add_dripline_auth_spec( scarab::main_app& an_app, bool a_use_auth_file=false );
 
 } /* namespace dripline */
 #endif /* DRIPLINE_DRIPLINE_CONFIG_HH_ */
