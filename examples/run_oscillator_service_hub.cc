@@ -37,7 +37,7 @@ int main( int argc, char** argv )
     int the_return = -1;
 
     auto t_service_callback = [&](){
-        auto the_service = std::make_shared< oscillator_service_hub >( the_main.primary_config()["dripline"].as_node(), the_main.auth() );
+        auto the_service = std::make_shared< oscillator_service_hub >( the_main.primary_config(), the_main.auth() );
 
         the_service->execute();
 

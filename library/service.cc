@@ -28,7 +28,7 @@ namespace dripline
 
     service::service( const scarab::param_node& a_config, const scarab::authentication& a_auth, const bool a_make_connection ) :
             scarab::cancelable(),
-            core( a_config, a_auth, a_make_connection ),
+            core( a_config["dripline"].as_node(), a_auth, a_make_connection ),
             endpoint( a_config.get_value( "name", "dlcpp_service" ) ),
             listener_receiver(),
             heartbeater(),
@@ -87,7 +87,7 @@ namespace dripline
         listener_receiver::operator=( std::move(a_orig) );
         heartbeater::operator=( std::move(a_orig) );
         scheduler<>::operator=( std::move(a_orig) );
-        
+
         f_status = std::move( a_orig.f_status );
         f_enable_scheduling = a_orig.f_enable_scheduling;
         f_id = std::move( a_orig.f_id );
