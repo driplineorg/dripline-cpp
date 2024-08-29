@@ -7,10 +7,10 @@ services:
     volumes:
       - ./dl-tests.sh:/root/dl-tests.sh
       - ./rabbitmq_for_dl_collection.json:/root/rabbitmq_for_dl_collection.json
-      - ./password.txt:/root/password.txt
     command: >
       bash -c "sleep 1 &&
               newman run /root/rabbitmq_for_dl_collection.json &&
               /root/dl-tests.sh"
     configs:
+      - dl_pw.txt
       - auths.json
