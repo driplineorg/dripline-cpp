@@ -25,16 +25,13 @@ namespace dripline
     dripline_config::dripline_config()
     {
         // default dripline configuration
-        add( "broker-port", 5672 );
+        add( "broker_port", 5672 );
         add( "broker", "localhost" );
-        add( "requests-exchange", "requests" );
-        add( "alerts-exchange", "alerts" );
-        add( "max-payload-size", DL_MAX_PAYLOAD_SIZE );
-        add( "loop-timeout-ms", 1000 );
-        add( "message-wait-ms", 1000 );
-        add( "heartbeat-routing-key", "heartbeat" );
-        add( "heartbeat-interval-s", 60 );
-        add( "max-connection-attempts", 10 );
+        add( "requests_exchange", "requests" );
+        add( "alerts_exchange", "alerts" );
+        add( "max_payload_size", DL_MAX_PAYLOAD_SIZE );
+        add( "heartbeat_routing_key", "heartbeat" );
+        add( "max_connection_attempts", 10 );
     }
 
     void add_dripline_options( scarab::main_app& an_app )
@@ -46,16 +43,13 @@ namespace dripline
         an_app.add_config_option< std::string >( "--auth-file", "auth-file", "Set the authentication file path" );
 
         // other dripline things
-        an_app.add_config_option< std::string >( "-b,--broker", "dripline.broker", "Set the dripline broker address" );
-        an_app.add_config_option< unsigned >( "-p,--port", "dripline.broker-port", "Set the port for communication with the dripline broker" );
-        an_app.add_config_option< std::string >( "--requests-exchange", "dripline.requests-exchange", "Set the name of the requests exchange" );
-        an_app.add_config_option< std::string >( "--alerts-exchange", "dripline.alerts-exchange", "Set the name of the alerts exchange" );
-        an_app.add_config_option< unsigned >( "--max-payload", "dripline.max-payload-size", "Set the maximum payload size (in bytes)" );
-        an_app.add_config_option< unsigned >( "--loop-timeout-ms" "dripline.loop-timeout-ms", "Set the timeout for thread loops in ms" );
-        an_app.add_config_option< unsigned >( "--message-wait-ms" "dripline.message-wait-ms", "Set the time to wait for a full multi-part message in ms" );
-        an_app.add_config_option< std::string >( "--heartbeat-routing-key", "dripline.heartbeat-routing-key", "Set the first token of heartbeat routing keys: [token].[origin]" );
-        an_app.add_config_option< unsigned >( "--heartbeat-interval-s", "dripline.heartbeat-interval-s", "Set the interval between heartbeats in s" );
-        an_app.add_config_option< unsigned >( "--max-connection-attempts", "dripline.max-connection-attempts", "Maximum number of times to attempt to connect to the broker" );
+        an_app.add_config_option< std::string >( "-b,--broker", "dripline_mesh.broker", "Set the dripline broker address" );
+        an_app.add_config_option< unsigned >( "-p,--port", "dripline_mesh.broker_port", "Set the port for communication with the dripline broker" );
+        an_app.add_config_option< std::string >( "--requests-exchange", "dripline_mesh.requests_exchange", "Set the name of the requests exchange" );
+        an_app.add_config_option< std::string >( "--alerts-exchange", "dripline_mesh.alerts_exchange", "Set the name of the alerts exchange" );
+        an_app.add_config_option< unsigned >( "--max-payload", "dripline_mesh.max_payload_size", "Set the maximum payload size (in bytes)" );
+        an_app.add_config_option< std::string >( "--heartbeat-routing-key", "dripline_mesh.heartbeat_routing_key", "Set the first token of heartbeat routing keys: [token].[origin]" );
+        an_app.add_config_option< unsigned >( "--max-connection-attempts", "dripline_mesh.max_connection_attempts", "Maximum number of times to attempt to connect to the broker" );
 
         return;
     }

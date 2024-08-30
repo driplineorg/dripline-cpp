@@ -75,7 +75,7 @@ namespace dripline
         public:
             /* 
                \brief Extracts necessary configuration and authentication information and prepares the hub to interact with the RabbitMQ broker. Does not initiate connection to the broker.
-               @param a_config Dripline configuration object.  The `name` must be unique for each hub.  The `dripline.broker` (and `dripline.broker-port` if needed) should be made appropriate for the mesh.  
+               @param a_config Dripline configuration object.  The `name` must be unique for each hub.  The `dripline.broker` (and `dripline.broker_port` if needed) should be made appropriate for the mesh.  
                  The other parameters can be left as their defaults, or should be made uniform across the mesh.
                  - *Service parameters*
                    - `name` (string; default: dlcpp_service) -- Name of the service and of the queue used by the service
@@ -86,13 +86,13 @@ namespace dripline
                    - `heartbeat-interval-s` (int; default: 60) -- Interval between sending heartbeat messages in s
                  - *Dripline core parameters -- within the `dripline` config object*
                    - `dripline.broker` (string; default: localhost) -- Address of the RabbitMQ broker
-                   - `dripline.broker-port` (int; default: 5672) -- Port used by the RabbitMQ broker
-                   - `dripline.requests-exchange` (string; default: requests) -- Name of the exchange used for DL requests
-                   - `dripline.alerts-exchange` (string; default: alerts) -- Name of the exchange used for DL alerts
-                   - `dripline.heartbeat-routing-key` (string; default: heartbeat) -- Routing key used for sending heartbeats
-                   - `dripline.max-payload-size` (int; default: DL_MAX_PAYLOAD_SIZE) -- Maximum size of payloads, in bytes
-                   - `dripline.max-connection-attempts` (int; default: 10) -- Maximum number of attempts that will be made to connect to the broker
-                   - `dripline.return-codes` (string or array of nodes; default: not present) -- Optional specification of additional return codes in the form of an array of nodes: `[{name: "<name>", value: <ret code>} <, ...>]`. 
+                   - `dripline.broker_port` (int; default: 5672) -- Port used by the RabbitMQ broker
+                   - `dripline.requests_exchange` (string; default: requests) -- Name of the exchange used for DL requests
+                   - `dripline.alerts_exchange` (string; default: alerts) -- Name of the exchange used for DL alerts
+                   - `dripline.heartbeat_routing_key` (string; default: heartbeat) -- Routing key used for sending heartbeats
+                   - `dripline.max_payload_size` (int; default: DL_MAX_PAYLOAD_SIZE) -- Maximum size of payloads, in bytes
+                   - `dripline.max_connection_attempts` (int; default: 10) -- Maximum number of attempts that will be made to connect to the broker
+                   - `dripline.return_codes` (string or array of nodes; default: not present) -- Optional specification of additional return codes in the form of an array of nodes: `[{name: "<name>", value: <ret code>} <, ...>]`. 
                           If this is a string, it's treated as a file can be interpreted by the param system (e.g. YAML or JSON) using the previously-mentioned format
                @param a_auth Authentication object (type scarab::authentication); authentication specification should be processed, and the authentication data should include:
                @param a_make_connection Flag for whether or not to contact a broker; if true, this object operates in "dry-run" mode

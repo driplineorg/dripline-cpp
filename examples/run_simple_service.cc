@@ -30,6 +30,7 @@ int main( int argc, char** argv )
     the_main.default_config() = service_config( "simple" );
 
     add_dripline_options( the_main );
+    add_service_options( the_main );
 
     add_dripline_auth_spec( the_main );
 

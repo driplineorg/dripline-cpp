@@ -46,10 +46,10 @@ int main( int argc, char** argv )
     {
         // Command line options
         add_dripline_options( the_main );
-        the_main.add_config_multi_option< std::string >( "-r,--requests", "request-keys", "Assign keys for binding to the requests exchange" );
-        the_main.add_config_multi_option< std::string >( "-a,--alerts", "alert-keys", "Assign keys for binding to the alerts exchange" );
-        the_main.add_config_flag< bool >( "--json-print", "json-print", "Output the returned reply in JSON; default is white-space suppressed (see --pretty-print)" );
-        the_main.add_config_flag< bool >( "--pretty-print", "pretty-print", "Output the returned reply in nicely formatted JSON" );
+        the_main.add_config_multi_option< std::string >( "-r,--requests", "request_keys", "Assign keys for binding to the requests exchange" );
+        the_main.add_config_multi_option< std::string >( "-a,--alerts", "alert_keys", "Assign keys for binding to the alerts exchange" );
+        the_main.add_config_flag< bool >( "--json-print", "json_print", "Output the returned reply in JSON; default is white-space suppressed (see --pretty-print)" );
+        the_main.add_config_flag< bool >( "--pretty-print", "pretty_print", "Output the returned reply in nicely formatted JSON" );
     }
     catch( std::exception& e )
     {

@@ -59,7 +59,7 @@ TEST_CASE( "config_retcode", "[core]" )
 
     param_ptr_t t_param( new param_node() );
     param_node& t_config = t_param->as_node();
-    t_config.add( "return-codes", t_ret_codes );
+    t_config.add( "return_codes", t_ret_codes );
 
     auto t_factory = scarab::indexed_factory< unsigned, dripline::return_code >::get_instance();
 
@@ -67,8 +67,8 @@ TEST_CASE( "config_retcode", "[core]" )
     dripline::core t_core( t_config, authentication() );
     REQUIRE( t_factory->has_class( 5000 ) );
 
-    t_config["return-codes"][0]["value"]() = 5001;
-    t_config["return-codes"][0].as_node().erase("description");
+    t_config["return_codes"][0]["value"]() = 5001;
+    t_config["return_codes"][0].as_node().erase("description");
 
     // test adding a return code with an invalid config
     REQUIRE_THROWS_AS( dripline::core( t_config, authentication() ), dripline::dripline_error );
@@ -98,7 +98,7 @@ TEST_CASE( "config_retcode_fromfile", "[core]" )
     // the config object
     param_ptr_t t_param( new param_node() );
     param_node& t_config = t_param->as_node();
-    t_config.add( "return-codes", t_temp_filename );
+    t_config.add( "return_codes", t_temp_filename );
 
     auto t_factory = scarab::indexed_factory< unsigned, dripline::return_code >::get_instance();
 

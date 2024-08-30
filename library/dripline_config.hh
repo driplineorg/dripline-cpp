@@ -24,7 +24,7 @@ namespace dripline
      @class dripline_config
      @author N.S. Oblath
 
-     @brief Sets the default configuration used by `core`.
+     @brief Sets the default configuration used by `core`.  These parameters pertain to the dripline mesh that will be used.
     */
     class DRIPLINE_API dripline_config : public scarab::param_node
     {
@@ -38,7 +38,7 @@ namespace dripline
             dripline_config& operator=( dripline_config&& ) = default;
     };
 
-    /// Add basic AMQP options to an app object
+    /// Add dripline mesh CL options to an app object
     void DRIPLINE_API add_dripline_options( scarab::main_app& an_app );
 
     /// Create a param_node with the default dripline authentication specification

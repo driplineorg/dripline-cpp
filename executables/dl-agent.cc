@@ -89,15 +89,15 @@ int main( int argc, char** argv )
     add_dripline_options( the_main );
     the_main.add_config_option< std::string >( "-s,--specifier", "specifier", "Set the specifier" );
     the_main.add_config_multi_option< std::string >( "-P,--payload", "payload", "Add values to the payload" );
-    the_main.add_config_multi_option< std::string >( "--values", "option-values", "Add ordered values" ); // stored in the config as "option-values" so they can be merged in later in the proper order
+    the_main.add_config_multi_option< std::string >( "--values", "option_values", "Add ordered values" ); // stored in the config as "option-values" so they can be merged in later in the proper order
     the_main.add_config_option< unsigned >( "-t,--timeout", "timeout", "Set the timeout for waiting for a reply (seconds)" );
-    the_main.add_config_option< std::string >( "-k,--lockout-key", "lockout-key", "Set the lockout key to send with the message (for sending requests only)" );
-    the_main.add_config_flag< bool >( "--suppress-output", "suppress-output", "Suppress the output of the returned reply" );
-    the_main.add_config_flag< bool >( "--json-print", "json-print", "Output the returned reply in JSON; default is white-space suppressed (see --pretty-print)" );
-    the_main.add_config_flag< bool >( "--pretty-print", "pretty-print", "Output the returned reply in nicely formatted JSON" );
+    the_main.add_config_option< std::string >( "-k,--lockout-key", "lockout_key", "Set the lockout key to send with the message (for sending requests only)" );
+    the_main.add_config_flag< bool >( "--suppress-output", "suppress_output", "Suppress the output of the returned reply" );
+    the_main.add_config_flag< bool >( "--json-print", "json_print", "Output the returned reply in JSON; default is white-space suppressed (see --pretty-print)" );
+    the_main.add_config_flag< bool >( "--pretty-print", "pretty_print", "Output the returned reply in nicely formatted JSON" );
     the_main.add_config_option< unsigned >( "--return-code", "return.code", "Set the return code sent (for sending replies only)" );
     the_main.add_config_option< std::string >( "--return-msg", "return.message", "Set the return message sent (for sending replies only)" );
-    the_main.add_config_flag< bool >( "--dry-run-msg", "dry-run-msg", "Print the message contents and exit" );
+    the_main.add_config_flag< bool >( "--dry-run-msg", "dry_run_msg", "Print the message contents and exit" );
 
     // Package version
     the_main.set_version( version_store::get_instance()->versions().at("dripline-cpp") );

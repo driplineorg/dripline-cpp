@@ -50,16 +50,17 @@ namespace dripline
 
     core::core( const scarab::param_node& a_config, const scarab::authentication& a_auth, const bool a_make_connection ) :
             f_address( a_config.get_value("broker", "localhost") ),
-            f_port( a_config.get_value("broker-port", 5672) ),
+            f_port( a_config.get_value("broker_port", 5672) ),
             f_username( a_auth.get("dripline", "username", "guest") ),
             f_password( a_auth.get("dripline", "password", "guest") ),
-            f_requests_exchange( a_config.get_value("requests-exchange", "requests") ),
-            f_alerts_exchange( a_config.get_value("alerts-exchange", "alerts") ),
-            f_heartbeat_routing_key( a_config.get_value("heartbeat-routing-key", "heartbeat") ),
-            f_max_payload_size( a_config.get_value("max-payload-size", DL_MAX_PAYLOAD_SIZE) ),
+            f_requests_exchange( a_config.get_value("requests_exchange", "requests") ),
+            f_alerts_exchange( a_config.get_value("alerts_exchange", "alerts") ),
+            f_heartbeat_routing_key( a_config.get_value("heartbeat_routing_key", "heartbeat") ),
+            f_max_payload_size( a_config.get_value("max_payload_size", DL_MAX_PAYLOAD_SIZE) ),
             f_make_connection( a_make_connection ),
-            f_max_connection_attempts( a_config.get_value("max-connection-attempts", 10) )
+            f_max_connection_attempts( a_config.get_value("max_connection_attempts", 10) )
     {
+        LDEBUG( dlog, "Dripline core being configured with:\n" << a_config );
 /* DO WE WANT TO USE ALTERNATIVE AUTH GROUPS?
         std::array< std::string > t_potential_groups{"dripline", "amqp", "rabbitmq"};
         std::string t_auth_group;

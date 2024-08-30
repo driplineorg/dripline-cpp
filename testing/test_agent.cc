@@ -32,7 +32,7 @@ TEST_CASE( "agent_configuration", "[agent]" )
     // end setup
 
     REQUIRE( the_main.default_config()["timeout"]().as_int() == 10 );
-    REQUIRE( the_main.default_config()["dripline"].is_node() );
+    REQUIRE( the_main.default_config()["dripline_mesh"].is_node() );
 
     REQUIRE( the_main.default_config().has("auth-groups") );
     REQUIRE_THAT( the_main.default_config()["auth-groups"]["dripline"]["username"]["default"]().as_string(), Equals("guest") );
@@ -42,7 +42,7 @@ TEST_CASE( "agent_configuration", "[agent]" )
     the_main.pre_callback();
 
     REQUIRE( the_main.primary_config()["timeout"]().as_int() == 10 );
-    REQUIRE( the_main.primary_config()["dripline"].is_node() );
+    REQUIRE( the_main.primary_config()["dripline_mesh"].is_node() );
     REQUIRE( the_main.primary_config().has("auth-groups") );
     REQUIRE_THAT( the_main.primary_config()["auth-groups"]["dripline"]["username"]["default"]().as_string(), Equals("guest") );
     REQUIRE_THAT( the_main.primary_config()["auth-groups"]["dripline"]["password"]["default"]().as_string(), Equals("guest") );

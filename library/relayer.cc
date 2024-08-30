@@ -14,7 +14,7 @@ namespace dripline
     LOGGER( dlog, "relayer" );
 
     relayer::relayer( const scarab::param_node& a_config, const scarab::authentication& a_auth ) :
-            core( a_config["dripline"].as_node(), a_auth ),
+            core( a_config["dripline_mesh"].as_node(), a_auth ),
             scarab::cancelable(),
             f_queue(),
             f_msg_receiver()

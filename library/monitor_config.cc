@@ -20,7 +20,7 @@ namespace dripline
     {
         // default agent configuration
 
-        add( "dripline", dripline_config() );
+        add( "dripline_mesh", dripline_config() );
 
     }
 

@@ -43,11 +43,11 @@ namespace dripline
      {
          "[operation: run, get, set, cmd, alert, reply] : "",
          "rk" : "[routing key]",
-         "dripline" : {
+         "dripline_mesh" : {
              "broker" : "[address]",
-             "broker-port" : [port],
+             "broker_port" : [port],
              "exchange" : "[exchange]",
-             "reply-timeout-ms": [ms] // optional; default is 10000
+             "reply_timeout_ms": [ms] // optional; default is 10000
          },
          "auth-file" : "[filename]" // optional, if using an auth file
          "auth-groups" : {
@@ -56,16 +56,16 @@ namespace dripline
                 "password": {[password specification]}
             }
          }
-         "lockout-key" : "[uuid]",  // optional
+         "lockout_key" : "[uuid]",  // optional
          "save" : "[filename]"  // optional
          "load" : "[filename]"  // optional; only used for cmd
          "return" : { // used only for replies
              "code" : [return code],
              "message" : "[return message]"
          }
-         "pretty-print" : null // optional; if present sets output to nicely formatted JSON
-         "suppress-output" : null // optional; if present suppresses the normal agent output
-         "dry-run-agent" : null // optional; if present prints the message to be sent and exits
+         "pretty_print" : null // optional; if present sets output to nicely formatted JSON
+         "suppress_output" : null // optional; if present suppresses the normal agent output
+         "dry_run_agent" : null // optional; if present prints the message to be sent and exits
      }
      ~~~
 

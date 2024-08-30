@@ -28,27 +28,28 @@ namespace dripline
 
     service::service( const scarab::param_node& a_config, const scarab::authentication& a_auth, const bool a_make_connection ) :
             scarab::cancelable(),
-            core( a_config["dripline"].as_node(), a_auth, a_make_connection ),
+            core( a_config["dripline_mesh"].as_node(), a_auth, a_make_connection ),
             endpoint( a_config.get_value( "name", "dlcpp_service" ) ),
             listener_receiver(),
             heartbeater(),
             scheduler<>(),
             std::enable_shared_from_this< service >(),
             f_status( status::nothing ),
-            f_enable_scheduling( a_config.get_value( "enable-scheduling", false ) ),
+            f_enable_scheduling( a_config.get_value( "enable_scheduling", false ) ),
             f_id( generate_random_uuid() ),
             f_sync_children(),
             f_async_children(),
-            f_broadcast_key( a_config.get_value( "broadcast-key", "broadcast" ) )
+            f_broadcast_key( a_config.get_value( "broadcast_key", "broadcast" ) )
     {
+        LDEBUG( dlog, "Service (cpp) created with config:\n" << a_config );
         // get more values from the config
         // default of f_listen_timeout_ms is in the listener class
-        f_listen_timeout_ms = a_config.get_value( "loop-timeout-ms", f_listen_timeout_ms );
+        f_listen_timeout_ms = a_config.get_value( "loop_timeout_ms", f_listen_timeout_ms );
         heartbeater::f_check_timeout_ms = f_listen_timeout_ms;
         // default of f_single_message_wait_ms is in the receiver class
-        f_single_message_wait_ms = a_config.get_value( "message-wait-ms", f_single_message_wait_ms );
+        f_single_message_wait_ms = a_config.get_value( "message_wait_ms", f_single_message_wait_ms );
         // default of f_heartbeat_interval_s is in the heartbeater class
-        f_heartbeat_interval_s = a_config.get_value( "heartbeat-interval-s", f_heartbeat_interval_s );
+        f_heartbeat_interval_s = a_config.get_value( "heartbeat_interval_s", f_heartbeat_interval_s );
     }
 /*
     service::service( const bool a_make_connection, const scarab::param_node& a_config, const scarab::authentication& a_auth ) :

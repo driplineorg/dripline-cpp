@@ -32,5 +32,9 @@ namespace dripline
             service_config& operator=( service_config&& ) = default;
     };
 
+    /// Add service options to an app object
+    void DRIPLINE_API add_service_options( scarab::main_app& an_app );
+
+
 } /* namespace dripline */
 #endif /* DRIPLINE_SERVICE_CONFIG_HH_ */

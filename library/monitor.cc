@@ -22,7 +22,7 @@ namespace dripline
 
     monitor::monitor( const scarab::param_node& a_config, const scarab::authentication& a_auth ) :
             scarab::cancelable(),
-            core( a_config["dripline"].as_node(), a_auth ),
+            core( a_config["dripline_mesh"].as_node(), a_auth ),
             listener_receiver(),
             f_status( status::nothing ),
             f_name( std::string("monitor_") + string_from_uuid(generate_random_uuid()) ),
@@ -32,9 +32,9 @@ namespace dripline
             f_alerts_keys()
     {
         // get requests keys
-        if( a_config.has( "request-keys" ) && a_config["request-keys"].is_array() )
+        if( a_config.has( "request_keys" ) && a_config["request_keys"].is_array() )
         {
-            const scarab::param_array& t_req_keys = a_config["request-keys"].as_array();
+            const scarab::param_array& t_req_keys = a_config["request_keys"].as_array();
             f_requests_keys.reserve( t_req_keys.size() );
             for( auto t_it = t_req_keys.begin(); t_it != t_req_keys.end(); ++t_it )
             {
@@ -43,16 +43,16 @@ namespace dripline
             }
         }
 
-        if( a_config.has( "request-key" ) && a_config["request-key"].is_value() )
+        if( a_config.has( "request_key" ) && a_config["request_key"].is_value() )
         {
-            LPROG( dlog, "Monitor <" << f_name << "> will monitor key <" << a_config["request-key"]().as_string() << "> on the requests exchange" );
-            f_requests_keys.push_back( a_config["request-key"]().as_string() );
+            LPROG( dlog, "Monitor <" << f_name << "> will monitor key <" << a_config["request_key"]().as_string() << "> on the requests exchange" );
+            f_requests_keys.push_back( a_config["request_key"]().as_string() );
         }
 
         // get alerts keys
-        if( a_config.has( "alert-keys" ) && a_config["alert-keys"].is_array() )
+        if( a_config.has( "alert_keys" ) && a_config["alert_keys"].is_array() )
         {
-            const scarab::param_array& t_req_keys = a_config["alert-keys"].as_array();
+            const scarab::param_array& t_req_keys = a_config["alert_keys"].as_array();
             f_requests_keys.reserve( t_req_keys.size() );
             for( auto t_it = t_req_keys.begin(); t_it != t_req_keys.end(); ++t_it )
             {
@@ -61,10 +61,10 @@ namespace dripline
             }
         }
 
-        if( a_config.has( "alert-key" ) && a_config["alert-key"].is_value() )
+        if( a_config.has( "alert_key" ) && a_config["alert_key"].is_value() )
         {
-            LPROG( dlog, "Monitor <" << f_name << "> will monitor key <" << a_config["alert-key"]().as_string() << "> on the alerts exchange" );
-            f_alerts_keys.push_back( a_config["alert-key"]().as_string() );
+            LPROG( dlog, "Monitor <" << f_name << "> will monitor key <" << a_config["alert_key"]().as_string() << "> on the alerts exchange" );
+            f_alerts_keys.push_back( a_config["alert_key"]().as_string() );
         }
     }
 
