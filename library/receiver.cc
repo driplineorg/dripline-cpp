@@ -351,7 +351,7 @@ namespace dripline
         // check if listening timed out
         if( ! is_canceled() && std::chrono::system_clock::now() > t_timeout_time )
         {
-            LDEBUG( dlog, "Listening for reply message timed out" );
+            LINFO( dlog, "Listening for reply message timed out" );
             a_status = core::post_listen_status::timeout;
             return reply_ptr_t();
         }
