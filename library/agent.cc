@@ -57,17 +57,13 @@ namespace dripline
     {
     }
 
-    agent::~agent()
-    {
-    }
-
-    void agent::sub_agent::execute( const scarab::param_node& a_config )
+    void agent::sub_agent::execute( const scarab::param_node& a_config, const scarab::authentication& a_auth )
     {
         const scarab::param_array a_ord_args;
-        execute( a_config, a_ord_args );
+        execute( a_config, a_ord_args, a_auth );
     }
 
-    void agent::sub_agent::execute( const scarab::param_node& a_config, const scarab::param_array& a_ord_args )
+    void agent::sub_agent::execute( const scarab::param_node& a_config, const scarab::param_array& a_ord_args, const scarab::authentication& a_auth )
     {
         LINFO( dlog, "Creating message" );
 
@@ -75,21 +71,24 @@ namespace dripline
         param_node t_config( a_config );
 
         param_node t_dripline_node;
-        if( t_config.has( "dripline" ) )
+        if( t_config.has( "dripline_mesh" ) )
         {
-            t_dripline_node = std::move(t_config.remove( "dripline" )->as_node());
+            t_dripline_node = std::move(t_config.remove( "dripline_mesh" )->as_node());
         }
 
-        core t_core( t_dripline_node );
+        core t_core( t_dripline_node, a_auth );
+
+        t_config.remove( "auth_file" );
+        t_config.remove( "auth_groups" );
 
         f_agent->set_timeout( t_config.get_value( "timeout", 10U ) * 1000 ); // convert seconds (dripline agent user interface) to milliseconds (expected by SimpleAmqpClient)
         t_config.erase( "timeout" );
-        f_agent->set_json_print( t_config.get_value( "json-print", f_agent->get_json_print() ) );
-        t_config.erase( "json-print" );
-        f_agent->set_pretty_print( t_config.get_value( "pretty-print", f_agent->get_pretty_print() ) );
-        t_config.erase( "pretty-print" );
-        f_agent->set_suppress_output( t_config.get_value( "suppress-output", f_agent->get_suppress_output() ) );
-        t_config.erase( "suppress-output" );
+        f_agent->set_json_print( t_config.get_value( "json_print", f_agent->get_json_print() ) );
+        t_config.erase( "json_print" );
+        f_agent->set_pretty_print( t_config.get_value( "pretty_print", f_agent->get_pretty_print() ) );
+        t_config.erase( "pretty_print" );
+        f_agent->set_suppress_output( t_config.get_value( "suppress_output", f_agent->get_suppress_output() ) );
+        t_config.erase( "suppress_output" );
 
         f_agent->routing_key() = t_config.get_value( "rk", f_agent->routing_key() );
         t_config.erase( "rk" );
@@ -97,14 +96,14 @@ namespace dripline
         f_agent->specifier() = t_config.get_value( "specifier", f_agent->specifier() );
         t_config.erase( "specifier" );
 
-        if( t_config.has( "lockout-key" ) )
+        if( t_config.has( "lockout_key" ) )
         {
             bool t_lk_valid = true;
-            f_agent->lockout_key() = dripline::uuid_from_string( t_config["lockout-key"]().as_string(), t_lk_valid );
-            t_config.erase( "lockout-key" );
+            f_agent->lockout_key() = dripline::uuid_from_string( t_config["lockout_key"]().as_string(), t_lk_valid );
+            t_config.erase( "lockout_key" );
             if( ! t_lk_valid )
             {
-                LERROR( dlog, "Invalid lockout key provided: <" << t_config.get_value( "lockout-key", "" ) << ">" );
+                LERROR( dlog, "Invalid lockout key provided: <" << t_config.get_value( "lockout_key", "" ) << ">" );
                 f_agent->set_return( dl_client_error().rc_value() );
                 return;
             }
@@ -128,10 +127,10 @@ namespace dripline
             t_config.erase( "values" );
         }
         t_values.merge( a_ord_args );
-        if( t_config.has( "option-values" ) )
+        if( t_config.has( "option_values" ) )
         {
-            t_values.merge( t_config["option-values"].as_array() );
-            t_config.erase( "option-values" );
+            t_values.merge( t_config["option_values"].as_array() );
+            t_config.erase( "option_values" );
         }
         if( ! t_values.empty() )
         {
@@ -139,9 +138,9 @@ namespace dripline
         }
         
         // check if this is meant to be a dry run message
-        if( t_config.has( "dry-run-msg" ) )
+        if( t_config.has( "dry_run_msg" ) )
         {
-            t_config.erase( "dry-run-msg" );
+            t_config.erase( "dry_run_msg" );
             f_agent->set_is_dry_run( true );
         }
 

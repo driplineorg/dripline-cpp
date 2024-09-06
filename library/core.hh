@@ -8,6 +8,7 @@
 #ifndef DRIPLINE_CORE_HH_
 #define DRIPLINE_CORE_HH_
 
+#include "dripline_config.hh"
 #include "message.hh"
 
 #include <map>
@@ -16,6 +17,7 @@
 
 namespace scarab
 {
+    class authentication;
     class param_node;
 }
 
@@ -84,18 +86,28 @@ namespace dripline
             };
 
         public:
-            /// Parameters specified in a_config will override the default values.
-            /// Parameters specified as individual parameters will override a_config.
-            /// If the broker address is not specified, it will be requested from the authentication file.
-            core( const scarab::param_node& a_config = scarab::param_node(), const std::string& a_broker_address = "", unsigned a_port = 0, const std::string& a_auth_file = "", const bool a_make_connection = true );
-            core( const bool a_make_connection, const scarab::param_node& a_config = scarab::param_node() );
-            core( const core& a_orig );
-            core( core&& a_orig );
-            //core( const scarab::param_node* a_config = nullptr );
-            virtual ~core();
+            /* 
+               \brief Extracts necessary configuration and authentication information and prepares the DL object to interact with the RabbitMQ broker. Does not initiate connection to the broker.
+               @param a_config Dripline configuration object.  Contents can be:
+                 - `broker` (string; default: localhost) -- Address of the RabbitMQ broker
+                 - `broker_port` (int; default: 5672) -- Port used by the RabbitMQ broker
+                 - `requests_exchange` (string; default: requests) -- Name of the exchange used for DL requests
+                 - `alerts_exchange` (string; default: alerts) -- Name of the exchange used for DL alerts
+                 - `heartbeat_routing_key` (string; default: heartbeat) -- Routing key used for sending heartbeats
+                 - `max_payload_size` (int; default: DL_MAX_PAYLOAD_SIZE) -- Maximum size of payloads, in bytes
+                 - `max_connection_attempts` (int; default: 10) -- Maximum number of attempts that will be made to connect to the broker
+                 - `return_codes` (string or array of nodes; default: not present) -- Optional specification of additional return codes in the form of an array of nodes: `[{name: "<name>", value: <ret code>} <, ...>]`. 
+                        If this is a string, it's treated as a file can be interpreted by the param system (e.g. YAML or JSON) using the previously-mentioned format
+               @param a_auth Authentication object (type scarab::authentication); authentication specification should be processed, and the authentication data should include:
+               @param a_make_connection Flag for whether or not to contact a broker; if true, this object operates in "dry-run" mode
+             */
+            core( const scarab::param_node& a_config = dripline_config(), const scarab::authentication& a_auth = scarab::authentication(), const bool a_make_connection = true );
+            core( const core& a_orig ) = default;
+            core( core&& a_orig ) = default;
+            virtual ~core() = default;
 
-            core& operator=( const core& a_orig );
-            core& operator=( core&& a_orig );
+            core& operator=( const core& a_orig ) = default;
+            core& operator=( core&& a_orig ) = default;
 
         public:
             /// Sends a request message and returns a channel on which to listen for a reply.

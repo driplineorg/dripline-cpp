@@ -6,8 +6,45 @@
  */
 
 #include "agent.hh"
+#include "agent_config.hh"
+
+#include "application.hh"
+
+//#include "logger.hh"
 
 #include "catch.hpp"
+
+//LOGGER( talog, "test_agent" );
+
+TEST_CASE( "agent_configuration", "[agent]" )
+{
+    using Catch::Matchers::Equals;
+
+    // This setup should match what's done in dl_agent.cc
+
+    scarab::main_app the_main;
+    dripline::agent the_agent;
+
+    the_main.default_config() = dripline::agent_config();
+    // Dripline authentication specification
+    dripline::add_dripline_auth_spec( the_main );
+
+    // end setup
+
+    REQUIRE( the_main.default_config()["timeout"]().as_int() == 10 );
+    REQUIRE( the_main.default_config()["dripline_mesh"].is_node() );
+
+    REQUIRE( the_main.default_config().has("auth-groups") );
+    REQUIRE_THAT( the_main.default_config()["auth-groups"]["dripline"]["username"]["default"]().as_string(), Equals("guest") );
+    REQUIRE_THAT( the_main.default_config()["auth-groups"]["dripline"]["password"]["default"]().as_string(), Equals("guest") );
+
+    // pre_callback() runs the configuration stages and authentication step
+    the_main.pre_callback();
+
+    REQUIRE( the_main.primary_config()["timeout"]().as_int() == 10 );
+    REQUIRE( the_main.primary_config()["dripline_mesh"].is_node() );
+    REQUIRE_FALSE( the_main.primary_config().has("auth-groups") ); // auth-groups should have been stripped out after authentication was handled by the_main
+}
 
 TEST_CASE( "sub_agent_get", "[agent]" )
 {

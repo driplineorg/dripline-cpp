@@ -7,6 +7,7 @@
 
 #include "agent_config.hh"
 #include "dripline_constants.hh"
+#include "service_config.hh"
 #include "version_store.hh"
 #include "oscillator_service_endpoints.hh"
 
@@ -27,14 +28,17 @@ int main( int argc, char** argv )
 
     the_main.set_version( version_store::get_instance()->versions().at("dripline-cpp") );
 
-    the_main.default_config().add( "dripline", dripline_config() );
+    the_main.default_config() = service_config( "osc_svc_ep" );
 
     add_dripline_options( the_main );
+    add_service_options( the_main );
+
+    add_dripline_auth_spec( the_main );
 
     int the_return = -1;
 
     auto t_service_callback = [&](){
-        auto the_service = std::make_shared< oscillator_service_endpoints >( the_main.primary_config()["dripline"].as_node() );
+        auto the_service = std::make_shared< oscillator_service_endpoints >( the_main.primary_config(), the_main.auth() );
 
         the_service->set_pointers();
         the_service->execute();

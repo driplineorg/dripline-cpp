@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   test:
     image: ghcr.io/driplineorg/dripline-cpp:${IMG_TAG:-latest-testing}
@@ -14,4 +12,5 @@ services:
               newman run /root/rabbitmq_for_dl_collection.json &&
               /root/dl-tests.sh"
     configs:
+      - dl_pw.txt
       - auths.json

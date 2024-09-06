@@ -30,7 +30,12 @@ namespace dripline
     {
         public:
             version();
-            ~version();
+            version( const version& ) = default;
+            version( version&& ) = default;
+            virtual ~version() = default;
+
+            version& operator=( const version& ) = default;
+            version& operator=( version&& ) = default;
     };
 
     /*!
@@ -43,7 +48,12 @@ namespace dripline
     {
         public:
             version_dripline_protocol();
-            ~version_dripline_protocol();
+            version_dripline_protocol( const version_dripline_protocol& ) = default;
+            version_dripline_protocol( version_dripline_protocol&& ) = default;
+            virtual ~version_dripline_protocol() = default;
+
+            version_dripline_protocol& operator=( const version_dripline_protocol& ) = default;
+            version_dripline_protocol& operator=( version_dripline_protocol&& ) = default;
     };
 
 } // namespace dripline

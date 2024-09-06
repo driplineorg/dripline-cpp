@@ -33,9 +33,6 @@ namespace dripline
             f_payload( a_orig.f_payload->clone() )
     {}
 
-    throw_reply::~throw_reply() noexcept
-    {}
-
     throw_reply& throw_reply::operator=( const throw_reply& a_orig )
     {
         f_return_message = a_orig.f_return_message;

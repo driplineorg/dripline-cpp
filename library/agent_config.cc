@@ -9,11 +9,9 @@
 
 #include "agent_config.hh"
 
-#include "logger.hh"
+//#include "logger.hh"
 
-using std::string;
-
-LOGGER( dlog, "agent_config" );
+//LOGGER( dlog, "agent_config" );
 
 namespace dripline
 {
@@ -22,13 +20,9 @@ namespace dripline
     {
         // default agent configuration
 
-        add( "dripline", dripline_config() );
+        add( "dripline_mesh", dripline_config() );
 
         add( "timeout", 10 ); // seconds
-    }
-
-    agent_config::~agent_config()
-    {
     }
 
 } /* namespace dripline */

@@ -53,7 +53,11 @@ namespace dripline
     {
         copy_code( unsigned a_value, const std::string& a_name, const std::string& a_description );
         copy_code( const return_code& a_code );
-        virtual ~copy_code() {};
+        copy_code( const copy_code& ) = default;
+        copy_code( copy_code&& ) = default;
+        virtual ~copy_code() = default;
+        copy_code& operator=( const copy_code& ) = default;
+        copy_code& operator=( copy_code&& ) = default;
         virtual unsigned rc_value() const { return f_value; }
         virtual std::string rc_name() const { return f_name; }
         virtual std::string rc_description() const { return f_description; }

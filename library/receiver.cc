@@ -50,23 +50,12 @@ namespace dripline
             f_reply_listen_timeout_ms( 1000 )
     {}
 
-    receiver::receiver( receiver&& a_orig ) :
-            scarab::cancelable( std::move(a_orig) ),
-            f_incoming_messages( std::move(a_orig.f_incoming_messages) ),
-            f_single_message_wait_ms( a_orig.f_single_message_wait_ms )
-    {
-        a_orig.f_single_message_wait_ms = 1000;
-    }
-
-    receiver::~receiver()
-    {}
-
     receiver& receiver::operator=( receiver&& a_orig )
     {
-        scarab::cancelable::operator=( std::move(a_orig) );
+        cancelable::operator=( std::move(a_orig) );
         f_incoming_messages = std::move(a_orig.f_incoming_messages);
         f_single_message_wait_ms = a_orig.f_single_message_wait_ms;
-        a_orig.f_single_message_wait_ms = 1000;
+        f_reply_listen_timeout_ms = a_orig.f_reply_listen_timeout_ms;
         return *this;
     }
 
@@ -362,7 +351,7 @@ namespace dripline
         // check if listening timed out
         if( ! is_canceled() && std::chrono::system_clock::now() > t_timeout_time )
         {
-            LDEBUG( dlog, "Listening for reply message timed out" );
+            LINFO( dlog, "Listening for reply message timed out" );
             a_status = core::post_listen_status::timeout;
             return reply_ptr_t();
         }

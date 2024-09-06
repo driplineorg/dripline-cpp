@@ -13,16 +13,22 @@ namespace dripline
 {
     LOGGER( dlog, "relayer" );
 
-    relayer::relayer( const scarab::param_node& a_config, const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file ) :
-            core( a_config, a_broker_address, a_port, a_auth_file ),
+    relayer::relayer( const scarab::param_node& a_config, const scarab::authentication& a_auth ) :
+            core( a_config["dripline_mesh"].as_node(), a_auth ),
             scarab::cancelable(),
             f_queue(),
             f_msg_receiver()
-    {
-    }
+    {}
 
-    relayer::~relayer()
+    relayer& relayer::operator=( relayer&& a_orig )
     {
+        core::operator=( std::move(a_orig) );
+        cancelable::operator=( std::move(a_orig) );
+
+        f_queue = std::move( a_orig.f_queue );
+        f_msg_receiver = std::move( a_orig.f_msg_receiver );
+
+        return *this;
     }
 
     void relayer::execute_relayer()

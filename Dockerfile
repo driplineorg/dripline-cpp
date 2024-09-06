@@ -2,7 +2,7 @@ ARG img_repo=python
 ARG img_tag=3.12.1-slim-bookworm
 
 # This FROM line includes a label so that the dependencies can be built by themselves by using the `--target` argument of `docker build`
-FROM ${img_repo}:${img_tag} as base
+FROM ${img_repo}:${img_tag} AS base
 
 ARG build_type=Release
 ARG build_examples=FALSE
@@ -29,7 +29,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # use pybind11_checkout to specify a tag or branch name to checkout
-ARG pybind11_checkout=v2.11.1
+ARG pybind11_checkout=v2.13.5
 RUN cd /usr/local && \
     git clone https://github.com/pybind/pybind11.git && \
     cd pybind11 && \

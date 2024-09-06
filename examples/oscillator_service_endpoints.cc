@@ -118,9 +118,9 @@ namespace dripline
         return a_request->reply( dl_success(), "Get request succeeded", std::move(t_reply_payload) );
     }
 
-    oscillator_service_endpoints::oscillator_service_endpoints( const scarab::param_node& a_config ) :
+    oscillator_service_endpoints::oscillator_service_endpoints( const scarab::param_node& a_config, const scarab::authentication& a_auth ) :
             scarab::cancelable(),
-            service( a_config, "osc_svc_ep" ),
+            service( a_config, a_auth ),
             f_oscillator(),
             f_return( dl_success().rc_value() )
     {

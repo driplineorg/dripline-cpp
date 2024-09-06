@@ -1,5 +1,3 @@
-version: '3'
-
 services:
 
   rabbit-broker:
@@ -18,10 +16,12 @@ services:
       rabbit-broker:
         condition: service_healthy
     command: >
-      bash -c "run_simple_service -vvv --auth-file /auths.json"
+      bash -c "run_simple_service -vvv -b rabbit-broker -u dripline --password-file /dl_pw.txt"
     configs:
-      - auths.json
+      - dl_pw.txt
 
 configs:
+  dl_pw.txt:
+    file: ./password.txt
   auths.json:
     file: ./authentications.json
