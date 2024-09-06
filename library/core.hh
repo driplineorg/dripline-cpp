@@ -8,6 +8,7 @@
 #ifndef DRIPLINE_CORE_HH_
 #define DRIPLINE_CORE_HH_
 
+#include "dripline_config.hh"
 #include "message.hh"
 
 #include <map>
@@ -100,11 +101,9 @@ namespace dripline
                @param a_auth Authentication object (type scarab::authentication); authentication specification should be processed, and the authentication data should include:
                @param a_make_connection Flag for whether or not to contact a broker; if true, this object operates in "dry-run" mode
              */
-            core( const scarab::param_node& a_config, const scarab::authentication& a_auth, const bool a_make_connection = true );
-//            core( const bool a_make_connection, const scarab::param_node& a_config = scarab::param_node(), const scarab::authentication& a_auth = scarab::authentication() );
+            core( const scarab::param_node& a_config = dripline_config(), const scarab::authentication& a_auth = scarab::authentication(), const bool a_make_connection = true );
             core( const core& a_orig ) = default;
             core( core&& a_orig ) = default;
-            //core( const scarab::param_node* a_config = nullptr );
             virtual ~core() = default;
 
             core& operator=( const core& a_orig ) = default;

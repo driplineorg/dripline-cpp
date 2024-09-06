@@ -16,6 +16,7 @@
 #include "receiver.hh"
 
 #include "dripline_exceptions.hh"
+#include "service_config.hh"
 #include "uuid.hh"
 
 #include <map>
@@ -29,7 +30,6 @@ namespace scarab
 }
 namespace dripline
 {
-
     /*!
      @class service
      @author N.S. Oblath
@@ -122,7 +122,9 @@ namespace dripline
                @param a_auth Authentication object (type scarab::authentication); authentication specification should be processed, and the authentication data should include:
                @param a_make_connection Flag for whether or not to contact a broker; if true, this object operates in "dry-run" mode
              */
-            service( const scarab::param_node& a_config, const scarab::authentication& a_auth, const bool a_make_connection = true );
+            service( const scarab::param_node& a_config = service_config(), 
+                     const scarab::authentication& a_auth = create_auth_with_dripline(true), 
+                     const bool a_make_connection = true );
 //            service( const bool a_make_connection, const scarab::param_node& a_config = scarab::param_node(), const scarab::authentication& a_auth = scarab::authentication() );
             service( const service& ) = delete;
             service( service&& a_orig ) = default;

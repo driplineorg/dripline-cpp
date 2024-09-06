@@ -10,6 +10,7 @@
 
 #include "dripline_api.hh"
 
+#include "authentication.hh"
 #include "param.hh"
 
 namespace scarab
@@ -43,6 +44,9 @@ namespace dripline
 
     /// Create a param_node with the default dripline authentication specification
     scarab::param_node DRIPLINE_API create_dripline_auth_spec();
+
+    /// Create an authentication object with the default dripline authentication specification
+    scarab::authentication DRIPLINE_API create_auth_with_dripline( bool a_process_spec=false );
 
     /// Add default authentication specification
     /// This can either be done with an authentication specification group or with an auth file, as determined by the a_use_auth_file flag.

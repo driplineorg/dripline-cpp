@@ -68,6 +68,22 @@ namespace dripline
         );
     }
 
+    scarab::authentication create_auth_with_dripline( bool a_process_spec )
+    {
+        scarab::param_node t_spec;
+        t_spec.add( "dripline", std::move(create_dripline_auth_spec()) );
+
+        scarab::authentication t_auth;
+        t_auth.add_groups( t_spec );
+
+        if( a_process_spec )
+        {
+            t_auth.process_spec();
+        }
+        
+        return t_auth;
+    }
+
     void add_dripline_auth_spec( scarab::main_app& an_app, bool a_use_auth_file )
     {
         // This is setup as an either-or feature:

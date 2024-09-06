@@ -9,7 +9,9 @@
 
 #include "service.hh"
 
+#include "dripline_config.hh"
 #include "dripline_exceptions.hh"
+#include "service_config.hh"
 
 #include "authentication.hh"
 #include "logger.hh"
@@ -28,7 +30,8 @@ namespace dripline
 
     service::service( const scarab::param_node& a_config, const scarab::authentication& a_auth, const bool a_make_connection ) :
             scarab::cancelable(),
-            core( a_config["dripline_mesh"].as_node(), a_auth, a_make_connection ),
+            core( a_config.has("dripline_mesh") ? a_config["dripline_mesh"].as_node() : dripline_config(), 
+                  a_auth, a_make_connection ),
             endpoint( a_config.get_value( "name", "dlcpp_service" ) ),
             listener_receiver(),
             heartbeater(),

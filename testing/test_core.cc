@@ -7,6 +7,7 @@
 
 
 #include "core.hh"
+#include "dripline_config.hh"
 #include "dripline_exceptions.hh"
 #include "return_codes.hh"
 
@@ -17,6 +18,38 @@
 
 #include <boost/filesystem.hpp>
 
+
+TEST_CASE( "configuration", "[core]" )
+{
+    using scarab::authentication;
+    using scarab::param_ptr_t;
+    using scarab::param;
+    using scarab::param_node;
+
+    // We'll test a core configured with the default config
+    // And we'll test a core configured with a blank param_node.
+    dripline::core t_core_default;
+    dripline::core t_core_blank( (param_node()) );
+
+    dripline::dripline_config t_config;
+
+    REQUIRE( t_core_default.address() == t_config["broker"]().as_string() );
+    REQUIRE( t_core_default.get_port() == t_config["broker_port"]().as_uint() );
+    REQUIRE( t_core_default.requests_exchange() == t_config["requests_exchange"]().as_string() );
+    REQUIRE( t_core_default.alerts_exchange() == t_config["alerts_exchange"]().as_string() );
+    REQUIRE( t_core_default.heartbeat_routing_key() == t_config["heartbeat_routing_key"]().as_string() );
+    REQUIRE( t_core_default.get_max_payload_size() == t_config["max_payload_size"]().as_uint() );
+    REQUIRE( t_core_default.get_max_connection_attempts() == t_config["max_connection_attempts"]().as_uint() );
+
+    REQUIRE( t_core_blank.address() == t_config["broker"]().as_string() );
+    REQUIRE( t_core_blank.get_port() == t_config["broker_port"]().as_uint() );
+    REQUIRE( t_core_blank.requests_exchange() == t_config["requests_exchange"]().as_string() );
+    REQUIRE( t_core_blank.alerts_exchange() == t_config["alerts_exchange"]().as_string() );
+    REQUIRE( t_core_blank.heartbeat_routing_key() == t_config["heartbeat_routing_key"]().as_string() );
+    REQUIRE( t_core_blank.get_max_payload_size() == t_config["max_payload_size"]().as_uint() );
+    REQUIRE( t_core_blank.get_max_connection_attempts() == t_config["max_connection_attempts"]().as_uint() );
+
+}
 
 TEST_CASE( "send_offline", "[core]" )
 {

@@ -43,9 +43,7 @@ TEST_CASE( "agent_configuration", "[agent]" )
 
     REQUIRE( the_main.primary_config()["timeout"]().as_int() == 10 );
     REQUIRE( the_main.primary_config()["dripline_mesh"].is_node() );
-    REQUIRE( the_main.primary_config().has("auth-groups") );
-    REQUIRE_THAT( the_main.primary_config()["auth-groups"]["dripline"]["username"]["default"]().as_string(), Equals("guest") );
-    REQUIRE_THAT( the_main.primary_config()["auth-groups"]["dripline"]["password"]["default"]().as_string(), Equals("guest") );
+    REQUIRE_FALSE( the_main.primary_config().has("auth-groups") ); // auth-groups should have been stripped out after authentication was handled by the_main
 }
 
 TEST_CASE( "sub_agent_get", "[agent]" )

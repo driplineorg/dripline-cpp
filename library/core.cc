@@ -49,18 +49,25 @@ namespace dripline
     bool core::s_offline = false;
 
     core::core( const scarab::param_node& a_config, const scarab::authentication& a_auth, const bool a_make_connection ) :
-            f_address( a_config.get_value("broker", "localhost") ),
-            f_port( a_config.get_value("broker_port", 5672) ),
-            f_username( a_auth.get("dripline", "username", "guest") ),
-            f_password( a_auth.get("dripline", "password", "guest") ),
-            f_requests_exchange( a_config.get_value("requests_exchange", "requests") ),
-            f_alerts_exchange( a_config.get_value("alerts_exchange", "alerts") ),
-            f_heartbeat_routing_key( a_config.get_value("heartbeat_routing_key", "heartbeat") ),
-            f_max_payload_size( a_config.get_value("max_payload_size", DL_MAX_PAYLOAD_SIZE) ),
+            f_address(),
+            f_port(),
+            f_username(),
+            f_password(),
+            f_requests_exchange(),
+            f_alerts_exchange(),
+            f_heartbeat_routing_key(),
+            f_max_payload_size(),
             f_make_connection( a_make_connection ),
-            f_max_connection_attempts( a_config.get_value("max_connection_attempts", 10) )
+            f_max_connection_attempts()
     {
-        LDEBUG( dlog, "Dripline core being configured with:\n" << a_config );
+        // Get the default values, and merge in the supplied a_config
+        // a_config's default value is also dripline_config, but the user can supply an arbitrary node.
+        // So we need to assume no configuration values are supplied and we start again from dripline_config, then merge in a_config.
+        dripline_config t_config;
+        t_config.merge( a_config );
+        LDEBUG( dlog, "User-supplied config:\n" << a_config );
+        LDEBUG( dlog, "Dripline core being configured with:\n" << t_config );
+
 /* DO WE WANT TO USE ALTERNATIVE AUTH GROUPS?
         std::array< std::string > t_potential_groups{"dripline", "amqp", "rabbitmq"};
         std::string t_auth_group;
@@ -77,10 +84,20 @@ namespace dripline
         f_username = t_auth.get( t_auth_group, "username", f_username );
         f_password = t_auth.get( t_auth_group, "password", f_password );
 */
+        // Replace local parameters with values from the config
+        f_address = t_config["broker"]().as_string(); //.get_value("broker", "localhost");
+        f_port = t_config["broker_port"]().as_uint(); //.get_value("broker_port", 5672);
+        f_requests_exchange = t_config["requests_exchange"]().as_string(); //.get_value("requests_exchange", "requests");
+        f_alerts_exchange = t_config["alerts_exchange"]().as_string(); //.get_value("alerts_exchange", "alerts");
+        f_heartbeat_routing_key = t_config["heartbeat_routing_key"]().as_string(); //.get_value("heartbeat_routing_key", "heartbeat");
+        f_max_payload_size = t_config["max_payload_size"]().as_uint(); //.get_value("max_payload_size", DL_MAX_PAYLOAD_SIZE);
+        f_max_connection_attempts = t_config["max_connection_attempts"]().as_uint(); //.get_value("max_connection_attempts", 10);
 
+        f_username = a_auth.get("dripline", "username", "guest");
+        f_password = a_auth.get("dripline", "password", "guest");
 
         // additional return codes
-        if( a_config.has( "return-codes" ) )
+        if( t_config.has( "return_codes" ) )
         {
             // define a function for extracting return codes from a param_array so that we can use it in a couple places
             auto t_extract_codes = [](const scarab::param_array& a_codes)
@@ -108,10 +125,10 @@ namespace dripline
                 return;
             };
 
-            if( a_config["return-codes"].is_value() && a_config["return-codes"]().is_string() )
+            if( t_config["return_codes"].is_value() && t_config["return_codes"]().is_string() )
             {
                 // then it's a filename; load YAML
-                std::string t_filename( a_config["return-codes"]().as_string() );
+                std::string t_filename( t_config["return_codes"]().as_string() );
                 scarab::param_translator t_translator;
                 scarab::param_ptr_t t_ret_codes = t_translator.read_file( t_filename );
                 if( ! t_ret_codes || ! t_ret_codes->is_array() )
@@ -120,25 +137,17 @@ namespace dripline
                 }
                 t_extract_codes( t_ret_codes->as_array() );
             }
-            else if( a_config["return-codes"].is_array() )
+            else if( t_config["return_codes"].is_array() )
             {
                 // then individual codes are specified
-                t_extract_codes( a_config["return-codes"].as_array() );
+                t_extract_codes( t_config["return_codes"].as_array() );
             }
             else
             {
-                throw dripline_error() << "Return code configuration is invalid:\n" << a_config["return-codes"];
+                throw dripline_error() << "Return code configuration is invalid:\n" << t_config["return_codes"];
             }
         }
     }
-/*
-    core::core( const bool a_make_connection, const scarab::param_node& a_config ) :
-            core::core( a_config )
-    {
-        // this constructor overrides the default value of make_connection
-        f_make_connection = a_make_connection;
-    }
-*/
 
     sent_msg_pkg_ptr core::send( request_ptr_t a_request, amqp_channel_ptr a_channel ) const
     {
