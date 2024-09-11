@@ -133,6 +133,8 @@ namespace dripline
             service& operator=( const service& ) = delete;
             service& operator=( service&& a_orig );
 
+            mv_referrable( scarab::authentication, auth );
+
             mv_accessible( status, status );
             mv_accessible( bool, enable_scheduling );
 

@@ -37,6 +37,7 @@ namespace dripline
             heartbeater(),
             scheduler<>(),
             std::enable_shared_from_this< service >(),
+            f_auth( a_auth ),
             f_status( status::nothing ),
             f_enable_scheduling( a_config.get_value( "enable_scheduling", false ) ),
             f_id( generate_random_uuid() ),
