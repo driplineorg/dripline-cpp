@@ -10,26 +10,27 @@ In the source code, this is implemented as a ``scarab::param_node``.
 Dripline Parameters
 ===================
 
-All dripline-based applications must have a common set of configuration parameters.  
-These parameters are indicated by the key ``dripline``. 
+All dripline-based applications must have a common set of mesh configuration parameters.  
+These parameters are grouped in the configuration with the key ``dripline_mesh``. 
 
 Explanation of Parameters
 -------------------------
 
-Here is the possible set of parameters for the ``dripline`` block, with a short description of each one:
+Here is the possible set of parameters for the ``dripline_mesh`` block, with a short description of each one:
 
 .. code-block:: YAML
 
-    dripline:
-        auth-file: (string) path to the authentications file (absolute paths are recommended)
-        requests-exchange: (string) name of the requests exchange
-        alerts-exchange: (string) name of the alerts exchange
-        max-payload-size: (unsigned int) maximum payload size in bytes
-        loop-timeout-ms: (unsigned int) time used in loops for checking for application shutdown in milliseconds
-        message-wait-ms: (unsigned int) timeout for waiting for a message in milliseconds
-        heartbeat-routing-key: (string) routing key for sending and receiving heartbeat messages
-        hearteat-interval-s: (unsigned int) interval for sending heartbeats in seconds
-        return-codes:
+    dripline_mesh:
+        broker: (string) address of the broker
+        broker_port: (unsigned int) port for exchanging AMQP messages with the broker
+        requests_exchange: (string) name of the requests exchange
+        alerts_exchange: (string) name of the alerts exchange
+        max_payload_size: (unsigned int) maximum payload size in bytes
+        loop_timeout_ms: (unsigned int) time used in loops for checking for application shutdown in milliseconds
+        message_wait_ms: (unsigned int) timeout for waiting for a message in milliseconds
+        heartbeat_routing_key: (string) routing key for sending and receiving heartbeat messages
+        hearteat_interval_s: (unsigned int) interval for sending heartbeats in seconds
+        return_codes:
           - name: (string) return-code name (must be unique)
             value: (unsigned int) return-code value (must be unique)
             description: (string) human-readable description of what the return-code means
@@ -43,19 +44,27 @@ The defaults for all of these parameters are given in the class ``dripline_confi
 .. code-block:: YAML
 
     dripline:
-        auth-file: DRIPLINE_AUTH_FILE
-        requests-exchange: requests
-        alerts-exchange: alerts
-        max-payload-size: DL_MAX_PAYLOAD_SIZE
-        loop-timeout-ms: 1000
-        message-wait-ms: 1000
-        heartbeat-routing-key: heartbeat
-        hearteat-interval-s: 60
+        broker: localhost
+        broker_port: 5672
+        requests_exchange: requests
+        alerts_exchange: alerts
+        max_payload_size: DL_MAX_PAYLOAD_SIZE
+        loop_timeout_ms: 1000
+        message_wait_ms: 1000
+        heartbeat_routing_key: heartbeat
+        hearteat_interval_s: 60
 
-Note that the defaults for ``auth-file`` and ``max-payload-size`` are defined by preprocessor macros that 
+Default parameters can be modified with a YAML file placed in the user's home directory.  
+Specifically, the file should be ``$HOME/.dripline_mesh.yaml``.  A common application of this 
+feature is to set the broker address.  To set the broker address to ``my-broker``, 
+the ``.dripline_mesh.yaml`` file should consist of:
+
+.. code-block:: YAML
+    broker: my-broker
+
+Note that the default ``max-payload-size`` are defined by preprocessor macros that 
 should be defined before building dripline-cpp.  ``DL_MAX_PAYLOAD_SIZE`` has a default 
-value within dripline-cpp, but ``DRIPLINE_AUTH_FILE`` must be defined by the client code/user, and 
-must be a valid file at runtime for the default to be placed in the ``dripline`` block.
+value within dripline-cpp.
 
 The default set of return codes are specified in ``return_codes.cc``.  There are no default return codes 
 in the class ``dripline_config``.
@@ -67,18 +76,18 @@ Application Parameters
 ======================
 
 Typically an application will have its own configuration parameters that will include 
-the ``dripline`` block.  For example, ``dl-agent`` is configured from ``agent_config``:
+the ``dripline_mesh`` block.  For example, ``dl-agent`` is configured from ``agent_config``:
 
 .. code-block:: YAML
 
     timeout: 10
-    dripline:
-        auth-file: DRIPLINE_AUTH_FILE
+    dripline_mesh:
+        broker: localhost
         . . .
 
 The application configuration parameters can be arbitrarily complicated, 
 according to the scarab application framework, 
-and for dripline purposes they just need to contain the ``dripline`` framework.
+and for dripline purposes they just need to contain the ``dripline_mesh`` block.
 
 Specifying Parameters
 =====================
@@ -96,20 +105,3 @@ The configuration process takes place in four stages:
 
 After stage four, the master configuration dictionary is passed to the application.
 
-Broker and Broker Port
-======================
-
-In a dripline application, a few parameters can be specified from the :ref:`authentication  <authentication>` file:
-
-.. code-block:: YAML
-
-    broker: [broker URL]
-    broker-port: [broker port]
-
-The values given in the authentications file form the default on top of which the master-config is applied.  
-In other words, if ``broker`` or ``broker-port`` are specified in the master configuration, they override 
-the values from the authentications file.  For that reason, ``dripline_config`` does not specify either of 
-those values.
-
-At the source-code level, clients of ``core`` can override ``broker`` and ``broker-port`` by specifying 
-parameters of the constructor.  There are a few other arguments that can be overridden in this way, as well.
