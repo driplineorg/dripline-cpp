@@ -89,12 +89,47 @@ The application configuration parameters can be arbitrarily complicated,
 according to the scarab application framework, 
 and for dripline purposes they just need to contain the ``dripline_mesh`` block.
 
+Authentication
+==============
+
+Authentication information is handled separately from other configuation parameters since it's 
+usually sensitive information that shouldn't be exposed.  The authentication information is 
+specified through a combination of application-specific defaults and user overrides. 
+
+In the dripline context, the main authentication item is for the RabbitMQ broker: a username 
+and password are required.  Other authentication items may also be present: e.g. for database 
+access or posting messages to something like Slack.
+
+In order of precedence, with items lower on the list overriding those higher on the list, the 
+sources of authentication information are:
+
+    1. Application defaults.  For dripline, the default username and password are ``guest`` and ``guest``, 
+    which match the defaults used by the RabbitMQ broker.
+
+    2. Environment variables.  By default dripline uses ``DRIPLINE_USERNAME`` and ``DRIPLINE_PASSWORD`` to 
+    set the username and password for sending messages to the broker, respectively.  The user can change 
+    the variables used at runtime.  If the variable(s) are present, their values will be used; otherwise 
+    they will be ignored.
+
+    3. A user-supplied file.  A file can be provided that contains exactly the item in question.  This is most 
+    often used for passwords.  Some deployment methods use the concept of a "secrets file" that can be used to 
+    provide sensitive information like a password.  The file should contain exactly the value desired for the 
+    particular authentication parameter (e.g. watch out for unintentional new lines at the end of a file).   
+    There is no default setting for this -- if the user does not supply a filename, no action is taken.
+
+    4. A user-supplied value.  An authentication item can be supplied directly, overriding any other settings.  
+    Be aware that this can put the value of an item into one's CLI history or otherwise expose it, which 
+    can be problematic for passwords.  There is no default setting for this -- if the user does not supply a value, 
+    no action is taken.
+
 Specifying Parameters
 =====================
 
-The configuration process takes place in four stages:
+The configuration process takes place in five stages:
 
-    1. The default parameters are used to form the master configuration dictionary.
+    1. The default parameters are used to form the primary configuration dictionary.  If a dripline mesh 
+    configuration file exists in the user's home directory (i.e. ``$HOME/.dripline_mesh.yaml``), values 
+    present in that file are merged into the hard-coded defaults.
 
     2. If specified, a configuration file is parsed and merged with the stage-1 configuration.
 
@@ -103,5 +138,91 @@ The configuration process takes place in four stages:
 
     4. Any command-line options (i.e. ``--parameter value``) are merged with the stage-3 configuration.
 
-After stage four, the master configuration dictionary is passed to the application.
+    5. If any parameters have been specified to include environment variable values, the variables are checked and 
+    the values are inserted into the parameter values.
 
+After stage five, the primary configuration dictionary is passed to the application.
+
+Configuration File
+------------------
+
+A configuration file, written in YAML or JSON, can be provided on the command-line.  This file can specify any parameters 
+that the user wants to configure via the file.  Parameters not included will be set to their default values.
+
+Keyword Arguments
+-----------------
+
+A keyword argument can modify any existing parameter value.  The format for the argument is ``key=value``.
+
+The ``key`` is used to address the particular parameter in the configuration hierarchy.  If the configuration 
+is viewed as a nested set of array-like and dictionary-like structures, any value in that structure can be 
+addressed with the following syntax: a combination of strings and integers, each of which indicates 
+a position in the nested dictionaries (string keys) and arrays (integer keys), separated by ``.``.  
+For example, given this configuration:
+
+.. code-block:: YAML
+    mercury:
+      moons: []
+      surface_temp: 167
+    venus:
+      moons: []
+      surface_temp: 464
+    earth:
+      moons:
+        - The moon
+      surface_temp: 18
+    mars:
+      moons:
+        - Phobos
+        - Deimos
+      surface_temp: -65
+
+You could fix the average temperature on early with ``earth.surface_temp=15`` or change the name 
+of Mars' second moon with ``mars.moons.1=moony``.
+
+Command-Line Options
+--------------------
+
+As a general principle, each application specifies the set of command-line (CL) options that it will use.  
+There is a default set of CL options that all dripline executables include:
+
+.. code-block::
+    -h,--help                     Print this help message and exit
+    -c,--config TEXT:FILE         Config file filename
+    --config-encoding TEXT        Config file encoding
+    -v,--verbose                  Increase verbosity
+    -q,--quiet                    Decrease verbosity
+    -V,--version                  Print the version message and exit
+    -u,--username TEXT            Specify the username for the rabbitmq broker
+    --password TEXT               Specify a password for the rabbitmq broker -- NOTE: this will be plain text on the command line and may end up in your command history!
+    --password-file TEXT          Specify a file (e.g. a secrets file) to be read in as the rabbitmq broker password
+    --auth-file TEXT              Set the authentication file path
+    -b,--broker TEXT              Set the dripline broker address
+    -p,--port UINT                Set the port for communication with the dripline broker
+    --requests-exchange TEXT      Set the name of the requests exchange
+    --alerts-exchange TEXT        Set the name of the alerts exchange
+    --max-payload UINT            Set the maximum payload size (in bytes)
+    --heartbeat-routing-key TEXT  Set the first token of heartbeat routing keys: [token].[origin]
+
+Specific applications will add further options.  For example, ``dl-agent`` adds options having to do with 
+sending messages, and ``dl-mon`` adds options having to do with monitoring messages.
+
+Environment Variables
+---------------------
+
+Environment variables can be used to substitute values into configuration parameters.  The syntax used in 
+the configuration parameter value is: ``ENV{<variable>}``.  That syntax needs to be inserted into or as a 
+configuration parameter value in one of the four previous configuration stages.
+
+If an environment variable is specified in the configuration but the variable does not exist in 
+the environment, an exception will be thrown.
+
+Here's an example configuration, shown in YAML format, where environment variable subsitution is requested:
+
+.. code-block:: YAML
+    dripline_mesh:
+      broker: ENV{DL_PREFIX}-broker
+      broker-port: ENV{DL_PORT}
+
+In this case the user wants a customized broker address specified at runtime by the contents of the ``DL_PREFIX`` 
+environment variable, and they want to specify the port with ``DL_PORT``.
