@@ -34,14 +34,7 @@ namespace dripline
 
         if( a_id_str.empty() ) return generate_nil_uuid();
 
-        try
-        {
-            return t_gen( a_id_str );
-        }
-        catch(...)
-        {
-            throw;
-        }
+        return t_gen( a_id_str );
     }
 
     uuid_t DRIPLINE_API uuid_from_string( const char* a_id_str )
@@ -50,14 +43,7 @@ namespace dripline
 
         if( strcmp( a_id_str, "" ) == 0 ) return generate_nil_uuid();
 
-        try
-        {
-            return t_gen( a_id_str );
-        }
-        catch(...)
-        {
-            throw;
-        }
+        return t_gen( a_id_str );
     }
 
     uuid_t DRIPLINE_API uuid_from_string( const std::string& a_id_str, bool& a_valid_flag )
