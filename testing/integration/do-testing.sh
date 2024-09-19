@@ -29,6 +29,8 @@ docker logs integration-test-1
 if [ -z ${TEST_EXIT_CODE+x} ] || [ "$TEST_EXIT_CODE" -ne 0 ] ; then
   docker logs integration-test-1
   docker logs integration-simple-service-1
+  docker logs integration-oscillator-hub-1
+  docker logs integration-oscillator-endpoints-1
   docker logs integration-rabbit-broker-1
   printf "${RED}Tests Failed${NC} - Exit Code: $TEST_EXIT_CODE\n"
 else

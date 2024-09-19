@@ -30,7 +30,8 @@ namespace dripline
     class DRIPLINE_API dripline_config : public scarab::param_node
     {
         public:
-            dripline_config();
+            /// Creates the mesh config object with default values merged (optionally) with anything in $HOME/.dripline_mesh.yaml
+            dripline_config( bool a_read_mesh_file=true );
             dripline_config( const dripline_config& ) = default;
             dripline_config( dripline_config&& ) = default;
             virtual ~dripline_config() = default;

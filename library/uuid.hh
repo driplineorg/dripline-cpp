@@ -32,7 +32,8 @@ namespace dripline
 
     /*!
      Converts a string to a UUID object.
-     @return the uuid_t object representing the given string, or a nil UUID if the string is not a valid UUID
+     Throws a std::runtime_error if the string is an invalid UUID.
+     @return the uuid_t object representing the given string
      @param a_id_str The input UUID represented as a string.  
          Valid formats are `hhhhhhhh-hhhh-hhhh-hhhh-hhhhhhhhhhhh`, 
          where each `h` is a case-insensitive hexidecimal character, 

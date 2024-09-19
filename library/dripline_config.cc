@@ -10,19 +10,21 @@
 #include "dripline_config.hh"
 
 #include "application.hh"
+#include "param_codec.hh"
 #include "param_helpers_impl.hh"
+#include "path.hh"
 
 #include "logger.hh"
 
 using scarab::param_node;
 using_param_args_and_kwargs;
 
-LOGGER( dlog, "agent_config" );
+LOGGER( dlog, "dripline_config" );
 
 namespace dripline
 {
 
-    dripline_config::dripline_config()
+    dripline_config::dripline_config( bool a_read_mesh_file )
     {
         // default dripline configuration
         add( "broker_port", 5672 );
@@ -32,6 +34,23 @@ namespace dripline
         add( "max_payload_size", DL_MAX_PAYLOAD_SIZE );
         add( "heartbeat_routing_key", "heartbeat" );
         add( "max_connection_attempts", 10 );
+
+        //LWARN( dlog, "in dripline_config constructor" );
+        if( a_read_mesh_file )
+        {
+            scarab::path t_file_path = scarab::path(getenv("HOME")) / scarab::path(".dripline_mesh.yaml");
+            if( boost::filesystem::exists( t_file_path ) )
+            {
+                LDEBUG( dlog, "Loading mesh file " << t_file_path );
+                scarab::param_translator t_translator;
+                scarab::param_ptr_t t_config_from_file = t_translator.read_file(t_file_path.native());
+                merge( t_config_from_file->as_node() );
+            }
+            else
+            {
+                LDEBUG( dlog, "Mesh file is not present: " << t_file_path );
+            }
+        }
     }
 
     void add_dripline_options( scarab::main_app& an_app )

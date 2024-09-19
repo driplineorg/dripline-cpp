@@ -21,6 +21,7 @@ set( testing_SOURCES
     test_service.cc
     test_specifier.cc
     test_throw_reply.cc
+    test_uuid.cc
     test_version_store.cc
 )
 
