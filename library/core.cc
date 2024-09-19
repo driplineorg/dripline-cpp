@@ -65,7 +65,7 @@ namespace dripline
         // So we need to assume no configuration values are supplied and we start again from dripline_config, then merge in a_config.
         dripline_config t_config;
         t_config.merge( a_config );
-        LDEBUG( dlog, "User-supplied config:\n" << a_config );
+        LDEBUG( dlog, "Received config:\n" << a_config );
         LDEBUG( dlog, "Dripline core being configured with:\n" << t_config );
 
 /* DO WE WANT TO USE ALTERNATIVE AUTH GROUPS?

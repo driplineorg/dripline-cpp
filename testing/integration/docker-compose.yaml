@@ -10,15 +10,44 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "curl -u dripline:dripline http://rabbit-broker:15672/api/overview &> /dev/null || exit 1"]
 
+  # broker specified in dripline_mesh file
+  # auth specified in environment variables
   simple-service:
     image: ghcr.io/driplineorg/dripline-cpp:${IMG_TAG:-latest-testing}
     depends_on:
       rabbit-broker:
         condition: service_healthy
     command: >
-      bash -c "run_simple_service -vvv -b rabbit-broker -u dripline --password-file /dl_pw.txt"
+      bash -c "run_simple_service -vvv"
+    volumes:
+      - ./dripline_mesh.yaml:/root/.dripline_mesh.yaml
+    environment:
+      - DRIPLINE_USER=dripline
+      - DRIPLINE_PASSWORD=dripline
+
+  # broker specified on the CL
+  # auth specified on the CL (username directly and password via file)
+  oscillator-hub:
+    image: ghcr.io/driplineorg/dripline-cpp:${IMG_TAG:-latest-testing}
+    depends_on:
+      rabbit-broker:
+        condition: service_healthy
+    command: >
+      bash -c "run_oscillator_service_hub -vvv -b rabbit-broker -u dripline --password-file /dl_pw.txt"
     configs:
       - dl_pw.txt
+
+  # broker speified on the CL
+  # auth specified in an old-school auth file
+  oscillator-endpoints:
+    image: ghcr.io/driplineorg/dripline-cpp:${IMG_TAG:-latest-testing}
+    depends_on:
+      rabbit-broker:
+        condition: service_healthy
+    command: >
+      bash -c "run_oscillator_service_endpoints -vvv -b rabbit-broker --auth-file=/auths.json"
+    configs:
+      - auths.json
 
 configs:
   dl_pw.txt:
