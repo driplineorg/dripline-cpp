@@ -460,7 +460,7 @@ namespace dripline
         t_message_node.add( "encoding", interpret_encoding() );
         t_message_node.add( "timestamp", f_timestamp );
         t_message_node.add( "sender_info", get_sender_info() );
-        if( a_include_payload ) t_message_node.add( "payload", payload() );
+        if( a_include_payload ) t_message_node.add( "payload", payload().clone() );
         this->derived_modify_message_param( t_message_node );
         return t_message_node;
     }
