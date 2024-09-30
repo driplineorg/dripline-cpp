@@ -37,9 +37,23 @@ RUN cd /usr/local && \
     mkdir build && \
     cd build && \
     cmake -DPYBIND11_TEST=FALSE .. && \
-    make -j3 install && \
+    make -j${narg} install && \
     cd / && \
     rm -rf /usr/local/pybind11
+
+# use pybind11_checkout to specify a tag or branch name to checkout
+ARG plog_checkout=1.1.10
+RUN cd /usr/local && \
+    git clone https://github.com/SergiusTheBest/plog.git && \
+    cd plog && \
+    git checkout ${plog_checkout} && \
+    mkdir build && \
+    cd build && \
+    cmake .. && \
+    make -j${narg} install && \
+    cd / && \
+    rm -rf /usr/local/plog
+
 
 FROM base
 

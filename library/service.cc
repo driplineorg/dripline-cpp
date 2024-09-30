@@ -39,6 +39,7 @@ namespace dripline
             std::enable_shared_from_this< service >(),
             f_auth( a_auth ),
             f_status( status::nothing ),
+            f_restart_on_error( a_config.get_value( "restart_on_error", true ) ),
             f_enable_scheduling( a_config.get_value( "enable_scheduling", false ) ),
             f_id( generate_random_uuid() ),
             f_sync_children(),
@@ -94,6 +95,7 @@ namespace dripline
         scheduler<>::operator=( std::move(a_orig) );
 
         f_status = std::move( a_orig.f_status );
+        f_restart_on_error = a_orig.f_restart_on_error;
         f_enable_scheduling = a_orig.f_enable_scheduling;
         f_id = std::move( a_orig.f_id );
         f_sync_children = std::move( a_orig.f_sync_children );
@@ -140,6 +142,54 @@ namespace dripline
             }
         }
         return t_inserted.second;
+    }
+
+    void service::run()
+    {
+        unsigned n_failures = 0;
+        bool t_do_repeat = true; // start true so that we get into the repeat loop
+        // Repeat loop for listening: we may call to listen_on_queue() multiple times
+        while( t_do_repeat )
+        {
+            t_do_repeat = false; // set false because we'll only do the repeat based on the conditions below
+            LINFO( dlog, "Starting the service" );
+            if( ! start() ) throw dripline_error() << "There was a problem while starting the service (check for prior error messages)";
+            try
+            {
+                LINFO( dlog, "Service started; now listening for messages" );
+                if( ! listen() ) throw dripline_error() << "There was a problem while listening for messages (check for prior error messages)";
+            }
+            catch( const dripline_error& e )
+            {
+                // We had an error while listening
+                // Check whether or not we should try to connect again
+                // 1. If we want to restart on error, and
+                // 2. If the failure count is less than our threshold (2)
+                ++n_failures;
+                if( f_restart_on_error && n_failures < 2 )
+                {
+                    t_do_repeat = true;
+                    // we'll report and then drop the exception to do the reconnect
+                    LWARN( dlog, e.what() );
+                    LWARN( dlog, "Will attempt to reconnect" );
+                }
+                else
+                {
+                    // if we're not going to connect again, and we had an error, propagate the error by rethrowing
+                    throw;
+                }
+            }
+
+            if( t_do_repeat )
+            {
+                reset_cancel();
+            }
+        }
+
+        LINFO( dlog, "Stopping the service" );
+        if( ! stop() ) throw dripline_error() << "There was a problem while stopping the service (check for prior error messages)";
+
+        return;
     }
 
     bool service::start()

@@ -52,11 +52,7 @@ namespace dripline
 
         try
         {
-            if( ! start() ) throw dripline_error() << "Unable to start service";
-
-            if( ! listen() ) throw dripline_error() << "Unable to start listening";
-
-            if( ! stop() ) throw dripline_error() << "Unable to stop service";
+            run();
         }
         catch( std::exception& e )
         {
