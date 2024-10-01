@@ -26,9 +26,6 @@ using namespace dripline;
 
 int main( int argc, char** argv )
 {
-    // Switch the logger out stream to std::cerr
-    scarab::logger::SetOutStream( &std::cerr );
-
     // Start handling signals
     scarab::signal_handler t_sig_hand;
 
