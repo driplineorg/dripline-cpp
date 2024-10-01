@@ -41,18 +41,18 @@ RUN cd /usr/local && \
     cd / && \
     rm -rf /usr/local/pybind11
 
-# use pybind11_checkout to specify a tag or branch name to checkout
-ARG plog_checkout=1.1.10
+# use quill_checkout to specify a tag or branch name to checkout
+ARG quill_checkout=v7.3.0
 RUN cd /usr/local && \
-    git clone https://github.com/SergiusTheBest/plog.git && \
-    cd plog && \
-    git checkout ${plog_checkout} && \
+    git clone https://github.com/odygrd/quill.git && \
+    cd quill && \
+    git checkout ${quill_checkout} && \
     mkdir build && \
     cd build && \
     cmake .. && \
     make -j${narg} install && \
     cd / && \
-    rm -rf /usr/local/plog
+    rm -rf /usr/local/quill
 
 
 FROM base
