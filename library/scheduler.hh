@@ -278,6 +278,7 @@ namespace dripline
 
         // create the wrapper executable around the event
         executable_t t_wrapped_executable = [this, an_executable, an_interval, an_id, a_rep_start](){ 
+            if( this->is_canceled() ) return;
             LDEBUG( dlog_sh, "wrapped execution" );
             // reschedule itself an_interval in the future
             this->schedule_repeating( an_executable, an_interval, an_id, a_rep_start + an_interval );
