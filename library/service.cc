@@ -244,6 +244,7 @@ namespace dripline
         {
             if( f_heartbeat_interval_s != 0 )
             {
+                LINFO( dlog, "Starting heartbeat" );
                 f_heartbeat_thread = std::thread( &heartbeater::execute, this, f_name, f_id, f_heartbeat_routing_key );
             }
             else
@@ -253,13 +254,15 @@ namespace dripline
 
             if( f_enable_scheduling )
             {
+                LINFO( dlog, "Starting scheduler" );
                 f_scheduler_thread = std::thread( &scheduler::execute, this );
             }
             else
             {
-                LINFO( dlog, "scheduler disabled" );
+                LINFO( dlog, "Scheduler disabled" );
             }
 
+            LINFO( dlog, "Starting receiver thread" );
             f_receiver_thread = std::thread( &concurrent_receiver::execute, this );
 
             // lambda to cancel everything on an error from listener::listen_on_queue()
@@ -272,6 +275,8 @@ namespace dripline
                 }
             };
 
+            if( ! f_async_children.empty() ) { LINFO( dlog, "Starting async children" ); }
+            else { LDEBUG( dlog, "No async children to start" ); }
             for( async_map_t::iterator t_child_it = f_async_children.begin();
                     t_child_it != f_async_children.end();
                     ++t_child_it )
@@ -280,6 +285,7 @@ namespace dripline
                 t_child_it->second->listener_thread() = std::thread( t_cancel_on_listen_error, std::ref(*t_child_it->second.get()) );
             }
 
+            LINFO( dlog, "Starting listener thread" );
             t_cancel_on_listen_error( *this );
 
             for( async_map_t::iterator t_child_it = f_async_children.begin();
