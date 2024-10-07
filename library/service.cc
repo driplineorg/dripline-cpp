@@ -158,6 +158,7 @@ namespace dripline
             {
                 LINFO( dlog, "Service started; now listening for messages" );
                 if( ! listen() ) throw dripline_error() << "There was a problem while listening for messages (check for prior error messages)";
+                n_failures = 0; // reset the number of failures to 0 once there's been a successful connection
             }
             catch( const dripline_error& e )
             {

@@ -25,7 +25,7 @@
 using namespace dripline;
 
 int main( int argc, char** argv )
-{
+{    
     // Start handling signals
     scarab::signal_handler t_sig_hand;
 
