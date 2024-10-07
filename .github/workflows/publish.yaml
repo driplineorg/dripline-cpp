@@ -273,7 +273,7 @@ jobs:
             enable_testing=${{ matrix.enable-testing }}
             narg=${{env.NARG }}
           tags: ${{ steps.docker_meta.outputs.tags }}
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
 
       - name: Build and push - integration
         id: build_push_integration
@@ -287,7 +287,7 @@ jobs:
             img_repo=dripline-cpp
             img_tag=latest-dev
           tags: ${{ steps.docker_meta_integration.outputs.tags }}
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
 
       - name: Release
         uses: softprops/action-gh-release@v1
