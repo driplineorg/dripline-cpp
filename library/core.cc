@@ -311,7 +311,7 @@ namespace dripline
                 LERROR( dlog, "AMQP Library Exception caught while creating channel: (" << e.ErrorCode() << ") " << e.what() );
                 if( e.ErrorCode() == -9 )
                 {
-                    LERROR( dlog, "This error means the client could not connect to the broker.\n\t" <<
+                    LERROR( dlog, "This error means the client could not connect to the broker.\n" <<
                             "Check that you have the address and port correct, and that the broker is running.")
                 }
                 return false;
@@ -323,10 +323,11 @@ namespace dripline
         auto t_exp_cancel_wrap = wrap_cancelable( t_open_conn_backoff );
         scarab::signal_handler::add_cancelable( t_exp_cancel_wrap );
 
+        int t_expback_return = 0;
         try
         {
             LDEBUG( dlog, "Attempting to open channel; will make up to " << f_max_connection_attempts << " attempts" );
-            t_open_conn_backoff.go();
+            t_expback_return = t_open_conn_backoff.go();
             // either succeeded or failed after multiple attempts
         }
         catch( amqp_exception& e )
@@ -337,6 +338,11 @@ namespace dripline
         {
             // unrecoverable error causing a std::exception
             LERROR( dlog, "Standard exception caught while creating channel: " << e.what() );
+        }
+
+        if( t_expback_return == 0 )
+        {
+            LERROR( dlog, "Failed to open a channel; no more attempts will be made" );
         }
         
         return t_ret_ptr;

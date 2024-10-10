@@ -177,6 +177,7 @@ namespace dripline
                 else
                 {
                     // if we're not going to connect again, and we had an error, propagate the error by rethrowing
+                    LERROR( dlog, "Reached maximum number of reconnect attempts" );
                     throw;
                 }
             }

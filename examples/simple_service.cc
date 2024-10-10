@@ -47,6 +47,7 @@ namespace dripline
         catch( std::exception& e )
         {
             LERROR( dlog, "Exception caught: " << e.what() );
+            LERROR( dlog, "Exiting service" );
             f_return = dl_service_error().rc_value() / 100;
             scarab::signal_handler::cancel_all( f_return );
         }
