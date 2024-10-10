@@ -4,6 +4,11 @@ Configuration
 
 An application that uses the Scarab application framework, including ``dl-agent`` and ``dl-mon``, 
 will have a global dictionary-like set of configuration parameters.  
+The parameters can generally be divided into two sets:
+
+    1. Dripline-mesh parameters, which describe the specifications of the mesh that is being used, and 
+    2. Application parameters, which are particular to the application being run (e.g. ``dl-agent`` or a service)
+
 In this documentation, configurations will be indicated using YAML, and the mapping collection.  
 In the source code, this is implemented as a ``scarab::param_node``. 
 
@@ -43,7 +48,7 @@ The defaults for all of these parameters are given in the class ``dripline_confi
 
 .. code-block:: YAML
 
-    dripline:
+    dripline_mesh:
         broker: localhost
         broker_port: 5672
         requests_exchange: requests
@@ -226,3 +231,28 @@ Here's an example configuration, shown in YAML format, where environment variabl
 
 In this case the user wants a customized broker address specified at runtime by the contents of the ``DL_PREFIX`` 
 environment variable, and they want to specify the port with ``DL_PORT``.
+
+Recommended Setup
+=================
+
+The above sections describe many ways in which Dripline applications can be configured.  
+For convenience to the user and ease of maintenance, we recommend the following setup:
+
+    1. Provide the default mesh information in a ``.dripline_mesh.yaml`` file in the user's home directory.  
+    At a minimum, include the broker address in that file.
+    2. For authentication information:
+
+        A. For manual interactive use (e.g. using ``dl-agent``), supply the RabbitMQ login details, and 
+        the login details for any other applications (e.g. database) with environment variables.
+
+        B. For deployed use (e.g. Docker Swarm or Kubernetes running services) either use environment variables 
+        or secrets files.
+
+Examples
+========
+
+The dripline-cpp integration tests provide a variety of examples of how to configure dripline-cpp applications.  
+These are found in the source directory ``testing/integration``.  
+You'll find several services started in different ways in ``docker-compose.yaml``, 
+and a number of ``dl-agent`` commands configured differently in ``dl-tests.sh``.
+    

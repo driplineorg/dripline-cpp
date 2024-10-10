@@ -23,7 +23,6 @@ Contents:
    Monitor <dl_mon>
    Library <library>
    Configuration <configuration>
-   Authentication <authentication>
    Offline & No-Connection <offline>
 
 .. end of toc

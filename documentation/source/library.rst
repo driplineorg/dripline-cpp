@@ -71,6 +71,8 @@ The interface for running a service consists of three functions:
 * ``listen()`` (blocking)
 * ``stop()``
 
+Or you can use ``run()`` to perform the start-->listen-->stop sequence.
+
 A service can have both synchronous and asynchronous child endpoints.  With the former, requests are 
 handled synchronously with the recieving of messages and with processing messages bound for itself.  
 With the latter, requests are passed to the appropriate endpoint, which handles them in its own thread.
