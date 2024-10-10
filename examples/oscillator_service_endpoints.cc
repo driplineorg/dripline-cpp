@@ -163,15 +163,12 @@ namespace dripline
 
         try
         {
-            if( ! start() ) throw dripline_error() << "Unable to start service";
-
-            if( ! listen() ) throw dripline_error() << "Unable to start listening";
-
-            if( ! stop() ) throw dripline_error() << "Unable to stop service";
+            run();
         }
         catch( std::exception& e )
         {
             LERROR( dlog, "Exception caught: " << e.what() );
+            LERROR( dlog, "Exiting service" );
             f_return = dl_service_error().rc_value() / 100;
             scarab::signal_handler::cancel_all( f_return );
         }

@@ -104,6 +104,7 @@ namespace dripline
                  The other parameters can be left as their defaults, or should be made uniform across the mesh.
                  - *Service parameters*
                    - `name` (string; default: dlcpp_service) -- Name of the service and the queue used by the service
+                   - `restart_on_error` (bool; default: true) -- Flag for whether the service attempts to restart itself if an error occurs in communicating with the broker
                    - `enable_scheduling` (bool; default: false) -- Flag for enabling the scheduler
                    - `broadcast_key` (string; default: broadcast) -- Routing key used for broadcasts
                    - `loop_timeout_ms` (int; default: 1000) -- Maximum time used for listening timeouts (e.g. waiting for replies) in ms
@@ -136,6 +137,7 @@ namespace dripline
             mv_referrable( scarab::authentication, auth );
 
             mv_accessible( status, status );
+            mv_accessible( bool, restart_on_error );
             mv_accessible( bool, enable_scheduling );
 
         public:
@@ -156,6 +158,16 @@ namespace dripline
             virtual sent_msg_pkg_ptr send( alert_ptr_t a_alert ) const;
 
         public:
+            /**
+            Runs the service, which consists of three stages:
+            1. Starting the service -- sets up the connection with the broker
+            2. Listens for messages -- waits on the queue to receive messages, and then handles them
+            3. Stops the service -- breaks down everything that was setup in start()
+
+            Override this to customize when happens when a service runs.
+            */
+            virtual void run();
+
             /// Creates a channel to the broker and establishes the queue for receiving messages.
             /// If no queue name was given, this does nothing.
             /// If this returns false, the service should quit with an error

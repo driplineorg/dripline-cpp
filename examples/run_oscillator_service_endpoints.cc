@@ -50,6 +50,8 @@ int main( int argc, char** argv )
 
     CLI11_PARSE( the_main, argc, argv );
 
+    STOP_LOGGING;
+
     return the_return;
 }
 

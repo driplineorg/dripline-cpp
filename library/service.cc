@@ -39,6 +39,7 @@ namespace dripline
             std::enable_shared_from_this< service >(),
             f_auth( a_auth ),
             f_status( status::nothing ),
+            f_restart_on_error( a_config.get_value( "restart_on_error", true ) ),
             f_enable_scheduling( a_config.get_value( "enable_scheduling", false ) ),
             f_id( generate_random_uuid() ),
             f_sync_children(),
@@ -94,6 +95,7 @@ namespace dripline
         scheduler<>::operator=( std::move(a_orig) );
 
         f_status = std::move( a_orig.f_status );
+        f_restart_on_error = a_orig.f_restart_on_error;
         f_enable_scheduling = a_orig.f_enable_scheduling;
         f_id = std::move( a_orig.f_id );
         f_sync_children = std::move( a_orig.f_sync_children );
@@ -140,6 +142,56 @@ namespace dripline
             }
         }
         return t_inserted.second;
+    }
+
+    void service::run()
+    {
+        unsigned n_failures = 0;
+        bool t_do_repeat = true; // start true so that we get into the repeat loop
+        // Repeat loop for listening: we may call to listen_on_queue() multiple times
+        while( t_do_repeat )
+        {
+            t_do_repeat = false; // set false because we'll only do the repeat based on the conditions below
+            LINFO( dlog, "Starting the service" );
+            if( ! start() ) throw dripline_error() << "There was a problem while starting the service (check for prior error messages)";
+            try
+            {
+                LINFO( dlog, "Service started; now listening for messages" );
+                if( ! listen() ) throw dripline_error() << "There was a problem while listening for messages (check for prior error messages)";
+                n_failures = 0; // reset the number of failures to 0 once there's been a successful connection
+            }
+            catch( const dripline_error& e )
+            {
+                // We had an error while listening
+                // Check whether or not we should try to connect again
+                // 1. If we want to restart on error, and
+                // 2. If the failure count is less than our threshold (2)
+                ++n_failures;
+                if( f_restart_on_error && n_failures < 2 )
+                {
+                    t_do_repeat = true;
+                    // we'll report and then drop the exception to do the reconnect
+                    LWARN( dlog, e.what() );
+                    LWARN( dlog, "Will attempt to reconnect" );
+                }
+                else
+                {
+                    // if we're not going to connect again, and we had an error, propagate the error by rethrowing
+                    LERROR( dlog, "Reached maximum number of reconnect attempts" );
+                    throw;
+                }
+            }
+
+            if( t_do_repeat )
+            {
+                reset_cancel();
+            }
+        }
+
+        LINFO( dlog, "Stopping the service" );
+        if( ! stop() ) throw dripline_error() << "There was a problem while stopping the service (check for prior error messages)";
+
+        return;
     }
 
     bool service::start()
@@ -194,6 +246,7 @@ namespace dripline
         {
             if( f_heartbeat_interval_s != 0 )
             {
+                LINFO( dlog, "Starting heartbeat" );
                 f_heartbeat_thread = std::thread( &heartbeater::execute, this, f_name, f_id, f_heartbeat_routing_key );
             }
             else
@@ -203,13 +256,15 @@ namespace dripline
 
             if( f_enable_scheduling )
             {
+                LINFO( dlog, "Starting scheduler" );
                 f_scheduler_thread = std::thread( &scheduler::execute, this );
             }
             else
             {
-                LINFO( dlog, "scheduler disabled" );
+                LINFO( dlog, "Scheduler disabled" );
             }
 
+            LINFO( dlog, "Starting receiver thread" );
             f_receiver_thread = std::thread( &concurrent_receiver::execute, this );
 
             // lambda to cancel everything on an error from listener::listen_on_queue()
@@ -222,6 +277,8 @@ namespace dripline
                 }
             };
 
+            if( ! f_async_children.empty() ) { LINFO( dlog, "Starting async children" ); }
+            else { LDEBUG( dlog, "No async children to start" ); }
             for( async_map_t::iterator t_child_it = f_async_children.begin();
                     t_child_it != f_async_children.end();
                     ++t_child_it )
@@ -230,6 +287,7 @@ namespace dripline
                 t_child_it->second->listener_thread() = std::thread( t_cancel_on_listen_error, std::ref(*t_child_it->second.get()) );
             }
 
+            LINFO( dlog, "Starting listener thread" );
             t_cancel_on_listen_error( *this );
 
             for( async_map_t::iterator t_child_it = f_async_children.begin();
