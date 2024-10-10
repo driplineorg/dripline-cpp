@@ -7,7 +7,8 @@
 
 #include "uuid.hh"
 
-#include "catch.hpp"
+#include "catch2/catch_test_macros.hpp"
+#include "catch2/matchers/catch_matchers_all.hpp"
 
 TEST_CASE( "uuid", "[message]" )
 {
@@ -19,25 +20,25 @@ TEST_CASE( "uuid", "[message]" )
     std::string t_test_string_1( "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE" );
     dripline::uuid_t t_test_uuid_1;
     REQUIRE_NOTHROW( t_test_uuid_1 = dripline::uuid_from_string( t_test_string_1 ) );
-    REQUIRE_THAT( t_test_string_1, Catch::Equals(dripline::string_from_uuid(t_test_uuid_1), Catch::CaseSensitive::No) );
+    REQUIRE_THAT( t_test_string_1, Catch::Matchers::Equals(dripline::string_from_uuid(t_test_uuid_1), Catch::CaseSensitive::No) );
 
     std::string t_test_string_2( "{AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE}" );
     dripline::uuid_t t_test_uuid_2;
     REQUIRE_NOTHROW( t_test_uuid_2 = dripline::uuid_from_string( t_test_string_2 ) );
     // compare to t_test_string_1 because the to_string conversion adds dashes and has no braces
-    REQUIRE_THAT( t_test_string_1, Catch::Equals(dripline::string_from_uuid(t_test_uuid_2), Catch::CaseSensitive::No) );
+    REQUIRE_THAT( t_test_string_1, Catch::Matchers::Equals(dripline::string_from_uuid(t_test_uuid_2), Catch::CaseSensitive::No) );
 
     std::string t_test_string_3( "AAAAAAAABBBBCCCCDDDDEEEEEEEEEEEE" );
     dripline::uuid_t t_test_uuid_3;
     REQUIRE_NOTHROW( t_test_uuid_3 = dripline::uuid_from_string( t_test_string_3 ) );
     // compare to t_test_string_1 because the to_string conversion adds dashes and has no braces
-    REQUIRE_THAT( t_test_string_1, Catch::Equals(dripline::string_from_uuid(t_test_uuid_3), Catch::CaseSensitive::No) );
+    REQUIRE_THAT( t_test_string_1, Catch::Matchers::Equals(dripline::string_from_uuid(t_test_uuid_3), Catch::CaseSensitive::No) );
 
     std::string t_test_string_4( "{AAAAAAAABBBBCCCCDDDDEEEEEEEEEEEE}" );
     dripline::uuid_t t_test_uuid_4;
     REQUIRE_NOTHROW( t_test_uuid_4 = dripline::uuid_from_string( t_test_string_4 ) );
     // compare to t_test_string_1 because the to_string conversion adds dashes and has no braces
-    REQUIRE_THAT( t_test_string_1, Catch::Equals(dripline::string_from_uuid(t_test_uuid_4), Catch::CaseSensitive::No) );
+    REQUIRE_THAT( t_test_string_1, Catch::Matchers::Equals(dripline::string_from_uuid(t_test_uuid_4), Catch::CaseSensitive::No) );
 }
 
 
