@@ -195,7 +195,7 @@ Command-Line Options
 As a general principle, each application specifies the set of command-line (CL) options that it will use.  
 There is a default set of CL options that all dripline executables include:
 
-.. code-block::
+::
 
     -h,--help                     Print this help message and exit
     -c,--config TEXT:FILE         Config file filename

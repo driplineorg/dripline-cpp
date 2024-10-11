@@ -161,10 +161,10 @@ The ``listener`` class provides the basic framework for doing that.
 
 The typical use case involves at least two threads:
 1. A listener gets messages from the AMQP channel (using ``listen_on_queue()``, 
-    e.g. ``service`` or ``endpoint_listener_receiver``) and 
-    calls ``receiver::handle_message_chunk()``
+   e.g. ``service`` or ``endpoint_listener_receiver``) and 
+   calls ``receiver::handle_message_chunk()``
 2. A receiver has a timing thread waiting for multiple message chunks (if relevant); 
-    when the message is complete, ``receiver::process_message()`` is called.
+   when the message is complete, ``receiver::process_message()`` is called.
 
 ``listener_receiver`` is a convenience class that brings together ``listener`` and ``concurrent_receiver``.
 

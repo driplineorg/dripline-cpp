@@ -21,9 +21,6 @@ Dripline build options include:
    ``Dripline_BUILD_EXAMPLES`` (BOOL)
       if ON, builds the example applications
 
-   ``Dripline_BUILD_EXAMPLES`` (BOOL)
-      if ON, builds the example applications
-
    ``Dripline_BUILD_PYTHON`` (BOOL)
       if ON, builds utilities used by the Python wrapping (Dripline python wrapping is done in Dripline-python)
 
