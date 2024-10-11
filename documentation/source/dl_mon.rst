@@ -45,13 +45,10 @@ Options
 Keyword Arguments
 -----------------
 
-Positional arguments can be used to add to the values array in the payload and to other parts of the payload.
-
-Arguments in the form [key]=[value] will be assumed to be keyword arguments.
-Other arguments will be assumed to be entries in the values array.
+Arguments in the form [key]=[value] will be assumed to be keyword arguments that can be used to set configuration parameters.
 
 The "key" portion of a keyword argument is an address that can specify both node and array locations.
-For example, ``my.value.0=10`` would add this to the payload::
+For example, ``my.value.0=10`` add/set this in the configuration::
 
     my:
       value:
@@ -60,6 +57,6 @@ For example, ``my.value.0=10`` would add this to the payload::
 Authentication
 ==============
 
-Communication with the RabbitMQ broker requires the broker address and port, and user/password authentication. 
+Communication with the RabbitMQ broker requires user/password authentication. 
 
 See :ref:`Authentication<authentication>` for information on how to specify the broker and authentication information.
