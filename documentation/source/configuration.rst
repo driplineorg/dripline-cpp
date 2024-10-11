@@ -59,12 +59,15 @@ The defaults for all of these parameters are given in the class ``dripline_confi
         heartbeat_routing_key: heartbeat
         hearteat_interval_s: 60
 
+.. _default-mesh-yaml:
+
 Default parameters can be modified with a YAML file placed in the user's home directory.  
 Specifically, the file should be ``$HOME/.dripline_mesh.yaml``.  A common application of this 
 feature is to set the broker address.  To set the broker address to ``my-broker``, 
 the ``.dripline_mesh.yaml`` file should consist of:
 
 .. code-block:: YAML
+
     broker: my-broker
 
 Note that the default ``max-payload-size`` are defined by preprocessor macros that 
@@ -166,6 +169,7 @@ a position in the nested dictionaries (string keys) and arrays (integer keys), s
 For example, given this configuration:
 
 .. code-block:: YAML
+
     mercury:
       moons: []
       surface_temp: 167
@@ -192,6 +196,7 @@ As a general principle, each application specifies the set of command-line (CL) 
 There is a default set of CL options that all dripline executables include:
 
 .. code-block::
+
     -h,--help                     Print this help message and exit
     -c,--config TEXT:FILE         Config file filename
     --config-encoding TEXT        Config file encoding
@@ -225,6 +230,7 @@ the environment, an exception will be thrown.
 Here's an example configuration, shown in YAML format, where environment variable subsitution is requested:
 
 .. code-block:: YAML
+
     dripline_mesh:
       broker: ENV{DL_PREFIX}-broker
       broker-port: ENV{DL_PORT}
