@@ -39,9 +39,6 @@ int main( int argc, char** argv )
     // Default configuration
     the_main.default_config() = monitor_config();
 
-    // Dripline authentication specification
-    add_dripline_auth_spec( the_main );
-
     try
     {
         // Command line options

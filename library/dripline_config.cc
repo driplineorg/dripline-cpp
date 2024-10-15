@@ -55,11 +55,18 @@ namespace dripline
 
     void add_dripline_options( scarab::main_app& an_app )
     {
+        // Fix two hyphen-->underscore issues
+        an_app.auth_file_key() = "auth_file";
+        an_app.auth_groups_key() = "auth_groups";
+
+        // Add auth spec (must be after fixing the keys above)
+        add_dripline_auth_spec( an_app );
+
         // authentication for the broker
-        an_app.add_config_option< std::string >( "-u,--username", "auth-groups.dripline.username.value", "Specify the username for the rabbitmq broker" );
-        an_app.add_config_option< std::string >( "--password", "auth-groups.dripline.password.value", "Specify a password for the rabbitmq broker -- NOTE: this will be plain text on the command line and may end up in your command history!" );
-        an_app.add_config_option< std::string >( "--password-file", "auth-groups.dripline.password.file", "Specify a file (e.g. a secrets file) to be read in as the rabbitmq broker password" );
-        an_app.add_config_option< std::string >( "--auth-file", "auth-file", "Set the authentication file path" );
+        an_app.add_config_option< std::string >( "-u,--username", "auth_groups.dripline.username.value", "Specify the username for the rabbitmq broker" );
+        an_app.add_config_option< std::string >( "--password", "auth_groups.dripline.password.value", "Specify a password for the rabbitmq broker -- NOTE: this will be plain text on the command line and may end up in your command history!" );
+        an_app.add_config_option< std::string >( "--password-file", "auth_groups.dripline.password.file", "Specify a file (e.g. a secrets file) to be read in as the rabbitmq broker password" );
+        an_app.add_config_option< std::string >( "--auth-file", "auth_file", "Set the authentication file path" );
 
         // other dripline things
         an_app.add_config_option< std::string >( "-b,--broker", "dripline_mesh.broker", "Set the dripline broker address" );

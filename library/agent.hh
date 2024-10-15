@@ -49,8 +49,8 @@ namespace dripline
              "exchange" : "[exchange]",
              "reply_timeout_ms": [ms] // optional; default is 10000
          },
-         "auth-file" : "[filename]" // optional, if using an auth file
-         "auth-groups" : {
+         "auth_file" : "[filename]" // optional, if using an auth file
+         "auth_groups" : {
             "dripline": {
                 "username": {[username specification]}
                 "password": {[password specification]}

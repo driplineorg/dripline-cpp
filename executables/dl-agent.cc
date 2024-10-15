@@ -76,14 +76,12 @@ int main( int argc, char** argv )
             [&]() { the_agent.execute< agent::sub_agent_alert>( the_main.primary_config(), the_main.nonoption_ord_args(), the_main.auth() ); }
     );
 
-    // Default configuration
+    // Agent-specific default configuration
     the_main.default_config() = agent_config();
 
-    // Dripline authentication specification
-    add_dripline_auth_spec( the_main );
-
-    // Command line options
+    // Dripline options and configuration conventions
     add_dripline_options( the_main );
+
     the_main.add_config_option< std::string >( "-s,--specifier", "specifier", "Set the specifier" );
     the_main.add_config_multi_option< std::string >( "-P,--payload", "payload", "Add values to the payload" );
     the_main.add_config_multi_option< std::string >( "--values", "option_values", "Add ordered values" ); // stored in the config as "option-values" so they can be merged in later in the proper order
