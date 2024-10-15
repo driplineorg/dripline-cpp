@@ -25,6 +25,16 @@ Contents:
    Configuration <configuration>
    Offline & No-Connection <offline>
 
+.. toctree::
+   :caption: Links:
+
+   Dripline Home <https://driplineorg.github.io>
+   Guides and Walkthroughs <https://controls-guide.readthedocs.io/>
+   Protocol <https://dripline.readthedocs.io/>
+   C++ Implementation <https://dripline-cpp.readthedocs.io/>
+   Python Implementation <https://dripline-python.readthedocs.io/>
+
+
 .. end of toc
 .. (you must not remove or modify the above comment line, it is required by the API Doc generation)
 `Full Doxygen API Reference <_static/index.html>`_

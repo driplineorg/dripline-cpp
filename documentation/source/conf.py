@@ -35,7 +35,7 @@ except:
 #if on_rtd:
 #  html_theme = 'default'
 #else:
-html_theme = 'alabaster'
+html_theme = 'furo'
 
 
 # -- General configuration ------------------------------------------------
@@ -46,7 +46,9 @@ html_theme = 'alabaster'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = []
+extensions = [
+    'sphinx.ext.intersphinx',
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -63,9 +65,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Dripline-Cpp'
-copyright = u'2020, Dripline-Cpp Authors'
-author = u'Driplineorg Developers'
+project = u'dripline-cpp'
+copyright = u'2024, dripline-cpp Authors'
+author = u'dripline-cpp Authors'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -120,13 +122,26 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
+# Intersphinx details
+intersphinx_mapping = {
+    "scarab": ("https://scarab.readthedocs.io/en/stable/", None),
+    "dripline": ("https://dripline.readthedocs.io/en/latest/", None),
+    "controls-guide": ("https://controls-guide.readthedocs.io/en/latest/", None),
+    "dripline-python": ("https://dripline-python.readthedocs.io/en/latest/", None),
+    "dl-home": ("https://driplineorggithubio.readthedocs.io/en/latest/", None),
+}
 
 # -- Options for HTML output ----------------------------------------------
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+html_theme_options = {
+  'source_repository': 'https://github.com/driplineorg/dripline-cpp',
+  'source_branch': 'main',
+  'source_directory': 'documentation/source/',
+  'navigation_with_keys': True,
+}
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
