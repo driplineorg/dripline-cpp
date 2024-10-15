@@ -32,8 +32,6 @@ int main( int argc, char** argv )
     add_dripline_options( the_main );
     add_service_options( the_main );
 
-    add_dripline_auth_spec( the_main );
-
     int the_return = -1;
 
     auto t_service_callback = [&](){
