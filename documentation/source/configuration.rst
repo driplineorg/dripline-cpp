@@ -97,6 +97,8 @@ The application configuration parameters can be arbitrarily complicated,
 according to the scarab application framework, 
 and for dripline purposes they just need to contain the ``dripline_mesh`` block.
 
+.. _authentication:
+
 Authentication
 ==============
 
