@@ -116,7 +116,7 @@ sources of authentication information are:
     1. Application defaults.  For dripline, the default username and password are ``guest`` and ``guest``, 
     which match the defaults used by the RabbitMQ broker.
 
-    2. Environment variables.  By default dripline uses ``DRIPLINE_USERNAME`` and ``DRIPLINE_PASSWORD`` to 
+    2. Environment variables.  By default dripline uses ``DRIPLINE_USER`` and ``DRIPLINE_PASSWORD`` to 
     set the username and password for sending messages to the broker, respectively.  The user can change 
     the variables used at runtime.  If the variable(s) are present, their values will be used; otherwise 
     they will be ignored.
