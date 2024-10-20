@@ -55,6 +55,8 @@ namespace dripline
 
     void add_dripline_options( scarab::main_app& an_app )
     {
+        LDEBUG( dlog, "Adding dripline config options" );
+
         // Fix two hyphen-->underscore issues
         an_app.auth_file_key() = "auth_file";
         an_app.auth_groups_key() = "auth_groups";
@@ -112,6 +114,8 @@ namespace dripline
 
     void add_dripline_auth_spec( scarab::main_app& an_app, bool a_use_auth_file )
     {
+        LDEBUG( dlog, "Adding dripline auth spec" );
+        
         // This is setup as an either-or feature:
         //   You're defaults are either the auth-specification or an auth file
         // The use of an auth file is being maintained for backwards compatibility, 
