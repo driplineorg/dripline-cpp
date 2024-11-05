@@ -113,43 +113,43 @@ access or posting messages to something like Slack.
 In order of precedence, with items lower on the list overriding those higher on the list, the 
 sources of authentication information are:
 
-    1. Application defaults.  For dripline, the default username and password are ``guest`` and ``guest``, 
-    which match the defaults used by the RabbitMQ broker.
+  1. **Application defaults:**  For dripline, the default username and password are ``guest`` and ``guest``, 
+  which match the defaults used by the RabbitMQ broker.
 
-    2. Environment variables.  By default dripline uses ``DRIPLINE_USER`` and ``DRIPLINE_PASSWORD`` to 
-    set the username and password for sending messages to the broker, respectively.  The user can change 
-    the variables used at runtime.  If the variable(s) are present, their values will be used; otherwise 
-    they will be ignored.
+  2. **Environment variables:**  By default dripline uses ``DRIPLINE_USER`` and ``DRIPLINE_PASSWORD`` to 
+  set the username and password for sending messages to the broker, respectively.  The user can change 
+  the variables used at runtime.  If the variable(s) are present, their values will be used; otherwise 
+  they will be ignored.
 
-    3. A user-supplied file.  A file can be provided that contains exactly the item in question.  This is most 
-    often used for passwords.  Some deployment methods use the concept of a "secrets file" that can be used to 
-    provide sensitive information like a password.  The file should contain exactly the value desired for the 
-    particular authentication parameter (e.g. watch out for unintentional new lines at the end of a file).   
-    There is no default setting for this -- if the user does not supply a filename, no action is taken.
+  3. **A user-supplied file:**  A file can be provided that contains exactly the item in question.  This is most 
+  often used for passwords.  Some deployment methods use the concept of a "secrets file" that can be used to 
+  provide sensitive information like a password.  The file should contain exactly the value desired for the 
+  particular authentication parameter (e.g. watch out for unintentional new lines at the end of a file).   
+  There is no default setting for this -- if the user does not supply a filename, no action is taken.
 
-    4. A user-supplied value.  An authentication item can be supplied directly, overriding any other settings.  
-    Be aware that this can put the value of an item into one's CLI history or otherwise expose it, which 
-    can be problematic for passwords.  There is no default setting for this -- if the user does not supply a value, 
-    no action is taken.
+  4. **A user-supplied value:**  An authentication item can be supplied directly, overriding any other settings.  
+  Be aware that this can put the value of an item into one's CLI history or otherwise expose it, which 
+  can be problematic for passwords.  There is no default setting for this -- if the user does not supply a value, 
+  no action is taken.
 
 Specifying Parameters
 =====================
 
 The configuration process takes place in five stages:
 
-    1. The default parameters are used to form the primary configuration dictionary.  If a dripline mesh 
-    configuration file exists in the user's home directory (i.e. ``$HOME/.dripline_mesh.yaml``), values 
-    present in that file are merged into the hard-coded defaults.
+  1. The **default parameters** are used to form the primary configuration dictionary.  If a dripline mesh 
+  configuration file exists in the user's home directory (i.e. ``$HOME/.dripline_mesh.yaml``), values 
+  present in that file are merged into the hard-coded defaults.
 
-    2. If specified, a configuration file is parsed and merged with the stage-1 configuration.
+  2. If specified, a **configuration file** is parsed and merged with the stage-1 configuration.
 
-    3. Any keyword non-option arguments (i.e. ``key=value``) given on the command line are 
-    merged with the stage-2 configuration.
+  3. Any **keyword non-option arguments** (i.e. ``key=value``) given on the command line are 
+  merged with the stage-2 configuration.
 
-    4. Any command-line options (i.e. ``--parameter value``) are merged with the stage-3 configuration.
+  4. Any **command-line options** (i.e. ``--parameter value``) are merged with the stage-3 configuration.
 
-    5. If any parameters have been specified to include environment variable values, the variables are checked and 
-    the values are inserted into the parameter values.
+  5. If any parameters have been specified to **include environment variable** values, the variables are checked and 
+  the values are inserted into the parameter values.
 
 After stage five, the primary configuration dictionary is passed to the application.
 
