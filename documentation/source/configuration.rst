@@ -6,8 +6,8 @@ An application that uses the Scarab application framework, including ``dl-agent`
 will have a global dictionary-like set of configuration parameters.  
 The parameters can generally be divided into two sets:
 
-    1. Dripline-mesh parameters, which describe the specifications of the mesh that is being used, and 
-    2. Application parameters, which are particular to the application being run (e.g. ``dl-agent`` or a service)
+  1. Dripline-mesh parameters, which describe the specifications of the mesh that is being used, and 
+  2. Application parameters, which are particular to the application being run (e.g. ``dl-agent`` or a service)
 
 In this documentation, configurations will be indicated using YAML, and the mapping collection.  
 In the source code, this is implemented as a ``scarab::param_node``. 
