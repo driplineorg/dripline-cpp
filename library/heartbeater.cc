@@ -22,7 +22,7 @@ LOGGER( dlog, "heartbeater" );
 namespace dripline
 {
 
-    heartbeater::heartbeater( service_ptr_t a_service ) :
+    heartbeater::heartbeater( service* a_service ) :
             cancelable(),
             f_heartbeat_interval_s( 60 ),
             f_check_timeout_ms( 1000 ),

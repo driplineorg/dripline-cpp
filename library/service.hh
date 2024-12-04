@@ -81,8 +81,7 @@ namespace dripline
             public endpoint,
             public listener_receiver,
             public heartbeater,
-            public scheduler<>,
-            public std::enable_shared_from_this< service >
+            public scheduler<>
     {
         protected:
             enum class status

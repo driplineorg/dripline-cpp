@@ -29,10 +29,22 @@ namespace dripline
 
     endpoint::endpoint( const std::string& a_name ) :
             f_name( a_name ),
-            f_service(),
+            f_service( nullptr ),
             f_lockout_tag(),
             f_lockout_key( generate_nil_uuid() )
     {
+    }
+
+    service& endpoint::parent()
+    {
+        if( f_service == nullptr ) throw dripline_error() << "Parent service pointer for endpoint <" << f_name << "> is null";
+        return *f_service;
+    }
+
+    const service& endpoint::parent() const
+    {
+        if( f_service == nullptr ) throw dripline_error() << "Parent service pointer for endpoint <" << f_name << "> is null";
+        return *f_service;
     }
 
     reply_ptr_t endpoint::submit_request_message( const request_ptr_t a_request_ptr)

@@ -38,7 +38,6 @@ int main( int argc, char** argv )
     auto t_service_callback = [&](){
         auto the_service = std::make_shared< oscillator_service_endpoints >( the_main.primary_config(), the_main.auth() );
 
-        the_service->set_pointers();
         the_service->execute();
 
         the_return = the_service->get_return();
