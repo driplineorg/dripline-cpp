@@ -34,9 +34,8 @@ namespace dripline
                   a_auth, a_make_connection ),
             endpoint( a_config.get_value( "name", "dlcpp_service" ) ),
             listener_receiver(),
-            heartbeater(),
+            heartbeater( this ),
             scheduler<>(),
-            std::enable_shared_from_this< service >(),
             f_auth( a_auth ),
             f_status( status::nothing ),
             f_restart_on_error( a_config.get_value( "restart_on_error", true ) ),
@@ -46,6 +45,7 @@ namespace dripline
             f_async_children(),
             f_broadcast_key( a_config.get_value( "broadcast_key", "broadcast" ) )
     {
+        LWARN( dlog, "Service (cpp) constructor" );
         LDEBUG( dlog, "Service (cpp) created with config:\n" << a_config );
         // get more values from the config
         // default of f_listen_timeout_ms is in the listener class
@@ -110,14 +110,12 @@ namespace dripline
         auto t_inserted = f_sync_children.insert( std::make_pair( a_endpoint_ptr->name(), a_endpoint_ptr ) );
         if( t_inserted.second )
         {
-            try
-            {
-                a_endpoint_ptr->service() = shared_from_this();
-            }
-            catch( std::bad_weak_ptr& e )
-            {
-                LWARN( dlog, "add_child called from service constructor (or for some other reason the shared-pointer is bad); Service pointer not set.");
-            }
+            a_endpoint_ptr->set_service( this );
+        }
+        else
+        {
+            LERROR( dlog, "Endpoint <" << a_endpoint_ptr->name() << " could not be added to service <" << f_name << ">" );
+            return false;
         }
         return t_inserted.second;
     }
@@ -132,14 +130,12 @@ namespace dripline
         auto t_inserted = f_async_children.insert( std::make_pair( a_endpoint_ptr->name(), t_listener_receiver_ptr ) );
         if( t_inserted.second )
         {
-            try
-            {
-                a_endpoint_ptr->service() = shared_from_this();
-            }
-            catch( std::bad_weak_ptr& e )
-            {
-                LWARN( dlog, "add_async_child called from service constructor (or for some other reason the shared-pointer is bad); Service pointer not set.");
-            }
+            a_endpoint_ptr->set_service( this );
+        }
+        else
+        {
+            LERROR( dlog, "Endpoint (async) <" << a_endpoint_ptr->name() << " could not be added to service <" << f_name << ">" );
+            return false;
         }
         return t_inserted.second;
     }
@@ -208,8 +204,8 @@ namespace dripline
         }
 
         // fill in the link to this in endpoint because we couldn't do it in the constructor
-        endpoint::f_service = this->shared_from_this();
-        heartbeater::f_service = this->shared_from_this();
+        endpoint::f_service = this;
+        heartbeater::f_service = this;
 
         LINFO( dlog, "Connecting to <" << f_address << ":" << f_port << ">" );
 

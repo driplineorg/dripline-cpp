@@ -53,7 +53,7 @@ namespace dripline
     {
         public:
             ///Primary constructor.  A service pointer is required to be able to send messages.
-            heartbeater( service_ptr_t a_service = service_ptr_t() );
+            heartbeater( service* a_service );
             heartbeater( const heartbeater& ) = delete;
             heartbeater( heartbeater&& a_orig ) = default;
             virtual ~heartbeater() = default;
@@ -75,7 +75,7 @@ namespace dripline
             /// Timing interval for the internal loop (default: 1000 ms)
             mv_accessible( unsigned, check_timeout_ms );
 
-            mv_referrable( service_ptr_t, service );
+            mv_accessible( service*, service );
 
             //mv_atomic( bool, stop );
 

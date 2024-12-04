@@ -25,9 +25,6 @@ namespace dripline
             oscillator_service_endpoints( const scarab::param_node& a_config, const scarab::authentication& a_auth );
             virtual ~oscillator_service_endpoints();
 
-            // annoying pointer initialization that has to be done in this setup _before_ executing
-            void set_pointers();
-
             void execute();
 
             mv_referrable( class oscillator, oscillator );
