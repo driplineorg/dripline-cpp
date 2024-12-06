@@ -101,9 +101,6 @@ namespace dripline
         }
     }
 
-    message::~message()
-    {
-    }
 /*
     message_ptr_t message::process_envelope( amqp_envelope_ptr a_envelope )
     {
@@ -463,7 +460,7 @@ namespace dripline
         t_message_node.add( "encoding", interpret_encoding() );
         t_message_node.add( "timestamp", f_timestamp );
         t_message_node.add( "sender_info", get_sender_info() );
-        if( a_include_payload ) t_message_node.add( "payload", payload() );
+        if( a_include_payload ) t_message_node.add( "payload", payload().clone() );
         this->derived_modify_message_param( t_message_node );
         return t_message_node;
     }
@@ -480,11 +477,6 @@ namespace dripline
             f_message_operation( op_t::unknown )
     {
         f_correlation_id = string_from_uuid( generate_random_uuid() );
-    }
-
-    msg_request::~msg_request()
-    {
-
     }
 
     request_ptr_t msg_request::create( param_ptr_t a_payload, op_t a_msg_op, const std::string& a_routing_key, const std::string& a_specifier, const std::string& a_reply_to, message::encoding a_encoding )
@@ -517,11 +509,6 @@ namespace dripline
             f_return_message(),
             f_return_buffer()
     {
-    }
-
-    msg_reply::~msg_reply()
-    {
-
     }
 
     reply_ptr_t msg_reply::create( const return_code& a_return_code, const std::string& a_ret_msg, param_ptr_t a_payload, const std::string& a_routing_key, const std::string& a_specifier, message::encoding a_encoding )
@@ -567,11 +554,6 @@ namespace dripline
             message()
     {
         f_correlation_id = string_from_uuid( generate_random_uuid() );
-    }
-
-    msg_alert::~msg_alert()
-    {
-
     }
 
     msg_t msg_alert::s_message_type = msg_t::alert;

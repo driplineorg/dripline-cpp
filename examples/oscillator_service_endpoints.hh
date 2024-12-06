@@ -22,11 +22,8 @@ namespace dripline
     class DRIPLINE_EXAMPLES_API oscillator_service_endpoints : public service
     {
         public:
-            oscillator_service_endpoints( const scarab::param_node& a_config = scarab::param_node() );
+            oscillator_service_endpoints( const scarab::param_node& a_config, const scarab::authentication& a_auth );
             virtual ~oscillator_service_endpoints();
-
-            // annoying pointer initialization that has to be done in this setup _before_ executing
-            void set_pointers();
 
             void execute();
 

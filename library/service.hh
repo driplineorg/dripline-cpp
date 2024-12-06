@@ -16,6 +16,7 @@
 #include "receiver.hh"
 
 #include "dripline_exceptions.hh"
+#include "service_config.hh"
 #include "uuid.hh"
 
 #include <map>
@@ -23,14 +24,17 @@
 #include <set>
 #include <vector>
 
+namespace scarab
+{
+    class authentication;
+}
 namespace dripline
 {
-
     /*!
      @class service
      @author N.S. Oblath
 
-     @brief Consumer of Dripline messages on a particular queue
+     @brief Primary unit of software that connects to a broker and typically provides an interface with an instrument or other software.
 
      @details
      The service class is the implementation of the "service" concept in Dripline.
@@ -77,8 +81,7 @@ namespace dripline
             public endpoint,
             public listener_receiver,
             public heartbeater,
-            public scheduler<>,
-            public std::enable_shared_from_this< service >
+            public scheduler<>
     {
         protected:
             enum class status
@@ -94,16 +97,46 @@ namespace dripline
             };
 
         public:
-            service( const scarab::param_node& a_config = scarab::param_node(), const std::string& a_queue_name = "",  const std::string& a_broker_address = "", unsigned a_port = 0, const std::string& a_auth_file = "", const bool a_make_connection = true );
-            service( const bool a_make_connection, const scarab::param_node& a_config = scarab::param_node() );
+            /* 
+               \brief Extracts necessary configuration and authentication information and prepares the service to interact with the RabbitMQ broker. Does not initiate connection to the broker.
+               @param a_config Dripline configuration object.  The `name` must be unique for each service.  The `dripline.broker` (and `dripline.broker_port` if needed) should be made appropriate for the mesh.  
+                 The other parameters can be left as their defaults, or should be made uniform across the mesh.
+                 - *Service parameters*
+                   - `name` (string; default: dlcpp_service) -- Name of the service and the queue used by the service
+                   - `restart_on_error` (bool; default: true) -- Flag for whether the service attempts to restart itself if an error occurs in communicating with the broker
+                   - `enable_scheduling` (bool; default: false) -- Flag for enabling the scheduler
+                   - `broadcast_key` (string; default: broadcast) -- Routing key used for broadcasts
+                   - `loop_timeout_ms` (int; default: 1000) -- Maximum time used for listening timeouts (e.g. waiting for replies) in ms
+                   - `message_wait_ms` (int; default: 1000) -- Maximum time used to wait for another AMQP message before declaring a DL message complete, in ms
+                   - `heartbeat_interval_s` (int; default: 60) -- Interval between sending heartbeat messages in s
+                 - *Dripline core parameters -- within the `dripline` config object*
+                   - `dripline.broker` (string; default: localhost) -- Address of the RabbitMQ broker
+                   - `dripline.broker_port` (int; default: 5672) -- Port used by the RabbitMQ broker
+                   - `dripline.requests_exchange` (string; default: requests) -- Name of the exchange used for DL requests
+                   - `dripline.alerts_exchange` (string; default: alerts) -- Name of the exchange used for DL alerts
+                   - `dripline.heartbeat_routing_key` (string; default: heartbeat) -- Routing key used for sending heartbeats
+                   - `dripline.max_payload_size` (int; default: DL_MAX_PAYLOAD_SIZE) -- Maximum size of payloads, in bytes
+                   - `dripline.max_connection_attempts` (int; default: 10) -- Maximum number of attempts that will be made to connect to the broker
+                   - `dripline.return_codes` (string or array of nodes; default: not present) -- Optional specification of additional return codes in the form of an array of nodes: `[{name: "<name>", value: <ret code>} <, ...>]`. 
+                          If this is a string, it's treated as a file can be interpreted by the param system (e.g. YAML or JSON) using the previously-mentioned format
+               @param a_auth Authentication object (type scarab::authentication); authentication specification should be processed, and the authentication data should include:
+               @param a_make_connection Flag for whether or not to contact a broker; if true, this object operates in "dry-run" mode
+             */
+            service( const scarab::param_node& a_config = service_config(), 
+                     const scarab::authentication& a_auth = create_auth_with_dripline(true), 
+                     const bool a_make_connection = true );
+//            service( const bool a_make_connection, const scarab::param_node& a_config = scarab::param_node(), const scarab::authentication& a_auth = scarab::authentication() );
             service( const service& ) = delete;
-            service( service&& a_orig );
+            service( service&& a_orig ) = default;
             virtual ~service();
 
             service& operator=( const service& ) = delete;
             service& operator=( service&& a_orig );
 
+            mv_referrable( scarab::authentication, auth );
+
             mv_accessible( status, status );
+            mv_accessible( bool, restart_on_error );
             mv_accessible( bool, enable_scheduling );
 
         public:
@@ -124,6 +157,16 @@ namespace dripline
             virtual sent_msg_pkg_ptr send( alert_ptr_t a_alert ) const;
 
         public:
+            /**
+            Runs the service, which consists of three stages:
+            1. Starting the service -- sets up the connection with the broker
+            2. Listens for messages -- waits on the queue to receive messages, and then handles them
+            3. Stops the service -- breaks down everything that was setup in start()
+
+            Override this to customize when happens when a service runs.
+            */
+            virtual void run();
+
             /// Creates a channel to the broker and establishes the queue for receiving messages.
             /// If no queue name was given, this does nothing.
             /// If this returns false, the service should quit with an error

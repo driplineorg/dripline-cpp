@@ -13,10 +13,13 @@ What's Included
 Requirements
 ============
 
-* CMake 3.1
-* C++11
+* CMake 3.12
+* C++17
 * Boost 1.46
 * rabbitmqc
+* libyaml-cpp
+* rapidjson
+* quill (logging library)
 
 
 Included Packages
@@ -26,10 +29,10 @@ Included Packages
 * `scarab <https://github.com/project8/scarab>`_
 
 
-Getting Dripline-cpp
+Getting dripline-cpp
 ====================
 
-The Dripline-cpp repository is available on `GitHub <https://driplineorg.github.com/dripline-cpp>`_.
+The dripline-cpp repository is available on `GitHub <https://driplineorg.github.com/dripline-cpp>`_.
 
 Dripline-cpp can either be built manually, or used from a Docker container.
 
@@ -42,7 +45,7 @@ Images are automatically built for each tagged release, and for the ``main`` and
 Users can also build their own images using the provided Dockerfile or by customizing their own.
 
 
-Using Dripline-cpp
+Using dripline-cpp
 ================== 
 
 See :ref:`Agent <dl-agent>` and :ref:`Monitor <dl-mon>` for instructions on using the included applications.
@@ -54,4 +57,5 @@ Setting Up a Mesh
 =================
 
 Instructions and examples for setting up a dripline mesh can be found 
-from the main `dripline documentation site <https://driplineorg.github.io>`_.
+from the main `dripline documentation site <https://driplineorg.github.io>`_ 
+and in the dripline-cpp integration tests.

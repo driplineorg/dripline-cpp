@@ -21,11 +21,8 @@ Dripline build options include:
    ``Dripline_BUILD_EXAMPLES`` (BOOL)
       if ON, builds the example applications
 
-   ``Dripline_BUILD_EXAMPLES`` (BOOL)
-      if ON, builds the example applications
-
    ``Dripline_BUILD_PYTHON`` (BOOL)
-      if ON, builds utilities used by the Python wrapping
+      if ON, builds utilities used by the Python wrapping (Dripline python wrapping is done in Dripline-python)
 
    ``Dripline_ENABLE_EXECUTABLES`` (BOOL)
       if ON, builds the Dripline executables
@@ -52,22 +49,15 @@ The CMake option and possible values are:
       ``Release``
          only prints warning and error messages; highly optimized, and no debugging symbols included
 
-You can additionally define preprocessor macros that are used directly in the code:
-
-.. glossary::
-
-   ``DRIPLINE_AUTH_FILE`` (PATH)
-      specifies the location and filename of the default authentication file
-
-
 .. _standalone-option:
 
 Standalone Option
 =================
 
 In standalone mode, one compiles only the dripline-cpp repository and its dependencies.
-This option is best for testing, providing access to commandline tools, or when a derrived software product uses dripline-cpp as an external dependency.
+This option is best for testing, providing access to command-line tools, or when a derrived software product uses dripline-cpp as an external dependency.
 This is the approach used in the Dockerfile, which is included in the dripline-cpp repository and used to automatically build dripline-cpp container images.
+Dripline-python's recommended build also expects dripline-cpp as an external dependency.
 The steps are:
 
 1. Clone the repository::
@@ -96,7 +86,6 @@ Submodule Option
 
 The submodule build configuration is for when the dripline-cpp is being include as a git submodule in some derived package's repository.
 This option is best when you want to track and pin the exact dripline-cpp version to be used in another project and you want to build them together using cmake.
-This is the approach used in the dripline-python package, which builds a python library on top of dripline-cpp.
 The steps for this mode are:
 
 1. Go to the top-level directory of the parent pacakge in which you want to include dripline-cpp::

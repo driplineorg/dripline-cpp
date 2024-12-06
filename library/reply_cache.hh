@@ -46,7 +46,11 @@ namespace dripline
             allow_thread_singleton_access( reply_cache );
             reply_cache();
             reply_cache( const reply_cache& ) = delete;
-            virtual ~reply_cache() noexcept;
+            reply_cache( reply_cache&& a_orig );
+            virtual ~reply_cache() noexcept = default;
+
+            reply_cache& operator=( const reply_cache& ) = delete;
+            reply_cache& operator=( reply_cache&& a_orig );
     };
 
 } /* namespace dripline */

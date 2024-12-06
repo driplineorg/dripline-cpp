@@ -18,6 +18,8 @@
 #include "param_codec.hh"
 #include "signal_handler.hh"
 
+#include <array>
+
 
 namespace dripline
 {
@@ -46,76 +48,56 @@ namespace dripline
 
     bool core::s_offline = false;
 
-    core::core( const scarab::param_node& a_config, const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file, const bool a_make_connection ) :
-            f_address( "localhost" ),
-            f_port( 5672 ),
-            f_username( "guest" ),
-            f_password( "guest" ),
-            f_requests_exchange( "requests" ),
-            f_alerts_exchange( "alerts" ),
-            f_heartbeat_routing_key( "heartbeat" ),
-            f_max_payload_size( DL_MAX_PAYLOAD_SIZE ),
+    core::core( const scarab::param_node& a_config, const scarab::authentication& a_auth, const bool a_make_connection ) :
+            f_address(),
+            f_port(),
+            f_username(),
+            f_password(),
+            f_requests_exchange(),
+            f_alerts_exchange(),
+            f_heartbeat_routing_key(),
+            f_max_payload_size(),
             f_make_connection( a_make_connection ),
-            f_max_connection_attempts( 10 )
+            f_max_connection_attempts()
     {
-        // auth file passed as a parameter overrides a file passed in the config
-        std::string t_auth_file( a_auth_file );
-        if( t_auth_file.empty() ) t_auth_file = a_config.get_value( "auth-file", "" );
+        // Get the default values, and merge in the supplied a_config
+        // a_config's default value is also dripline_config, but the user can supply an arbitrary node.
+        // So we need to assume no configuration values are supplied and we start again from dripline_config, then merge in a_config.
+        dripline_config t_config;
+        t_config.merge( a_config );
+        LDEBUG( dlog, "Received config:\n" << a_config );
+        LDEBUG( dlog, "Dripline core being configured with:\n" << t_config );
 
-        // get auth file contents and override defaults
-        if( ! t_auth_file.empty() )
+/* DO WE WANT TO USE ALTERNATIVE AUTH GROUPS?
+        std::array< std::string > t_potential_groups{"dripline", "amqp", "rabbitmq"};
+        std::string t_auth_group;
+        for( const auto& i_gr : t_potential_goups )
         {
-            LDEBUG( dlog, "Using authentication file <" << t_auth_file << ">" );
-
-            scarab::authentication t_auth( t_auth_file );
-            if( ! t_auth.get_is_loaded() )
+            if( a_auth.has( i_gr ) )
             {
-                throw dripline_error() << "Authentication file <" << a_auth_file << "> could not be loaded";
-            }
-
-            if( ! t_auth.has( "amqp" ) )
-            {
-                throw dripline_error() << "No \"amqp\" authentication information present in <" << a_auth_file << ">";
-            }
-
-            const scarab::param_node& t_amqp_auth = t_auth["amqp"].as_node();
-            if( ! t_amqp_auth.has( "username" ) || ! t_amqp_auth.has( "password" ) )
-            {
-                throw dripline_error() <<  "AMQP authentication is not available or is not complete";
-            }
-            f_username = t_amqp_auth["username"]().as_string();
-            f_password = t_amqp_auth["password"]().as_string();
-
-            // Override the default values for broker and broker port with those specified in the auth file, if they're there
-            if( t_amqp_auth.has( "broker" ) )
-            {
-                f_address = t_amqp_auth["broker"]().as_string();
-            }
-            if( t_amqp_auth.has( "broker-port" ) )
-            {
-                f_port = t_amqp_auth["broker-port"]().as_uint();
+                t_auth_group = i_gr;
+                break;
             }
         }
+        LDEBUG( dlog, "Using auth group <" << t_auth_group << ">" );
 
-        // config file overrides defaults (and auth file, for broker and broker-port)
-        if( ! a_config.empty() )
-        {
-            f_address = a_config.get_value( "broker", f_address );
-            f_port = a_config.get_value( "broker-port", f_port );
-            f_requests_exchange = a_config.get_value( "requests-exchange", f_requests_exchange );
-            f_alerts_exchange = a_config.get_value( "alerts-exchange", f_alerts_exchange );
-            f_heartbeat_routing_key = a_config.get_value( "heartbeat-routing-key", f_heartbeat_routing_key );
-            f_max_payload_size = a_config.get_value( "max-payload-size", f_max_payload_size );
-            f_make_connection = a_config.get_value( "make-connection", f_make_connection );
-            f_max_connection_attempts = a_config.get_value( "max-connection-attempts", f_max_connection_attempts );
-        }
+        f_username = t_auth.get( t_auth_group, "username", f_username );
+        f_password = t_auth.get( t_auth_group, "password", f_password );
+*/
+        // Replace local parameters with values from the config
+        f_address = t_config["broker"]().as_string(); //.get_value("broker", "localhost");
+        f_port = t_config["broker_port"]().as_uint(); //.get_value("broker_port", 5672);
+        f_requests_exchange = t_config["requests_exchange"]().as_string(); //.get_value("requests_exchange", "requests");
+        f_alerts_exchange = t_config["alerts_exchange"]().as_string(); //.get_value("alerts_exchange", "alerts");
+        f_heartbeat_routing_key = t_config["heartbeat_routing_key"]().as_string(); //.get_value("heartbeat_routing_key", "heartbeat");
+        f_max_payload_size = t_config["max_payload_size"]().as_uint(); //.get_value("max_payload_size", DL_MAX_PAYLOAD_SIZE);
+        f_max_connection_attempts = t_config["max_connection_attempts"]().as_uint(); //.get_value("max_connection_attempts", 10);
 
-        // parameters override config file, auth file, and defaults
-        if( ! a_broker_address.empty() ) f_address = a_broker_address;
-        if( a_port != 0 ) f_port = a_port;
+        f_username = a_auth.get("dripline", "username", "guest");
+        f_password = a_auth.get("dripline", "password", "guest");
 
         // additional return codes
-        if( a_config.has( "return-codes" ) )
+        if( t_config.has( "return_codes" ) )
         {
             // define a function for extracting return codes from a param_array so that we can use it in a couple places
             auto t_extract_codes = [](const scarab::param_array& a_codes)
@@ -143,10 +125,10 @@ namespace dripline
                 return;
             };
 
-            if( a_config["return-codes"].is_value() && a_config["return-codes"]().is_string() )
+            if( t_config["return_codes"].is_value() && t_config["return_codes"]().is_string() )
             {
                 // then it's a filename; load YAML
-                std::string t_filename( a_config["return-codes"]().as_string() );
+                std::string t_filename( t_config["return_codes"]().as_string() );
                 scarab::param_translator t_translator;
                 scarab::param_ptr_t t_ret_codes = t_translator.read_file( t_filename );
                 if( ! t_ret_codes || ! t_ret_codes->is_array() )
@@ -155,87 +137,16 @@ namespace dripline
                 }
                 t_extract_codes( t_ret_codes->as_array() );
             }
-            else if( a_config["return-codes"].is_array() )
+            else if( t_config["return_codes"].is_array() )
             {
                 // then individual codes are specified
-                t_extract_codes( a_config["return-codes"].as_array() );
+                t_extract_codes( t_config["return_codes"].as_array() );
             }
             else
             {
-                throw dripline_error() << "Return code configuration is invalid:\n" << a_config["return-codes"];
+                throw dripline_error() << "Return code configuration is invalid:\n" << t_config["return_codes"];
             }
         }
-    }
-
-    core::core( const bool a_make_connection, const scarab::param_node& a_config ) :
-            core::core( a_config )
-    {
-        // this constructor overrides the default value of make_connection
-        f_make_connection = a_make_connection;
-    }
-
-    core::core( const core& a_orig ) :
-            f_address( a_orig.f_address ),
-            f_port( a_orig.f_port ),
-            f_username( a_orig.f_username ),
-            f_password( a_orig.f_password ),
-            f_requests_exchange( a_orig.f_requests_exchange ),
-            f_alerts_exchange( a_orig.f_alerts_exchange ),
-            f_heartbeat_routing_key( a_orig.f_heartbeat_routing_key ),
-            f_max_payload_size( a_orig.f_max_payload_size ),
-            f_make_connection( a_orig.f_make_connection ),
-            f_max_connection_attempts( a_orig.f_max_connection_attempts )
-    {}
-
-    core::core( core&& a_orig ) :
-            f_address( std::move(a_orig.f_address) ),
-            f_port( a_orig.f_port ),
-            f_username( std::move(a_orig.f_username) ),
-            f_password( std::move(a_orig.f_password) ),
-            f_requests_exchange( std::move(a_orig.f_requests_exchange) ),
-            f_alerts_exchange( std::move(a_orig.f_alerts_exchange) ),
-            f_heartbeat_routing_key( std::move(a_orig.f_heartbeat_routing_key) ),
-            f_max_payload_size( a_orig.f_max_payload_size ),
-            f_make_connection( std::move(a_orig.f_make_connection) ),
-            f_max_connection_attempts( std::move(a_orig.f_max_connection_attempts) )
-    {
-        a_orig.f_port = 0;
-        a_orig.f_max_payload_size = DL_MAX_PAYLOAD_SIZE;
-    }
-
-    core::~core()
-    {}
-
-    core& core::operator=( const core& a_orig )
-    {
-        f_address = a_orig.f_address;
-        f_port = a_orig.f_port;
-        f_username = a_orig.f_username;
-        f_password = a_orig.f_password;
-        f_requests_exchange = a_orig.f_requests_exchange;
-        f_alerts_exchange = a_orig.f_alerts_exchange;
-        f_heartbeat_routing_key = a_orig.f_heartbeat_routing_key;
-        f_max_payload_size = a_orig.f_max_payload_size;
-        f_make_connection = a_orig.f_make_connection;
-        f_max_connection_attempts = a_orig.f_max_connection_attempts;
-        return *this;
-    }
-
-    core& core::operator=( core&& a_orig )
-    {
-        f_address = std::move( a_orig.f_address );
-        f_port = a_orig.f_port;
-        a_orig.f_port = 0;
-        f_username = std::move( a_orig.f_username );
-        f_password = std::move( a_orig.f_password );
-        f_requests_exchange = std::move( a_orig.f_requests_exchange );
-        f_alerts_exchange = std::move( a_orig.f_alerts_exchange );
-        f_heartbeat_routing_key = std::move( a_orig.f_heartbeat_routing_key );
-        f_max_payload_size = a_orig.f_max_payload_size;
-        a_orig.f_max_payload_size = DL_MAX_PAYLOAD_SIZE;
-        f_make_connection = std::move( a_orig.f_make_connection );
-        f_max_connection_attempts = std::move( a_orig.f_max_connection_attempts );
-        return *this;
     }
 
     sent_msg_pkg_ptr core::send( request_ptr_t a_request, amqp_channel_ptr a_channel ) const
@@ -400,7 +311,7 @@ namespace dripline
                 LERROR( dlog, "AMQP Library Exception caught while creating channel: (" << e.ErrorCode() << ") " << e.what() );
                 if( e.ErrorCode() == -9 )
                 {
-                    LERROR( dlog, "This error means the client could not connect to the broker.\n\t" <<
+                    LERROR( dlog, "This error means the client could not connect to the broker.\n" <<
                             "Check that you have the address and port correct, and that the broker is running.")
                 }
                 return false;
@@ -412,10 +323,11 @@ namespace dripline
         auto t_exp_cancel_wrap = wrap_cancelable( t_open_conn_backoff );
         scarab::signal_handler::add_cancelable( t_exp_cancel_wrap );
 
+        int t_expback_return = 0;
         try
         {
             LDEBUG( dlog, "Attempting to open channel; will make up to " << f_max_connection_attempts << " attempts" );
-            t_open_conn_backoff.go();
+            t_expback_return = t_open_conn_backoff.go();
             // either succeeded or failed after multiple attempts
         }
         catch( amqp_exception& e )
@@ -426,6 +338,11 @@ namespace dripline
         {
             // unrecoverable error causing a std::exception
             LERROR( dlog, "Standard exception caught while creating channel: " << e.what() );
+        }
+
+        if( t_expback_return == 0 )
+        {
+            LERROR( dlog, "Failed to open a channel; no more attempts will be made" );
         }
         
         return t_ret_ptr;

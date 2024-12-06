@@ -53,13 +53,13 @@ namespace dripline
     {
         public:
             ///Primary constructor.  A service pointer is required to be able to send messages.
-            heartbeater( service_ptr_t a_service = service_ptr_t() );
+            heartbeater( service* a_service );
             heartbeater( const heartbeater& ) = delete;
-            heartbeater( heartbeater&& a_orig );
-            virtual ~heartbeater();
+            heartbeater( heartbeater&& a_orig ) = default;
+            virtual ~heartbeater() = default;
 
             heartbeater& operator=( const heartbeater& ) = delete;
-            heartbeater& operator=( heartbeater&& a_orig );
+            heartbeater& operator=( heartbeater&& a_orig ); // we have to explicitly define this because of the virtual inheritance of scarab::cancelable
 
             /*!
              Starts the heartbeat process.  Heartbeat alerts are emitted every `heartbeat_interval_s` seconds.
@@ -75,9 +75,9 @@ namespace dripline
             /// Timing interval for the internal loop (default: 1000 ms)
             mv_accessible( unsigned, check_timeout_ms );
 
-            mv_referrable( service_ptr_t, service );
+            mv_accessible( service*, service );
 
-            mv_atomic( bool, stop );
+            //mv_atomic( bool, stop );
 
         protected:
             std::thread f_heartbeat_thread;

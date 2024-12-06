@@ -26,9 +26,9 @@ LOGGER( dlog, "oscillator_service_hub" );
 namespace dripline
 {
 
-    oscillator_service_hub::oscillator_service_hub( const scarab::param_node& a_config ) :
+    oscillator_service_hub::oscillator_service_hub( const scarab::param_node& a_config, const scarab::authentication& a_auth ) :
             scarab::cancelable(),
-            hub( a_config, "osc_svc_hub" ),
+            hub( a_config, a_auth ),
             f_oscillator(),
             f_return( RETURN_SUCCESS )
     {
@@ -52,15 +52,12 @@ namespace dripline
 
         try
         {
-            if( ! start() ) throw dripline_error() << "Unable to start service";
-
-            if( ! listen() ) throw dripline_error() << "Unable to start listening";
-
-            if( ! stop() ) throw dripline_error() << "Unable to stop service";
+            run();
         }
         catch( std::exception& e )
         {
             LERROR( dlog, "Exception caught: " << e.what() );
+            LERROR( dlog, "Exiting service" );
             f_return = dl_service_error().rc_value() / 100;
             scarab::signal_handler::cancel_all( f_return );
         }

@@ -39,13 +39,13 @@ namespace dripline
     {
         param_ptr_t t_reply_payload( new param_node() );
         param_node& t_reply_node = t_reply_payload->as_node();
-        t_reply_node.add( "value", f_osc_svc->oscillator().get_frequency() );
+        t_reply_node.add( "value", static_cast< oscillator_service_endpoints* >( f_service )->oscillator().get_frequency() );
         return a_request->reply( dl_success(), "Get request succeeded", std::move(t_reply_payload) );
     }
 
     reply_ptr_t oscillator_ep_frequency::do_set_request( const request_ptr_t a_request )
     {
-        f_osc_svc->oscillator().set_frequency( a_request->payload()["values"][0]().as_double() );
+        static_cast< oscillator_service_endpoints* >( f_service )->oscillator().set_frequency( a_request->payload()["values"][0]().as_double() );
         return a_request->reply( dl_success(), "Frequency set" );
     }
 
@@ -60,13 +60,13 @@ namespace dripline
     {
         param_ptr_t t_reply_payload( new param_node() );
         param_node& t_reply_node = t_reply_payload->as_node();
-        t_reply_node.add( "value", f_osc_svc->oscillator().get_amplitude() );
+        t_reply_node.add( "value", static_cast< oscillator_service_endpoints* >( f_service )->oscillator().get_amplitude() );
         return a_request->reply( dl_success(), "Get request succeeded", std::move(t_reply_payload) );
     }
 
     reply_ptr_t oscillator_ep_amplitude::do_set_request( const request_ptr_t a_request )
     {
-        f_osc_svc->oscillator().set_amplitude( a_request->payload()["values"][0]().as_double() );
+        static_cast< oscillator_service_endpoints* >( f_service )->oscillator().set_amplitude( a_request->payload()["values"][0]().as_double() );
         return a_request->reply( dl_success(), "Frequency set" );
     }
 
@@ -81,7 +81,7 @@ namespace dripline
     {
         param_ptr_t t_reply_payload( new param_node() );
         param_node& t_reply_node = t_reply_payload->as_node();
-        t_reply_node.add( "value", f_osc_svc->oscillator().in_phase().second );
+        t_reply_node.add( "value", static_cast< oscillator_service_endpoints* >( f_service )->oscillator().in_phase().second );
         return a_request->reply( dl_success(), "Get request succeeded", std::move(t_reply_payload) );
     }
 
@@ -96,7 +96,7 @@ namespace dripline
     {
         param_ptr_t t_reply_payload( new param_node() );
         param_node& t_reply_node = t_reply_payload->as_node();
-        t_reply_node.add( "value", f_osc_svc->oscillator().quadrature().second );
+        t_reply_node.add( "value", static_cast< oscillator_service_endpoints* >( f_service )->oscillator().quadrature().second );
         return a_request->reply( dl_success(), "Get request succeeded", std::move(t_reply_payload) );
     }
 
@@ -112,15 +112,15 @@ namespace dripline
         param_ptr_t t_reply_payload( new param_node() );
         param_node& t_reply_node = t_reply_payload->as_node();
         param_array t_iq_param;
-        t_iq_param.push_back( f_osc_svc->oscillator().iq().second.real() );
-        t_iq_param.push_back( f_osc_svc->oscillator().iq().second.imag() );
+        t_iq_param.push_back( static_cast< oscillator_service_endpoints* >( f_service )->oscillator().iq().second.real() );
+        t_iq_param.push_back( static_cast< oscillator_service_endpoints* >( f_service )->oscillator().iq().second.imag() );
         t_reply_node.add( "value", std::move(t_iq_param) );
         return a_request->reply( dl_success(), "Get request succeeded", std::move(t_reply_payload) );
     }
 
-    oscillator_service_endpoints::oscillator_service_endpoints( const scarab::param_node& a_config ) :
+    oscillator_service_endpoints::oscillator_service_endpoints( const scarab::param_node& a_config, const scarab::authentication& a_auth ) :
             scarab::cancelable(),
-            service( a_config, "osc_svc_ep" ),
+            service( a_config, a_auth ),
             f_oscillator(),
             f_return( dl_success().rc_value() )
     {
@@ -135,27 +135,6 @@ namespace dripline
     {
     }
 
-    void oscillator_service_endpoints::set_pointers()
-    {
-        for( async_map_t::iterator t_child_it = f_async_children.begin();
-                t_child_it != f_async_children.end();
-                ++t_child_it )
-        {
-            auto t_listener_endpoint = std::static_pointer_cast< endpoint_listener_receiver >(t_child_it->second);
-            t_listener_endpoint->endpoint()->service() = shared_from_this();
-            auto t_osc_endpoint = std::static_pointer_cast< oscillator_ep >(t_listener_endpoint->endpoint());
-            t_osc_endpoint->f_osc_svc = this;
-        }
-        for( sync_map_t::iterator t_child_it = f_sync_children.begin();
-                t_child_it != f_sync_children.end();
-                ++t_child_it )
-        {
-            std::static_pointer_cast< oscillator_ep >(t_child_it->second)->f_service = shared_from_this();
-            std::static_pointer_cast< oscillator_ep >(t_child_it->second)->f_osc_svc = this;
-        }
-        return;
-    }
-
     void oscillator_service_endpoints::execute()
     {
         auto t_cwrap = scarab::wrap_cancelable( *this );
@@ -163,15 +142,12 @@ namespace dripline
 
         try
         {
-            if( ! start() ) throw dripline_error() << "Unable to start service";
-
-            if( ! listen() ) throw dripline_error() << "Unable to start listening";
-
-            if( ! stop() ) throw dripline_error() << "Unable to stop service";
+            run();
         }
         catch( std::exception& e )
         {
             LERROR( dlog, "Exception caught: " << e.what() );
+            LERROR( dlog, "Exiting service" );
             f_return = dl_service_error().rc_value() / 100;
             scarab::signal_handler::cancel_all( f_return );
         }

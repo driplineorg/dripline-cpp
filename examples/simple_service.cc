@@ -24,9 +24,9 @@ LOGGER( dlog, "simple_service" )
 namespace dripline
 {
 
-    simple_service::simple_service( const scarab::param_node& a_config ) :
+    simple_service::simple_service( const scarab::param_node& a_config, const scarab::authentication& a_auth ) :
             scarab::cancelable(),
-            service( a_config, "simple" ),
+            service( a_config, a_auth ),
             f_return( dl_success().rc_value() )
     {
     }
@@ -42,15 +42,12 @@ namespace dripline
 
         try
         {
-            if( ! start() ) throw dripline_error() << "Unable to start service";
-
-            if( ! listen() ) throw dripline_error() << "Unable to start listening";
-
-            if( ! stop() ) throw dripline_error() << "Unable to stop service";
+            run();
         }
         catch( std::exception& e )
         {
             LERROR( dlog, "Exception caught: " << e.what() );
+            LERROR( dlog, "Exiting service" );
             f_return = dl_service_error().rc_value() / 100;
             scarab::signal_handler::cancel_all( f_return );
         }

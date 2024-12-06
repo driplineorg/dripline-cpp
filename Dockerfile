@@ -2,7 +2,7 @@ ARG img_repo=python
 ARG img_tag=3.12.1-slim-bookworm
 
 # This FROM line includes a label so that the dependencies can be built by themselves by using the `--target` argument of `docker build`
-FROM ${img_repo}:${img_tag} as base
+FROM ${img_repo}:${img_tag} AS base
 
 ARG build_type=Release
 ARG build_examples=FALSE
@@ -29,7 +29,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # use pybind11_checkout to specify a tag or branch name to checkout
-ARG pybind11_checkout=v2.11.1
+ARG pybind11_checkout=smart_holder
 RUN cd /usr/local && \
     git clone https://github.com/pybind/pybind11.git && \
     cd pybind11 && \
@@ -37,9 +37,23 @@ RUN cd /usr/local && \
     mkdir build && \
     cd build && \
     cmake -DPYBIND11_TEST=FALSE .. && \
-    make -j3 install && \
+    make -j${narg} install && \
     cd / && \
     rm -rf /usr/local/pybind11
+
+# use quill_checkout to specify a tag or branch name to checkout
+ARG quill_checkout=v7.3.0
+RUN cd /usr/local && \
+    git clone https://github.com/odygrd/quill.git && \
+    cd quill && \
+    git checkout ${quill_checkout} && \
+    mkdir build && \
+    cd build && \
+    cmake .. && \
+    make -j${narg} install && \
+    cd / && \
+    rm -rf /usr/local/quill
+
 
 FROM base
 

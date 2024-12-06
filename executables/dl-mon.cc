@@ -43,10 +43,10 @@ int main( int argc, char** argv )
     {
         // Command line options
         add_dripline_options( the_main );
-        the_main.add_config_multi_option< std::string >( "-r,--requests", "request-keys", "Assign keys for binding to the requests exchange" );
-        the_main.add_config_multi_option< std::string >( "-a,--alerts", "alert-keys", "Assign keys for binding to the alerts exchange" );
-        the_main.add_config_flag< bool >( "--json-print", "json-print", "Output the returned reply in JSON; default is white-space suppressed (see --pretty-print)" );
-        the_main.add_config_flag< bool >( "--pretty-print", "pretty-print", "Output the returned reply in nicely formatted JSON" );
+        the_main.add_config_multi_option< std::string >( "-r,--requests", "request_keys", "Assign keys for binding to the requests exchange" );
+        the_main.add_config_multi_option< std::string >( "-a,--alerts", "alert_keys", "Assign keys for binding to the alerts exchange" );
+        the_main.add_config_flag< bool >( "--json-print", "json_print", "Output the returned reply in JSON; default is white-space suppressed (see --pretty-print)" );
+        the_main.add_config_flag< bool >( "--pretty-print", "pretty_print", "Output the returned reply in nicely formatted JSON" );
     }
     catch( std::exception& e )
     {
@@ -62,7 +62,7 @@ int main( int argc, char** argv )
     auto t_callback = [&](){
         the_return = dl_client_error().rc_value() / 100;
 
-        auto the_monitor = std::make_shared< monitor >( the_main.primary_config() );
+        auto the_monitor = std::make_shared< monitor >( the_main.primary_config(), the_main.auth() );
 
         // run each phase of the operation, while checking for errors
         if ( ! the_monitor->start() || 
@@ -83,6 +83,8 @@ int main( int argc, char** argv )
 
     // Parse CL options and run the application
     CLI11_PARSE( the_main, argc, argv );
+
+    STOP_LOGGING;
 
     return the_return;
 }

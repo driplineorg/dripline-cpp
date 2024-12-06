@@ -29,45 +29,22 @@ namespace dripline
 
     endpoint::endpoint( const std::string& a_name ) :
             f_name( a_name ),
-            f_service(),
+            f_service( nullptr ),
             f_lockout_tag(),
             f_lockout_key( generate_nil_uuid() )
     {
     }
 
-    endpoint::endpoint( const endpoint& a_orig ) :
-            f_name( a_orig.f_name ),
-            f_service( a_orig.f_service ),
-            f_lockout_tag( a_orig.f_lockout_tag ),
-            f_lockout_key( a_orig.f_lockout_key )
-    {}
-
-    endpoint::endpoint( endpoint&& a_orig ) :
-            f_name( std::move(a_orig.f_name) ),
-            f_service( std::move(a_orig.f_service) ),
-            f_lockout_tag( std::move(a_orig.f_lockout_tag) ),
-            f_lockout_key( std::move(a_orig.f_lockout_key) )
-    {}
-
-    endpoint::~endpoint()
-    {}
-
-    endpoint& endpoint::operator=( const endpoint& a_orig )
+    service& endpoint::parent()
     {
-        f_name = a_orig.f_name;
-        f_service = a_orig.f_service;
-        f_lockout_tag = a_orig.f_lockout_tag;
-        f_lockout_key = a_orig.f_lockout_key;
-        return *this;
+        if( f_service == nullptr ) throw dripline_error() << "Parent service pointer for endpoint <" << f_name << "> is null";
+        return *f_service;
     }
 
-    endpoint& endpoint::operator=( endpoint&& a_orig )
+    const service& endpoint::parent() const
     {
-        f_name = std::move(a_orig.f_name);
-        f_service = std::move(a_orig.f_service);
-        f_lockout_tag = std::move(a_orig.f_lockout_tag);
-        f_lockout_key = std::move(a_orig.f_lockout_key);
-        return *this;
+        if( f_service == nullptr ) throw dripline_error() << "Parent service pointer for endpoint <" << f_name << "> is null";
+        return *f_service;
     }
 
     reply_ptr_t endpoint::submit_request_message( const request_ptr_t a_request_ptr)

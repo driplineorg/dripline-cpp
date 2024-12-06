@@ -31,6 +31,7 @@ set( dripline_HEADERS
     return_codes.hh
     scheduler.hh
     service.hh
+    service_config.hh
     specifier.hh
     throw_reply.hh
     uuid.hh
@@ -56,6 +57,7 @@ set( dripline_SOURCES
     relayer.cc
     return_codes.cc
     service.cc
+    service_config.cc
     specifier.cc
     throw_reply.cc
     uuid.cc

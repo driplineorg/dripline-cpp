@@ -22,10 +22,6 @@ namespace dripline
         if( ! a_rk.empty() ) add_next( a_rk );
     }
 
-    routing_key::~routing_key()
-    {
-    }
-
     void routing_key::parse( const std::string& a_rk )
     {
         while( ! empty() ) pop_front();

@@ -32,7 +32,11 @@ namespace dripline
         public:
             dripline_error() = default;
             dripline_error( const dripline_error& ) = default;
+            dripline_error( dripline_error&& ) = default;
             virtual ~dripline_error() noexcept = default;
+
+            dripline_error& operator=( const dripline_error& ) = default;
+            dripline_error& operator=( dripline_error&& ) = default;
     };
 
     /*!
@@ -45,7 +49,11 @@ namespace dripline
         public:
             connection_error() = default;
             connection_error( const connection_error& ) = default;
+            connection_error( connection_error&& ) = default;
             virtual ~connection_error() noexcept = default;
+
+            connection_error& operator=( const connection_error& ) = default;
+            connection_error& operator=( connection_error&& ) = default;
     };
 
 }

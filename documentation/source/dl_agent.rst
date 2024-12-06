@@ -92,6 +92,6 @@ For example, ``my.value.0=10`` would add this to the payload::
 Authentication
 ==============
 
-Communication with the RabbitMQ broker requires the broker address and port, and user/password authentication. 
+Communication with the RabbitMQ broker requires user/password authentication. 
 
 See :ref:`Authentication<authentication>` for information on how to specify the broker and authentication information.

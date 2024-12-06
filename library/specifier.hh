@@ -31,7 +31,12 @@ namespace dripline
 
         public:
             routing_key( const std::string& a_rk = "" );
-            virtual ~routing_key();
+            routing_key( const routing_key& ) = default;
+            routing_key( routing_key&& ) = default;
+            virtual ~routing_key() = default;
+
+            routing_key& operator=( const routing_key& ) = default;
+            routing_key& operator=( routing_key&& ) = default;
 
             /// Parses a routing key
             void parse( const std::string& a_rk );

@@ -13,6 +13,7 @@
 
 namespace dripline
 {
+    class service;
 
     /*!
      @class endpoint
@@ -96,17 +97,20 @@ namespace dripline
     {
         public:
             endpoint( const std::string& a_name );
-            endpoint( const endpoint& a_orig );
-            endpoint( endpoint&& a_orig );
-            virtual ~endpoint();
+            endpoint( const endpoint& a_orig ) = default;
+            endpoint( endpoint&& a_orig ) = default;
+            virtual ~endpoint() = default;
 
-            endpoint& operator=( const endpoint& a_orig );
-            endpoint& operator=( endpoint&& a_orig );
+            endpoint& operator=( const endpoint& a_orig ) = default;
+            endpoint& operator=( endpoint&& a_orig ) = default;
 
         public:
             mv_referrable( std::string, name );
 
-            mv_referrable( service_ptr_t, service );
+            // endpoint does not own the service pointed to by f_service
+            mv_accessible( service*, service );
+            service& parent();
+            const service& parent() const;
 
         public:
             //**************************

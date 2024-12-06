@@ -7,7 +7,7 @@
 
 #include "endpoint.hh"
 
-#include "catch.hpp"
+#include "catch2/catch_test_macros.hpp"
 
 
 TEST_CASE( "lockout", "[endpoint]" ) // even though a service is used here for convenience, lockout functionality lives in endpoint

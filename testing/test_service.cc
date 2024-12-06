@@ -8,7 +8,10 @@
 #include "dripline_exceptions.hh"
 #include "service.hh"
 
-#include "catch.hpp"
+#include "authentication.hh"
+#include "param_node.hh"
+
+#include "catch2/catch_test_macros.hpp"
 
 #include <chrono>
 #include <future>
@@ -16,7 +19,7 @@
 
 TEST_CASE( "process_message", "[service]" )
 {
-    dripline::service t_service;
+    dripline::service t_service( scarab::param_node(), scarab::authentication(), false);
 
     dripline::request_ptr_t t_request_ptr = dripline::msg_request::create( scarab::param_ptr_t( new scarab::param() ), dripline::op_t::get, "dlcpp_service", "", "" );
 

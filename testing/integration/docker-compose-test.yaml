@@ -1,0 +1,22 @@
+services:
+  test:
+    image: ghcr.io/driplineorg/dripline-cpp:${IMG_TAG:-latest-testing}
+    depends_on:
+      - rabbit-broker
+      - simple-service
+      - oscillator-hub
+      - oscillator-endpoints
+    command: >
+      bash -c "sleep 1 &&
+              newman run /root/rabbitmq_for_dl_collection.json &&
+              /root/dl-tests.sh"
+    volumes:
+      - ./dl-tests.sh:/root/dl-tests.sh
+      - ./rabbitmq_for_dl_collection.json:/root/rabbitmq_for_dl_collection.json
+      - ./dripline_mesh.yaml:/root/.dripline_mesh.yaml
+    environment:
+      - DRIPLINE_USER=dripline
+      - DRIPLINE_PASSWORD=dripline 
+    configs:
+      - dl_pw.txt
+      - auths.json

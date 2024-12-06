@@ -9,7 +9,9 @@
 
 #include "service.hh"
 
+#include "dripline_config.hh"
 #include "dripline_exceptions.hh"
+#include "service_config.hh"
 
 #include "authentication.hh"
 #include "logger.hh"
@@ -26,36 +28,36 @@ namespace dripline
 {
     LOGGER( dlog, "service" );
 
-    service::service( const scarab::param_node& a_config, const string& a_queue_name,  const std::string& a_broker_address, unsigned a_port, const std::string& a_auth_file, const bool a_make_connection ) :
+    service::service( const scarab::param_node& a_config, const scarab::authentication& a_auth, const bool a_make_connection ) :
             scarab::cancelable(),
-            core( a_config, a_broker_address, a_port, a_auth_file, a_make_connection ),
-            // logic for setting the name:
-            //   a_queue_name if provided
-            //   otherwise a_config["queue"] if it exists
-            //   otherwise "dlcpp_service"
-            endpoint( a_queue_name.empty() ? a_config.get_value( "queue", "dlcpp_service" ) : a_queue_name ),
+            core( a_config.has("dripline_mesh") ? a_config["dripline_mesh"].as_node() : dripline_config(), 
+                  a_auth, a_make_connection ),
+            endpoint( a_config.get_value( "name", "dlcpp_service" ) ),
             listener_receiver(),
-            heartbeater(),
+            heartbeater( this ),
             scheduler<>(),
-            std::enable_shared_from_this< service >(),
+            f_auth( a_auth ),
             f_status( status::nothing ),
-            f_enable_scheduling( a_config.get_value("enable-scheduling", false ) ),
+            f_restart_on_error( a_config.get_value( "restart_on_error", true ) ),
+            f_enable_scheduling( a_config.get_value( "enable_scheduling", false ) ),
             f_id( generate_random_uuid() ),
             f_sync_children(),
             f_async_children(),
-            f_broadcast_key( "broadcast" )
+            f_broadcast_key( a_config.get_value( "broadcast_key", "broadcast" ) )
     {
-        // get values from the config
-        f_listen_timeout_ms = a_config.get_value( "loop-timeout-ms", f_listen_timeout_ms );
+        LWARN( dlog, "Service (cpp) constructor" );
+        LDEBUG( dlog, "Service (cpp) created with config:\n" << a_config );
+        // get more values from the config
+        // default of f_listen_timeout_ms is in the listener class
+        f_listen_timeout_ms = a_config.get_value( "loop_timeout_ms", f_listen_timeout_ms );
         heartbeater::f_check_timeout_ms = f_listen_timeout_ms;
-        f_single_message_wait_ms = a_config.get_value( "message-wait-ms", f_single_message_wait_ms );
-        f_heartbeat_interval_s = a_config.get_value( "heartbeat-interval-s", f_heartbeat_interval_s );
-
-        // override if specified as a separate argument
-        if( ! a_queue_name.empty() ) f_name = a_queue_name;
+        // default of f_single_message_wait_ms is in the receiver class
+        f_single_message_wait_ms = a_config.get_value( "message_wait_ms", f_single_message_wait_ms );
+        // default of f_heartbeat_interval_s is in the heartbeater class
+        f_heartbeat_interval_s = a_config.get_value( "heartbeat_interval_s", f_heartbeat_interval_s );
     }
-
-    service::service( const bool a_make_connection, const scarab::param_node& a_config ) :
+/*
+    service::service( const bool a_make_connection, const scarab::param_node& a_config, const scarab::authentication& a_auth ) :
             scarab::cancelable(),
             core( a_make_connection, a_config ),
             endpoint( "" ),
@@ -71,23 +73,7 @@ namespace dripline
             f_broadcast_key()
     {
     }
-
-    service::service( service&& a_orig ) :
-            scarab::cancelable(),
-            core( std::move(a_orig) ),
-            endpoint( std::move(a_orig) ),
-            listener_receiver( std::move(a_orig) ),
-            heartbeater( std::move(a_orig) ),
-            scheduler<>( std::move(a_orig) ),
-            std::enable_shared_from_this< service >(),
-            f_status( std::move(a_orig.f_status) ),
-            f_enable_scheduling( std::move(a_orig.f_enable_scheduling) ),
-            f_id( std::move(a_orig.f_id) ),
-            f_sync_children( std::move(a_orig.f_sync_children) ),
-            f_async_children( std::move(a_orig.f_async_children) ),
-            f_broadcast_key( std::move(a_orig.f_broadcast_key) )
-    {
-    }
+*/
 
     service::~service()
     {
@@ -101,17 +87,21 @@ namespace dripline
 
     service& service::operator=( service&& a_orig )
     {
+        cancelable::operator=( std::move(a_orig) );
         core::operator=( std::move(a_orig) );
-        endpoint::operator=( std::move(a_orig) );
+        endpoint::operator=( std::move(a_orig));
         listener_receiver::operator=( std::move(a_orig) );
         heartbeater::operator=( std::move(a_orig) );
         scheduler<>::operator=( std::move(a_orig) );
-        f_status = std::move(a_orig.f_status) ;
-        f_enable_scheduling = std::move(a_orig.f_enable_scheduling);
-        f_id = std::move(a_orig.f_id);
-        f_sync_children = std::move(a_orig.f_sync_children);
-        f_async_children = std::move(a_orig.f_async_children);
-        f_broadcast_key = std::move(a_orig.f_broadcast_key);
+
+        f_status = std::move( a_orig.f_status );
+        f_restart_on_error = a_orig.f_restart_on_error;
+        f_enable_scheduling = a_orig.f_enable_scheduling;
+        f_id = std::move( a_orig.f_id );
+        f_sync_children = std::move( a_orig.f_sync_children );
+        f_async_children = std::move( a_orig.f_async_children );
+        f_broadcast_key = std::move( a_orig.f_broadcast_key );
+
         return *this;
     }
 
@@ -120,14 +110,12 @@ namespace dripline
         auto t_inserted = f_sync_children.insert( std::make_pair( a_endpoint_ptr->name(), a_endpoint_ptr ) );
         if( t_inserted.second )
         {
-            try
-            {
-                a_endpoint_ptr->service() = shared_from_this();
-            }
-            catch( std::bad_weak_ptr& e )
-            {
-                LWARN( dlog, "add_child called from service constructor (or for some other reason the shared-pointer is bad); Service pointer not set.");
-            }
+            a_endpoint_ptr->set_service( this );
+        }
+        else
+        {
+            LERROR( dlog, "Endpoint <" << a_endpoint_ptr->name() << " could not be added to service <" << f_name << ">" );
+            return false;
         }
         return t_inserted.second;
     }
@@ -142,16 +130,64 @@ namespace dripline
         auto t_inserted = f_async_children.insert( std::make_pair( a_endpoint_ptr->name(), t_listener_receiver_ptr ) );
         if( t_inserted.second )
         {
-            try
-            {
-                a_endpoint_ptr->service() = shared_from_this();
-            }
-            catch( std::bad_weak_ptr& e )
-            {
-                LWARN( dlog, "add_async_child called from service constructor (or for some other reason the shared-pointer is bad); Service pointer not set.");
-            }
+            a_endpoint_ptr->set_service( this );
+        }
+        else
+        {
+            LERROR( dlog, "Endpoint (async) <" << a_endpoint_ptr->name() << " could not be added to service <" << f_name << ">" );
+            return false;
         }
         return t_inserted.second;
+    }
+
+    void service::run()
+    {
+        unsigned n_failures = 0;
+        bool t_do_repeat = true; // start true so that we get into the repeat loop
+        // Repeat loop for listening: we may call to listen_on_queue() multiple times
+        while( t_do_repeat )
+        {
+            t_do_repeat = false; // set false because we'll only do the repeat based on the conditions below
+            LINFO( dlog, "Starting the service" );
+            if( ! start() ) throw dripline_error() << "There was a problem while starting the service (check for prior error messages)";
+            try
+            {
+                LINFO( dlog, "Service started; now listening for messages" );
+                if( ! listen() ) throw dripline_error() << "There was a problem while listening for messages (check for prior error messages)";
+                n_failures = 0; // reset the number of failures to 0 once there's been a successful connection
+            }
+            catch( const dripline_error& e )
+            {
+                // We had an error while listening
+                // Check whether or not we should try to connect again
+                // 1. If we want to restart on error, and
+                // 2. If the failure count is less than our threshold (2)
+                ++n_failures;
+                if( f_restart_on_error && n_failures < 2 )
+                {
+                    t_do_repeat = true;
+                    // we'll report and then drop the exception to do the reconnect
+                    LWARN( dlog, e.what() );
+                    LWARN( dlog, "Will attempt to reconnect" );
+                }
+                else
+                {
+                    // if we're not going to connect again, and we had an error, propagate the error by rethrowing
+                    LERROR( dlog, "Reached maximum number of reconnect attempts" );
+                    throw;
+                }
+            }
+
+            if( t_do_repeat )
+            {
+                reset_cancel();
+            }
+        }
+
+        LINFO( dlog, "Stopping the service" );
+        if( ! stop() ) throw dripline_error() << "There was a problem while stopping the service (check for prior error messages)";
+
+        return;
     }
 
     bool service::start()
@@ -168,8 +204,8 @@ namespace dripline
         }
 
         // fill in the link to this in endpoint because we couldn't do it in the constructor
-        endpoint::f_service = this->shared_from_this();
-        heartbeater::f_service = this->shared_from_this();
+        endpoint::f_service = this;
+        heartbeater::f_service = this;
 
         LINFO( dlog, "Connecting to <" << f_address << ":" << f_port << ">" );
 
@@ -206,6 +242,7 @@ namespace dripline
         {
             if( f_heartbeat_interval_s != 0 )
             {
+                LINFO( dlog, "Starting heartbeat" );
                 f_heartbeat_thread = std::thread( &heartbeater::execute, this, f_name, f_id, f_heartbeat_routing_key );
             }
             else
@@ -215,13 +252,15 @@ namespace dripline
 
             if( f_enable_scheduling )
             {
+                LINFO( dlog, "Starting scheduler" );
                 f_scheduler_thread = std::thread( &scheduler::execute, this );
             }
             else
             {
-                LINFO( dlog, "scheduler disabled" );
+                LINFO( dlog, "Scheduler disabled" );
             }
 
+            LINFO( dlog, "Starting receiver thread" );
             f_receiver_thread = std::thread( &concurrent_receiver::execute, this );
 
             // lambda to cancel everything on an error from listener::listen_on_queue()
@@ -234,6 +273,8 @@ namespace dripline
                 }
             };
 
+            if( ! f_async_children.empty() ) { LINFO( dlog, "Starting async children" ); }
+            else { LDEBUG( dlog, "No async children to start" ); }
             for( async_map_t::iterator t_child_it = f_async_children.begin();
                     t_child_it != f_async_children.end();
                     ++t_child_it )
@@ -242,6 +283,7 @@ namespace dripline
                 t_child_it->second->listener_thread() = std::thread( t_cancel_on_listen_error, std::ref(*t_child_it->second.get()) );
             }
 
+            LINFO( dlog, "Starting listener thread" );
             t_cancel_on_listen_error( *this );
 
             for( async_map_t::iterator t_child_it = f_async_children.begin();

@@ -22,31 +22,22 @@ LOGGER( dlog, "heartbeater" );
 namespace dripline
 {
 
-    heartbeater::heartbeater( service_ptr_t a_service ) :
+    heartbeater::heartbeater( service* a_service ) :
             cancelable(),
             f_heartbeat_interval_s( 60 ),
             f_check_timeout_ms( 1000 ),
             f_service( a_service ),
+//            f_stop( false ),
             f_heartbeat_thread()
-    {}
-
-    heartbeater::heartbeater( heartbeater&& a_orig ) :
-            cancelable( std::move(a_orig) ),
-            f_heartbeat_interval_s( a_orig.f_heartbeat_interval_s ),
-            f_check_timeout_ms( a_orig.f_check_timeout_ms ),
-            f_service( std::move(a_orig.f_service) ),
-            f_heartbeat_thread( std::move(a_orig.f_heartbeat_thread) )
-    {}
-
-    heartbeater::~heartbeater()
     {}
 
     heartbeater& heartbeater::operator=( heartbeater&& a_orig )
     {
-        f_heartbeat_interval_s = std::move(a_orig.f_heartbeat_interval_s);
-        f_check_timeout_ms = std::move(a_orig.f_check_timeout_ms);
-        f_service = std::move(a_orig.f_service);
-        f_heartbeat_thread = std::move(a_orig.f_heartbeat_thread);
+        cancelable::operator=( std::move(a_orig) );
+        f_heartbeat_interval_s = a_orig.f_heartbeat_interval_s;
+        f_check_timeout_ms = a_orig.f_check_timeout_ms;
+        f_service = std::move( a_orig.f_service );
+        f_heartbeat_thread = std::move( a_orig.f_heartbeat_thread );
         return *this;
     }
 

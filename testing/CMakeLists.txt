@@ -4,11 +4,26 @@
 
 ##########
 
+# Install Catch2
+
+include( FetchContent )
+
+FetchContent_Declare(
+    Catch2
+    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    GIT_TAG        v3.7.1
+)
+
+FetchContent_MakeAvailable( Catch2 )
+list( APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras )
+
+##########
+
 #set( testing_HEADERS
 #)
 
 set( testing_SOURCES
-    use_catch.cc
+    run_dl_tests.cc
     test_agent.cc
     test_amqp.cc
     test_core.cc
@@ -21,12 +36,12 @@ set( testing_SOURCES
     test_service.cc
     test_specifier.cc
     test_throw_reply.cc
+    test_uuid.cc
     test_version_store.cc
 )
 
 set( testing_LIBS 
     Dripline
-    Catch
 )
 
 if( Dripline_BUILD_EXAMPLES )
@@ -41,13 +56,26 @@ if( Dripline_BUILD_EXAMPLES )
     )
 endif()
 
-# Interface library was recommended for Catch:
-# https://stackoverflow.com/questions/34896891/catch-lib-unit-testing-and-ctest-cmake-integration/34900012#34900012
-add_library( Catch INTERFACE )
-target_include_directories( Catch INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/catch )
+pbuilder_executable( 
+    EXECUTABLE run_dl_tests
+    SOURCES ${testing_SOURCES}
+    PROJECT_LIBRARIES ${testing_LIBS}
+    PRIVATE_EXTERNAL_LIBRARIES Catch2::Catch2
+)
 
-add_executable( run_tests ${testing_SOURCES} )
-target_link_libraries( run_tests ${testing_LIBS} )
+list( APPEND programs "run_dl_tests" )
+
+pbuilder_component_install_and_export( 
+    COMPONENT Catch2
+    LIBTARGETS Catch2
+    NAMESPACE Catch2::
+)
+
+pbuilder_component_install_and_export( 
+    COMPONENT Executables
+    EXETARGETS ${programs}
+)
+
 
 # So far it seems sufficient to use Catch2's ability to run tests, and not CTest.
 # Here are two ways it could potentially be integrated with CTest, if we change our minds.

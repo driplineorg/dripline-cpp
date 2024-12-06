@@ -88,7 +88,6 @@ namespace dripline
         return std::make_shared< version_store_adder<x_version> >( a_name );
     }
 
-    // function to use to add a version via a base-class pointer to a derived object
     /*!
      @fn add_version
      @author N.S. Oblath
@@ -110,6 +109,16 @@ namespace dripline
     #define ADD_VERSION( version_name, version_type ) \
         static ::dripline::version_store_adder< version_type > s_version_adder_##version_name( TOSTRING(version_name) );
 
+    /*!
+     @fn get_version
+     @author N.S. Oblath
+
+     @brief Function for getting a version object by name.
+
+     @note This method returns a version object of a version_semantic type.  
+     This is intended for use at runtime, and in particular for the Python binding.
+    */
+    DRIPLINE_API scarab::version_semantic_ptr_t get_version( const std::string& a_name );
 
     template< typename x_version >
     inline void version_store::add_version( const std::string& a_name )

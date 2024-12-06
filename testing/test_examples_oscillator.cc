@@ -7,7 +7,8 @@
 
 #include "oscillator.hh"
 
-#include "catch.hpp"
+#include "catch2/catch_test_macros.hpp"
+#include "catch2/matchers/catch_matchers_all.hpp"
 
 #include <cmath>
 

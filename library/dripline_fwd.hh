@@ -40,7 +40,6 @@ namespace dripline
     typedef std::shared_ptr< endpoint > endpoint_ptr_t;
 
     class service;
-    typedef std::shared_ptr< service > service_ptr_t;
 }
 
 #endif /* DRIPLINE_DRIPLINE_FWD_HH_ */

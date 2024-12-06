@@ -20,9 +20,9 @@ LOGGER( dlog, "monitor" );
 namespace dripline
 {
 
-    monitor::monitor( const scarab::param_node& a_config ) :
+    monitor::monitor( const scarab::param_node& a_config, const scarab::authentication& a_auth ) :
             scarab::cancelable(),
-            core( a_config.has( "dripline" ) ? a_config["dripline"].as_node() : scarab::param_node() ),
+            core( a_config["dripline_mesh"].as_node(), a_auth ),
             listener_receiver(),
             f_status( status::nothing ),
             f_name( std::string("monitor_") + string_from_uuid(generate_random_uuid()) ),
@@ -32,9 +32,9 @@ namespace dripline
             f_alerts_keys()
     {
         // get requests keys
-        if( a_config.has( "request-keys" ) && a_config["request-keys"].is_array() )
+        if( a_config.has( "request_keys" ) && a_config["request_keys"].is_array() )
         {
-            const scarab::param_array& t_req_keys = a_config["request-keys"].as_array();
+            const scarab::param_array& t_req_keys = a_config["request_keys"].as_array();
             f_requests_keys.reserve( t_req_keys.size() );
             for( auto t_it = t_req_keys.begin(); t_it != t_req_keys.end(); ++t_it )
             {
@@ -43,16 +43,16 @@ namespace dripline
             }
         }
 
-        if( a_config.has( "request-key" ) && a_config["request-key"].is_value() )
+        if( a_config.has( "request_key" ) && a_config["request_key"].is_value() )
         {
-            LPROG( dlog, "Monitor <" << f_name << "> will monitor key <" << a_config["request-key"]().as_string() << "> on the requests exchange" );
-            f_requests_keys.push_back( a_config["request-key"]().as_string() );
+            LPROG( dlog, "Monitor <" << f_name << "> will monitor key <" << a_config["request_key"]().as_string() << "> on the requests exchange" );
+            f_requests_keys.push_back( a_config["request_key"]().as_string() );
         }
 
         // get alerts keys
-        if( a_config.has( "alert-keys" ) && a_config["alert-keys"].is_array() )
+        if( a_config.has( "alert_keys" ) && a_config["alert_keys"].is_array() )
         {
-            const scarab::param_array& t_req_keys = a_config["alert-keys"].as_array();
+            const scarab::param_array& t_req_keys = a_config["alert_keys"].as_array();
             f_requests_keys.reserve( t_req_keys.size() );
             for( auto t_it = t_req_keys.begin(); t_it != t_req_keys.end(); ++t_it )
             {
@@ -61,27 +61,11 @@ namespace dripline
             }
         }
 
-        if( a_config.has( "alert-key" ) && a_config["alert-key"].is_value() )
+        if( a_config.has( "alert_key" ) && a_config["alert_key"].is_value() )
         {
-            LPROG( dlog, "Monitor <" << f_name << "> will monitor key <" << a_config["alert-key"]().as_string() << "> on the alerts exchange" );
-            f_alerts_keys.push_back( a_config["alert-key"]().as_string() );
+            LPROG( dlog, "Monitor <" << f_name << "> will monitor key <" << a_config["alert_key"]().as_string() << "> on the alerts exchange" );
+            f_alerts_keys.push_back( a_config["alert_key"]().as_string() );
         }
-    }
-
-    monitor::monitor( monitor&& a_orig ) :
-            scarab::cancelable( std::move(a_orig) ),
-            core( std::move(a_orig) ),
-            listener_receiver( std::move(a_orig) ),
-            f_status( a_orig.f_status ),
-            f_name( std::move(a_orig.f_name) ),
-            f_json_print( a_orig.f_json_print ),
-            f_pretty_print( a_orig.f_pretty_print ),
-            f_requests_keys( std::move(a_orig.f_requests_keys) ),
-            f_alerts_keys( std::move(a_orig.f_alerts_keys) )
-    {
-        a_orig.f_status = status::nothing;
-        a_orig.f_json_print = false;
-        a_orig.f_pretty_print = false;
     }
 
     monitor::~monitor()
@@ -92,19 +76,6 @@ namespace dripline
             std::this_thread::sleep_for( std::chrono::milliseconds(1100) );
         }
         if( f_status > status::exchange_declared ) stop();
-    }
-
-    monitor& monitor::operator=( monitor&& a_orig )
-    {
-        core::operator=( std::move(a_orig) );
-        listener::operator=( std::move(a_orig) );
-        concurrent_receiver::operator=( std::move(a_orig) );
-        f_status = a_orig.f_status;
-        a_orig.f_status = status::nothing;
-        f_name = std::move(a_orig.f_name);
-        f_requests_keys = std::move(a_orig.f_requests_keys);
-        f_alerts_keys = std::move(a_orig.f_alerts_keys);
-        return *this;
     }
 
     bool monitor::start()
@@ -327,7 +298,7 @@ namespace dripline
         }
         catch( std::exception& e )
         {
-            LERROR( dlog, "<" << f_name << "> Standard exception caught while sending reply: " << e.what() );
+            LERROR( dlog, "<" << f_name << "> Standard exception caught while handling message: " << e.what() );
         }
 
         return;
