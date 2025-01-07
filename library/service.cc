@@ -45,7 +45,6 @@ namespace dripline
             f_async_children(),
             f_broadcast_key( a_config.get_value( "broadcast_key", "broadcast" ) )
     {
-        LWARN( dlog, "Service (cpp) constructor" );
         LDEBUG( dlog, "Service (cpp) created with config:\n" << a_config );
         // get more values from the config
         // default of f_listen_timeout_ms is in the listener class
