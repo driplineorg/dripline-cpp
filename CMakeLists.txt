@@ -6,7 +6,7 @@ cmake_minimum_required (VERSION 3.12)
 #########
 
 cmake_policy( SET CMP0048 NEW ) # version in project()
-project( Dripline VERSION 2.10.0 )
+project( Dripline VERSION 2.10.1 )
 
 list( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/scarab/cmake )
 
@@ -33,8 +33,8 @@ set ( Dripline_PYTHON_THROW_REPLY_KEYWORD "ThrowReply" CACHE STRING "Keyword use
 
 set( Dripline_MAX_PAYLOAD_SIZE "10000" CACHE STRING "Maximum payload size (bytes)" )
 
-# always use C++17
-set( CMAKE_CXX_STANDARD 17 )
+# always use C++17 or higher
+set_to_max( CMAKE_CXX_STANDARD 17 )
 
 # This can be used to debug memory issues
 #add_compile_options(-fsanitize=address)
