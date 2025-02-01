@@ -42,7 +42,7 @@ RUN cd /usr/local && \
     rm -rf /usr/local/pybind11
 
 # use quill_checkout to specify a tag or branch name to checkout
-ARG quill_checkout=v7.3.0
+ARG quill_checkout=v8.1.0
 RUN cd /usr/local && \
     git clone https://github.com/odygrd/quill.git && \
     cd quill && \
