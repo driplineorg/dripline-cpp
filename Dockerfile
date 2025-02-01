@@ -9,6 +9,11 @@ ARG build_examples=FALSE
 ARG enable_testing=FALSE
 ARG narg=2
 
+ARG install_python_dev=FALSE
+
+USER root
+WORKDIR /
+
 # Most dependencies
 
 RUN apt-get update && \
@@ -26,6 +31,7 @@ RUN apt-get update && \
         rapidjson-dev && \
 #        pybind11-dev \
 #        wget && \
+    apt-get -y install python3-dev&& \
     rm -rf /var/lib/apt/lists/*
 
 # use pybind11_checkout to specify a tag or branch name to checkout
