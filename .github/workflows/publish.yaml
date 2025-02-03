@@ -176,7 +176,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      NARG: 2
+      NARG: 1
 
     # This job runs on push (limited above to develop, main and tags) and pull_requests marked read_for_review
     # Pushing images is limited below to push events
