@@ -20,7 +20,7 @@ jobs:
 
   test_docker:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     env:
       NARG: 2
@@ -107,9 +107,9 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-22.04, macos-latest]
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             narg: 2
           - os: macos-latest
             narg: 3
@@ -173,7 +173,7 @@ jobs:
 
   build_and_push:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     env:
       NARG: 2
