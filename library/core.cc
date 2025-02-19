@@ -57,7 +57,7 @@ namespace dripline
             f_alerts_exchange(),
             f_heartbeat_routing_key(),
             f_max_payload_size(),
-            f_make_connection( a_make_connection ),
+            f_make_connection(),
             f_max_connection_attempts()
     {
         // Get the default values, and merge in the supplied a_config
@@ -89,6 +89,7 @@ namespace dripline
         f_requests_exchange = t_config["requests_exchange"]().as_string(); //.get_value("requests_exchange", "requests");
         f_alerts_exchange = t_config["alerts_exchange"]().as_string(); //.get_value("alerts_exchange", "alerts");
         f_heartbeat_routing_key = t_config["heartbeat_routing_key"]().as_string(); //.get_value("heartbeat_routing_key", "heartbeat");
+        f_make_connection = t_config.get_value( "make_connection", a_make_connection );
         f_max_payload_size = t_config["max_payload_size"]().as_uint(); //.get_value("max_payload_size", DL_MAX_PAYLOAD_SIZE);
         f_max_connection_attempts = t_config["max_connection_attempts"]().as_uint(); //.get_value("max_connection_attempts", 10);
 
