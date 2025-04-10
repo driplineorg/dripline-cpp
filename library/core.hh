@@ -94,6 +94,7 @@ namespace dripline
                  - `requests_exchange` (string; default: requests) -- Name of the exchange used for DL requests
                  - `alerts_exchange` (string; default: alerts) -- Name of the exchange used for DL alerts
                  - `heartbeat_routing_key` (string; default: heartbeat) -- Routing key used for sending heartbeats
+                 - `make_connection` (bool; default: true) -- Flag for performing a dry run -- no connection to a broker is made; this parameter overrides the parameter in the constructor and is the preferred flag to use.
                  - `max_payload_size` (int; default: DL_MAX_PAYLOAD_SIZE) -- Maximum size of payloads, in bytes
                  - `max_connection_attempts` (int; default: 10) -- Maximum number of attempts that will be made to connect to the broker
                  - `return_codes` (string or array of nodes; default: not present) -- Optional specification of additional return codes in the form of an array of nodes: `[{name: "<name>", value: <ret code>} <, ...>]`. 
