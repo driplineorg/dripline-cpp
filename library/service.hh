@@ -148,13 +148,13 @@ namespace dripline
 
         public:
             /// Sends a request message and returns a channel on which to listen for a reply.
-            virtual sent_msg_pkg_ptr send( request_ptr_t a_request ) const;
+            virtual sent_msg_pkg_ptr send( request_ptr_t a_request, amqp_channel_ptr a_channel = amqp_channel_ptr() ) const;
 
             /// Sends a reply message
-            virtual sent_msg_pkg_ptr send( reply_ptr_t a_reply ) const;
+            virtual sent_msg_pkg_ptr send( reply_ptr_t a_reply, amqp_channel_ptr a_channel = amqp_channel_ptr() ) const;
 
             /// Sends an alert message
-            virtual sent_msg_pkg_ptr send( alert_ptr_t a_alert ) const;
+            virtual sent_msg_pkg_ptr send( alert_ptr_t a_alert, amqp_channel_ptr a_channel = amqp_channel_ptr() ) const;
 
         public:
             /**
@@ -224,28 +224,28 @@ namespace dripline
             virtual void do_cancellation( int a_code );
     };
 
-    inline sent_msg_pkg_ptr service::send( request_ptr_t a_request ) const
+    inline sent_msg_pkg_ptr service::send( request_ptr_t a_request, amqp_channel_ptr a_channel ) const
     {
         a_request->sender_service_name() = f_name;
         // we don't use f_channel on this core::send command because a channel can only be used in a single thread, 
         // and f_channel is primarily meant for listening with the listener thread.
-        return core::send( a_request );
+        return core::send( a_request, a_channel );
     }
 
-    inline sent_msg_pkg_ptr service::send( reply_ptr_t a_reply ) const
+    inline sent_msg_pkg_ptr service::send( reply_ptr_t a_reply, amqp_channel_ptr a_channel ) const
     {
         a_reply->sender_service_name() = f_name ;
         // we don't use f_channel on this core::send command because a channel can only be used in a single thread, 
         // and f_channel is primarily meant for listening with the listener thread.
-        return core::send( a_reply );
+        return core::send( a_reply, a_channel );
     }
 
-    inline sent_msg_pkg_ptr service::send( alert_ptr_t a_alert ) const
+    inline sent_msg_pkg_ptr service::send( alert_ptr_t a_alert, amqp_channel_ptr a_channel ) const
     {
         a_alert->sender_service_name() = f_name;
         // we don't use f_channel on this core::send command because a channel can only be used in a single thread, 
         // and f_channel is primarily meant for listening with the listener thread.
-        return core::send( a_alert );
+        return core::send( a_alert, a_channel );
     }
 
 } /* namespace dripline */
