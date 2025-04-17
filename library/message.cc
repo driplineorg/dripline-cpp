@@ -221,14 +221,14 @@ namespace dripline
 
         // Create the message, of whichever type
         message_ptr_t t_message;
-        msg_t t_msg_type = to_msg_t( at( t_properties, std::string("message_type"), TableValue(to_uint(msg_t::unknown)) ).GetUint32() );
+        msg_t t_msg_type = to_msg_t( at( t_properties, std::string("message_type"), TableValue(to_uint(msg_t::unknown)) ).GetInteger() );
         switch( t_msg_type )
         {
             case msg_t::request:
             {
                 request_ptr_t t_request = msg_request::create(
                         std::move(t_payload),
-                        to_op_t( at( t_properties, std::string("message_operation"), TableValue(to_uint(op_t::unknown)) ).GetUint32() ),
+                        to_op_t( at( t_properties, std::string("message_operation"), TableValue(to_uint(op_t::unknown)) ).GetInteger() ),
                         a_routing_key,
                         at( t_properties, std::string("specifier"), TableValue("") ).GetString(),
                         t_first_valid_message->ReplyTo(),
@@ -244,7 +244,7 @@ namespace dripline
             case msg_t::reply:
             {
                 reply_ptr_t t_reply = msg_reply::create(
-                        at( t_properties, std::string("return_code"), TableValue(999U) ).GetUint32(),
+                        at( t_properties, std::string("return_code"), TableValue(999U) ).GetInteger(),
                         at( t_properties, std::string("return_message"), TableValue("") ).GetString(),
                         std::move(t_payload),
                         a_routing_key,
