@@ -14,6 +14,7 @@
 
 #include <cstdint>
 #include <limits>
+#include <climits>
 #include <ostream>
 
 namespace dripline
