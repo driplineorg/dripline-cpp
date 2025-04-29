@@ -16,7 +16,14 @@
 
 using namespace dripline;
 
-LOGGER( dlog, "simple_service" );
+namespace dripline
+{
+    void set_qopts( quill::BackendOptions& an_opts )
+    {
+        std::cerr << "SETTING SIMPLE SERVICE DEFAULT QUILL OPTIONS" << std::endl;
+    }
+}
+LOGGER_WOPTS( dlog, "simple_service", &dripline::set_qopts );
 
 int main( int argc, char** argv )
 {
