@@ -64,15 +64,15 @@ TEST_CASE( "send_offline", "[core]" )
 
     dripline::alert_ptr_t t_alert_ptr = dripline::msg_alert::create( param_ptr_t(new param()), "" );
 
-    REQUIRE_THROWS_AS( t_core.send( t_alert_ptr ), dripline::message_ptr_t );
+    REQUIRE_THROWS_AS( t_core.send( t_alert_ptr ), dripline::alert_ptr_t );
 
     dripline::request_ptr_t t_request_ptr = dripline::msg_request::create( param_ptr_t( new param() ), dripline::op_t::cmd, "routing.key", "specifier", "" );
 
-    REQUIRE_THROWS_AS( t_core.send( t_request_ptr ), dripline::message_ptr_t );
+    REQUIRE_THROWS_AS( t_core.send( t_request_ptr ), dripline::request_ptr_t );
 
     dripline::reply_ptr_t t_reply_ptr = dripline::msg_reply::create( dripline::dl_success(), "reply", param_ptr_t( new param() ), "routing.key" );
 
-    REQUIRE_THROWS_AS( t_core.send( t_reply_ptr ), dripline::message_ptr_t );
+    REQUIRE_THROWS_AS( t_core.send( t_reply_ptr ), dripline::reply_ptr_t );
 }
 
 TEST_CASE( "config_retcode", "[core]" )
