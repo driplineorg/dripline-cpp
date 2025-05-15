@@ -152,18 +152,33 @@ namespace dripline
     sent_msg_pkg_ptr core::send( request_ptr_t a_request, amqp_channel_ptr a_channel ) const
     {
         LDEBUG( dlog, "Sending request with routing key <" << a_request->routing_key() << ">" );
+        if ( ! f_make_connection || core::s_offline )
+        {
+            throw a_request;
+            //throw dripline_error() << "cannot send reply when make_connection is false";
+        }
         return do_send( std::static_pointer_cast< message >( a_request ), f_requests_exchange, true, a_channel );
     }
 
     sent_msg_pkg_ptr core::send( reply_ptr_t a_reply, amqp_channel_ptr a_channel ) const
     {
         LDEBUG( dlog, "Sending reply with routing key <" << a_reply->routing_key() << ">" );
+        if ( ! f_make_connection || core::s_offline )
+        {
+            throw a_reply;
+            //throw dripline_error() << "cannot send reply when make_connection is false";
+        }
         return do_send( std::static_pointer_cast< message >( a_reply ), f_requests_exchange, false, a_channel );
     }
 
     sent_msg_pkg_ptr core::send( alert_ptr_t a_alert, amqp_channel_ptr a_channel ) const
     {
         LDEBUG( dlog, "Sending alert with routing key <" << a_alert->routing_key() << ">" );
+        if ( ! f_make_connection || core::s_offline )
+        {
+            throw a_alert;
+            //throw dripline_error() << "cannot send reply when make_connection is false";
+        }
         return do_send( std::static_pointer_cast< message >( a_alert ), f_alerts_exchange, false, a_channel );
     }
 
@@ -179,12 +194,6 @@ namespace dripline
         auto t_diagnostic_string_maker = [a_message, this]() -> std::string {
             return std::string("Broker: ") + f_address +"\nPort: " + std::to_string(f_port) + "\nRouting Key: " + a_message->routing_key();
         };
-
-        if ( ! f_make_connection || core::s_offline )
-        {
-            throw a_message;
-            //throw dripline_error() << "cannot send reply when make_connection is false";
-        }
 
         amqp_channel_ptr t_channel = a_channel ? a_channel : open_channel();
         if( ! t_channel )

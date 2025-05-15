@@ -94,9 +94,9 @@ jobs:
           ./do-testing.sh ${{ env.INT_TAG }}
 
 # For debugging
-      - name: Setup tmate session
-        if: ${{ ! success() }}
-        uses: mxschmitt/action-tmate@v3
+#      - name: Setup tmate session
+#        if: ${{ ! success() }}
+#        uses: mxschmitt/action-tmate@v3
 
 
   test_builds:
@@ -143,7 +143,7 @@ jobs:
             libyaml-cpp-dev
           git clone https://github.com/odygrd/quill.git
           cd quill
-          git checkout v8.1.0
+          git checkout v9.0.2
           mkdir build
           cd build
           sudo cmake ..
