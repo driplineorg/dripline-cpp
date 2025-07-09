@@ -77,7 +77,7 @@ TEST_CASE( "message", "[message]" )
     REQUIRE( t_msg_node["correlation_id"]().as_string() == t_req_ptr->correlation_id() );
     REQUIRE( t_msg_node["message_id"]().as_string() == t_req_ptr->message_id() );
     REQUIRE( t_msg_node["reply_to"]().as_string() == t_req_ptr->reply_to() );
-    REQUIRE( t_msg_node["message_type"]().as_int() == to_int(t_req_ptr->message_type()) );
+    REQUIRE( t_msg_node["message_type"]().as_uint() == to_uint(t_req_ptr->message_type()) );
     REQUIRE( t_msg_node["encoding"]().as_string() == "application/json" );
     REQUIRE( t_msg_node["timestamp"]().as_string() == t_req_ptr->timestamp() );
 

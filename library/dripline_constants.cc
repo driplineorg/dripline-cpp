@@ -14,17 +14,17 @@ namespace dripline
 {
     // op_t utility functions
     // Conversion functions for use when a numeric value is needed
-    DRIPLINE_API int to_int( op_t an_op )
+    DRIPLINE_API unsigned to_uint( op_t an_op )
     {
-        return static_cast< int >( an_op );
+        return static_cast< unsigned >( an_op );
     }
-    DRIPLINE_API op_t to_op_t( int an_op_int )
+    DRIPLINE_API op_t to_op_t( unsigned an_op_uint )
     {
-        return static_cast< op_t >( an_op_int );
+        return static_cast< op_t >( an_op_uint );
     }
     DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, op_t an_op )
     {
-        return a_os << to_int( an_op );
+        return a_os << to_uint( an_op );
     }
     // Conversion functions for use when string values are required
     DRIPLINE_API std::string to_string( op_t an_op )
@@ -48,17 +48,17 @@ namespace dripline
 
     // msg_t utility functions
     // Conversion functions for use when a numeric value is needed
-    DRIPLINE_API int to_int( msg_t a_msg )
+    DRIPLINE_API unsigned to_uint( msg_t a_msg )
     {
-        return static_cast< int >( a_msg );
+        return static_cast< unsigned >( a_msg );
     }
-    DRIPLINE_API msg_t to_msg_t( int a_msg_int )
+    DRIPLINE_API msg_t to_msg_t( unsigned a_msg_uint )
     {
-        return static_cast< msg_t >( a_msg_int );
+        return static_cast< msg_t >( a_msg_uint );
     }
     DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, msg_t a_msg )
     {
-        return a_os << to_int( a_msg );
+        return a_os << to_uint( a_msg );
     }
     // Conversion functions for use when string values are required
     DRIPLINE_API std::string to_string( msg_t a_msg )
