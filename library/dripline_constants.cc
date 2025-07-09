@@ -33,8 +33,7 @@ namespace dripline
             case op_t::set: return "set";
             case op_t::get: return "get";
             case op_t::cmd: return "cmd";
-            case op_t::unknown: return "unknown";
-            default: throw dripline_error() << "op_t value <" << an_op << "> not recognized";
+            default: return "unknown";
         }
     }
     DRIPLINE_API op_t to_op_t( std::string an_op_str )
@@ -67,8 +66,7 @@ namespace dripline
             case msg_t::reply: return "reply";
             case msg_t::request: return "request";
             case msg_t::alert: return "alert";
-            case msg_t::unknown: return "unknown";
-            default: throw dripline_error() << "msg_t value <" << a_msg << "> not recognized";
+            default: return "unknown";
         }
     }
     DRIPLINE_API msg_t to_msg_t( std::string a_msg_str )
