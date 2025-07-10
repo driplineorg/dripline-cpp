@@ -221,14 +221,14 @@ namespace dripline
 
         // Create the message, of whichever type
         message_ptr_t t_message;
-        msg_t t_msg_type = to_msg_t( at( t_properties, std::string("message_type"), TableValue(to_int(msg_t::unknown)) ).GetInteger() );
+        msg_t t_msg_type = to_msg_t( at( t_properties, std::string("message_type"), TableValue(to_uint(msg_t::unknown)) ).GetInteger() );
         switch( t_msg_type )
         {
             case msg_t::request:
             {
                 request_ptr_t t_request = msg_request::create(
                         std::move(t_payload),
-                        to_op_t( at( t_properties, std::string("message_operation"), TableValue(to_int(op_t::unknown)) ).GetInteger() ),
+                        to_op_t( at( t_properties, std::string("message_operation"), TableValue(to_uint(op_t::unknown)) ).GetInteger() ),
                         a_routing_key,
                         at( t_properties, std::string("specifier"), TableValue("") ).GetString(),
                         t_first_valid_message->ReplyTo(),
@@ -323,7 +323,7 @@ namespace dripline
                 t_message->ReplyTo( f_reply_to );
 
                 AmqpClient::Table t_properties;
-                t_properties.insert( AmqpClient::TableEntry( "message_type", to_int(message_type()) ) );
+                t_properties.insert( AmqpClient::TableEntry( "message_type", to_uint(message_type()) ) );
                 t_properties.insert( AmqpClient::TableEntry( "specifier", f_specifier.to_string() ) );
                 t_properties.insert( AmqpClient::TableEntry( "timestamp", f_timestamp ) );
                 t_properties.insert( AmqpClient::TableEntry( "sender_info", param_to_table( get_sender_info() ) ) );
@@ -456,7 +456,7 @@ namespace dripline
         t_message_node.add( "correlation_id", f_correlation_id );
         t_message_node.add( "message_id", f_message_id );
         t_message_node.add( "reply_to", f_reply_to );
-        t_message_node.add( "message_type", to_int(message_type()) );
+        t_message_node.add( "message_type", to_uint(message_type()) );
         t_message_node.add( "encoding", interpret_encoding() );
         t_message_node.add( "timestamp", f_timestamp );
         t_message_node.add( "sender_info", get_sender_info() );
@@ -623,7 +623,7 @@ namespace dripline
         a_os << "Routing key: " << a_message.routing_key() << '\n';
         a_os << "Correlation ID: " << a_message.correlation_id() << '\n';
         a_os << "Reply To: " << a_message.reply_to() << '\n';
-        a_os << "Message Type: " << to_int(a_message.message_type()) << '\n';
+        a_os << "Message Type: " << to_uint(a_message.message_type()) << " (" << to_string(a_message.message_type()) << ")\n";
         a_os << "Encoding: " << a_message.get_encoding() << '\n';
         a_os << "Timestamp: " << a_message.timestamp() << '\n';
         a_os << "Sender Info:\n";

@@ -31,18 +31,18 @@ namespace dripline
         \enum op_t
         Message Operations
     */
-    enum class DRIPLINE_API op_t:int {
+    enum class DRIPLINE_API op_t:unsigned {
             set = 0,
             get = 1,
             cmd = 9,
-            unknown = INT_MAX
+            unknown = UINT_MAX
     };
 
     /// Convert a message-operation enum to an integer
-    DRIPLINE_API int to_int( op_t an_op );
+    DRIPLINE_API unsigned to_uint( op_t an_op );
     /// Convert an integer to a message-operation enum
     /// The result is unspecified for invalid integers
-    DRIPLINE_API op_t to_op_t( int an_op_int );
+    DRIPLINE_API op_t to_op_t( unsigned an_op_uint );
     /// Pass the integer-equivalent of a message-operation enum to an ostream
     DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, op_t an_op );
     /// Gives the human-readable version of a message operation
@@ -55,19 +55,19 @@ namespace dripline
         \enum msg_t
         Message Types
     */
-    enum class DRIPLINE_API msg_t:int
+    enum class DRIPLINE_API msg_t:unsigned
     {
         reply = 2,
         request = 3,
         alert = 4,
-        unknown = INT_MAX
+        unknown = UINT_MAX
     };
 
     /// Convert a message-type enum to an integer
-    DRIPLINE_API int to_int( msg_t a_msg );
+    DRIPLINE_API unsigned to_uint( msg_t a_msg );
     /// Convert an integer to a message-type enum
     /// The result is unspecified for invalid integers
-    DRIPLINE_API msg_t to_msg_t( int a_msg_int );
+    DRIPLINE_API msg_t to_msg_t( unsigned a_msg_uint );
     /// Pass the integer-equivalent of a message-type enum to an ostream
     DRIPLINE_API std::ostream& operator<<( std::ostream& a_os, msg_t a_msg );
     /// Gives the human-readable version of the message type
