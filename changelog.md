@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## Changed
+
+- Use rasmus-saks/release-a-changelog-action to create a GitHub release that incorporates the latest changelog information
+
 ## [2.10.6] - 2025-07-10
 
 ### Fixed
