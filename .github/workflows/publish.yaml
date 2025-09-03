@@ -106,6 +106,7 @@ jobs:
     # This job runs for all events that trigger this workflow
 
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-22.04, macos-latest]
         include:
@@ -175,9 +176,9 @@ jobs:
           ./run_dl_tests
 
 # For debugging
-#      - name: Setup tmate session
-#        if: ${{ ! success() }}
-#        uses: mxschmitt/action-tmate@v3
+      - name: Setup tmate session
+        if: ${{ ! success() }}
+        uses: mxschmitt/action-tmate@v3
 
 
   build_and_push:
