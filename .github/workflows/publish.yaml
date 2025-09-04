@@ -137,7 +137,6 @@ jobs:
         run: |
           brew install \
             boost \
-            quill \
             rabbitmq-c \
             rapidjson \
             yaml-cpp
@@ -151,13 +150,6 @@ jobs:
             librabbitmq-dev \
             rapidjson-dev \
             libyaml-cpp-dev
-          git clone https://github.com/odygrd/quill.git
-          cd quill
-          git checkout v9.0.2
-          mkdir build
-          cd build
-          sudo cmake ..
-          sudo make -j${{ matrix.narg }} install
             
       - name: Configure
         run: |
