@@ -11,7 +11,7 @@ Types of changes: Added, Changed, Deprecated, Removed, Fixed, Security
 
 ### Changed
 
-- Updated Scarab to v3.13.1
+- Updated Scarab to v3.13.2
 
 ## [2.10.6] - 2025-07-10
 
