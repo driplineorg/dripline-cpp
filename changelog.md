@@ -12,6 +12,7 @@ Types of changes: Added, Changed, Deprecated, Removed, Fixed, Security
 ### Changed
 
 - Updated Scarab to v3.13.2
+- Updated minimum CMake version in the SimpleAmqpClient integration (external/CMakeLists.txt)
 
 ## [2.10.6] - 2025-07-10
 
