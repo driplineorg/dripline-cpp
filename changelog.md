@@ -9,6 +9,8 @@ Types of changes: Added, Changed, Deprecated, Removed, Fixed, Security
 
 ## [Unreleased]
 
+## [2.10.7] - 2025-10-16
+
 ### Changed
 
 - Use rasmus-saks/release-a-changelog-action to create a GitHub release that incorporates the latest changelog information
