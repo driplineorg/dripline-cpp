@@ -3,7 +3,7 @@
 # SimpleAmqpClient requires wrapping so that modern CMake practices (use of targets and interfaces) can be applied.
 
 # Minimum cmake verison 3.1 required by dripline-cpp
-cmake_minimum_required (VERSION 3.1)
+cmake_minimum_required (VERSION 3.12)
 
 cmake_policy( SET CMP0048 NEW ) # version in project()
 project( DriplineExternal VERSION 0.0.0 )
