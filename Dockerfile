@@ -29,7 +29,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # use pybind11_checkout to specify a tag or branch name to checkout
-ARG pybind11_checkout=master
+ARG pybind11_checkout=v3.0.1
 ARG pybind11_repo=https://github.com/pybind/pybind11.git
 ARG pybind11_name=pybind11
 RUN cd /usr/local && \
@@ -42,20 +42,6 @@ RUN cd /usr/local && \
     make -j${narg} install && \
     cd / && \
     rm -rf /usr/local/${pybind11_name}
-
-# use quill_checkout to specify a tag or branch name to checkout
-ARG quill_checkout=v9.0.2
-RUN cd /usr/local && \
-    git clone https://github.com/odygrd/quill.git && \
-    cd quill && \
-    git checkout ${quill_checkout} && \
-    mkdir build && \
-    cd build && \
-    cmake .. && \
-    make -j${narg} install && \
-    cd / && \
-    rm -rf /usr/local/quill
-
 
 FROM base
 
