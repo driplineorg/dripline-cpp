@@ -11,6 +11,7 @@ Types of changes: Added, Changed, Deprecated, Removed, Fixed, Security
 
 ### Changed
 
+- Use rasmus-saks/release-a-changelog-action to create a GitHub release that incorporates the latest changelog information
 - Updated Scarab to v3.13.2
 - Updated minimum CMake version in the SimpleAmqpClient integration (external/CMakeLists.txt)
 
