@@ -6,7 +6,7 @@ cmake_minimum_required (VERSION 3.12)
 #########
 
 cmake_policy( SET CMP0048 NEW ) # version in project()
-project( Dripline VERSION 2.10.6 )
+project( Dripline VERSION 2.10.7 )
 
 list( APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/scarab/cmake )
 
@@ -144,7 +144,7 @@ else( Dripline_BUILD_PYTHON )
 endif( Dripline_BUILD_PYTHON )
 
 # SimpleAmqpClient needs system and chrono
-list( APPEND Scarab_BOOST_COMPONENTS system chrono )
+list( APPEND Scarab_BOOST_COMPONENTS chrono )
  
 
 #####################

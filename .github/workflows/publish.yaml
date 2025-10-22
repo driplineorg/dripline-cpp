@@ -106,6 +106,7 @@ jobs:
     # This job runs for all events that trigger this workflow
 
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-22.04, macos-latest]
         include:
@@ -122,12 +123,20 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Select CC version
+        # Scarab requires GCC 12 or higher if using GCC
+        # The default GCC for Ubuntu 22.04 is 11, but 12 is available
+        # This can be removed once a newer Ubuntu version can be used
+        if: ${{ matrix.os == 'ubuntu-22.04' }}
+        run: |
+          echo "CC=gcc-12" >> $GITHUB_ENV
+          echo "CXX=g++-12" >> $GITHUB_ENV
+
       - name: Install dependencies -- Mac
         if: startsWith(matrix.os, 'macos')
         run: |
           brew install \
             boost \
-            quill \
             rabbitmq-c \
             rapidjson \
             yaml-cpp
@@ -141,13 +150,6 @@ jobs:
             librabbitmq-dev \
             rapidjson-dev \
             libyaml-cpp-dev
-          git clone https://github.com/odygrd/quill.git
-          cd quill
-          git checkout v9.0.2
-          mkdir build
-          cd build
-          sudo cmake ..
-          sudo make -j${{ matrix.narg }} install
             
       - name: Configure
         run: |
@@ -177,6 +179,10 @@ jobs:
 
     env:
       NARG: 2
+      # Scarab requires GCC 12 or higher, but Ubuntu 22.04 defaults to 11
+      # This can be removed once a newer OS can be used
+      CC: gcc-12
+      CXX: g++-12
 
     # This job runs on push (limited above to develop, main and tags) and pull_requests marked read_for_review
     # Pushing images is limited below to push events
@@ -297,6 +303,11 @@ jobs:
           tags: ${{ steps.docker_meta_integration.outputs.tags }}
           platforms: linux/amd64,linux/arm64,linux/arm/v7
 
-      - name: Release
-        uses: softprops/action-gh-release@v1
+      - name: Release with a changelog
+        uses: rasmus-saks/release-a-changelog-action@v1.2.0
         if: ${{ github.event_name == 'push' && contains(github.ref, 'refs/tags/') }}
+        with:
+          github-token: '${{ secrets.GITHUB_TOKEN }}'
+          path: 'changelog.md'
+          title-template: 'dripline-cpp v{version} -- Release Notes'
+          tag-template: 'v{version}'

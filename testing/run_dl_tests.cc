@@ -8,13 +8,9 @@
 
 #include "catch2/catch_session.hpp"
 
-#include "logger.hh"
-
 int main( int argc, char* argv[] ) {
 
   int result = Catch::Session().run( argc, argv );
-
-  STOP_LOGGING;
 
   return result;
 }
