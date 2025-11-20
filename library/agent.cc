@@ -140,8 +140,8 @@ namespace dripline
         // check if this is meant to be a dry run message
         if( t_config.has( "dry_run_msg" ) )
         {
+            f_agent->set_is_dry_run( t_config["dry_run_msg"]().as_bool() );
             t_config.erase( "dry_run_msg" );
-            f_agent->set_is_dry_run( true );
         }
 
         this->create_and_send_message( t_config, t_core );
