@@ -10,6 +10,14 @@ Types of changes: Added, Changed, Deprecated, Removed, Fixed, Security
 ## [Unreleased]
 
 
+## [2.10.9] - 2025-12-02
+
+### Fixed
+
+- dl-agent was stuck in dry-run mode due to a change in configuration; this is fixed by changing the logic to set the agent in dry-run mode
+- A long-standing memory leak in which messages were being kept by the receiver instead of being erased once processed is fixed
+
+
 ## [2.10.8] - 2025-11-04
 
 ### Changed
