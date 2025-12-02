@@ -26,6 +26,7 @@ set( testing_SOURCES
     run_dl_tests.cc
     test_agent.cc
     test_amqp.cc
+    test_concurrent_receiver.cc
     test_core.cc
     test_dripline_error.cc
     test_endpoint.cc
