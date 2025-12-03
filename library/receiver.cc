@@ -67,12 +67,13 @@ namespace dripline
             LDEBUG( dlog, "Received a message chunk <" << t_message->MessageId() );
 
             auto t_parsed_message_id = message::parse_message_id( t_message->MessageId() );
-            if( incoming_messages().count( std::get<0>(t_parsed_message_id) ) == 0 )
+            std::string t_message_id( std::get<0>(t_parsed_message_id) );
+            if( incoming_messages().count( t_message_id ) == 0 )
             {
                 // this path: first chunk for this message
                 LDEBUG( dlog, "This is the first chunk for this message; creating new message pack" );
                 // create the new message_pack object
-                incoming_message_pack& t_pack = incoming_messages()[std::get<0>(t_parsed_message_id)];
+                incoming_message_pack& t_pack = incoming_messages()[t_message_id];
                 // set the f_messages vector to the expected size
                 t_pack.f_messages.resize( std::get<2>(t_parsed_message_id) );
                 // put in place the first message chunk received
@@ -84,7 +85,7 @@ namespace dripline
                 {
                     // if we only expect one chunk, we can bypass creating a separate thread, etc
                     LDEBUG( dlog, "Single-chunk message being sent directly to processing" );
-                    process_message_pack( t_pack, t_message->MessageId() );
+                    process_message_pack( t_pack, t_message_id );
                 }
                 else
                 {
