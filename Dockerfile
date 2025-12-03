@@ -43,6 +43,16 @@ RUN cd /usr/local && \
     cd / && \
     rm -rf /usr/local/${pybind11_name}
 
+FROM base AS devel
+
+RUN apt-get update && \
+    apt-get clean && \
+    apt-get --fix-missing  -y install \
+        nano \
+        gdb \
+        valgrind \
+        cmake-curses-gui
+
 FROM base
 
 # note that the build dir is *not* in source, this is so that the source can me mounted onto the container without covering the build target
