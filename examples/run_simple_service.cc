@@ -46,5 +46,7 @@ int main( int argc, char** argv )
 
     CLI11_PARSE( the_main, argc, argv );
 
+    t_sig_hand.join_waiting_thread();
+
     return the_return;
 }
