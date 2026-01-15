@@ -22,7 +22,7 @@ LOGGER( dlog, "run_oscillation_service_endpoints" );
 int main( int argc, char** argv )
 {
     // Start handling signals
-    scarab::signal_handler t_sig_hand;
+    scarab::signal_handler t_sig_hand( true );
 
     scarab::main_app the_main;
 
@@ -46,8 +46,6 @@ int main( int argc, char** argv )
     the_main.callback( t_service_callback );
 
     CLI11_PARSE( the_main, argc, argv );
-
-    t_sig_hand.join_waiting_thread();
 
     return the_return;
 }

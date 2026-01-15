@@ -27,7 +27,7 @@ using namespace dripline;
 int main( int argc, char** argv )
 {    
     // Start handling signals
-    scarab::signal_handler t_sig_hand;
+    scarab::signal_handler t_sig_hand( true );
 
     // Create the application and agent objects
     scarab::main_app the_main;
@@ -99,8 +99,6 @@ int main( int argc, char** argv )
 
     // Parse CL options and run the application
     CLI11_PARSE( the_main, argc, argv );
-
-    t_sig_hand.join_waiting_thread();
 
     return the_agent.get_return() / 100; // this exit code is the class of the dripline return code
 }

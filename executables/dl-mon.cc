@@ -29,7 +29,7 @@ LOGGER( dlog, "dl-mon" );
 int main( int argc, char** argv )
 {
     // Start handling signals
-    scarab::signal_handler t_sig_hand;
+    scarab::signal_handler t_sig_hand( true );
 
     // Create the application
     scarab::main_app the_main;
@@ -83,8 +83,6 @@ int main( int argc, char** argv )
 
     // Parse CL options and run the application
     CLI11_PARSE( the_main, argc, argv );
-
-    t_sig_hand.join_waiting_thread();
 
     return the_return;
 }
