@@ -21,7 +21,7 @@ LOGGER( dlog, "simple_service" );
 int main( int argc, char** argv )
 {
     // Start handling signals
-    scarab::signal_handler t_sig_hand;
+    scarab::signal_handler t_sig_hand( true );
 
     scarab::main_app the_main;
 

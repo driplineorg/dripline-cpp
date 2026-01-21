@@ -29,7 +29,7 @@ LOGGER( dlog, "dl-mon" );
 int main( int argc, char** argv )
 {
     // Start handling signals
-    scarab::signal_handler t_sig_hand;
+    scarab::signal_handler t_sig_hand( true );
 
     // Create the application
     scarab::main_app the_main;
