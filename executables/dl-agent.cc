@@ -27,7 +27,7 @@ using namespace dripline;
 int main( int argc, char** argv )
 {    
     // Start handling signals
-    scarab::signal_handler t_sig_hand;
+    scarab::signal_handler t_sig_hand( true );
 
     // Create the application and agent objects
     scarab::main_app the_main;

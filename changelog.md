@@ -9,6 +9,13 @@ Types of changes: Added, Changed, Deprecated, Removed, Fixed, Security
 
 ## [Unreleased]
 
+## [2.10.10] -- 2026-01-21
+
+### Changed
+
+- Updated Scarab to v3.14.0 and made downstream changes
+- Updated the base Docker image to 3.14.2-slim-trixie
+
 
 ## [2.10.9] - 2025-12-02
 
