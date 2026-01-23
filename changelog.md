@@ -9,6 +9,14 @@ Types of changes: Added, Changed, Deprecated, Removed, Fixed, Security
 
 ## [Unreleased]
 
+
+## [2.10.11] -- 2026-01-23
+
+### Changed
+
+- Updated Scarab to v3.14.1
+
+
 ## [2.10.10] -- 2026-01-21
 
 ### Changed
