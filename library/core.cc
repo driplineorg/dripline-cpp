@@ -583,7 +583,7 @@ namespace dripline
             catch( std::exception& e )
             {
                 LERROR( dlog, "Standard exception caught: " << e.what() );
-                a_status = post_listen_status::hard_error;
+                a_status = post_listen_status::soft_error;
                 return;
             }
             catch(...)
