@@ -9,8 +9,10 @@ ARG build_examples=FALSE
 ARG enable_testing=FALSE
 ARG narg=2
 
-# Most dependencies
+ENV VCPKG_FORCE_SYSTEM_BINARIES=1
+ENV VCPKG_ROOT=/usr/local/vcpkg
 
+# Most dependencies
 RUN apt-get update && \
     apt-get clean && \
     apt-get --fix-missing  -y install \
@@ -21,9 +23,17 @@ RUN apt-get update && \
         libboost-chrono-dev \
         libboost-filesystem-dev \
         libboost-system-dev \
-        librabbitmq-dev \
         libyaml-cpp-dev \
-        rapidjson-dev && \
+        rapidjson-dev \
+        libzstd-dev \
+        libssl-dev \
+        zlib1g-dev \
+        ninja-build \
+        pkg-config \
+        curl \
+        tar \
+        unzip \
+        zip && \
 #        pybind11-dev \
 #        wget && \
     rm -rf /var/lib/apt/lists/*
@@ -42,6 +52,23 @@ RUN cd /usr/local && \
     make -j${narg} install && \
     cd / && \
     rm -rf /usr/local/${pybind11_name}
+
+ARG rmqcpp_checkout=
+RUN cd /usr/local && \
+    git clone https://github.com/Microsoft/vcpkg.git && \
+    /usr/local/vcpkg/bootstrap-vcpkg.sh && \
+    git clone https://github.com/bloomberg/rmqcpp.git && \
+    cd /usr/local/rmqcpp && \
+    git checkout ${rmqcpp_checkout} && \
+    ${VCPKG_ROOT}/vcpkg install --triplet arm64-linux && \
+    mkdir build && \
+    cd build && \
+    cmake -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake \
+        -DCMAKE_INSTALL_PREFIX=/usr/local \
+        -DBUILD_TESTING=OFF \
+        .. && \
+    make -j${narg} install
 
 FROM base AS devel
 
