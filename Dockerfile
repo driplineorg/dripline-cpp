@@ -20,14 +20,11 @@ RUN apt-get update && \
         cmake \
 #        gdb \
         git \
-        libboost-chrono-dev \
-        libboost-filesystem-dev \
-        libboost-system-dev \
         libyaml-cpp-dev \
         rapidjson-dev \
-        libzstd-dev \
         libssl-dev \
         zlib1g-dev \
+        libzstd-dev \
         ninja-build \
         pkg-config \
         curl \
@@ -43,7 +40,7 @@ ARG pybind11_checkout=v3.0.1
 ARG pybind11_repo=https://github.com/pybind/pybind11.git
 ARG pybind11_name=pybind11
 RUN cd /usr/local && \
-    git clone ${pybind11_repo} && \
+    git clone ${pybind11_repo} ${pybind11_name} && \
     cd ${pybind11_name} && \
     git checkout ${pybind11_checkout} && \
     mkdir build && \
@@ -53,6 +50,7 @@ RUN cd /usr/local && \
     cd / && \
     rm -rf /usr/local/${pybind11_name}
 
+ARG TARGETARCH
 ARG rmqcpp_checkout=
 RUN cd /usr/local && \
     git clone https://github.com/Microsoft/vcpkg.git && \
@@ -60,15 +58,46 @@ RUN cd /usr/local && \
     git clone https://github.com/bloomberg/rmqcpp.git && \
     cd /usr/local/rmqcpp && \
     git checkout ${rmqcpp_checkout} && \
-    ${VCPKG_ROOT}/vcpkg install --triplet arm64-linux && \
+    case "${TARGETARCH}" in \
+        amd64) TRIPLET="x64-linux-release" ;; \
+        arm64) TRIPLET="arm64-linux-release" ;; \
+        *) echo "Unsupported architecture: ${TARGETARCH}"; exit 1 ;; \
+    esac && \
+    ${VCPKG_ROOT}/vcpkg install --triplet ${TRIPLET} && \
     mkdir build && \
     cd build && \
     cmake -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake \
+        -DVCPKG_TARGET_TRIPLET=${TRIPLET} \
         -DCMAKE_INSTALL_PREFIX=/usr/local \
         -DBUILD_TESTING=OFF \
         .. && \
-    make -j${narg} install
+    make -j${narg} install && \
+    cd / && \
+    ${VCPKG_ROOT}/vcpkg install --triplet ${TRIPLET} boost-filesystem boost-system boost-chrono boost-variant && \
+    cp -a /usr/local/rmqcpp/vcpkg_installed/${TRIPLET}/include/. /usr/local/include/ && \
+    cp -a /usr/local/rmqcpp/vcpkg_installed/${TRIPLET}/lib/. /usr/local/lib/ && \
+    cp -a /usr/local/rmqcpp/vcpkg_installed/${TRIPLET}/share/. /usr/local/share/ && \
+    cp -a ${VCPKG_ROOT}/installed/${TRIPLET}/include/. /usr/local/include/ && \
+    cp -a ${VCPKG_ROOT}/installed/${TRIPLET}/lib/. /usr/local/lib/ && \
+    cp -a ${VCPKG_ROOT}/installed/${TRIPLET}/share/. /usr/local/share/ && \
+    rm -rf /usr/local/share/zstd && \
+    # Create a shim file to adapt the vcpkg install of "pcre2" to the expected standard "libpcre2-8"
+    mkdir -p /usr/local/share/libpcre2-8 && \
+    printf '%s\n' \
+        'include("/usr/local/share/pcre2/pcre2-config.cmake")' \
+        'if(NOT TARGET libpcre2-8::pcre2-8 AND TARGET pcre2::pcre2-8-static)' \
+        '  add_library(libpcre2-8::pcre2-8 ALIAS pcre2::pcre2-8-static)' \
+        'endif()' \
+        'set(libpcre2-8_FOUND TRUE)' \
+        > /usr/local/share/libpcre2-8/libpcre2-8Config.cmake && \
+    # rmqcpp's rmqcppConfig.cmake is missing the use of find_dependency(zstd), so we add it
+    RMQCPP_CONFIG=$(find /usr/local -name rmqcppConfig.cmake 2>/dev/null | head -1) && \
+    test -n "${RMQCPP_CONFIG}" && \
+    if ! grep -q 'find_dependency(zstd' "${RMQCPP_CONFIG}"; then \
+        sed -i '/include.*rmqcppTargets/i find_dependency(zstd CONFIG)' "${RMQCPP_CONFIG}"; \
+    fi
+    #rm -rf /usr/local/rmqcpp /usr/local/vcpkg /root/.cache/vcpkg
 
 FROM base AS devel
 
@@ -101,7 +130,7 @@ RUN mkdir -p /usr/local/build && \
     cmake ../src && \
     # unclear why I have to run cmake twice
     cmake -DCMAKE_BUILD_TYPE=${build_type} \
-        -DCMAKE_INSTALL_PREFIX:PATH=/usr/local \ 
+        -DCMAKE_INSTALL_PREFIX:PATH=/usr/local \
         -DDripline_BUILD_EXAMPLES:BOOL=${build_examples} \
         -DDripline_ENABLE_TESTING:BOOL=${enable_testing} \
         -DDripline_BUILD_PYTHON:BOOL=TRUE \
