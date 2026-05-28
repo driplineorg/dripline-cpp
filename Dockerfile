@@ -74,7 +74,7 @@ RUN cd /usr/local && \
         .. && \
     make -j${narg} install && \
     cd / && \
-    ${VCPKG_ROOT}/vcpkg install --triplet ${TRIPLET} boost-filesystem boost-system boost-chrono boost-variant && \
+    ${VCPKG_ROOT}/vcpkg install --triplet ${TRIPLET} boost-filesystem boost-system boost-chrono boost-variant boost-uuid && \
     cp -a /usr/local/rmqcpp/vcpkg_installed/${TRIPLET}/include/. /usr/local/include/ && \
     cp -a /usr/local/rmqcpp/vcpkg_installed/${TRIPLET}/lib/. /usr/local/lib/ && \
     cp -a /usr/local/rmqcpp/vcpkg_installed/${TRIPLET}/share/. /usr/local/share/ && \
