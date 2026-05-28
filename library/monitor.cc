@@ -15,6 +15,9 @@
 #include "logger.hh"
 #include "signal_handler.hh"
 
+#include <chrono>
+#include <thread>
+
 LOGGER( dlog, "monitor" );
 
 namespace dripline
@@ -23,7 +26,7 @@ namespace dripline
     monitor::monitor( const scarab::param_node& a_config, const scarab::authentication& a_auth ) :
             scarab::cancelable(),
             core( a_config["dripline_mesh"].as_node(), a_auth ),
-            listener_receiver(),
+            concurrent_receiver(),
             f_status( status::nothing ),
             f_name( std::string("monitor_") + string_from_uuid(generate_random_uuid()) ),
             f_json_print( false ),
@@ -94,24 +97,22 @@ namespace dripline
 
         LINFO( dlog, "Connecting to <" << f_address << ":" << f_port << ">" );
 
-        LDEBUG( dlog, "Opening channel for message monitor <" << f_name << ">" );
-        f_channel = open_channel();
-        if( ! f_channel ) return false;
+        try
+        {
+            open_connection();
+        }
+        catch( connection_error& e )
+        {
+            LERROR( dlog, "Unable to connect to the broker: " << e.what() );
+            return false;
+        }
         f_status = status::channel_created;
 
-        if( ! setup_exchange( f_channel, f_requests_exchange ) ) return false;
-        if( ! setup_exchange( f_channel, f_alerts_exchange ) ) return false;
-        f_status = status::exchange_declared;
-
-        LDEBUG( dlog, "Setting up queue for message monitor <" << f_name << ">" );
-        if( ! setup_queue( f_channel, f_name ) ) return false;
-        f_status = status::queue_declared;
-
-        if( ! bind_keys() ) return false;
-        f_status = status::queue_bound;
-
-        f_consumer_tag = start_consuming( f_channel, f_name );
-        if( f_consumer_tag.empty() ) return false;
+        // TODO (Phase 6): set up monitor topology, declare queue, bind routing keys
+        // - declare monitor queue (f_name)
+        // - bind each request key to the requests exchange
+        // - bind each alerts key to the alerts exchange
+        // - call start_listening( f_vhost, topology, queue_handle, f_name )
         f_status = status::consuming;
 
         return true;
@@ -134,16 +135,17 @@ namespace dripline
         {
             f_receiver_thread = std::thread( &concurrent_receiver::execute, this );
 
-            if( ! listen_on_queue() )
+            // Block until canceled
+            while( ! is_canceled() )
             {
-                throw dripline_error() << "Something went wrong while listening for messages";
+                std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
             }
 
             f_receiver_thread.join();
         }
         catch( std::system_error& e )
         {
-            LERROR( dlog, "Could not start the a thread due to a system error: " << e.what() );
+            LERROR( dlog, "Could not start a thread due to a system error: " << e.what() );
             return false;
         }
         catch( dripline_error& e )
@@ -165,94 +167,15 @@ namespace dripline
     {
         LINFO( dlog, "Stopping message monitor <" << f_name << ">" );
 
-        if( f_status >= status::listening ) // listening
+        if( f_status >= status::listening )
         {
             this->cancel( dl_success().rc_value() );
             f_status = status::consuming;
         }
 
-        if( f_status >= status::queue_bound ) // queue_bound or consuming
-        {
-            if( ! stop_consuming( f_channel, f_consumer_tag ) ) return false;
-            f_status = status::queue_bound;
-        }
+        stop_listening();
 
-        if( f_status >= status::queue_declared ) // queue_declared or queue_bound
-        {
-            if( ! remove_queue( f_channel, f_name ) ) return false;
-            f_status = status::exchange_declared;
-        }
-
-        return true;
-    }
-
-    bool monitor::bind_keys()
-    {
-        LDEBUG( dlog, "Binding request keys for message monitor <" << f_name << ">" );
-        for( auto t_req_key_it = f_requests_keys.begin(); t_req_key_it != f_requests_keys.end(); ++t_req_key_it )
-        {
-            if( ! bind_key( f_channel, f_requests_exchange, f_name, *t_req_key_it ) ) return false;
-        }
-
-        LDEBUG( dlog, "Binding alerts keys for message monitor <" << f_name << ">" );
-        for( auto t_al_key_it = f_alerts_keys.begin(); t_al_key_it != f_alerts_keys.end(); ++t_al_key_it )
-        {
-            if( ! bind_key( f_channel, f_alerts_exchange, f_name, *t_al_key_it ) ) return false;
-        }
-
-        return true;
-    }
-
-    bool monitor::listen_on_queue()
-    {
-        LINFO( dlog, "Listening for incoming messages on <" << f_name << ">" );
-
-        while( ! is_canceled()  )
-        {
-            amqp_envelope_ptr t_envelope;
-            core::post_listen_status t_post_listen_status = core::post_listen_status::unknown;
-            core::listen_for_message( t_envelope, t_post_listen_status, f_channel, f_consumer_tag, f_listen_timeout_ms );
-
-            if( f_canceled.load() )
-            {
-                LDEBUG( dlog, "Monitor <" << f_name << "> canceled" );
-                return true;
-            }
-
-            if( t_post_listen_status == core::post_listen_status::timeout )
-            {
-                // we end up here every time the listen times out with no message received
-                continue;
-            }
-
-            if( t_post_listen_status == core::post_listen_status::soft_error )
-            {
-                LWARN( dlog, "A soft error ocurred while listening for messages for monitor <" << f_name << ">.  The channel is still valid" );
-                continue;
-            }
-
-            if( t_post_listen_status == core::post_listen_status::hard_error )
-            {
-                LERROR( dlog, "A hard error ocurred while listening for messages for monitor <" << f_name << ">.  The channel is no longer valid" );
-                return false;
-            }
-
-            if( t_post_listen_status == core::post_listen_status::unknown )
-            {
-                LERROR( dlog, "An unknown status occurred while listening for messages for monitor <" << f_name << ">" );
-                return false;
-            }
-
-            // remaining status is core::post_listen_status::message_received
-
-            handle_message_chunk( t_envelope );
-
-            if( f_canceled.load() )
-            {
-                LDEBUG( dlog, "Monitor <" << f_name << "> canceled" );
-                return true;
-            }
-        }
+        f_status = status::nothing;
         return true;
     }
 

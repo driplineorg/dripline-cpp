@@ -9,7 +9,6 @@
 #define DRIPLINE_MONITOR_HH_
 
 #include "core.hh"
-#include "listener.hh"
 #include "receiver.hh"
 
 namespace scarab
@@ -43,7 +42,7 @@ namespace DRIPLINE_API dripline
     */
     class monitor :
             public core,
-            public listener_receiver
+            public concurrent_receiver
     {
         protected:
             enum class status
@@ -93,14 +92,7 @@ namespace DRIPLINE_API dripline
             /// Stops listening for messages and closes the AMQP connection.
             bool stop();
 
-        protected:
-            bool bind_keys();
-
         public:
-            /// Waits for a single AMQP message and processes it.
-            /// Returns false if the return is due to an error in this function; returns true otherwise (namely because it was canceled)
-            virtual bool listen_on_queue();
-
             /// Handles a single Dripline message by printing it to stdout.
             /// Printing is done via a prog-level message in the logger.
             virtual void submit_message( message_ptr_t a_message );
