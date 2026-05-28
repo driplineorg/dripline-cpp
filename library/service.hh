@@ -11,9 +11,8 @@
 #include "core.hh"
 #include "endpoint.hh"
 #include "heartbeater.hh"
-#include "scheduler.hh"
-#include "listener.hh"
 #include "receiver.hh"
+#include "scheduler.hh"
 
 #include "dripline_exceptions.hh"
 #include "service_config.hh"
@@ -79,7 +78,7 @@ namespace dripline
     class DRIPLINE_API service :
             public core,
             public endpoint,
-            public listener_receiver,
+            public concurrent_receiver,
             public heartbeater,
             public scheduler<>
     {
@@ -147,14 +146,14 @@ namespace dripline
             bool add_async_child( endpoint_ptr_t a_endpoint_ptr );
 
         public:
-            /// Sends a request message and returns a channel on which to listen for a reply.
-            virtual sent_msg_pkg_ptr send( request_ptr_t a_request, amqp_channel_ptr a_channel = amqp_channel_ptr() ) const;
+            /// Sends a request message
+            virtual sent_msg_pkg_ptr send( request_ptr_t a_request ) const;
 
             /// Sends a reply message
-            virtual sent_msg_pkg_ptr send( reply_ptr_t a_reply, amqp_channel_ptr a_channel = amqp_channel_ptr() ) const;
+            virtual sent_msg_pkg_ptr send( reply_ptr_t a_reply ) const;
 
             /// Sends an alert message
-            virtual sent_msg_pkg_ptr send( alert_ptr_t a_alert, amqp_channel_ptr a_channel = amqp_channel_ptr() ) const;
+            virtual sent_msg_pkg_ptr send( alert_ptr_t a_alert ) const;
 
         public:
             /**
@@ -182,34 +181,13 @@ namespace dripline
             /// If this returns false, the service should quit with an error
             bool stop();
 
-        protected:
-            virtual bool open_channels();
-
-            virtual bool setup_queues();
-
-            virtual bool bind_keys();
-
-            virtual bool start_consuming();
-
-            virtual bool stop_consuming();
-
-            virtual bool remove_queue();
-
-        public:
-            /// Waits for AMQP messages arriving on the channel
-            /// Returns false if the return is due to an error in this function; returns true otherwise (namely because it was canceled)
-            virtual bool listen_on_queue();
-
-            /// Sends a reply message
-            virtual void send_reply( reply_ptr_t a_reply ) const;
-
             mv_accessible( uuid_t, id );
 
         public:
             typedef std::map< std::string, endpoint_ptr_t > sync_map_t;
             mv_referrable( sync_map_t, sync_children );
 
-            typedef std::map< std::string, lr_ptr_t > async_map_t;
+            typedef std::map< std::string, elr_ptr_t > async_map_t;
             mv_referrable( async_map_t, async_children );
 
             mv_referrable( std::string, broadcast_key );
@@ -224,28 +202,22 @@ namespace dripline
             virtual void do_cancellation( int a_code );
     };
 
-    inline sent_msg_pkg_ptr service::send( request_ptr_t a_request, amqp_channel_ptr a_channel ) const
+    inline sent_msg_pkg_ptr service::send( request_ptr_t a_request ) const
     {
         a_request->sender_service_name() = f_name;
-        // we don't use f_channel on this core::send command because a channel can only be used in a single thread, 
-        // and f_channel is primarily meant for listening with the listener thread.
-        return core::send( a_request, a_channel );
+        return core::send( a_request );
     }
 
-    inline sent_msg_pkg_ptr service::send( reply_ptr_t a_reply, amqp_channel_ptr a_channel ) const
+    inline sent_msg_pkg_ptr service::send( reply_ptr_t a_reply ) const
     {
-        a_reply->sender_service_name() = f_name ;
-        // we don't use f_channel on this core::send command because a channel can only be used in a single thread, 
-        // and f_channel is primarily meant for listening with the listener thread.
-        return core::send( a_reply, a_channel );
+        a_reply->sender_service_name() = f_name;
+        return core::send( a_reply );
     }
 
-    inline sent_msg_pkg_ptr service::send( alert_ptr_t a_alert, amqp_channel_ptr a_channel ) const
+    inline sent_msg_pkg_ptr service::send( alert_ptr_t a_alert ) const
     {
         a_alert->sender_service_name() = f_name;
-        // we don't use f_channel on this core::send command because a channel can only be used in a single thread, 
-        // and f_channel is primarily meant for listening with the listener thread.
-        return core::send( a_alert, a_channel );
+        return core::send( a_alert );
     }
 
 } /* namespace dripline */

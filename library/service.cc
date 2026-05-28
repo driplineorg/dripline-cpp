@@ -33,7 +33,7 @@ namespace dripline
             core( a_config.has("dripline_mesh") ? a_config["dripline_mesh"].as_node() : dripline_config(), 
                   a_auth, a_make_connection ),
             endpoint( a_config.get_value( "name", "dlcpp_service" ) ),
-            listener_receiver(),
+            concurrent_receiver(),
             heartbeater( this ),
             scheduler<>(),
             f_auth( a_auth ),
@@ -47,9 +47,7 @@ namespace dripline
     {
         LDEBUG( dlog, "Service (cpp) created with config:\n" << a_config );
         // get more values from the config
-        // default of f_listen_timeout_ms is in the listener class
-        f_listen_timeout_ms = a_config.get_value( "loop_timeout_ms", f_listen_timeout_ms );
-        heartbeater::f_check_timeout_ms = f_listen_timeout_ms;
+        heartbeater::f_check_timeout_ms = a_config.get_value( "loop_timeout_ms", 1000 );
         // default of f_single_message_wait_ms is in the receiver class
         f_single_message_wait_ms = a_config.get_value( "message_wait_ms", f_single_message_wait_ms );
         // default of f_heartbeat_interval_s is in the heartbeater class
@@ -89,7 +87,7 @@ namespace dripline
         cancelable::operator=( std::move(a_orig) );
         core::operator=( std::move(a_orig) );
         endpoint::operator=( std::move(a_orig));
-        listener_receiver::operator=( std::move(a_orig) );
+        concurrent_receiver::operator=( std::move(a_orig) );
         heartbeater::operator=( std::move(a_orig) );
         scheduler<>::operator=( std::move(a_orig) );
 
@@ -121,12 +119,12 @@ namespace dripline
 
     bool service::add_async_child( endpoint_ptr_t a_endpoint_ptr )
     {
-        lr_ptr_t t_listener_receiver_ptr = std::dynamic_pointer_cast< listener_receiver >( a_endpoint_ptr );
-        if( ! t_listener_receiver_ptr )
+        elr_ptr_t t_elr_ptr = std::dynamic_pointer_cast< endpoint_listener_receiver >( a_endpoint_ptr );
+        if( ! t_elr_ptr )
         {
-            t_listener_receiver_ptr.reset( new endpoint_listener_receiver( a_endpoint_ptr ) );
+            t_elr_ptr = std::make_shared< endpoint_listener_receiver >( a_endpoint_ptr );
         }
-        auto t_inserted = f_async_children.insert( std::make_pair( a_endpoint_ptr->name(), t_listener_receiver_ptr ) );
+        auto t_inserted = f_async_children.insert( std::make_pair( a_endpoint_ptr->name(), t_elr_ptr ) );
         if( t_inserted.second )
         {
             a_endpoint_ptr->set_service( this );
@@ -208,20 +206,22 @@ namespace dripline
 
         LINFO( dlog, "Connecting to <" << f_address << ":" << f_port << ">" );
 
-        if( ! open_channels() ) return false;
+        try
+        {
+            open_connection();
+        }
+        catch( connection_error& e )
+        {
+            LERROR( dlog, "Unable to connect to the broker: " << e.what() );
+            return false;
+        }
         f_status = status::channel_created;
 
-        if( ! setup_exchange( f_channel, f_requests_exchange ) ) return false;
-        if( ! setup_exchange( f_channel, f_alerts_exchange ) ) return false;
-        f_status = status::exchange_declared;
-
-        if( ! setup_queues() ) return false;
-        f_status = status::queue_declared;
-
-        if( ! bind_keys() ) return false;
-        f_status = status::queue_bound;
-
-        if( ! start_consuming() ) return false;
+        // TODO (Phase 6): set up service topology, declare queues, bind routing keys
+        // - declare service queue (f_name) and routing keys (f_name + ".#", f_broadcast_key + ".#")
+        // - for each sync child, bind child_name + ".#" to the service queue
+        // - call start_listening( f_vhost, topology, service_queue_handle, f_name )
+        // - for each async child, declare its queue and call child->start_listening(...)
         f_status = status::consuming;
 
         return true;
@@ -262,35 +262,26 @@ namespace dripline
             LINFO( dlog, "Starting receiver thread" );
             f_receiver_thread = std::thread( &concurrent_receiver::execute, this );
 
-            // lambda to cancel everything on an error from listener::listen_on_queue()
-            bool t_listen_error = false;
-            auto t_cancel_on_listen_error = [&t_listen_error, this](listener& a_listener) {
-                if( ! a_listener.listen_on_queue() )
-                {
-                    t_listen_error = true;
-                    this->cancel( RETURN_ERROR );
-                }
-            };
-
             if( ! f_async_children.empty() ) { LINFO( dlog, "Starting async children" ); }
             else { LDEBUG( dlog, "No async children to start" ); }
-            for( async_map_t::iterator t_child_it = f_async_children.begin();
-                    t_child_it != f_async_children.end();
-                    ++t_child_it )
+            for( auto& t_child_pair : f_async_children )
             {
-                t_child_it->second->receiver_thread() = std::thread( &concurrent_receiver::execute, static_cast< listener_receiver* >(t_child_it->second.get()) );
-                t_child_it->second->listener_thread() = std::thread( t_cancel_on_listen_error, std::ref(*t_child_it->second.get()) );
+                t_child_pair.second->receiver_thread() = std::thread( &concurrent_receiver::execute, t_child_pair.second.get() );
+                // TODO (Phase 6): call t_child_pair.second->start_listening( f_vhost, topology, queue_handle, t_child_pair.first )
             }
 
-            LINFO( dlog, "Starting listener thread" );
-            t_cancel_on_listen_error( *this );
-
-            for( async_map_t::iterator t_child_it = f_async_children.begin();
-                    t_child_it != f_async_children.end();
-                    ++t_child_it )
+            // Block until canceled
+            while( ! is_canceled() )
             {
-                t_child_it->second->listener_thread().join();
-                t_child_it->second->receiver_thread().join();
+                std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
+            }
+
+            for( auto& t_child_pair : f_async_children )
+            {
+                if( t_child_pair.second->receiver_thread().joinable() )
+                {
+                    t_child_pair.second->receiver_thread().join();
+                }
             }
 
             f_receiver_thread.join();
@@ -303,12 +294,10 @@ namespace dripline
             {
                 f_scheduler_thread.join();
             }
-
-            if( t_listen_error) throw dripline_error() << "Something went wrong while listening for messages";
         }
         catch( std::system_error& e )
         {
-            LERROR( dlog, "Could not start the a thread due to a system error: " << e.what() );
+            LERROR( dlog, "Could not start a thread due to a system error: " << e.what() );
             return false;
         }
         catch( dripline_error& e )
@@ -329,182 +318,20 @@ namespace dripline
     {
         LINFO( dlog, "Stopping service on <" << f_name << ">" );
 
-        if( f_status >= status::listening ) // listening or processing
+        if( f_status >= status::listening )
         {
             this->cancel( dl_success().rc_value() );
             f_status = status::consuming;
         }
-        if( f_status >= status::queue_bound ) // queue_bound or consuming
+
+        stop_listening();
+
+        for( auto& t_child_pair : f_async_children )
         {
-            if( ! stop_consuming() ) return false;
-            f_status = status::queue_bound;
+            t_child_pair.second->stop_listening();
         }
 
-
-        if( f_status >= status::queue_declared ) // queue_declared or queue_bound
-        {
-            if( ! remove_queue() ) return false;
-            f_status = status::exchange_declared;
-        }
-
-        return true;
-    }
-
-    bool service::open_channels()
-    {
-        LDEBUG( dlog, "Opening channel for service <" << f_name << ">" );
-        f_channel = open_channel();
-        if( ! f_channel ) return false;
-
-        for( async_map_t::iterator t_child_it = f_async_children.begin();
-                t_child_it != f_async_children.end();
-                ++t_child_it )
-        {
-            LDEBUG( dlog, "Opening channel for child <" << t_child_it->first << ">" );
-            t_child_it->second->channel() = open_channel();
-            t_child_it->second->set_listen_timeout_ms( f_listen_timeout_ms );
-        }
-        return true;
-    }
-
-    bool service::setup_queues()
-    {
-        LDEBUG( dlog, "Setting up queue for service <" << f_name << ">" );
-        if( ! setup_queue( f_channel, f_name ) ) return false;
-
-        for( async_map_t::iterator t_child_it = f_async_children.begin();
-                t_child_it != f_async_children.end();
-                ++t_child_it )
-        {
-            LDEBUG( dlog, "Setting up queue for async child <" << t_child_it->first << ">" );
-            if( ! setup_queue( t_child_it->second->channel(), t_child_it->first ) ) return false;
-        }
-
-        return true;
-    }
-
-    bool service::bind_keys()
-    {
-        LDEBUG( dlog, "Binding primary service keys" );
-        if( ! bind_key( f_channel, f_requests_exchange, f_name, f_name + ".#" ) ) return false;
-        if( ! bind_key( f_channel, f_requests_exchange, f_name, f_broadcast_key + ".#" ) ) return false;
-
-        LDEBUG( dlog, "Binding keys for synchronous children" );
-        for( sync_map_t::const_iterator t_child_it = f_sync_children.begin();
-                t_child_it != f_sync_children.end();
-                ++t_child_it )
-        {
-            if( ! bind_key( f_channel, f_requests_exchange, f_name, t_child_it->first + ".#" ) ) return false;
-        }
-
-        LDEBUG( dlog, "Binding keys for asynchronous children" );
-        for( async_map_t::iterator t_child_it = f_async_children.begin();
-                t_child_it != f_async_children.end();
-                ++t_child_it )
-        {
-            if( ! bind_key( t_child_it->second->channel(), f_requests_exchange, t_child_it->first, t_child_it->first + ".#" ) ) return false;
-        }
-
-        return true;
-    }
-
-    bool service::start_consuming()
-    {
-        f_consumer_tag = core::start_consuming( f_channel, f_name );
-        if( f_consumer_tag.empty() ) return false;
-
-        for( async_map_t::iterator t_child_it = f_async_children.begin();
-                t_child_it != f_async_children.end();
-                ++t_child_it )
-        {
-            t_child_it->second->consumer_tag() = core::start_consuming( t_child_it->second->channel(), t_child_it->first );
-            if( t_child_it->second->consumer_tag().empty() ) return false;
-        }
-        return true;
-    }
-
-    bool service::stop_consuming()
-    {
-        // doesn't stop on failure; continues trying to stop consuming
-        bool t_success = true;
-        t_success = core::stop_consuming( f_channel, f_consumer_tag );
-        for( async_map_t::iterator t_child_it = f_async_children.begin();
-                t_child_it != f_async_children.end();
-                ++t_child_it )
-        {
-            t_success = core::stop_consuming( t_child_it->second->channel(), t_child_it->second->consumer_tag() );
-        }
-        return t_success;
-    }
-
-    bool service::remove_queue()
-    {
-        // doesn't stop on failure; continues trying to remove queues
-        bool t_success = true;
-        t_success = core::remove_queue( f_channel, f_name );
-        for( async_map_t::iterator t_child_it = f_async_children.begin();
-                t_child_it != f_async_children.end();
-                ++t_child_it )
-        {
-            t_success = core::remove_queue( t_child_it->second->channel(), t_child_it->first );
-        }
-        return t_success;
-    }
-
-    bool service::listen_on_queue()
-    {
-        LINFO( dlog, "Listening for incoming messages on <" << f_name << ">" );
-
-        while( ! is_canceled()  )
-        {
-            amqp_envelope_ptr t_envelope;
-            core::post_listen_status t_post_listen_status = core::post_listen_status::unknown;
-            core::listen_for_message( t_envelope, t_post_listen_status, f_channel, f_consumer_tag, f_listen_timeout_ms );
-
-            if( f_canceled.load() )
-            {
-                LDEBUG( dlog, "Service canceled" );
-                return true;
-            }
-
-            if( t_post_listen_status == core::post_listen_status::timeout )
-            {
-                // we end up here every time the listen times out with no message received
-                continue;
-            }
-
-            if( t_post_listen_status == core::post_listen_status::soft_error )
-            {
-                LWARN( dlog, "A soft error ocurred while listening for messages for <" << f_name << ">.  The channel is still valid" );
-                continue;
-            }
-
-            if( t_post_listen_status == core::post_listen_status::hard_error )
-            {
-                LERROR( dlog, "A hard error ocurred while listening for messages for <" << f_name << ">.  The channel is no longer valid" );
-                return false;
-            }
-
-            if( t_post_listen_status == core::post_listen_status::unknown )
-            {
-                LERROR( dlog, "An unknown status occurred while listening for messages for <" << f_name << ">" );
-                return false;
-            }
-
-            // remaining status is core::post_listen_status::message_received
-
-            f_status = status::processing;
-
-            handle_message_chunk( t_envelope );
-
-            if( f_canceled.load() )
-            {
-                LDEBUG( dlog, "Service <" << f_name << "> canceled" );
-                return true;
-            }
-
-            f_status = status::listening;
-        }
+        f_status = status::nothing;
         return true;
     }
 
@@ -520,36 +347,12 @@ namespace dripline
             LERROR( dlog, "<" << f_name << "> Dripline exception caught while handling message: " << e.what() );
             throw;
         }
-        catch( amqp_exception& e )
-        {
-            LERROR( dlog, "<" << f_name << "> AMQP exception caught while handling message: (" << e.reply_code() << ") " << e.reply_text() );
-            throw;
-        }
-        catch( amqp_lib_exception& e )
-        {
-            LERROR( dlog, "<" << f_name << "> AMQP Library Exception caught while handling message: (" << e.ErrorCode() << ") " << e.what() );
-            throw;
-        }
         catch( std::exception& e )
         {
             LERROR( dlog, "<" << f_name << "> Standard exception caught while handling message: " << e.what() );
             throw;
         }
 
-        return;
-    }
-
-    void service::send_reply( reply_ptr_t a_reply ) const
-    {
-        LDEBUG( dlog, "Sending reply message to <" << a_reply->routing_key() << ">:\n" <<
-                 "    Return code: " << a_reply->get_return_code() << '\n' <<
-                 "    Return message: " << a_reply->return_message() << '\n' <<
-                 "    Payload:\n" << a_reply->payload() );
-
-        if( ! send( a_reply ) )
-        {
-            LWARN( dlog, "Something went wrong while sending the reply" );
-        }
         return;
     }
 
