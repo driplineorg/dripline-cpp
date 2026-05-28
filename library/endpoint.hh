@@ -9,6 +9,7 @@
 #define DRIPLINE_ENDPOINT_HH_
 
 #include "message.hh"
+#include "receiver.hh"
 #include "return_codes.hh"
 
 namespace dripline
@@ -251,6 +252,34 @@ namespace dripline
     {
         return a_request->reply( dl_success(), "No action taken (this is the default method)" );
     }
+
+    /*!
+     @class endpoint_listener_receiver
+     @author N.S. Oblath
+
+     @brief Decorator class for a plain endpoint: adds concurrent_receiver capabilities.
+
+     @details
+     The endpoint_listener_receiver is used by @ref service to wrap an endpoint that is to listen for messages asynchronously.
+    */
+    class DRIPLINE_API endpoint_listener_receiver : public concurrent_receiver
+    {
+        public:
+            explicit endpoint_listener_receiver( endpoint_ptr_t a_endpoint_ptr );
+            endpoint_listener_receiver( const endpoint_listener_receiver& ) = delete;
+            endpoint_listener_receiver( endpoint_listener_receiver&& a_orig );
+            virtual ~endpoint_listener_receiver();
+
+            endpoint_listener_receiver& operator=( const endpoint_listener_receiver& ) = delete;
+            endpoint_listener_receiver& operator=( endpoint_listener_receiver&& a_orig );
+
+        protected:
+            /// Direct submission of messages to the endpoint
+            virtual void submit_message( message_ptr_t a_message ) override;
+
+            /// Pointer to the decorated endpoint
+            mv_referrable( endpoint_ptr_t, endpoint );
+    };
 
 } /* namespace dripline */
 
