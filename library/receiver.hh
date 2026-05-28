@@ -12,6 +12,8 @@
 #include "dripline_api.hh"
 #include "dripline_fwd.hh"
 
+#include "rmqa_topology.h"
+
 #include "cancelable.hh"
 #include "concurrent_queue.hh"
 #include "member_variables.hh"
@@ -105,8 +107,6 @@ namespace dripline
             mv_referrable( incoming_message_map, incoming_messages );
             /// Wait time for all message chunks from a single dripline message
             mv_accessible( unsigned, single_message_wait_ms );
-            /// Listen timeout for individual message chunks when waiting for replies
-            mv_accessible( unsigned, reply_listen_timeout_ms );
 
 
         public:
@@ -118,18 +118,9 @@ namespace dripline
             @return Reply message
             */
             reply_ptr_t wait_for_reply( const sent_msg_pkg_ptr a_receive_reply, int a_timeout_ms = 0 );
-            /*!
-            User interface for waiting for a reply message.
-            This can be called multiple times to receive multiple replies.
-            @param[in] a_receive_reply The sent-message package from the request.
-            @param[in] a_timeout_ms Timeout for waiting for a reply; if it's 0, there will be no timeout.
-            @param[out] a_chan_valid Returns whether or not the channel is still valid for use after receiving a message.
-            @return Reply message
-            */
-            reply_ptr_t wait_for_reply( const sent_msg_pkg_ptr a_receive_reply, core::post_listen_status& a_status, int a_timeout_ms = 0 );
 
         protected:
-            reply_ptr_t process_received_reply( incoming_message_pack& a_pack, const std::string& a_message_id );
+            // (no protected helpers currently)
 
     };
 
@@ -172,6 +163,16 @@ namespace dripline
             /// Handles messages that appear in the concurrent queue by calling `submit_message()`.
             void execute();
 
+            /// Creates an rmqcpp consumer on the given queue and begins receiving messages.
+            /// Each received message is passed to handle_message_chunk().
+            void start_listening( bsl::shared_ptr< BloombergLP::rmqa::VHost > a_vhost,
+                                  const BloombergLP::rmqa::Topology& a_topology,
+                                  const BloombergLP::rmqt::QueueHandle& a_queue_handle,
+                                  const std::string& a_label = "" );
+
+            /// Cancels the rmqcpp consumer, drains in-flight messages, and releases it.
+            void stop_listening();
+
         protected:
             /// Handles messages according to the use case.  It's to be implemented by the class inheriting from concurrent_receiver
             /// For a concrete example, see @ref service or @ref endpoint_listener_receiver.
@@ -179,6 +180,7 @@ namespace dripline
 
             mv_referrable( scarab::concurrent_queue< message_ptr_t >, message_queue );
             mv_referrable( std::thread, receiver_thread );
+            bsl::shared_ptr< BloombergLP::rmqa::Consumer > f_consumer;
     };
 
 } /* namespace dripline */

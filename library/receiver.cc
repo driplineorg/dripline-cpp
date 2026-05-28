@@ -12,8 +12,13 @@
 #include "dripline_exceptions.hh"
 #include "message.hh"
 
+#include "rmqa_vhost.h"
+#include "rmqp_messageguard.h"
+
 #include "logger.hh"
 #include "signal_handler.hh"
+
+#include <future>
 
 LOGGER( dlog, "receiver" );
 
@@ -46,8 +51,7 @@ namespace dripline
     receiver::receiver() :
             scarab::cancelable(),
             f_incoming_messages(),
-            f_single_message_wait_ms( 1000 ),
-            f_reply_listen_timeout_ms( 1000 )
+            f_single_message_wait_ms( 1000 )
     {}
 
     receiver& receiver::operator=( receiver&& a_orig )
@@ -63,10 +67,10 @@ namespace dripline
     {
         try
         {
-            amqp_message_ptr t_message = a_envelope->Message();
-            LDEBUG( dlog, "Received a message chunk <" << t_message->MessageId() );
+            amqp_message_ptr t_message = bsl::make_shared< BloombergLP::rmqt::Message >( a_envelope->message() );
+            LDEBUG( dlog, "Received a message chunk <" << std::string( t_message->messageId() ) );
 
-            auto t_parsed_message_id = message::parse_message_id( t_message->MessageId() );
+            auto t_parsed_message_id = message::parse_message_id( std::string( t_message->messageId() ) );
             std::string t_message_id( std::get<0>(t_parsed_message_id) );
             if( incoming_messages().count( t_message_id ) == 0 )
             {
@@ -78,7 +82,7 @@ namespace dripline
                 t_pack.f_messages.resize( std::get<2>(t_parsed_message_id) );
                 // put in place the first message chunk received
                 t_pack.f_messages[std::get<1>(t_parsed_message_id)] = t_message;
-                t_pack.f_routing_key = a_envelope->RoutingKey();
+                t_pack.f_routing_key = std::string( a_envelope->envelope().routingKey() );
                 t_pack.f_chunks_received = 1;
 
                 if( t_pack.f_messages.size() == 1 )
@@ -205,18 +209,12 @@ namespace dripline
 
     reply_ptr_t receiver::wait_for_reply( const sent_msg_pkg_ptr a_receive_reply, int a_timeout_ms )
     {
-        core::post_listen_status t_temp = core::post_listen_status::unknown;
-        return wait_for_reply( a_receive_reply, t_temp, a_timeout_ms );
-    }
-
-    reply_ptr_t receiver::wait_for_reply( const sent_msg_pkg_ptr a_receive_reply, core::post_listen_status& a_status, int a_timeout_ms )
-    {
-        if ( ! a_receive_reply->f_channel )
+        if( ! a_receive_reply->f_reply_consumer )
         {
             return reply_ptr_t();
         }
 
-        if( a_timeout_ms != 0 ) 
+        if( a_timeout_ms != 0 )
         {
             LDEBUG( dlog, "Waiting for a reply (timeout: " << a_timeout_ms << " ms)" );
         }
@@ -225,189 +223,37 @@ namespace dripline
             LDEBUG( dlog, "Waiting for a reply (no timeout)" );
         }
 
-        // Assign the chunk timeout time; it should be f_reply_listen_timeout_ms unless a_timeout_ms is shorter than f_reply_listen_timeout_ms
-        unsigned t_chunk_timeout_ms = f_reply_listen_timeout_ms;
-        if( a_timeout_ms > 0 && a_timeout_ms < t_chunk_timeout_ms )
+        auto t_future = a_receive_reply->f_reply_promise->get_future();
+        auto t_deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds( a_timeout_ms );
+
+        while( ! is_canceled() )
         {
-            t_chunk_timeout_ms = a_timeout_ms;
+            auto t_status = t_future.wait_for( std::chrono::milliseconds( 100 ) );
+            if( t_status == std::future_status::ready )
+            {
+                return t_future.get();
+            }
+            if( a_timeout_ms > 0 && std::chrono::steady_clock::now() >= t_deadline )
+            {
+                LWARN( dlog, "Timed out waiting for reply" );
+                return reply_ptr_t();
+            }
         }
 
-        // for checking the wait_for_reply timeout
-        auto t_timeout_time = std::chrono::system_clock::now() + std::chrono::milliseconds(a_timeout_ms);
-
-        // wait for messages until either:
-        //   1. the channel is no longer valid (return empty reply pointer; a_chan_valid will be false)
-        //   2. listening times out (return empty reply pointer; a_chan_valid will be true)
-        //   3. a full dripline message is received (return message)
-        //   4. error processing a recieved amqp message (return empty reply pointer)
-        while( ! is_canceled() && (a_timeout_ms == 0 || std::chrono::system_clock::now() < t_timeout_time) )
-        {
-            amqp_envelope_ptr t_envelope;
-            core::listen_for_message( t_envelope, a_status, a_receive_reply->f_channel, a_receive_reply->f_consumer_tag, t_chunk_timeout_ms, false );
-
-            // check whether we canceled while listening
-            if( is_canceled() )
-            {
-                LDEBUG( dlog, "Receiver was canceled before receiving reply" );
-                return reply_ptr_t();
-            }
-
-            // there was a soft error listening on the channel; no message received
-            if( a_status == core::post_listen_status::soft_error )
-            {
-                LWARN( dlog, "There was a soft error while listening for a reply; no message received" );
-                continue;
-            }
-
-            // there was a hard error listening on the channel; no message received
-            if( a_status == core::post_listen_status::hard_error )
-            {
-                LERROR( dlog, "There was a hard error error while listening for a reply; no message received" );
-                return reply_ptr_t();
-            }
-
-            // listening timed out
-            if( a_status == core::post_listen_status::timeout )
-            {
-                LTRACE( dlog, "Listening for reply message chunks timed out" );
-                // continue to wait for message chunks
-                continue;
-            }
-
-            // unknown state; should not get here
-            if( a_status == core::post_listen_status::unknown )
-            {
-                LERROR( dlog, "An unknown status occurred while listening for messages" );
-                return reply_ptr_t();
-            }
-
-            // because core::listen_for_message uses whether or not the envelope is empty to differentiate between a received message and a timeout, 
-            // we will never have an empty envelope and a status == message_received
-
-            // go ahead with message processing
-            try
-            {
-                amqp_message_ptr t_message = t_envelope->Message();
-                LDEBUG( dlog, "Received a message chunk <" << t_message->MessageId() );
-
-                auto t_parsed_message_id = message::parse_message_id( t_message->MessageId() );
-                if( f_incoming_messages.count( std::get<0>(t_parsed_message_id) ) == 0 )
-                {
-                    // this path: first chunk for this message
-                    LDEBUG( dlog, "This is the first chunk for this message; creating new message pack" );
-                    // create the new message_pack object
-                    incoming_message_pack& t_pack = f_incoming_messages[std::get<0>(t_parsed_message_id)];
-                    // set the f_messages vector to the expected size
-                    t_pack.f_messages.resize( std::get<2>(t_parsed_message_id) );
-                    // put in place the first message chunk received
-                    t_pack.f_messages[std::get<1>(t_parsed_message_id)] = t_message;
-                    t_pack.f_routing_key = t_envelope->RoutingKey();
-                    t_pack.f_chunks_received = 1;
-
-                    if( t_pack.f_chunks_received == t_pack.f_messages.size() )
-                    {
-                        return process_received_reply( t_pack, std::get<0>(t_parsed_message_id) );
-                    }
-                    // else, need more chunks
-                }
-                else
-                {
-                    // this path: have already received chunks from this message
-                    LDEBUG( dlog, "This is not the first chunk for this message; adding to message pack" );
-                    incoming_message_pack& t_pack = f_incoming_messages[std::get<0>(t_parsed_message_id)];
-                    if( t_pack.f_processing.load() )
-                    {
-                        LWARN( dlog, "Message <" << std::get<0>(t_parsed_message_id) << "> is already being processed\n" <<
-                                "Just received chunk " << std::get<1>(t_parsed_message_id) << " of " << std::get<2>(t_parsed_message_id) );
-                    }
-                    else
-                    {
-                        if( t_pack.f_messages[std::get<1>(t_parsed_message_id)] )
-                        {
-                            LWARN( dlog, "Received duplicate message chunk for message <" << std::get<0>(t_parsed_message_id) << ">; chunk " << std::get<1>(t_parsed_message_id) );
-                        }
-                        else
-                        {
-                            // add chunk to set of chunks
-                            t_pack.f_messages[std::get<1>(t_parsed_message_id)] = t_message;
-                            ++t_pack.f_chunks_received;
-                            if( t_pack.f_chunks_received == t_pack.f_messages.size() )
-                            {
-                                return process_received_reply( t_pack, std::get<0>(t_parsed_message_id) );
-                            }
-                        }
-                    }
-                }
-
-            }
-            catch( dripline_error& e )
-            {
-                LERROR( dlog, "There was a problem processing the message: " << e.what() );
-                a_status = core::post_listen_status::soft_error;
-                return reply_ptr_t();
-            }
-
-        } // end while( ! is_canceled() && not timed out )
-
-        // check if listening timed out
-        if( ! is_canceled() && std::chrono::system_clock::now() > t_timeout_time )
-        {
-            LINFO( dlog, "Listening for reply message timed out" );
-            a_status = core::post_listen_status::timeout;
-            return reply_ptr_t();
-        }
-
-        LDEBUG( dlog, "Receiver was canceled" );
+        LDEBUG( dlog, "Receiver canceled while waiting for reply" );
         return reply_ptr_t();
-    }
-
-    reply_ptr_t receiver::process_received_reply( incoming_message_pack& a_pack, const std::string& a_message_id )
-    {
-        a_pack.f_processing.store( true );
-        try
-        {
-            message_ptr_t t_message = message::process_message( a_pack.f_messages, a_pack.f_routing_key );
-
-            f_incoming_messages.erase( a_message_id );
-
-            if( t_message->is_reply() )
-            {
-                return std::static_pointer_cast< msg_reply >( t_message );
-            }
-            else
-            {
-                throw dripline_error() << "Non-reply message received";
-            }
-        }
-        catch( dripline_error& e )
-        {
-            LERROR( dlog, "Dripline exception caught while handling message: " << e.what() );
-        }
-        catch( amqp_exception& e )
-        {
-            LERROR( dlog, "AMQP exception caught while sending reply: (" << e.reply_code() << ") " << e.reply_text() );
-        }
-        catch( amqp_lib_exception& e )
-        {
-            LERROR( dlog, "AMQP Library Exception caught while sending reply: (" << e.ErrorCode() << ") " << e.what() );
-        }
-        catch( std::exception& e )
-        {
-            LERROR( dlog, "Standard exception caught while sending reply: " << e.what() );
-        }
-
-        return reply_ptr_t();
-
     }
 
     concurrent_receiver::concurrent_receiver() :
             receiver(),
-            f_message_queue()
+            f_message_queue(),
+            f_consumer()
     {}
 
     concurrent_receiver::concurrent_receiver( concurrent_receiver&& a_orig ) :
             receiver( std::move(a_orig) ),
-            f_message_queue()
+            f_message_queue(),
+            f_consumer( std::move(a_orig.f_consumer) )
     {}
 
     concurrent_receiver::~concurrent_receiver()
@@ -416,7 +262,7 @@ namespace dripline
     concurrent_receiver& concurrent_receiver::operator=( concurrent_receiver&& a_orig )
     {
         receiver::operator=( std::move(a_orig) );
-        // nothing to do with message queue
+        f_consumer = std::move(a_orig.f_consumer);
         return *this;
     }
 
@@ -444,6 +290,41 @@ namespace dripline
             // shutdown gracefully on an exception
             LERROR( dlog, "Exception caught; shutting down.\n" << "\t" << e.what() );
             scarab::signal_handler::cancel_all( RETURN_ERROR );
+        }
+    }
+
+    void concurrent_receiver::start_listening( bsl::shared_ptr< BloombergLP::rmqa::VHost > a_vhost,
+                                               const BloombergLP::rmqa::Topology& a_topology,
+                                               const BloombergLP::rmqt::QueueHandle& a_queue_handle,
+                                               const std::string& a_label )
+    {
+        using namespace BloombergLP;
+        auto t_result = a_vhost->createConsumer(
+            a_topology, a_queue_handle,
+            [this]( rmqp::MessageGuard& guard ) {
+                amqp_envelope_ptr t_envelope = guard.transferOwnership();
+                t_envelope->ack();
+                handle_message_chunk( std::move(t_envelope) );
+            },
+            a_label,
+            1 );
+        if( ! t_result )
+        {
+            throw connection_error() << "Unable to create consumer: " << t_result.error();
+        }
+        f_consumer = t_result.value();
+    }
+
+    void concurrent_receiver::stop_listening()
+    {
+        if( f_consumer )
+        {
+            auto t_result = f_consumer->cancelAndDrain();
+            if( ! t_result )
+            {
+                LWARN( dlog, "Error canceling consumer: " << t_result.error() );
+            }
+            f_consumer.reset();
         }
     }
 
