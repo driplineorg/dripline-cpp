@@ -11,7 +11,9 @@
 #include "dripline_config.hh"
 #include "message.hh"
 
+#include <future>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <thread>
 
@@ -20,6 +22,8 @@ namespace scarab
     class authentication;
     class param_node;
 }
+
+namespace BloombergLP { namespace rmqa { class Consumer; class RabbitContext; class VHost; class Producer; } }
 
 namespace dripline
 {
@@ -38,9 +42,8 @@ namespace dripline
     */
     struct DRIPLINE_API sent_msg_pkg
     {
-        std::mutex f_mutex;
-        amqp_channel_ptr f_channel;
-        std::string f_consumer_tag;
+        bsl::shared_ptr< BloombergLP::rmqa::Consumer > f_reply_consumer; ///< rmqcpp consumer on the temporary reply queue (null if no reply expected)
+        std::shared_ptr< std::promise< reply_ptr_t > > f_reply_promise;  ///< fulfilled by the reply consumer callback when the reply is assembled
         bool f_successful_send;
         std::string f_send_error_message;
         ~sent_msg_pkg();
@@ -76,15 +79,6 @@ namespace dripline
         public:
             static bool s_offline;
 
-            enum class post_listen_status
-            {
-                unknown, ///< Initialized or unknown status
-                message_received, ///< A message was received, and the channel is still valid
-                timeout, ///< A timeout occurred, and the channel is still valid
-                soft_error, ///< An error occurred, but the channel should still be valid
-                hard_error ///< An error occurred, and the channel is no longer valid
-            };
-
         public:
             /* 
                \brief Extracts necessary configuration and authentication information and prepares the DL object to interact with the RabbitMQ broker. Does not initiate connection to the broker.
@@ -111,20 +105,17 @@ namespace dripline
             core& operator=( core&& a_orig ) = default;
 
         public:
-            /// Sends a request message and returns a channel on which to listen for a reply.
+            /// Sends a request message and waits for a reply via an rmqcpp consumer on a temporary queue.
             /// Default exchange is "requests"
-            /// Caller can supply a channel; if one is not supplied, a new channel will be established
-            virtual sent_msg_pkg_ptr send( request_ptr_t a_request, amqp_channel_ptr a_channel = amqp_channel_ptr() ) const;
+            virtual sent_msg_pkg_ptr send( request_ptr_t a_request ) const;
 
             /// Sends a reply message
             /// Default exchange is "requests"
-            /// Caller can supply a channel; if one is not supplied, a new channel will be established
-            virtual sent_msg_pkg_ptr send( reply_ptr_t a_reply, amqp_channel_ptr a_channel = amqp_channel_ptr() ) const;
+            virtual sent_msg_pkg_ptr send( reply_ptr_t a_reply ) const;
 
             /// Sends an alert message
             /// Default exchange is "alerts"
-            /// Caller can supply a channel; if one is not supplied, a new channel will be established
-            virtual sent_msg_pkg_ptr send( alert_ptr_t a_alert, amqp_channel_ptr a_channel = amqp_channel_ptr() ) const;
+            virtual sent_msg_pkg_ptr send( alert_ptr_t a_alert ) const;
 
             mv_referrable( std::string, address );
             mv_accessible( unsigned, port );
@@ -144,29 +135,23 @@ namespace dripline
         protected:
             friend class receiver;
 
-            sent_msg_pkg_ptr do_send( message_ptr_t a_message, const std::string& a_exchange, bool a_expect_reply, amqp_channel_ptr a_channel = amqp_channel_ptr() ) const;
+            sent_msg_pkg_ptr do_send( message_ptr_t a_message, const std::string& a_exchange, bool a_expect_reply ) const;
 
-            amqp_channel_ptr send_withreply( message_ptr_t a_message, std::string& a_reply_consumer_tag, const std::string& a_exchange ) const;
+            /// Sets up a temporary reply queue, starts an rmqcpp consumer on it, then sends the message.
+            /// Stores the consumer and reply promise in a_pkg.
+            void send_withreply( message_ptr_t a_message, const std::string& a_exchange, sent_msg_pkg_ptr a_pkg ) const;
 
             bool send_noreply( message_ptr_t a_message, const std::string& a_exchange ) const;
 
-            amqp_channel_ptr open_channel() const;
+            /// Lazily establishes the RabbitMQ connection and creates the requests/alerts producers.
+            /// Thread-safe; subsequent calls are no-ops if already connected.
+            void open_connection() const;
 
-            static bool setup_exchange( amqp_channel_ptr a_channel, const std::string& a_exchange );
-
-            static bool setup_queue( amqp_channel_ptr a_channel, const std::string& a_queue_name );
-
-            static bool bind_key( amqp_channel_ptr a_channel, const std::string& a_exchange, const std::string& a_queue_name, const std::string& a_routing_key );
-
-            static std::string start_consuming( amqp_channel_ptr a_channel, const std::string& a_queue_name );
-
-            static bool stop_consuming( amqp_channel_ptr a_channel, std::string& a_consumer_tag );
-
-            static bool remove_queue( amqp_channel_ptr a_channel, const std::string& a_queue_name );
-
-        public:
-            /// listen for a single AMQP message
-            static void listen_for_message( amqp_envelope_ptr& a_envelope, post_listen_status& a_status, amqp_channel_ptr a_channel, const std::string& a_consumer_tag, int a_timeout_ms = 0, bool a_do_ack = true );
+            mutable bsl::shared_ptr< BloombergLP::rmqa::RabbitContext > f_rabbit_context;
+            mutable bsl::shared_ptr< BloombergLP::rmqa::VHost > f_vhost;
+            mutable bsl::shared_ptr< BloombergLP::rmqa::Producer > f_requests_producer;
+            mutable bsl::shared_ptr< BloombergLP::rmqa::Producer > f_alerts_producer;
+            mutable std::shared_ptr< std::mutex > f_connection_mutex;
     };
 
 } /* namespace dripline */
