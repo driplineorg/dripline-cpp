@@ -131,17 +131,14 @@ namespace dripline
      @brief Receives and processes messages concurrently
 
      @details
-     This class enables Dripline messages to be received and processed concurrently.  It is intended to be used in 
-     conjuction with a listener, as in @ref listener_receiver.
+     This class enables Dripline messages to be received and processed concurrently.
 
-     The typical use case involves three threads:
-     1. A listener gets messages from the AMQP channel (using `listen_on_queue(), e.g. @ref service or @ref endpoint_listener_receiver) and 
+     The typical use case involves two threads:
+     1. A consumer callback (set up via `start_listening()`) receives messages from the AMQP broker and
         calls `receiver::handle_message_chunk()`
-     2. A receiver has a timing thread waiting for multiple message chunks (if relevant); 
-        when the message is complete, `concurrent_receiver::process_message()` is called, which deposits the message in a concurrent queue.
-     3. A concurrent_receiver picks up the complete message from the concurrent queue, and processes the message using `submit_message()`.
+     2. A concurrent_receiver picks up the complete message from the concurrent queue (via `execute()`), and processes the message using `submit_message()`.
 
-     The `execute()` function implements thread 3.
+     The `execute()` function implements thread 2.
 
      A class deriving from concurrent_receiver must implement `submit_message()`.
     */

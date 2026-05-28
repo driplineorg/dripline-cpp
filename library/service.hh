@@ -56,7 +56,7 @@ namespace dripline
      A service has a number of key characteristics (most of which come from its parent classes):
        * `core` -- Has all of the basic AMQP capabilities, sending messages, and making and manipulating connections
        * `endpoint` -- Handles Dripline messages
-       * `listener_receiver` -- Asynchronously recieves AMQP messages and turns them into Dripline messages
+       * `concurrent_receiver` -- Asynchronously receives AMQP messages and turns them into Dripline messages
        * `heartbeater` -- Sends periodic heartbeat messages
        * `scheduler` -- Can schedule events
     

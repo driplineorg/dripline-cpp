@@ -208,16 +208,15 @@ namespace dripline
             return;
         }
 
-        if( ! t_receive_reply->f_consumer_tag.empty() )  // this indicates that the reply queue was created, and we've started consuming on it; we should wait for a reply
+        if( t_receive_reply->f_reply_consumer )  // this indicates that the reply queue was created, and we've started consuming on it; we should wait for a reply
         {
             LINFO( dlog, "Waiting for a reply from the server; use ctrl-c to cancel" );
 
             // timed blocking call to wait for incoming message
             receiver t_msg_receiver;
-            core::post_listen_status t_post_listen_status = core::post_listen_status::unknown;
             auto t_rec_cancel_wrap = wrap_cancelable( t_msg_receiver );
             scarab::signal_handler::add_cancelable( t_rec_cancel_wrap );
-            dripline::reply_ptr_t t_reply = t_msg_receiver.wait_for_reply( t_receive_reply, t_post_listen_status, f_agent->get_timeout() );
+            dripline::reply_ptr_t t_reply = t_msg_receiver.wait_for_reply( t_receive_reply, f_agent->get_timeout() );
 
             if( t_msg_receiver.is_canceled() )
             {
@@ -266,23 +265,8 @@ namespace dripline
             }
             else
             {
-                if( t_post_listen_status == core::post_listen_status::timeout )
-                {
-                    LWARN( dlog, "Timed out or while waiting for reply" );
-                    f_agent->set_return( dl_client_error_timeout().rc_value() );
-                }
-                else
-                {
-                    if( t_post_listen_status == core::post_listen_status::hard_error ) 
-                    {
-                        LERROR( dlog, "Error while waiting for reply" );
-                    }
-                    else 
-                    {
-                        LERROR( dlog, "Unknown state while waiting for reply: " << (int)t_post_listen_status );
-                    }
-                    f_agent->set_return( dl_client_error().rc_value() );
-                }
+                LWARN( dlog, "Timed out or error while waiting for reply" );
+                f_agent->set_return( dl_client_error_timeout().rc_value() );
             }
             f_agent->set_reply( t_reply );
         }

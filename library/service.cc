@@ -53,24 +53,6 @@ namespace dripline
         // default of f_heartbeat_interval_s is in the heartbeater class
         f_heartbeat_interval_s = a_config.get_value( "heartbeat_interval_s", f_heartbeat_interval_s );
     }
-/*
-    service::service( const bool a_make_connection, const scarab::param_node& a_config, const scarab::authentication& a_auth ) :
-            scarab::cancelable(),
-            core( a_make_connection, a_config ),
-            endpoint( "" ),
-            listener_receiver(),
-            heartbeater(),
-            scheduler<>(),
-            std::enable_shared_from_this< service >(),
-            f_status( status::nothing ),
-            f_enable_scheduling( a_config.get_value("enable-scheduling", false ) ),
-            f_id( generate_random_uuid() ),
-            f_sync_children(),
-            f_async_children(),
-            f_broadcast_key()
-    {
-    }
-*/
 
     service::~service()
     {
@@ -141,7 +123,7 @@ namespace dripline
     {
         unsigned n_failures = 0;
         bool t_do_repeat = true; // start true so that we get into the repeat loop
-        // Repeat loop for listening: we may call to listen_on_queue() multiple times
+        // Repeat loop for restarting on connection failure
         while( t_do_repeat )
         {
             t_do_repeat = false; // set false because we'll only do the repeat based on the conditions below
