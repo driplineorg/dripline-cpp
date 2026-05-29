@@ -81,7 +81,7 @@ namespace dripline
         t_config.remove( "auth_file" );
         t_config.remove( "auth_groups" );
 
-        f_agent->set_timeout( t_config.get_value( "timeout", 10U ) * 1000 ); // convert seconds (dripline agent user interface) to milliseconds (expected by SimpleAmqpClient)
+        f_agent->set_timeout( t_config.get_value( "timeout", 10U ) * 1000 ); // convert seconds (dripline agent user interface) to milliseconds
         t_config.erase( "timeout" );
         f_agent->set_json_print( t_config.get_value( "json_print", f_agent->get_json_print() ) );
         t_config.erase( "json_print" );
