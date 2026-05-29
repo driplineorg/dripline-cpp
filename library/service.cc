@@ -241,14 +241,10 @@ namespace dripline
                 LINFO( dlog, "Scheduler disabled" );
             }
 
-            LINFO( dlog, "Starting receiver thread" );
-            f_receiver_thread = std::thread( &concurrent_receiver::execute, this );
-
             if( ! f_async_children.empty() ) { LINFO( dlog, "Starting async children" ); }
             else { LDEBUG( dlog, "No async children to start" ); }
             for( auto& t_child_pair : f_async_children )
             {
-                t_child_pair.second->receiver_thread() = std::thread( &concurrent_receiver::execute, t_child_pair.second.get() );
                 // TODO (Phase 6): call t_child_pair.second->start_listening( f_vhost, topology, queue_handle, t_child_pair.first )
             }
 
@@ -257,16 +253,6 @@ namespace dripline
             {
                 std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
             }
-
-            for( auto& t_child_pair : f_async_children )
-            {
-                if( t_child_pair.second->receiver_thread().joinable() )
-                {
-                    t_child_pair.second->receiver_thread().join();
-                }
-            }
-
-            f_receiver_thread.join();
 
             if( f_heartbeat_thread.joinable() )
             {

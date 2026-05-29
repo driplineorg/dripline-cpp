@@ -15,13 +15,11 @@
 #include "rmqa_topology.h"
 
 #include "cancelable.hh"
-#include "concurrent_queue.hh"
 #include "member_variables.hh"
 
-#include <atomic>
-#include <condition_variable>
+#include <chrono>
 #include <map>
-#include <thread>
+#include <mutex>
 
 namespace dripline
 {
@@ -36,10 +34,8 @@ namespace dripline
         amqp_split_message_ptrs f_messages;
         unsigned f_chunks_received;
         std::string f_routing_key;
-        std::thread f_thread;
+        std::chrono::steady_clock::time_point f_creation_time;
         std::mutex f_mutex;
-        std::condition_variable f_conv;
-        std::atomic< bool > f_processing;
         incoming_message_pack();
         incoming_message_pack( const incoming_message_pack& ) = delete;
         incoming_message_pack( incoming_message_pack&& a_orig );
@@ -93,11 +89,8 @@ namespace dripline
             /// For single-chunk messages, processes the message immediately.
             void handle_message_chunk( amqp_envelope_ptr a_envelope );
 
-            /// Waits for messages for a set amount of time (`single_message_wait_ms`), and submits the message pack for processing.
-            /// Intended to be used in a separate thread for each message pack.
-            void wait_for_message( incoming_message_pack& a_pack, const std::string& a_message_id );
             /// Converts a message pack into a Dripline message, and then submits the message for processing.
-            void process_message_pack( incoming_message_pack& a_pack, const std::string& a_message_id );
+            void process_message_pack( amqp_split_message_ptrs& a_messages, const std::string& a_routing_key );
 
             /// Processes a single Dripline message.
             /// This is the default implementation that always throws a `dripline_error`.
@@ -122,6 +115,9 @@ namespace dripline
         protected:
             // (no protected helpers currently)
 
+        private:
+            mutable std::mutex f_incoming_messages_mutex;
+
     };
 
     /*!
@@ -131,14 +127,11 @@ namespace dripline
      @brief Receives and processes messages concurrently
 
      @details
-     This class enables Dripline messages to be received and processed concurrently.
+     This class enables Dripline messages to be received and processed.
 
-     The typical use case involves two threads:
-     1. A consumer callback (set up via `start_listening()`) receives messages from the AMQP broker and
-        calls `receiver::handle_message_chunk()`
-     2. A concurrent_receiver picks up the complete message from the concurrent queue (via `execute()`), and processes the message using `submit_message()`.
-
-     The `execute()` function implements thread 2.
+     A consumer callback (set up via `start_listening()`) receives messages from the AMQP broker and
+     calls `receiver::handle_message_chunk()`, which assembles chunks and calls `submit_message()`
+     directly (synchronously in the rmqcpp callback thread).
 
      A class deriving from concurrent_receiver must implement `submit_message()`.
     */
@@ -154,11 +147,8 @@ namespace dripline
             concurrent_receiver& operator=( concurrent_receiver&& a_orig );
 
         public:
-            /// Deposits the message in the concurrent queue (called by the listener)
+            /// Dispatches the message directly to `submit_message()`.
             virtual void process_message( message_ptr_t a_message );
-
-            /// Handles messages that appear in the concurrent queue by calling `submit_message()`.
-            void execute();
 
             /// Creates an rmqcpp consumer on the given queue and begins receiving messages.
             /// Each received message is passed to handle_message_chunk().
@@ -175,8 +165,6 @@ namespace dripline
             /// For a concrete example, see @ref service or @ref endpoint_listener_receiver.
             virtual void submit_message( message_ptr_t a_message ) = 0;
 
-            mv_referrable( scarab::concurrent_queue< message_ptr_t >, message_queue );
-            mv_referrable( std::thread, receiver_thread );
             bsl::shared_ptr< BloombergLP::rmqa::Consumer > f_consumer;
     };
 

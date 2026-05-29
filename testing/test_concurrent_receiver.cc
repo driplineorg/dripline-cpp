@@ -13,10 +13,6 @@
 
 #include "catch2/catch_test_macros.hpp"
 
-#include <chrono>
-#include <future>
-#include <thread>
-
 namespace dripline
 {
     class concurrent_receiver_tester : public concurrent_receiver
@@ -24,8 +20,10 @@ namespace dripline
         public:
             using concurrent_receiver::concurrent_receiver;
 
+            int f_submit_count = 0;
+
             void submit_message( message_ptr_t )
-            {}
+            { ++f_submit_count; }
     };
 }
 
@@ -35,30 +33,12 @@ TEST_CASE( "cr_process_message", "[concurrent_receiver]" )
 
     dripline::request_ptr_t t_request_ptr = dripline::msg_request::create( scarab::param_ptr_t( new scarab::param() ), dripline::op_t::get, "dlcpp_service", "", "" );
 
-    // we process the message before executing the concurrent_receiver.
-    // this means the message will be queued.
+    // process_message() now calls submit_message() directly and synchronously; no queue or execute() thread
     t_concrecv.process_message( t_request_ptr );
     t_concrecv.process_message( t_request_ptr );
     t_concrecv.process_message( t_request_ptr );
-    t_concrecv.process_message( t_request_ptr );
-    t_concrecv.process_message( t_request_ptr );
-    t_concrecv.process_message( t_request_ptr );
-    t_concrecv.process_message( t_request_ptr );
-    t_concrecv.process_message( t_request_ptr );
-    t_concrecv.process_message( t_request_ptr );
-    t_concrecv.process_message( t_request_ptr );
-    REQUIRE( t_concrecv.message_queue().size() == 10 );
 
-    // here we launch the execution asynchronously.
-    // we'll give it 1 second to execute, which should be enough, though in principle it's not a 100% guarantee that it'll be done in time.
-    // we then cancel the service and move on to verify that the queue is empty.
-    auto t_do_execute = [&](){ t_concrecv.concurrent_receiver::execute(); };
-    auto t_exe_future = std::async(std::launch::async, t_do_execute);
-    std::this_thread::sleep_for( std::chrono::seconds(1) );
-    t_concrecv.cancel();
-    t_exe_future.wait();
-
-    REQUIRE( t_concrecv.message_queue().empty() );
+    REQUIRE( t_concrecv.f_submit_count == 3 );
 
 }
 

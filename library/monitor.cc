@@ -133,15 +133,11 @@ namespace dripline
 
         try
         {
-            f_receiver_thread = std::thread( &concurrent_receiver::execute, this );
-
             // Block until canceled
             while( ! is_canceled() )
             {
                 std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
             }
-
-            f_receiver_thread.join();
         }
         catch( std::system_error& e )
         {
