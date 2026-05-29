@@ -27,11 +27,16 @@ set( testing_SOURCES
     test_agent.cc
     test_amqp.cc
     test_concurrent_receiver.cc
+    test_configs.cc
     test_core.cc
+    test_dripline_constants.cc
     test_dripline_error.cc
     test_endpoint.cc
+    test_endpoint_handlers.cc
+    test_hub.cc
     test_lockout.cc
     test_messages.cc
+    test_reply_cache.cc
     test_return_codes.cc
     test_scheduler.cc
     test_service.cc
