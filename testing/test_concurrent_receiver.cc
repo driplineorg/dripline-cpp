@@ -5,13 +5,19 @@
  *      Author: N.S. Oblath
  */
 
+#include "amqp.hh"
 #include "dripline_exceptions.hh"
 #include "message.hh"
 #include "receiver.hh"
 
 #include "param_node.hh"
 
+#include "rmqp_messageguard.h"
+#include "rmqt_envelope.h"
+
 #include "catch2/catch_test_macros.hpp"
+
+#include <thread>
 
 namespace dripline
 {
@@ -27,6 +33,44 @@ namespace dripline
     };
 }
 
+// Minimal rmqp::MessageGuard implementation for constructing amqp_envelope_ptr in tests.
+// TransferrableMessageGuard = bsl::shared_ptr<rmqp::MessageGuard>, so any concrete
+// subclass wrapped in a bsl::shared_ptr is a valid amqp_envelope_ptr.
+struct fake_message_guard : public BloombergLP::rmqp::MessageGuard
+{
+    BloombergLP::rmqt::Message  d_message;
+    BloombergLP::rmqt::Envelope d_envelope;
+
+    fake_message_guard( const BloombergLP::rmqt::Message& a_msg,
+                        const std::string& a_routing_key )
+        : d_message( a_msg )
+        , d_envelope( 0, 0,
+                      bsl::string(""),
+                      bsl::string(""),
+                      bsl::string( a_routing_key.c_str() ),
+                      false )
+    {}
+
+    const BloombergLP::rmqt::Message&  message()  const override { return d_message; }
+    const BloombergLP::rmqt::Envelope& envelope() const override { return d_envelope; }
+    void ack() override {}
+    void nack( bool ) override {}
+    BloombergLP::rmqp::Consumer* consumer() const override { return nullptr; }
+    BloombergLP::rmqp::TransferrableMessageGuard transferOwnership() override
+    {
+        return BloombergLP::rmqp::TransferrableMessageGuard();
+    }
+};
+
+// Wraps an already-serialized chunk (amqp_message_ptr) and routing key into an
+// amqp_envelope_ptr suitable for passing to receiver::handle_message_chunk().
+static dripline::amqp_envelope_ptr make_test_envelope( const dripline::amqp_message_ptr& a_chunk,
+                                                       const std::string& a_routing_key )
+{
+    return bsl::make_shared< fake_message_guard >( *a_chunk, a_routing_key );
+}
+
+
 TEST_CASE( "cr_process_message", "[concurrent_receiver]" )
 {
     dripline::concurrent_receiver_tester t_concrecv;
@@ -41,6 +85,92 @@ TEST_CASE( "cr_process_message", "[concurrent_receiver]" )
     REQUIRE( t_concrecv.f_submit_count == 3 );
 
 }
+
+TEST_CASE( "cr_multi_chunk_assembly", "[concurrent_receiver]" )
+{
+    // Payload serializes to ~54 chars of JSON; max_size=20 forces at least 3 chunks.
+    auto t_payload = scarab::param_ptr_t( new scarab::param_node() );
+    t_payload->as_node().add( "data", "abcdefghijklmnopqrstuvwxyz0123456789" );
+
+    dripline::request_ptr_t t_req_ptr = dripline::msg_request::create(
+            std::move( t_payload ),
+            dripline::op_t::get,
+            "multi.chunk.rk" );
+
+    const std::string t_routing_key = t_req_ptr->routing_key();
+    dripline::amqp_split_message_ptrs t_chunks = t_req_ptr->create_amqp_messages( 20 );
+
+    REQUIRE( t_chunks.size() > 1 );
+
+    SECTION( "in-order delivery" )
+    {
+        dripline::concurrent_receiver_tester t_concrecv;
+        for( auto& t_chunk : t_chunks )
+        {
+            t_concrecv.handle_message_chunk( make_test_envelope( t_chunk, t_routing_key ) );
+        }
+        // All chunks delivered: process_message_pack called exactly once
+        REQUIRE( t_concrecv.f_submit_count == 1 );
+        // Map should be empty after successful assembly
+        REQUIRE( t_concrecv.incoming_messages().empty() );
+    }
+
+    SECTION( "reverse-order delivery" )
+    {
+        dripline::concurrent_receiver_tester t_concrecv;
+        for( auto it = t_chunks.rbegin(); it != t_chunks.rend(); ++it )
+        {
+            t_concrecv.handle_message_chunk( make_test_envelope( *it, t_routing_key ) );
+        }
+        REQUIRE( t_concrecv.f_submit_count == 1 );
+        REQUIRE( t_concrecv.incoming_messages().empty() );
+    }
+}
+
+TEST_CASE( "cr_stale_eviction", "[concurrent_receiver]" )
+{
+    dripline::concurrent_receiver_tester t_concrecv;
+    // Short eviction threshold so the test doesn't need a long sleep.
+    t_concrecv.set_single_message_wait_ms( 50 );
+
+    // Build a 2-chunk message A; deliver only the first chunk so it stays incomplete.
+    auto t_payload_a = scarab::param_ptr_t( new scarab::param_node() );
+    t_payload_a->as_node().add( "data", "abcdefghijklmnopqrstuvwxyz0123456789" );
+
+    dripline::request_ptr_t t_req_a = dripline::msg_request::create(
+            std::move( t_payload_a ),
+            dripline::op_t::get,
+            "stale.rk" );
+
+    dripline::amqp_split_message_ptrs t_chunks_a = t_req_a->create_amqp_messages( 20 );
+    REQUIRE( t_chunks_a.size() > 1 );
+
+    // Deliver only chunk 0 — incomplete entry is inserted into the map.
+    t_concrecv.handle_message_chunk( make_test_envelope( t_chunks_a[0], "stale.rk" ) );
+    REQUIRE( t_concrecv.f_submit_count == 0 );
+    REQUIRE( t_concrecv.incoming_messages().size() == 1 );
+
+    // Wait longer than the eviction threshold so the entry becomes stale.
+    std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
+
+    // Deliver a fresh 1-chunk message B.  The lazy sweep in handle_message_chunk
+    // runs at entry and evicts message A's stale entry before processing B.
+    auto t_payload_b = scarab::param_ptr_t( new scarab::param_node() );
+    dripline::request_ptr_t t_req_b = dripline::msg_request::create(
+            std::move( t_payload_b ),
+            dripline::op_t::get,
+            "fresh.rk" );
+
+    dripline::amqp_split_message_ptrs t_chunks_b = t_req_b->create_amqp_messages();
+    REQUIRE( t_chunks_b.size() == 1 );
+
+    t_concrecv.handle_message_chunk( make_test_envelope( t_chunks_b[0], "fresh.rk" ) );
+
+    // Message A evicted (never processed); message B processed successfully.
+    REQUIRE( t_concrecv.f_submit_count == 1 );
+    REQUIRE( t_concrecv.incoming_messages().empty() );
+}
+
 
 
 
