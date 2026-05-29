@@ -160,11 +160,11 @@ namespace dripline
             /// Cancels the rmqcpp consumer, drains in-flight messages, and releases it.
             void stop_listening();
 
-        protected:
             /// Handles messages according to the use case.  It's to be implemented by the class inheriting from concurrent_receiver
             /// For a concrete example, see @ref service or @ref endpoint_listener_receiver.
             virtual void submit_message( message_ptr_t a_message ) = 0;
 
+        protected:
             bsl::shared_ptr< BloombergLP::rmqa::Consumer > f_consumer;
     };
 

@@ -273,7 +273,6 @@ namespace dripline
             endpoint_listener_receiver& operator=( const endpoint_listener_receiver& ) = delete;
             endpoint_listener_receiver& operator=( endpoint_listener_receiver&& a_orig );
 
-        protected:
             /// Direct submission of messages to the endpoint
             virtual void submit_message( message_ptr_t a_message ) override;
 

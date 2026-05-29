@@ -18,7 +18,7 @@
 static dripline::request_ptr_t make_request( dripline::op_t a_op, const std::string& a_specifier )
 {
     return dripline::msg_request::create(
-        scarab::param_ptr_t( new scarab::param() ),
+        scarab::param_ptr_t( new scarab::param_node() ),
         a_op,
         "test.routing.key",
         a_specifier,
@@ -60,14 +60,17 @@ TEST_CASE( "endpoint_lock_unlock", "[endpoint]" )
 
     SECTION( "lock fails when already locked" )
     {
-        // pre-lock using the direct API
-        t_endpoint.enable_lockout( scarab::param_node() );
+        // pre-lock using the direct API; capture the key so the re-lock request can authenticate
+        dripline::uuid_t t_key = t_endpoint.enable_lockout( scarab::param_node() );
         REQUIRE( t_endpoint.is_locked() );
 
+        // The re-lock request must carry the correct key, otherwise __do_cmd_request rejects
+        // it with dl_service_error_access_denied before even reaching handle_lock_request.
         auto t_request = make_request( dripline::op_t::cmd, "lock" );
+        t_request->lockout_key() = t_key;
         auto t_reply = t_endpoint.submit_request_message( t_request );
 
-        // handle_lock_request returns dl_resource_error when already locked
+        // handle_lock_request sees is_locked()==true, calls enable_lockout which returns nil → resource error
         REQUIRE( t_reply->get_return_code() == dripline::dl_resource_error::s_value );
         REQUIRE( t_endpoint.is_locked() );
     }
@@ -95,7 +98,7 @@ TEST_CASE( "endpoint_lock_unlock", "[endpoint]" )
 
     SECTION( "unlock with correct key succeeds" )
     {
-        dripline::uuid_t t_key = t_endpoint.enable_lockout( scarab::param_node() );
+        dripline::uuid_t t_key = t_endpoint.enable_lockout( scarab::param_node{} );
         REQUIRE( t_endpoint.is_locked() );
 
         auto t_request = make_request( dripline::op_t::cmd, "unlock" );

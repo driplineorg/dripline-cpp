@@ -58,7 +58,7 @@ TEST_CASE( "reply_cache_assign_throw_reply", "[reply_cache]" )
 {
     dripline::reply_cache* t_cache = dripline::reply_cache::get_instance();
 
-    dripline::throw_reply t_src( dripline::dl_resource_error() );
+    dripline::throw_reply t_src( dripline::dl_resource_error{} );
     t_src.set_payload( scarab::param_ptr_t( new scarab::param_value( 99 ) ) );
     t_src << "assigned from throw_reply";
 

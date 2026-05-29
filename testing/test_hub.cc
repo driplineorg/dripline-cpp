@@ -28,7 +28,7 @@ TEST_CASE( "hub_get_handler", "[hub]" )
         auto t_request = dripline::msg_request::create(
             scarab::param_ptr_t( new scarab::param() ),
             dripline::op_t::get,
-            "test.endpoint",
+            "dlcpp_service",
             "my_value",
             "" );
 
@@ -42,7 +42,7 @@ TEST_CASE( "hub_get_handler", "[hub]" )
         auto t_request = dripline::msg_request::create(
             scarab::param_ptr_t( new scarab::param() ),
             dripline::op_t::get,
-            "test.endpoint",
+            "dlcpp_service",
             "not_registered",
             "" );
 
@@ -63,7 +63,7 @@ TEST_CASE( "hub_get_handler", "[hub]" )
         auto t_request = dripline::msg_request::create(
             scarab::param_ptr_t( new scarab::param() ),
             dripline::op_t::get,
-            "test.endpoint",
+            "dlcpp_service",
             "to_remove",
             "" );
 
@@ -88,7 +88,7 @@ TEST_CASE( "hub_set_handler", "[hub]" )
         auto t_request = dripline::msg_request::create(
             scarab::param_ptr_t( new scarab::param() ),
             dripline::op_t::set,
-            "test.endpoint",
+            "dlcpp_service",
             "my_param",
             "" );
 
@@ -102,7 +102,7 @@ TEST_CASE( "hub_set_handler", "[hub]" )
         auto t_request = dripline::msg_request::create(
             scarab::param_ptr_t( new scarab::param() ),
             dripline::op_t::set,
-            "test.endpoint",
+            "dlcpp_service",
             "not_registered",
             "" );
 
@@ -123,7 +123,7 @@ TEST_CASE( "hub_set_handler", "[hub]" )
         auto t_request = dripline::msg_request::create(
             scarab::param_ptr_t( new scarab::param() ),
             dripline::op_t::set,
-            "test.endpoint",
+            "dlcpp_service",
             "to_remove",
             "" );
 
@@ -148,7 +148,7 @@ TEST_CASE( "hub_cmd_handler", "[hub]" )
         auto t_request = dripline::msg_request::create(
             scarab::param_ptr_t( new scarab::param() ),
             dripline::op_t::cmd,
-            "test.endpoint",
+            "dlcpp_service",
             "do_thing",
             "" );
 
@@ -162,7 +162,7 @@ TEST_CASE( "hub_cmd_handler", "[hub]" )
         auto t_request = dripline::msg_request::create(
             scarab::param_ptr_t( new scarab::param() ),
             dripline::op_t::cmd,
-            "test.endpoint",
+            "dlcpp_service",
             "not_registered",
             "" );
 
@@ -183,7 +183,7 @@ TEST_CASE( "hub_cmd_handler", "[hub]" )
         auto t_request = dripline::msg_request::create(
             scarab::param_ptr_t( new scarab::param() ),
             dripline::op_t::cmd,
-            "test.endpoint",
+            "dlcpp_service",
             "to_remove",
             "" );
 
