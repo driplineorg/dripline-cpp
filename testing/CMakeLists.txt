@@ -37,6 +37,11 @@ set( testing_SOURCES
     test_lockout.cc
     test_messages.cc
     test_reply_cache.cc
+    test_endpoint_handlers.cc
+    test_hub.cc
+    test_lockout.cc
+    test_messages.cc
+    test_reply_cache.cc
     test_return_codes.cc
     test_scheduler.cc
     test_service.cc
