@@ -12,6 +12,7 @@
 #include "dripline_exceptions.hh"
 #include "message.hh"
 
+#include "rmqa_consumer.h"
 #include "rmqa_vhost.h"
 #include "rmqp_messageguard.h"
 
@@ -46,6 +47,12 @@ namespace dripline
             scarab::cancelable(),
             f_incoming_messages(),
             f_single_message_wait_ms( 1000 )
+    {}
+
+    receiver::receiver( receiver&& a_orig ) :
+            scarab::cancelable( std::move(a_orig) ),
+            f_incoming_messages( std::move(a_orig.f_incoming_messages) ),
+            f_single_message_wait_ms( a_orig.f_single_message_wait_ms )
     {}
 
     receiver& receiver::operator=( receiver&& a_orig )

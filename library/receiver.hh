@@ -77,7 +77,7 @@ namespace dripline
         public:
             receiver();
             receiver( const receiver& a_orig ) = delete;
-            receiver( receiver&& a_orig ) = default;
+            receiver( receiver&& a_orig );
             virtual ~receiver() = default;
 
             receiver& operator=( const receiver& a_orig ) = delete;
