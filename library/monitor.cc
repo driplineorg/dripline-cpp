@@ -108,11 +108,36 @@ namespace dripline
         }
         f_status = status::channel_created;
 
-        // TODO (Phase 6): set up monitor topology, declare queue, bind routing keys
-        // - declare monitor queue (f_name)
-        // - bind each request key to the requests exchange
-        // - bind each alerts key to the alerts exchange
-        // - call start_listening( f_vhost, topology, queue_handle, f_name )
+        try
+        {
+            using namespace BloombergLP;
+
+            // Monitor queue: ephemeral (auto-delete, non-durable); f_name already contains a UUID
+            rmqa::Topology t_topo;
+            auto t_monitor_queue = t_topo.addQueue( bsl::string(f_name), rmqt::AutoDelete::ON, rmqt::Durable::OFF );
+            if( ! f_requests_keys.empty() )
+            {
+                auto t_req_ex = t_topo.addExchange( bsl::string(f_requests_exchange), rmqt::ExchangeType::TOPIC );
+                for( const auto& t_key : f_requests_keys )
+                {
+                    t_topo.bind( t_req_ex, t_monitor_queue, bsl::string(t_key) );
+                }
+            }
+            if( ! f_alerts_keys.empty() )
+            {
+                auto t_alerts_ex = t_topo.addExchange( bsl::string(f_alerts_exchange), rmqt::ExchangeType::TOPIC );
+                for( const auto& t_key : f_alerts_keys )
+                {
+                    t_topo.bind( t_alerts_ex, t_monitor_queue, bsl::string(t_key) );
+                }
+            }
+            start_listening( f_vhost, t_topo, t_monitor_queue, f_name );
+        }
+        catch( connection_error& e )
+        {
+            LERROR( dlog, "Unable to set up monitor topology: " << e.what() );
+            return false;
+        }
         f_status = status::consuming;
 
         return true;

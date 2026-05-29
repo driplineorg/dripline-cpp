@@ -199,11 +199,39 @@ namespace dripline
         }
         f_status = status::channel_created;
 
-        // TODO (Phase 6): set up service topology, declare queues, bind routing keys
-        // - declare service queue (f_name) and routing keys (f_name + ".#", f_broadcast_key + ".#")
-        // - for each sync child, bind child_name + ".#" to the service queue
-        // - call start_listening( f_vhost, topology, service_queue_handle, f_name )
-        // - for each async child, declare its queue and call child->start_listening(...)
+        try
+        {
+            using namespace BloombergLP;
+
+            // Build service queue topology: durable, not auto-delete
+            rmqa::Topology t_topo;
+            auto t_req_ex = t_topo.addExchange( bsl::string(f_requests_exchange), rmqt::ExchangeType::TOPIC );
+            auto t_service_queue = t_topo.addQueue( bsl::string(f_name), rmqt::AutoDelete::OFF, rmqt::Durable::ON );
+            t_topo.bind( t_req_ex, t_service_queue, bsl::string(f_name + ".#") );
+            t_topo.bind( t_req_ex, t_service_queue, bsl::string(f_broadcast_key + ".#") );
+            for( const auto& t_child_pair : f_sync_children )
+            {
+                // Sync children share the service queue
+                t_topo.bind( t_req_ex, t_service_queue, bsl::string(t_child_pair.first + ".#") );
+            }
+            start_listening( f_vhost, t_topo, t_service_queue, f_name );
+
+            // Each async child gets its own durable queue
+            for( auto& t_child_pair : f_async_children )
+            {
+                const std::string& t_child_name = t_child_pair.first;
+                rmqa::Topology t_child_topo;
+                auto t_child_ex = t_child_topo.addExchange( bsl::string(f_requests_exchange), rmqt::ExchangeType::TOPIC );
+                auto t_child_queue = t_child_topo.addQueue( bsl::string(t_child_name), rmqt::AutoDelete::OFF, rmqt::Durable::ON );
+                t_child_topo.bind( t_child_ex, t_child_queue, bsl::string(t_child_name + ".#") );
+                t_child_pair.second->start_listening( f_vhost, t_child_topo, t_child_queue, t_child_name );
+            }
+        }
+        catch( connection_error& e )
+        {
+            LERROR( dlog, "Unable to set up service topology: " << e.what() );
+            return false;
+        }
         f_status = status::consuming;
 
         return true;
@@ -239,13 +267,6 @@ namespace dripline
             else
             {
                 LINFO( dlog, "Scheduler disabled" );
-            }
-
-            if( ! f_async_children.empty() ) { LINFO( dlog, "Starting async children" ); }
-            else { LDEBUG( dlog, "No async children to start" ); }
-            for( auto& t_child_pair : f_async_children )
-            {
-                // TODO (Phase 6): call t_child_pair.second->start_listening( f_vhost, topology, queue_handle, t_child_pair.first )
             }
 
             // Block until canceled
