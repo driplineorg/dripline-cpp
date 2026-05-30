@@ -51,7 +51,7 @@ RUN cd /usr/local && \
     rm -rf /usr/local/${pybind11_name}
 
 ARG TARGETARCH
-ARG rmqcpp_checkout=
+ARG rmqcpp_checkout=cc6885319ccb97b8a6d13e09e83a52c43aab16c7
 RUN cd /usr/local && \
     git clone https://github.com/Microsoft/vcpkg.git && \
     /usr/local/vcpkg/bootstrap-vcpkg.sh && \
@@ -64,8 +64,8 @@ RUN cd /usr/local && \
         *) echo "Unsupported architecture: ${TARGETARCH}"; exit 1 ;; \
     esac && \
     ${VCPKG_ROOT}/vcpkg install --triplet ${TRIPLET} && \
-    mkdir build && \
-    cd build && \
+    mkdir -p /usr/local/rmqcpp/build && \
+    cd /usr/local/rmqcpp/build && \
     cmake -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake \
         -DVCPKG_TARGET_TRIPLET=${TRIPLET} \
@@ -74,7 +74,12 @@ RUN cd /usr/local && \
         .. && \
     make -j${narg} install && \
     cd / && \
-    ${VCPKG_ROOT}/vcpkg install --triplet ${TRIPLET} boost-filesystem boost-system boost-chrono boost-variant boost-uuid && \
+    ${VCPKG_ROOT}/vcpkg install --triplet ${TRIPLET} \
+        boost-filesystem \
+        boost-system \
+        boost-chrono \
+        boost-variant \
+        boost-uuid && \
     cp -a /usr/local/rmqcpp/vcpkg_installed/${TRIPLET}/include/. /usr/local/include/ && \
     cp -a /usr/local/rmqcpp/vcpkg_installed/${TRIPLET}/lib/. /usr/local/lib/ && \
     cp -a /usr/local/rmqcpp/vcpkg_installed/${TRIPLET}/share/. /usr/local/share/ && \
