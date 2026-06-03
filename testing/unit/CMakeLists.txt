@@ -1,4 +1,4 @@
-# CMakeLists.txt for dripline-cpp/testing
+# CMakeLists.txt for dripline-cpp/testing/unit
 # Author: N. Oblath
 # Created: Aug 14, 2018
 
