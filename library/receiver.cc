@@ -12,10 +12,6 @@
 #include "dripline_exceptions.hh"
 #include "message.hh"
 
-#include "rmqa_consumer.h"
-#include "rmqa_vhost.h"
-#include "rmqp_messageguard.h"
-
 #include "logger.hh"
 
 #include <future>
@@ -218,68 +214,5 @@ namespace dripline
         LDEBUG( dlog, "Receiver canceled while waiting for reply" );
         return reply_ptr_t();
     }
-
-    concurrent_receiver::concurrent_receiver() :
-            receiver(),
-            f_consumer()
-    {}
-
-    concurrent_receiver::concurrent_receiver( concurrent_receiver&& a_orig ) :
-            receiver( std::move(a_orig) ),
-            f_consumer( std::move(a_orig.f_consumer) )
-    {}
-
-    concurrent_receiver::~concurrent_receiver()
-    {}
-
-    concurrent_receiver& concurrent_receiver::operator=( concurrent_receiver&& a_orig )
-    {
-        receiver::operator=( std::move(a_orig) );
-        f_consumer = std::move(a_orig.f_consumer);
-        return *this;
-    }
-
-    void concurrent_receiver::process_message( message_ptr_t a_message )
-    {
-        this->submit_message( a_message );
-        return;
-    }
-
-    void concurrent_receiver::start_listening( bsl::shared_ptr< BloombergLP::rmqa::VHost > a_vhost,
-                                               const BloombergLP::rmqa::Topology& a_topology,
-                                               const BloombergLP::rmqt::QueueHandle& a_queue_handle,
-                                               const std::string& a_label )
-    {
-        using namespace BloombergLP;
-        auto t_result = a_vhost->createConsumer(
-            a_topology, a_queue_handle,
-            [this]( rmqp::MessageGuard& guard ) {
-                amqp_envelope_ptr t_envelope = guard.transferOwnership();
-                t_envelope->ack();
-                handle_message_chunk( std::move(t_envelope) );
-            },
-            a_label,
-            1 );
-        if( ! t_result )
-        {
-            throw connection_error() << "Unable to create consumer: " << t_result.error();
-        }
-        f_consumer = t_result.value();
-    }
-
-    void concurrent_receiver::stop_listening()
-    {
-        if( f_consumer )
-        {
-            auto t_result = f_consumer->cancelAndDrain();
-            if( ! t_result )
-            {
-                LWARN( dlog, "Error canceling consumer: " << t_result.error() );
-            }
-            f_consumer.reset();
-        }
-    }
-
-
 
 } /* namespace dripline */

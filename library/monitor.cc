@@ -26,7 +26,7 @@ namespace dripline
     monitor::monitor( const scarab::param_node& a_config, const scarab::authentication& a_auth ) :
             scarab::cancelable(),
             core( a_config["dripline_mesh"].as_node(), a_auth ),
-            concurrent_receiver(),
+            message_dispatcher(),
             f_status( status::nothing ),
             f_name( std::string("monitor_") + string_from_uuid(generate_random_uuid()) ),
             f_json_print( false ),

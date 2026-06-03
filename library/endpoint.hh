@@ -9,7 +9,7 @@
 #define DRIPLINE_ENDPOINT_HH_
 
 #include "message.hh"
-#include "receiver.hh"
+#include "message_dispatcher.hh"
 #include "return_codes.hh"
 
 namespace dripline
@@ -257,12 +257,12 @@ namespace dripline
      @class endpoint_listener_receiver
      @author N.S. Oblath
 
-     @brief Decorator class for a plain endpoint: adds concurrent_receiver capabilities.
+     @brief Decorator class for a plain endpoint: adds message_dispatcher capabilities.
 
      @details
      The endpoint_listener_receiver is used by @ref service to wrap an endpoint that is to listen for messages asynchronously.
     */
-    class DRIPLINE_API endpoint_listener_receiver : public concurrent_receiver
+    class DRIPLINE_API endpoint_listener_receiver : public message_dispatcher
     {
         public:
             explicit endpoint_listener_receiver( endpoint_ptr_t a_endpoint_ptr );

@@ -9,7 +9,7 @@
 #define DRIPLINE_MONITOR_HH_
 
 #include "core.hh"
-#include "receiver.hh"
+#include "message_dispatcher.hh"
 
 namespace scarab
 {
@@ -42,7 +42,7 @@ namespace DRIPLINE_API dripline
     */
     class monitor :
             public core,
-            public concurrent_receiver
+            public message_dispatcher
     {
         protected:
             enum class status

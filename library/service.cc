@@ -33,7 +33,7 @@ namespace dripline
             core( a_config.has("dripline_mesh") ? a_config["dripline_mesh"].as_node() : dripline_config(), 
                   a_auth, a_make_connection ),
             endpoint( a_config.get_value( "name", "dlcpp_service" ) ),
-            concurrent_receiver(),
+            message_dispatcher(),
             heartbeater( this ),
             scheduler<>(),
             f_auth( a_auth ),
@@ -69,7 +69,7 @@ namespace dripline
         cancelable::operator=( std::move(a_orig) );
         core::operator=( std::move(a_orig) );
         endpoint::operator=( std::move(a_orig));
-        concurrent_receiver::operator=( std::move(a_orig) );
+        message_dispatcher::operator=( std::move(a_orig) );
         heartbeater::operator=( std::move(a_orig) );
         scheduler<>::operator=( std::move(a_orig) );
 

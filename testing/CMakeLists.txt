@@ -26,7 +26,6 @@ set( testing_SOURCES
     run_dl_tests.cc
     test_agent.cc
     test_amqp.cc
-    test_concurrent_receiver.cc
     test_configs.cc
     test_core.cc
     test_dripline_constants.cc
@@ -35,11 +34,7 @@ set( testing_SOURCES
     test_endpoint_handlers.cc
     test_hub.cc
     test_lockout.cc
-    test_messages.cc
-    test_reply_cache.cc
-    test_endpoint_handlers.cc
-    test_hub.cc
-    test_lockout.cc
+    test_message_dispatcher.cc
     test_messages.cc
     test_reply_cache.cc
     test_return_codes.cc

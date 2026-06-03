@@ -11,7 +11,7 @@
 #include "core.hh"
 #include "endpoint.hh"
 #include "heartbeater.hh"
-#include "receiver.hh"
+#include "message_dispatcher.hh"
 #include "scheduler.hh"
 
 #include "dripline_exceptions.hh"
@@ -56,21 +56,14 @@ namespace dripline
      A service has a number of key characteristics (most of which come from its parent classes):
        * `core` -- Has all of the basic AMQP capabilities, sending messages, and making and manipulating connections
        * `endpoint` -- Handles Dripline messages
-       * `concurrent_receiver` -- Asynchronously receives AMQP messages and turns them into Dripline messages
+        * `message_dispatcher` -- Receives AMQP messages via rmqcpp callbacks and dispatches them as Dripline messages
        * `heartbeater` -- Sends periodic heartbeat messages
        * `scheduler` -- Can schedule events
     
-     As is apparent from the above descriptions, a service is responsible for a number of threads 
-     when it executes:
-       * Listening -- grabs AMQP messages off the channel when they arrive
-       * Message-wait -- any incomplete multi-part Dripline message will setup a thread to wait 
-       *                 until the message is complete, and then submits it for handling
-       * Receiver -- grabs completed Dripline messages and handles it
-       * Async endpoint listening -- same as abovefor each asynchronous endpoint
-       * Async endpoint message-wait -- same as above for each asynchronous endpoint
-       * Async endpoint receiver -- same as above for each asynchronous endpoint
-       * Heatbeater -- sends regular heartbeat messages
-       * Scheduler -- executes scheduled events
+      Message delivery is handled by rmqcpp's internal thread pool via callbacks; dripline-cpp
+      manages only the following threads:
+        * Heartbeater -- sends regular heartbeat messages
+        * Scheduler -- executes scheduled events
 
      In addition to receiving messages from the broker, a user or client code can give messages directly to the service 
      using `process_message(message)`.
@@ -78,7 +71,7 @@ namespace dripline
     class DRIPLINE_API service :
             public core,
             public endpoint,
-            public concurrent_receiver,
+            public message_dispatcher,
             public heartbeater,
             public scheduler<>
     {
@@ -193,7 +186,7 @@ namespace dripline
             mv_referrable( std::string, broadcast_key );
 
         protected:
-            /// Implementation of submit_message (from concurrent_receiver)
+            /// Implementation of submit_message (from message_dispatcher)
             virtual void submit_message( message_ptr_t a_message );
 
             virtual reply_ptr_t on_request_message( const request_ptr_t a_request );

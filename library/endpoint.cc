@@ -432,14 +432,12 @@ namespace dripline
     }
 
     endpoint_listener_receiver::endpoint_listener_receiver( endpoint_ptr_t a_endpoint_ptr ) :
-            scarab::cancelable(),
-            concurrent_receiver(),
+            message_dispatcher(),
             f_endpoint( a_endpoint_ptr )
     {}
 
     endpoint_listener_receiver::endpoint_listener_receiver( endpoint_listener_receiver&& a_orig ) :
-            scarab::cancelable( std::move(a_orig) ),
-            concurrent_receiver( std::move(a_orig) ),
+            message_dispatcher( std::move(a_orig) ),
             f_endpoint( std::move(a_orig.f_endpoint) )
     {}
 
@@ -448,7 +446,7 @@ namespace dripline
 
     endpoint_listener_receiver& endpoint_listener_receiver::operator=( endpoint_listener_receiver&& a_orig )
     {
-        concurrent_receiver::operator=( std::move(a_orig) );
+        message_dispatcher::operator=( std::move(a_orig) );
         f_endpoint = std::move(a_orig.f_endpoint);
         return *this;
     }

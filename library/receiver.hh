@@ -12,8 +12,6 @@
 #include "dripline_api.hh"
 #include "dripline_fwd.hh"
 
-#include "rmqa_topology.h"
-
 #include "cancelable.hh"
 #include "member_variables.hh"
 
@@ -51,26 +49,26 @@ namespace dripline
      @brief A receiver is able to collect Dripline message chunks and reassemble them into a complete Dripline message.
 
      @details
-     This is a mix-in class for synchronously receiving and processing Dripline messages.
+     This is a mix-in class for receiving and processing Dripline messages.
 
-     Dripline messages can be broken up into multiple chunks, each of which is transported as an AMQP message.  
-     A receiver is responsible for handling message chunks, storing incomplete Dripline messages, and eventually 
+     Dripline messages can be broken up into multiple chunks, each of which is transported as an AMQP message.
+     A receiver is responsible for handling message chunks, storing incomplete Dripline messages, and eventually
      processing complete Dripline messages.
 
      The receiver class contains an interface specifically for users waiting to receive reply messages: `wait_for_reply()`.
 
-     When the first message chunk for a message is received, one of two things happens:
-     1. if the message comprises one chunk, then the message is processed immediately;
-     2. if the message comprises multiple chunks, then a separate thread is spun up to wait for the remaining chunks.
+     When a message chunk arrives via `handle_message_chunk()`, it is stored in the incoming-message map.
+     Message chunks for a given message can be received in any order.  Once all chunks for a message have
+     arrived, `process_message_pack()` is called inline (no separate thread is spawned).
 
-     Incomplete messages are stored in the incoming-message map.  Message chunks for a given message can be received 
-     in any order.  The receiver will wait `single_message_wait_ms` ms for all of the chunks of a message to arrive 
-     before timing out processing the incomplete message.
+     Stale incomplete messages (entries older than `single_message_wait_ms` ms) are lazily evicted at the
+     start of each `handle_message_chunk()` call.
 
      The actual assembly of message chunks into complete messages is done in @ref message.
 
-     The `receiver` class itself does not know how to process a message.  This must be implemented by the class derived from `receiver`.
-     The default implementation of `process_message()` will throw a `dripline_error`.
+     The `receiver` class itself does not know how to process a message.  This must be implemented by the
+     class derived from `receiver`.  The default implementation of `process_message()` will throw a
+     `dripline_error`.
     */
     class DRIPLINE_API receiver : public virtual scarab::cancelable
     {
@@ -118,54 +116,6 @@ namespace dripline
         private:
             mutable std::mutex f_incoming_messages_mutex;
 
-    };
-
-    /*!
-     @class concurrent_receiver
-     @author N.S. Oblath
-
-     @brief Receives and processes messages concurrently
-
-     @details
-     This class enables Dripline messages to be received and processed.
-
-     A consumer callback (set up via `start_listening()`) receives messages from the AMQP broker and
-     calls `receiver::handle_message_chunk()`, which assembles chunks and calls `submit_message()`
-     directly (synchronously in the rmqcpp callback thread).
-
-     A class deriving from concurrent_receiver must implement `submit_message()`.
-    */
-    class DRIPLINE_API concurrent_receiver : public receiver
-    {
-        public:
-            concurrent_receiver();
-            concurrent_receiver( const concurrent_receiver& ) = delete;
-            concurrent_receiver( concurrent_receiver&& a_orig );
-            virtual ~concurrent_receiver();
-
-            concurrent_receiver& operator=( const concurrent_receiver& ) = delete;
-            concurrent_receiver& operator=( concurrent_receiver&& a_orig );
-
-        public:
-            /// Dispatches the message directly to `submit_message()`.
-            virtual void process_message( message_ptr_t a_message );
-
-            /// Creates an rmqcpp consumer on the given queue and begins receiving messages.
-            /// Each received message is passed to handle_message_chunk().
-            void start_listening( bsl::shared_ptr< BloombergLP::rmqa::VHost > a_vhost,
-                                  const BloombergLP::rmqa::Topology& a_topology,
-                                  const BloombergLP::rmqt::QueueHandle& a_queue_handle,
-                                  const std::string& a_label = "" );
-
-            /// Cancels the rmqcpp consumer, drains in-flight messages, and releases it.
-            void stop_listening();
-
-            /// Handles messages according to the use case.  It's to be implemented by the class inheriting from concurrent_receiver
-            /// For a concrete example, see @ref service or @ref endpoint_listener_receiver.
-            virtual void submit_message( message_ptr_t a_message ) = 0;
-
-        protected:
-            bsl::shared_ptr< BloombergLP::rmqa::Consumer > f_consumer;
     };
 
 } /* namespace dripline */
