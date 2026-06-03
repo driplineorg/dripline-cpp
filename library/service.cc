@@ -203,10 +203,10 @@ namespace dripline
         {
             using namespace BloombergLP;
 
-            // Build service queue topology: durable, not auto-delete
+            // Build service queue topology: non-durable, auto-delete
             rmqa::Topology t_topo;
             auto t_req_ex = t_topo.addExchange( bsl::string(f_requests_exchange), rmqt::ExchangeType::TOPIC );
-            auto t_service_queue = t_topo.addQueue( bsl::string(f_name), rmqt::AutoDelete::OFF, rmqt::Durable::ON );
+            auto t_service_queue = t_topo.addQueue( bsl::string(f_name), rmqt::AutoDelete::ON, rmqt::Durable::OFF );
             t_topo.bind( t_req_ex, t_service_queue, bsl::string(f_name + ".#") );
             t_topo.bind( t_req_ex, t_service_queue, bsl::string(f_broadcast_key + ".#") );
             for( const auto& t_child_pair : f_sync_children )
@@ -222,7 +222,7 @@ namespace dripline
                 const std::string& t_child_name = t_child_pair.first;
                 rmqa::Topology t_child_topo;
                 auto t_child_ex = t_child_topo.addExchange( bsl::string(f_requests_exchange), rmqt::ExchangeType::TOPIC );
-                auto t_child_queue = t_child_topo.addQueue( bsl::string(t_child_name), rmqt::AutoDelete::OFF, rmqt::Durable::ON );
+                auto t_child_queue = t_child_topo.addQueue( bsl::string(t_child_name), rmqt::AutoDelete::ON, rmqt::Durable::OFF );
                 t_child_topo.bind( t_child_ex, t_child_queue, bsl::string(t_child_name + ".#") );
                 t_child_pair.second->start_listening( f_vhost, t_child_topo, t_child_queue, t_child_name );
             }
