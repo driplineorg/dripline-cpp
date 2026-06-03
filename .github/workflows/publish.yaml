@@ -111,7 +111,8 @@ jobs:
       - name: Integration Tests
         run: |
           cd testing/integration
-          ./do-testing.sh ${{ env.INT_TAG }}
+          ./run-dl-tests.sh ${{ env.INT_TAG }}
+          ./run-broker-restart-test.sh ${{ env.INT_TAG }}
 
 # For debugging
 #      - name: Setup tmate session
