@@ -33,6 +33,12 @@ Dripline build options include:
    ``Dripline_MAX_PAYLOAD_SIZE`` (INT)
       Maximum payload size in bytes
 
+   ``Dripline_OFFLINE`` (BOOL)
+      if ON, builds the library in offline mode (no broker connection required).
+      In this mode, sending a message throws the message object rather than transmitting it,
+      which is useful for unit testing.
+      See :ref:`Offline & No-Connection <offline>` for more details.
+
    ``Dripline_PYTHON_THROW_REPLY_KEYWORD``
       keyword used by the python wrapping that indicates that the thrown object is a reply message to be sent
 

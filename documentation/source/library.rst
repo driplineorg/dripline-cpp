@@ -21,8 +21,8 @@ There are also a number of classes that implement various features of the above 
 
 * :ref:`Core<core>`: interface for the RabbitMQ client library; interface includes interacting with the broker and for sending and receiving messages
 * :ref:`Heartbeater<heartbeater>`: implements the heartbeat behavior
-* :ref:`Listeners<listeners>`: listen for AMQP messages (dripline message chunks or whole messages)
-* :ref:`Receivers<receivers>`: collect dripline message chunks and assembles them into complete messages
+* :ref:`Message Dispatcher<message-dispatcher>`: manages the rmqcpp Consumer lifecycle and dispatches assembled Dripline messages
+* :ref:`Receiver<receivers>`: collects Dripline message chunks and assembles them into complete messages
 * :ref:`Scheduler<scheduler>`: executes scheduled events
 * :ref:`Specifier<specifier>`: parses specifier strings
 * :ref:`Version Store<version-store>`: stores version information for a particular application context
@@ -61,7 +61,7 @@ It's range of capabilities are largely defined by the classes it inherits from:
 
 * ``core``
 * ``endpoint``
-* ``listener_receiver``
+* ``message_dispatcher``
 * ``heartbeater``
 * ``scheduler``
 
@@ -74,8 +74,14 @@ The interface for running a service consists of three functions:
 Or you can use ``run()`` to perform the start-->listen-->stop sequence.
 
 A service can have both synchronous and asynchronous child endpoints.  With the former, requests are 
-handled synchronously with the recieving of messages and with processing messages bound for itself.  
+handled synchronously with the receiving of messages and with processing messages bound for itself.  
 With the latter, requests are passed to the appropriate endpoint, which handles them in its own thread.
+
+Message delivery is handled by rmqcpp's internal thread pool via callbacks.  Dripline-cpp manages 
+only the following threads:
+
+* **Heartbeat thread** — sends regular heartbeat messages (optional)
+* **Scheduler thread** — executes scheduled events (optional)
 
 .. _messages:
 
@@ -132,7 +138,7 @@ Core
 ----
 
 The ``core`` class provides an interface for the basic AMQP functionality.  It wraps the 
-more general RabbitMQ API in a dripline-specific interface.
+rmqcpp RabbitMQ API in a dripline-specific interface.
 
 The class includes a number of static utility functions for interacting with the broker.
 
@@ -150,42 +156,52 @@ The heartbeat is an alert sent to a pre-determined routing key, which is given a
 ``execute()`` function.  The interval for sending the heartbeats is ``f_heartbeat_interval_s``, 
 which is in seconds.  The default interval is 60 s.
 
-.. _listeners:
+.. _message-dispatcher:
 
-Listeners
----------
+Message Dispatcher
+------------------
 
-A listener is a class capable of listening on an AMQP channel for AMQP messages, 
-which represent either a dripline message chunk or an entire dripline message.  
-The ``listener`` class provides the basic framework for doing that.
+The ``message_dispatcher`` class manages the lifecycle of an rmqcpp Consumer
+(via ``start_listening()`` / ``stop_listening()``) and dispatches each assembled
+Dripline message to ``submit_message()``.
 
-The typical use case involves at least two threads:
-1. A listener gets messages from the AMQP channel (using ``listen_on_queue()``, 
-   e.g. ``service`` or ``endpoint_listener_receiver``) and 
-   calls ``receiver::handle_message_chunk()``
-2. A receiver has a timing thread waiting for multiple message chunks (if relevant); 
-   when the message is complete, ``receiver::process_message()`` is called.
+Message delivery is callback-based: rmqcpp's internal thread pool invokes the delivery
+callback, which passes each AMQP message chunk to ``receiver::handle_message_chunk()``.
+Once all chunks of a Dripline message have arrived, the assembled message is dispatched
+synchronously to ``submit_message()`` in the rmqcpp callback thread.
 
-``listener_receiver`` is a convenience class that brings together ``listener`` and ``concurrent_receiver``.
+A class deriving from ``message_dispatcher`` must implement ``submit_message()`` to define
+what happens with each received message.  The two concrete implementations in dripline-cpp are:
 
-``endpoint_listener_receiver`` is a decorator class for a "plain" endpoint: 
-it adds ``listener_receiver`` capabilities, allowing it to act as an asynchronous endpoint of a ``service``.
+* ``service`` — dispatches messages to itself or to its child endpoints
+* ``endpoint_listener_receiver`` — a decorator class that wraps a plain ``endpoint`` and adds
+  ``message_dispatcher`` capabilities, allowing it to act as an asynchronous child endpoint of a ``service``
+
+.. note::
+   Prior to the rmqcpp migration, this class was named ``concurrent_receiver``.  The name was changed
+   because the class no longer manages any concurrency itself — rmqcpp's thread pool handles delivery.
 
 .. _receivers:
 
-Receivers
----------
+Receiver
+--------
 
 A receiver is able to collect Dripline message chunks and reassemble them into a complete dripline message.
 
 Dripline messages can be broken up into multiple chunks, each of which is transported as an AMQP message.  
-A receiver is responsible for handling message chunks, storing incomplete dripline messages, and eventually 
+A receiver is responsible for handling message chunks, storing incomplete dripline messages, and eventually
 processing complete dripline messages.
 
-The ``receiver`` class contains an interface specifically for users waiting to receive reply messages: `wait_for_reply()`.
+When a message chunk arrives via ``handle_message_chunk()``, it is stored in the incoming-message map.
+Message chunks for a given message can be received in any order.  Once all chunks for a message have
+arrived, ``process_message_pack()`` is called inline (no separate thread is spawned).
 
-The ``concurrent_receiver`` class allows client code to concurrently receive and process messages 
-(i.e. in separate threads).  
+Stale incomplete messages (entries older than ``single_message_wait_ms`` ms) are lazily evicted at the
+start of each ``handle_message_chunk()`` call.
+
+The ``receiver`` class contains an interface specifically for users waiting to receive reply messages:
+``wait_for_reply()``.  This uses a ``std::future`` to wait for the reply, which is fulfilled by the
+reply consumer's callback when the reply arrives.
 
 .. _scheduler:
 

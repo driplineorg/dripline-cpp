@@ -34,7 +34,7 @@ Here is the possible set of parameters for the ``dripline_mesh`` block, with a s
         loop_timeout_ms: (unsigned int) time used in loops for checking for application shutdown in milliseconds
         message_wait_ms: (unsigned int) timeout for waiting for a message in milliseconds
         heartbeat_routing_key: (string) routing key for sending and receiving heartbeat messages
-        hearteat_interval_s: (unsigned int) interval for sending heartbeats in seconds
+        heartbeat_interval_s: (unsigned int) interval for sending heartbeats in seconds
         return_codes:
           - name: (string) return-code name (must be unique)
             value: (unsigned int) return-code value (must be unique)
@@ -57,7 +57,7 @@ The defaults for all of these parameters are given in the class ``dripline_confi
         loop_timeout_ms: 1000
         message_wait_ms: 1000
         heartbeat_routing_key: heartbeat
-        hearteat_interval_s: 60
+        heartbeat_interval_s: 60
 
 .. _default-mesh-yaml:
 

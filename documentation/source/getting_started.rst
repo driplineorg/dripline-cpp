@@ -15,8 +15,9 @@ Requirements
 
 * CMake 3.12
 * C++17
-* Boost 1.46
-* rabbitmqc
+* Boost 1.46 (including Boost.Asio)
+* `rmqcpp <https://github.com/bloomberg/rmqcpp>`_ (Bloomberg AMQP client library)
+* BDE libraries (Bloomberg Development Environment; required by rmqcpp)
 * libyaml-cpp
 * rapidjson
 * quill (logging library)
@@ -25,7 +26,6 @@ Requirements
 Included Packages
 =================
 
-* `SimpleAmqpClient <https://github.com/project8/SimpleAmqpClient>`_ (unchanged fork of `upstream SimpleAmqpClient <https://github.com/alanxz/SimpleAmqpClient>`_)
 * `scarab <https://github.com/project8/scarab>`_
 
 
