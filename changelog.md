@@ -25,6 +25,13 @@ Types of changes: Added, Changed, Deprecated, Removed, Fixed, Security
 - `external/SimpleAmqpClient/` submodule (deleted).
 
 
+## [2.10.12] -- 2026-06-05
+
+### Changed
+
+- Modified GHA workflow to allow keeping of test-build images
+
+
 ## [2.10.11] -- 2026-01-23
 
 ### Changed
