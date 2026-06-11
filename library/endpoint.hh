@@ -276,9 +276,10 @@ namespace dripline
        `submit_message()` implementation forwards each assembled Dripline message to the
        decorated endpoint's `sort_message()`.
 
-     The `f_topology` and `f_queue` members (inherited from `message_dispatcher`) are
-     populated by `service` before `start_listening()` is called — the same lifecycle as
-     the service itself.
+     The `f_queue` member (inherited from `message_dispatcher`) is populated by
+     `service::add_queues()` before `start_listening()` is called.  The topology
+     (`core::f_topology`, owned by the enclosing `service`) is passed directly to
+     `start_listening()` — the ELR does not own a separate topology object.
     */
     class DRIPLINE_API endpoint_listener_receiver : public message_dispatcher
     {

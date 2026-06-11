@@ -48,12 +48,9 @@ namespace dripline
             enum class status
             {
                 nothing = 0,
-                channel_created = 10,
-                exchange_declared = 20,
-                queue_declared = 30,
-                queue_bound = 40,
-                consuming = 50,
-                listening = 60
+                channel_created = 10,  ///< broker connection established
+                consuming = 50,        ///< queue declared, keys bound, consumer started
+                listening = 60         ///< actively waiting for messages
             };
 
         public:

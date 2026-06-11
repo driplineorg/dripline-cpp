@@ -12,6 +12,7 @@
 #include "dripline_exceptions.hh"
 
 #include "rmqa_consumer.h"
+#include "rmqa_topology.h"
 #include "rmqa_vhost.h"
 #include "rmqp_messageguard.h"
 
@@ -25,15 +26,13 @@ namespace dripline
     message_dispatcher::message_dispatcher() :
             receiver(),
             f_consumer(),
-            f_queue(),
-            f_topology()
+            f_queue()
     {}
 
     message_dispatcher::message_dispatcher( message_dispatcher&& a_orig ) :
             receiver( std::move(a_orig) ),
             f_consumer( std::move(a_orig.f_consumer) ),
-            f_queue( std::move(a_orig.f_queue) ),
-            f_topology( std::move(a_orig.f_topology) )
+            f_queue( std::move(a_orig.f_queue) )
     {}
 
     message_dispatcher::~message_dispatcher()
@@ -44,7 +43,6 @@ namespace dripline
         receiver::operator=( std::move(a_orig) );
         f_consumer = std::move(a_orig.f_consumer);
         f_queue    = std::move(a_orig.f_queue);
-        f_topology = std::move(a_orig.f_topology);
         return *this;
     }
 
@@ -55,11 +53,12 @@ namespace dripline
     }
 
     void message_dispatcher::start_listening( bsl::shared_ptr< BloombergLP::rmqa::VHost > a_vhost,
+                                              BloombergLP::rmqa::Topology& a_topology,
                                               const std::string& a_label )
     {
         using namespace BloombergLP;
         auto t_result = a_vhost->createConsumer(
-            f_topology, f_queue,
+            a_topology, f_queue,
             [this]( rmqp::MessageGuard& guard ) {
                 amqp_envelope_ptr t_envelope = guard.transferOwnership();
                 t_envelope->ack();

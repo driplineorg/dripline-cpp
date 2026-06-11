@@ -10,7 +10,7 @@
 
 #include "receiver.hh"
 
-#include "rmqa_topology.h"
+namespace BloombergLP { namespace rmqa { class Topology; } }
 
 namespace dripline
 {
@@ -30,10 +30,21 @@ namespace dripline
      A class deriving from `message_dispatcher` must implement `submit_message()` to
      define what happens with each received message.
 
-     The topology and queue for this dispatcher are populated by `service::add_queues()`
-     (which sets `f_queue` via `core::add_requests_queue()` and builds `f_topology` with
-     the exchange + queue declaration) and `service::bind_keys()` (which adds bindings to
-     `f_topology`).  Both must be called before `start_listening()`.
+     **Topology ownership**
+
+     `message_dispatcher` does **not** own the AMQP topology.  The topology is owned by
+     the `core` instance that the concrete subclass (e.g. `service`, `monitor`) also
+     inherits from.  The queue handle `f_queue` is set by the subclass via
+     `core::add_requests_ephemeral_queue()` (or the durable variant) and then the shared
+     `core::f_topology` is passed to `start_listening()`.  This means that after a
+     connection restart rmqcpp will redeclare the complete topology — exchanges, queues,
+     and bindings — from the single canonical object in `core`.
+
+     The typical call sequence (performed by `service`) is:
+     1. `open_connection()` — establishes the connection and declares exchanges.
+     2. `add_queues()` — calls `core::add_requests_ephemeral_queue()` → stores result in `f_queue`.
+     3. `bind_keys()` — calls `core::bind_requests_key()` with `f_queue`.
+     4. `start_listening( f_vhost, core::f_topology, label )` — starts consuming.
 
      @note
      The name `concurrent_receiver` was used for this class prior to the rmqcpp migration.
@@ -56,21 +67,26 @@ namespace dripline
             virtual void process_message( message_ptr_t a_message );
 
             /*!
-             @brief Creates an rmqcpp consumer using this dispatcher's own topology and queue,
-                    then begins receiving messages.
+             @brief Creates an rmqcpp consumer using the supplied topology and this dispatcher's
+                    queue handle, then begins receiving messages.
 
              @details
-             `f_topology` and `f_queue` must be fully populated before calling this method.
-             `f_topology` is built by `service::add_queues()` (exchange + queue declaration) and
-             `service::bind_keys()` (bindings).  `f_queue` is set by `service::add_queues()` via
-             `core::add_requests_queue()`.
+             `f_queue` must be set (via `core::add_requests_ephemeral_queue()` or similar) and
+             the bindings must be added to `a_topology` (via `core::bind_requests_key()` etc.)
+             before calling this method.
+
+             The topology is passed by (non-const) reference because rmqcpp requires it that
+             way; the underlying `Topology` object is owned by `core::f_topology`.
 
              Throws `connection_error` if the rmqcpp consumer cannot be created.
 
-             @param a_vhost  The rmqcpp VHost to create the consumer on.
-             @param a_label  Optional label for the consumer (used for logging/identification).
+             @param a_vhost     The rmqcpp VHost to create the consumer on.
+             @param a_topology  The shared topology (from `core::f_topology`) that rmqcpp uses
+                                to redeclare exchanges, queues, and bindings after reconnects.
+             @param a_label     Optional label for the consumer (used for logging/identification).
             */
             void start_listening( bsl::shared_ptr< BloombergLP::rmqa::VHost > a_vhost,
+                                  BloombergLP::rmqa::Topology& a_topology,
                                   const std::string& a_label = "" );
 
             /*!
@@ -91,18 +107,9 @@ namespace dripline
             bsl::shared_ptr< BloombergLP::rmqa::Consumer > f_consumer;
 
             /// The queue this dispatcher consumes from.
-            /// Set by `service::add_queues()` (via `core::add_requests_queue()`) before
-            /// `start_listening()` is called.
+            /// Set by the concrete subclass (e.g. via `service::add_queues()` calling
+            /// `core::add_requests_ephemeral_queue()`) before `start_listening()` is called.
             BloombergLP::rmqt::QueueHandle f_queue;
-
-            /// The topology that declares the queue and its bindings for this dispatcher.
-            /// Populated by `service::add_queues()` (exchange + queue) and
-            /// `service::bind_keys()` (bindings).  Passed to rmqcpp's `createConsumer()`
-            /// inside `start_listening()` so that the broker can redeclare the topology
-            /// after a connection restart.
-            BloombergLP::rmqa::Topology f_topology;
-
-
     };
 
 } /* namespace dripline */

@@ -78,7 +78,7 @@ namespace dripline
             this->cancel( dl_success().rc_value() );
             std::this_thread::sleep_for( std::chrono::milliseconds(1100) );
         }
-        if( f_status > status::exchange_declared ) stop();
+        if( f_status > status::channel_created ) stop();
     }
 
     bool monitor::start()
@@ -110,29 +110,25 @@ namespace dripline
 
         try
         {
-            using namespace BloombergLP;
-
             // Monitor queue: ephemeral (auto-delete, non-durable); f_name already contains a UUID.
-            // Build the topology, then store it on the dispatcher's f_topology and f_queue so that
-            // start_listening() can pass a self-contained topology to rmqcpp.
-            f_queue = f_topology.addQueue( bsl::string(f_name), rmqt::AutoDelete::ON, rmqt::Durable::OFF );
-            if( ! f_requests_keys.empty() )
+            // One queue is bound to both the requests and alerts exchanges via the core helpers.
+            // All declarations land in core::f_topology so that rmqcpp can redeclare the full
+            // topology after a connection restart.
+            f_queue = add_requests_ephemeral_queue( f_name );
+
+            for( const auto& t_key : f_requests_keys )
             {
-                auto t_req_ex = f_topology.addExchange( bsl::string(f_requests_exchange), rmqt::ExchangeType::TOPIC );
-                for( const auto& t_key : f_requests_keys )
-                {
-                    f_topology.bind( t_req_ex, f_queue, bsl::string(t_key) );
-                }
+                bind_requests_key( f_name, t_key, f_queue );
             }
-            if( ! f_alerts_keys.empty() )
+
+            // Bind the same queue to the alerts exchange for any alert keys.
+            // add_alerts_*_queue() is not called; we reuse the queue declared above.
+            for( const auto& t_key : f_alerts_keys )
             {
-                auto t_alerts_ex = f_topology.addExchange( bsl::string(f_alerts_exchange), rmqt::ExchangeType::TOPIC );
-                for( const auto& t_key : f_alerts_keys )
-                {
-                    f_topology.bind( t_alerts_ex, f_queue, bsl::string(t_key) );
-                }
+                bind_alerts_key( f_name, t_key, f_queue );
             }
-            start_listening( f_vhost, f_name );
+
+            start_listening( f_vhost, f_topology, f_name );
         }
         catch( connection_error& e )
         {

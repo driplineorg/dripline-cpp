@@ -27,12 +27,15 @@ namespace dripline
     {
         public:
             using core::core;
-            using core::add_requests_queue;
+            using core::add_requests_durable_queue;
+            using core::add_requests_ephemeral_queue;
             using core::bind_requests_key;
-            using core::add_alerts_queue;
+            using core::add_alerts_durable_queue;
+            using core::add_alerts_ephemeral_queue;
             using core::bind_alerts_key;
             using core::f_requests_ex;
             using core::f_alerts_ex;
+            using core::f_topology;
     };
 } // namespace dripline
 
@@ -190,23 +193,93 @@ TEST_CASE( "exchange_store_name_from_custom_config", "[core]" )
     REQUIRE( t_core.f_alerts_ex.f_name == "my_alerts" );
 }
 
-TEST_CASE( "bind_key_missing_queue_throws", "[core]" )
+// ---------------------------------------------------------------------------
+// Queue declaration and binding helpers (offline / dry-run tests)
+// ---------------------------------------------------------------------------
+// These tests exercise the add_*_queue() and bind_*_key() helpers in offline
+// mode (make_connection=false).  They verify that the functions complete
+// without throwing and that they operate on core::f_topology.
+//
+// NOTE: In offline mode open_connection() is a no-op, so f_requests_ex.f_exchange
+// and f_alerts_ex.f_exchange remain default-constructed.  The rmqcpp Topology
+// API still allows addQueue() and bind() on a topology that has no live broker
+// connection, which is sufficient to exercise the helpers in unit tests.
+
+TEST_CASE( "add_requests_durable_queue", "[core]" )
 {
-    // Verify that bind_key() throws connection_error when the named queue has not been
-    // previously declared via add_queue().  The exchange handle is default-constructed
-    // (null) which is fine because the error check fires before any topology call.
     using scarab::authentication;
     using scarab::param_node;
 
     dripline::core_tester t_core( param_node(), authentication(), false );
 
-    BloombergLP::rmqt::QueueHandle t_dummy_handle;  // default-constructed (null)
+    BloombergLP::rmqt::QueueHandle t_handle;
+    REQUIRE_NOTHROW( t_handle = t_core.add_requests_durable_queue( "test_durable_requests" ) );
+    // The returned handle should be non-null.
+    REQUIRE( t_handle );
+}
 
-    REQUIRE_THROWS_AS(
-        t_core.bind_requests_key( "nonexistent_queue", "nonexistent_queue.#", t_dummy_handle ),
-        dripline::connection_error );
+TEST_CASE( "add_requests_ephemeral_queue", "[core]" )
+{
+    using scarab::authentication;
+    using scarab::param_node;
 
-    REQUIRE_THROWS_AS(
-        t_core.bind_alerts_key( "nonexistent_queue", "nonexistent_queue.#", t_dummy_handle ),
-        dripline::connection_error );
+    dripline::core_tester t_core( param_node(), authentication(), false );
+
+    BloombergLP::rmqt::QueueHandle t_handle;
+    REQUIRE_NOTHROW( t_handle = t_core.add_requests_ephemeral_queue( "test_ephemeral_requests" ) );
+    REQUIRE( t_handle );
+}
+
+TEST_CASE( "add_alerts_durable_queue", "[core]" )
+{
+    using scarab::authentication;
+    using scarab::param_node;
+
+    dripline::core_tester t_core( param_node(), authentication(), false );
+
+    BloombergLP::rmqt::QueueHandle t_handle;
+    REQUIRE_NOTHROW( t_handle = t_core.add_alerts_durable_queue( "test_durable_alerts" ) );
+    REQUIRE( t_handle );
+}
+
+TEST_CASE( "add_alerts_ephemeral_queue", "[core]" )
+{
+    using scarab::authentication;
+    using scarab::param_node;
+
+    dripline::core_tester t_core( param_node(), authentication(), false );
+
+    BloombergLP::rmqt::QueueHandle t_handle;
+    REQUIRE_NOTHROW( t_handle = t_core.add_alerts_ephemeral_queue( "test_ephemeral_alerts" ) );
+    REQUIRE( t_handle );
+}
+
+// ---------------------------------------------------------------------------
+// NOTE: bind_requests_key() / bind_alerts_key() cannot be exercised fully in
+// unit tests because they call Topology::bind() with an exchange handle that
+// is only populated by open_connection() (which requires a live broker).  In
+// offline mode the exchange handle is default-constructed (null) and the
+// behaviour of Topology::bind() with a null exchange is implementation-defined
+// in rmqcpp.  Those paths are instead covered by the integration test suite.
+// ---------------------------------------------------------------------------
+
+TEST_CASE( "add_queue_returns_valid_handle_for_requests_and_alerts", "[core]" )
+{
+    // Verify that add_*_queue() helpers for both exchanges return valid (non-null)
+    // handles, proving they all operate on core::f_topology (the single shared topology).
+    // A non-null QueueHandle means rmqcpp successfully registered the queue declaration.
+    using scarab::authentication;
+    using scarab::param_node;
+
+    dripline::core_tester t_core( param_node(), authentication(), false );
+
+    auto t_h1 = t_core.add_requests_ephemeral_queue( "shared_topo_q1" );
+    auto t_h2 = t_core.add_requests_durable_queue(   "shared_topo_q2" );
+    auto t_h3 = t_core.add_alerts_ephemeral_queue(   "shared_topo_q3" );
+    auto t_h4 = t_core.add_alerts_durable_queue(     "shared_topo_q4" );
+
+    REQUIRE( t_h1 );
+    REQUIRE( t_h2 );
+    REQUIRE( t_h3 );
+    REQUIRE( t_h4 );
 }

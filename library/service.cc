@@ -232,13 +232,16 @@ namespace dripline
 
         try
         {
-            start_listening( f_vhost, f_name );
+            // Pass the shared topology (owned by core) so that rmqcpp can redeclare
+            // exchanges, queues, and bindings after a connection restart.
+            start_listening( f_vhost, f_topology, f_name );
 
-            // Each async child gets its own durable queue
+            // Each async child gets its own ephemeral queue; they all share the same
+            // core topology which already contains all queue and binding declarations.
             for( auto& t_child_pair : f_async_children )
             {
                 const std::string& t_child_name = t_child_pair.first;
-                t_child_pair.second->start_listening( f_vhost, t_child_name );
+                t_child_pair.second->start_listening( f_vhost, f_topology, t_child_name );
             }
         }
         catch( connection_error& e )
@@ -299,24 +302,17 @@ namespace dripline
 
     void service::add_queues()
     {
-        using namespace BloombergLP;
-
-        // Service's own queue: declare on the requests exchange topology and record
-        // the handle and a consumer-specific topology on this dispatcher.
-        LDEBUG( dlog, "Adding queue for service <" << f_name << ">" );
-        f_queue = add_requests_queue( f_name );
-        // Seed this dispatcher's topology with the exchange + queue declaration so
-        // that start_listening() can pass a self-contained topology to rmqcpp.
-        f_topology = f_requests_ex.f_topo;
+        // Service's own queue: ephemeral (auto-delete, non-durable) so that stale
+        // messages from a previous run are discarded when the service is offline.
+        LDEBUG( dlog, "Adding ephemeral queue for service <" << f_name << ">" );
+        f_queue = add_requests_ephemeral_queue( f_name );
 
         for( async_map_t::iterator t_child_it = f_async_children.begin();
                 t_child_it != f_async_children.end();
                 ++t_child_it )
         {
-            LDEBUG( dlog, "Adding queue for async child <" << t_child_it->first << ">" );
-            t_child_it->second->f_queue = add_requests_queue( t_child_it->first );
-            // Each async child gets its own snapshot of the topology (exchange + its queue).
-            t_child_it->second->f_topology = f_requests_ex.f_topo;
+            LDEBUG( dlog, "Adding ephemeral queue for async child <" << t_child_it->first << ">" );
+            t_child_it->second->f_queue = add_requests_ephemeral_queue( t_child_it->first );
         }
 
         return;
@@ -324,8 +320,6 @@ namespace dripline
 
     void service::bind_keys()
     {
-        using namespace BloombergLP;
-
         LDEBUG( dlog, "Binding primary service keys" );
         bind_requests_key( f_name, f_name + ".#", f_queue );
         bind_requests_key( f_name, f_broadcast_key + ".#", f_queue );
@@ -346,15 +340,9 @@ namespace dripline
             bind_requests_key( t_child_it->first, t_child_it->first + ".#", t_child_it->second->f_queue );
         }
 
-        // After all bindings are recorded on f_requests_ex.f_topo, update each
-        // dispatcher's topology snapshot so it includes the bindings too.
-        f_topology = f_requests_ex.f_topo;
-        for( async_map_t::iterator t_child_it = f_async_children.begin();
-                t_child_it != f_async_children.end();
-                ++t_child_it )
-        {
-            t_child_it->second->f_topology = f_requests_ex.f_topo;
-        }
+        // All queue and binding declarations are accumulated in core::f_topology.
+        // No per-dispatcher topology copies are needed; start_listening() will pass
+        // f_topology (from core) directly to rmqcpp.
 
         return;
     }

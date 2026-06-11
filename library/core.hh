@@ -12,9 +12,9 @@
 #include "message.hh"
 
 #include <future>
-#include <map>
 #include <memory>
 #include <mutex>
+#include <string>
 #include <thread>
 
 namespace scarab
@@ -23,7 +23,8 @@ namespace scarab
     class param_node;
 }
 
-namespace BloombergLP { namespace rmqa { class Consumer; class RabbitContext; class VHost; class Producer; } }
+namespace BloombergLP { namespace rmqa { class Consumer; class RabbitContext; class Topology; class VHost; class Producer; } }
+namespace BloombergLP { namespace rmqt { class QueueHandle; } }
 
 namespace dripline
 {
@@ -64,26 +65,50 @@ namespace dripline
      @class core
      @author N.S. Oblath
 
-     @brief Basic AMQP interactions, including sending messages and interacting with AMQP channels.
+     @brief Basic AMQP interactions, including sending messages and setting up the AMQP topology.
 
      @details
-     The configuration for a `core` object is supplied via the constructor.  The basic required information can be obtained 
-     from `dripline_config`.  The configuration values have default parameters, and they can be modified with the config 
-     `param_node`, and a few parameters can be specified explicitly as constructor arguments.  The order of precedence for 
-     those values is (items higher in the list override those below them):
+     The configuration for a `core` object is supplied via the constructor.  The basic required
+     information can be obtained from `dripline_config`.  Configuration values have defaults that
+     can be overridden by the supplied `param_node`; a few can also be set explicitly as constructor
+     arguments.  Precedence (highest first):
        * Constructor arguments (other than `a_config`)
        * Config `param_node` object
        * Defaults
-     
-     If the broker is not specified in either the config object or as a constructor parameter, it will be requested from the 
-     authentication file.
-     
-     A second constructor allows a user to create a `core` object without connecting to a broker.
 
-     The primary user interface is `core::send()`, one of which exists for each type of message (request, reply, and alert).
+     If the broker address is not specified in either the config or as a constructor parameter, it
+     will be requested from the authentication file.
 
-     `Core` also contains a number of utility functions that wrap the main interactions with AMQP channels.  
-     Classes wishing to take advantage of those functions should inherit from `core`.
+     **Topology management**
+
+     `core` owns a single `rmqa::Topology` (`f_topology`, accessible read-only via `topology()`).
+     All AMQP queue and binding declarations for the service, monitor, or any other consumer must
+     be made through `core`'s helper functions so that they are recorded in `f_topology`.
+     `open_connection()` populates `f_topology` with both exchange declarations; subclasses then
+     add queues and bindings on top of that.  The typical call sequence is:
+
+     1. `open_connection()` — establishes the broker connection and declares the two exchanges in
+        `f_topology`.
+     2. `add_requests_[durable|ephemeral]_queue()` / `add_alerts_[durable|ephemeral]_queue()` —
+        adds a queue declaration to `f_topology` and returns a `QueueHandle`.
+     3. `bind_requests_key()` / `bind_alerts_key()` — adds a binding to `f_topology`.
+     4. Pass `f_topology` to `message_dispatcher::start_listening()` so that rmqcpp can redeclare
+        the full topology after a connection restart.
+
+     **Durable vs. ephemeral queues**
+
+     - *Durable* queues (`add_*_durable_queue()`) survive broker restarts.  Use these when the
+       consumer needs to receive messages that arrived while it was offline.
+     - *Ephemeral* queues (`add_*_ephemeral_queue()`) are auto-delete and non-durable: they
+       disappear when the last consumer disconnects and are not restored after a broker restart.
+       `service` and `monitor` both use ephemeral queues because they process messages in real
+       time and have no need to buffer missed traffic.
+
+     **Sending messages**
+
+     The primary user interface is `core::send()`, one of which exists for each message type
+     (request, reply, and alert).  Classes wishing to take advantage of the AMQP helpers should
+     inherit from `core`.
     */
     class DRIPLINE_API core
     {
@@ -91,21 +116,25 @@ namespace dripline
             static bool s_offline;
 
         public:
-            /* 
-               \brief Extracts necessary configuration and authentication information and prepares the DL object to interact with the RabbitMQ broker. Does not initiate connection to the broker.
-               @param a_config Dripline configuration object.  Contents can be:
-                 - `broker` (string; default: localhost) -- Address of the RabbitMQ broker
-                 - `broker_port` (int; default: 5672) -- Port used by the RabbitMQ broker
-                 - `requests_exchange` (string; default: requests) -- Name of the exchange used for DL requests
-                 - `alerts_exchange` (string; default: alerts) -- Name of the exchange used for DL alerts
-                 - `heartbeat_routing_key` (string; default: heartbeat) -- Routing key used for sending heartbeats
-                 - `make_connection` (bool; default: true) -- Flag for performing a dry run -- no connection to a broker is made; this parameter overrides the parameter in the constructor and is the preferred flag to use.
-                 - `max_payload_size` (int; default: DL_MAX_PAYLOAD_SIZE) -- Maximum size of payloads, in bytes
-                 - `max_connection_attempts` (int; default: 10) -- Maximum number of attempts that will be made to connect to the broker
-                 - `return_codes` (string or array of nodes; default: not present) -- Optional specification of additional return codes in the form of an array of nodes: `[{name: "<name>", value: <ret code>} <, ...>]`. 
-                        If this is a string, it's treated as a file can be interpreted by the param system (e.g. YAML or JSON) using the previously-mentioned format
-               @param a_auth Authentication object (type scarab::authentication); authentication specification should be processed, and the authentication data should include:
-               @param a_make_connection Flag for whether or not to contact a broker; if true, this object operates in "dry-run" mode
+            /*!
+               @brief Extracts configuration and authentication information; prepares this object
+                      to interact with the RabbitMQ broker.  Does **not** open the connection.
+
+               @param a_config Dripline configuration object.  Recognised keys:
+                 - `broker` (string; default: localhost) — broker address
+                 - `broker_port` (int; default: 5672) — broker port
+                 - `requests_exchange` (string; default: requests) — exchange for DL requests
+                 - `alerts_exchange` (string; default: alerts) — exchange for DL alerts
+                 - `heartbeat_routing_key` (string; default: heartbeat) — heartbeat routing key
+                 - `make_connection` (bool; default: true) — if false, operates in dry-run mode
+                 - `max_payload_size` (int; default: DL_MAX_PAYLOAD_SIZE) — max payload in bytes
+                 - `max_connection_attempts` (int; default: 10) — connection attempt limit
+                 - `return_codes` (string or array of nodes) — optional extra return codes as
+                        `[{name: "<name>", value: <ret code>, description: "<desc>"}, ...]`.
+                        A string value is treated as a file path to a YAML/JSON file.
+               @param a_auth  Authentication object; should contain `dripline/username` and
+                              `dripline/password` (defaults to `guest`/`guest`).
+               @param a_make_connection  If false, operates in dry-run mode (overridden by config).
              */
             core( const scarab::param_node& a_config = dripline_config(), const scarab::authentication& a_auth = scarab::authentication(), const bool a_make_connection = true );
             core( const core& a_orig ) = default;
@@ -116,16 +145,14 @@ namespace dripline
             core& operator=( core&& a_orig ) = default;
 
         public:
-            /// Sends a request message and waits for a reply via an rmqcpp consumer on a temporary queue.
-            /// Default exchange is "requests"
+            /// Sends a request message; creates a temporary auto-delete reply queue and waits
+            /// for the reply via an rmqcpp consumer.  Default exchange is "requests".
             virtual sent_msg_pkg_ptr send( request_ptr_t a_request ) const;
 
-            /// Sends a reply message
-            /// Default exchange is "requests"
+            /// Sends a reply message.  Default exchange is "requests".
             virtual sent_msg_pkg_ptr send( reply_ptr_t a_reply ) const;
 
-            /// Sends an alert message
-            /// Default exchange is "alerts"
+            /// Sends an alert message.  Default exchange is "alerts".
             virtual sent_msg_pkg_ptr send( alert_ptr_t a_alert ) const;
 
             mv_referrable( std::string, address );
@@ -148,95 +175,135 @@ namespace dripline
 
             /*!
              @struct exchange_store
-             @brief Bundles the rmqcpp topology, exchange handle, producer, and queue registry for a single AMQP exchange.
+             @brief Bundles the rmqcpp exchange handle and producer for a single AMQP exchange.
 
              @details
-             One `exchange_store` is held by `core` for the requests exchange (`f_requests_ex`) and one for
-             the alerts exchange (`f_alerts_ex`).  Both are populated lazily inside `open_connection()`.
+             One `exchange_store` is held by `core` for the requests exchange (`f_requests_ex`)
+             and one for the alerts exchange (`f_alerts_ex`).  Both are populated lazily inside
+             `open_connection()`.
 
-             Usage:
-             - `add_queue()` declares a durable queue on `f_topo` and records its handle in `f_queues`.
-               Must be called after `open_connection()` (the exchange handle must already exist).
-             - `bind_key()` binds an existing queue to `f_exchange` using the supplied routing key.
-               It requires the named queue to already be present in `f_queues`.  The routing key is
-               used verbatim — no wildcard suffixes are added; callers are responsible for their own
-               patterns (e.g. `"my-service.#"`).
+             Queue and binding declarations are made directly on `core::f_topology` (the single
+             shared topology), passed in by the `core` helpers.  `exchange_store` no longer owns
+             a topology object.
 
-             Both `add_queue()` and `bind_key()` mutate `f_topo` in-place and must **not** be called
-             while rmqcpp is actively using the topology object.
+             The helper methods `add_durable_queue()`, `add_ephemeral_queue()`, and `bind_key()`
+             must only be called after `open_connection()` has populated `f_exchange`.
             */
             struct exchange_store
             {
-                std::string f_name;  ///< Exchange name string (e.g. "requests" or "alerts")
-                BloombergLP::rmqa::Topology f_topo;
+                std::string f_name;  ///< Exchange name (e.g. "requests" or "alerts")
                 BloombergLP::rmqt::ExchangeHandle f_exchange;
                 bsl::shared_ptr< BloombergLP::rmqa::Producer > f_producer;
-                std::map< std::string, BloombergLP::rmqt::QueueHandle > f_queues;  ///< queue name → handle; used for duplicate-detection in bind_key()
 
-                /// Declares a durable queue on this exchange's topology and records the handle.
-                /// Returns the QueueHandle for use in bind_key() and start_listening().
-                BloombergLP::rmqt::QueueHandle add_queue( const std::string& a_queue_name );
+                /*!
+                 @brief Declares a durable (non-auto-delete) queue on the supplied topology.
+                 @param a_topo        The shared topology owned by `core`.
+                 @param a_queue_name  Unique name for the queue.
+                 @return Handle to the newly declared queue.
+                */
+                BloombergLP::rmqt::QueueHandle add_durable_queue( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name );
 
-                /// Binds the named queue to this exchange with the given routing key.
-                /// Throws connection_error if the queue was not previously added via add_queue().
-                /// The routing key is used verbatim (no `.#` suffix is appended here).
-                void bind_key( const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue );
+                /*!
+                 @brief Declares an ephemeral (auto-delete, non-durable) queue on the supplied topology.
+                 @details Ephemeral queues are removed from the broker when the last consumer
+                          disconnects and are not restored after a broker restart.  They are
+                          appropriate for real-time consumers such as `service` and `monitor`.
+                 @param a_topo        The shared topology owned by `core`.
+                 @param a_queue_name  Unique name for the queue (typically includes a UUID or service name).
+                 @return Handle to the newly declared queue.
+                */
+                BloombergLP::rmqt::QueueHandle add_ephemeral_queue( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name );
+
+                /*!
+                 @brief Binds a queue to this exchange with the supplied routing key.
+                 @details The routing key is used verbatim; include any desired wildcard suffixes
+                          (e.g. `"my-service.#"`).  The queue handle may come from either
+                          `add_durable_queue()` or `add_ephemeral_queue()` on **any** exchange
+                          store — this is intentional, since `monitor` binds a single queue to
+                          both the requests and the alerts exchange.
+                 @param a_topo         The shared topology owned by `core`.
+                 @param a_queue_name   Queue name (informational; used in error messages).
+                 @param a_routing_key  Routing key pattern to bind (verbatim).
+                 @param a_queue        Queue handle to bind.
+                */
+                void bind_key( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue );
             };
 
             sent_msg_pkg_ptr do_send( message_ptr_t a_message, const std::string& a_exchange, bool a_expect_reply ) const;
 
-            /// Sets up a temporary reply queue, starts an rmqcpp consumer on it, then sends the message.
-            /// Stores the consumer and reply promise in a_pkg.
+            /// Sets up a temporary reply queue, starts an rmqcpp consumer on it, then sends the
+            /// message.  Stores the consumer and reply promise in `a_pkg`.
             void send_withreply( message_ptr_t a_message, const std::string& a_exchange, sent_msg_pkg_ptr a_pkg ) const;
 
             bool send_noreply( message_ptr_t a_message, const std::string& a_exchange ) const;
 
-            /// Lazily establishes the RabbitMQ connection and creates the requests/alerts producers.
-            /// Thread-safe (mutex-guarded); subsequent calls after the first successful connection are no-ops.
+            /*!
+             @brief Lazily establishes the RabbitMQ connection, declares both exchanges in
+                    `f_topology`, and creates the requests and alerts producers.
+             @details Thread-safe (mutex-guarded); subsequent calls after the first successful
+                      connection are no-ops.  `f_topology` is populated here; all queue and
+                      binding helpers must be called **after** this function.
+            */
             void open_connection() const;
 
             /*!
-             @brief Declares a durable queue on the **requests** exchange topology.
-             @details
-             Must be called after `open_connection()` (the requests exchange handle must exist).
-             The returned QueueHandle must be stored (typically in `message_dispatcher::f_queue`) and
-             later passed to `bind_requests_key()` and to `message_dispatcher::start_listening()`.
-             @param a_queue_name  The unique name for this queue (usually the service or endpoint name).
-             @return The QueueHandle for the newly declared queue.
+             @brief Declares a **durable** queue on the requests exchange topology.
+             @details Must be called after `open_connection()`.  Durable queues survive broker
+                      restarts and buffer messages while the consumer is offline.  Use for
+                      consumers that must not miss traffic across restarts.
+             @param a_queue_name  Unique name for this queue (e.g. a service or endpoint name).
+             @return QueueHandle to pass to `bind_requests_key()` and `message_dispatcher::start_listening()`.
             */
-            BloombergLP::rmqt::QueueHandle add_requests_queue( const std::string& a_queue_name );
+            BloombergLP::rmqt::QueueHandle add_requests_durable_queue( const std::string& a_queue_name );
 
             /*!
-             @brief Binds a queue on the **requests** exchange to the given routing key.
-             @details
-             Must be called after `add_requests_queue()` for the same queue name.
-             The routing key is used verbatim; include any desired wildcard suffixes in `a_routing_key`
-             (e.g. pass `"my-service.#"` to match all keys under `my-service`).
-             @param a_queue_name   The queue name (must already exist in the exchange store).
-             @param a_routing_key  The routing key pattern to bind.
-             @param a_queue        The QueueHandle returned by `add_requests_queue()`.
+             @brief Declares an **ephemeral** (auto-delete, non-durable) queue on the requests exchange topology.
+             @details Must be called after `open_connection()`.  Ephemeral queues are removed when
+                      the consumer disconnects and are not restored after a broker restart.
+                      `service` uses this so that stale messages from a previous run are discarded.
+             @param a_queue_name  Unique name for this queue (typically the service name).
+             @return QueueHandle to pass to `bind_requests_key()` and `message_dispatcher::start_listening()`.
+            */
+            BloombergLP::rmqt::QueueHandle add_requests_ephemeral_queue( const std::string& a_queue_name );
+
+            /*!
+             @brief Binds a queue on the requests exchange to the given routing key.
+             @details Must be called after `add_requests_durable_queue()` or
+                      `add_requests_ephemeral_queue()` for the same queue.  The routing key is
+                      used verbatim — append `.#` yourself if you want wildcard matching.
+             @param a_queue_name   Queue name (used in log messages).
+             @param a_routing_key  Routing key pattern to bind.
+             @param a_queue        QueueHandle returned by the corresponding `add_requests_*_queue()`.
             */
             void bind_requests_key( const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue );
 
             /*!
-             @brief Declares a durable queue on the **alerts** exchange topology.
-             @details
-             Must be called after `open_connection()` (the alerts exchange handle must exist).
-             @param a_queue_name  The unique name for this queue.
-             @return The QueueHandle for the newly declared queue.
+             @brief Declares a **durable** queue on the alerts exchange topology.
+             @details Must be called after `open_connection()`.
+             @param a_queue_name  Unique name for this queue.
+             @return QueueHandle to pass to `bind_alerts_key()` and `message_dispatcher::start_listening()`.
             */
-            BloombergLP::rmqt::QueueHandle add_alerts_queue( const std::string& a_queue_name );
+            BloombergLP::rmqt::QueueHandle add_alerts_durable_queue( const std::string& a_queue_name );
 
             /*!
-             @brief Binds a queue on the **alerts** exchange to the given routing key.
-             @details
-             Must be called after `add_alerts_queue()` for the same queue name.
-             @param a_queue_name   The queue name (must already exist in the exchange store).
-             @param a_routing_key  The routing key pattern to bind (verbatim; no suffix appended).
-             @param a_queue        The QueueHandle returned by `add_alerts_queue()`.
+             @brief Declares an **ephemeral** (auto-delete, non-durable) queue on the alerts exchange topology.
+             @details Must be called after `open_connection()`.
+             @param a_queue_name  Unique name for this queue.
+             @return QueueHandle to pass to `bind_alerts_key()` and `message_dispatcher::start_listening()`.
+            */
+            BloombergLP::rmqt::QueueHandle add_alerts_ephemeral_queue( const std::string& a_queue_name );
+
+            /*!
+             @brief Binds a queue on the alerts exchange to the given routing key.
+             @details The queue handle may come from either `add_alerts_*_queue()` **or** from
+                      `add_requests_*_queue()` — `monitor` intentionally binds a single queue to
+                      both exchanges by calling both `bind_requests_key()` and `bind_alerts_key()`
+                      with the same handle.
+             @param a_queue_name   Queue name (used in log messages).
+             @param a_routing_key  Routing key pattern to bind (verbatim).
+             @param a_queue        QueueHandle to bind.
             */
             void bind_alerts_key( const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue );
-
 
             mutable bsl::shared_ptr< BloombergLP::rmqa::RabbitContext > f_rabbit_context;
             mutable bsl::shared_ptr< BloombergLP::rmqa::VHost > f_vhost;
@@ -244,7 +311,20 @@ namespace dripline
             mutable exchange_store f_requests_ex;
             mutable exchange_store f_alerts_ex;
 
+            /// The single shared AMQP topology for this core object.
+            /// Populated by `open_connection()` (exchange declarations) and then by the
+            /// `add_*_queue()` / `bind_*_key()` helpers.  Passed read-only via `topology()`.
+            /// Passed to `message_dispatcher::start_listening()` so that rmqcpp can redeclare
+            /// the full topology after a connection restart.
+            mutable BloombergLP::rmqa::Topology f_topology;
+
             mutable std::shared_ptr< std::mutex > f_connection_mutex;
+
+        public:
+            /// Read-only access to the shared AMQP topology.
+            /// Concrete subclasses (e.g. `service`, `monitor`) pass this to
+            /// `message_dispatcher::start_listening()`.
+            const BloombergLP::rmqa::Topology& topology() const { return f_topology; }
     };
 
 } /* namespace dripline */

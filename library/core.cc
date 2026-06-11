@@ -64,6 +64,7 @@ namespace dripline
             f_max_connection_attempts(),
             f_rabbit_context(),
             f_vhost(),
+            f_topology(),
             f_connection_mutex( std::make_shared< std::mutex >() )
     {
         // Get the default values, and merge in the supplied a_config
@@ -90,16 +91,16 @@ namespace dripline
         f_password = t_auth.get( t_auth_group, "password", f_password );
 */
         // Replace local parameters with values from the config
-        f_address = t_config["broker"]().as_string(); //.get_value("broker", "localhost");
-        f_port = t_config["broker_port"]().as_uint(); //.get_value("broker_port", 5672);
-        f_requests_exchange = t_config["requests_exchange"]().as_string(); //.get_value("requests_exchange", "requests");
-        f_alerts_exchange = t_config["alerts_exchange"]().as_string(); //.get_value("alerts_exchange", "alerts");
+        f_address = t_config["broker"]().as_string();
+        f_port = t_config["broker_port"]().as_uint();
+        f_requests_exchange = t_config["requests_exchange"]().as_string();
+        f_alerts_exchange = t_config["alerts_exchange"]().as_string();
         f_requests_ex.f_name = f_requests_exchange;
         f_alerts_ex.f_name = f_alerts_exchange;
-        f_heartbeat_routing_key = t_config["heartbeat_routing_key"]().as_string(); //.get_value("heartbeat_routing_key", "heartbeat");
+        f_heartbeat_routing_key = t_config["heartbeat_routing_key"]().as_string();
         f_make_connection = t_config.get_value( "make_connection", a_make_connection );
-        f_max_payload_size = t_config["max_payload_size"]().as_uint(); //.get_value("max_payload_size", DL_MAX_PAYLOAD_SIZE);
-        f_max_connection_attempts = t_config["max_connection_attempts"]().as_uint(); //.get_value("max_connection_attempts", 10);
+        f_max_payload_size = t_config["max_payload_size"]().as_uint();
+        f_max_connection_attempts = t_config["max_connection_attempts"]().as_uint();
 
         f_username = a_auth.get("dripline", "username", "guest");
         f_password = a_auth.get("dripline", "password", "guest");
@@ -269,10 +270,13 @@ namespace dripline
             throw connection_error() << "Unable to create vhost connection to " << f_address << ":" << f_port;
         }
 
+        // Declare both exchanges on the single shared topology
+        f_requests_ex.f_exchange = f_topology.addExchange( bsl::string(f_requests_ex.f_name), rmqt::ExchangeType::TOPIC );
+        f_alerts_ex.f_exchange   = f_topology.addExchange( bsl::string(f_alerts_ex.f_name),   rmqt::ExchangeType::TOPIC );
+
         // Create requests producer
         {
-            f_requests_ex.f_exchange = f_requests_ex.f_topo.addExchange( bsl::string(f_requests_ex.f_name), rmqt::ExchangeType::TOPIC );
-            auto t_result = f_vhost->createProducer( f_requests_ex.f_topo, f_requests_ex.f_exchange, 10 );
+            auto t_result = f_vhost->createProducer( f_topology, f_requests_ex.f_exchange, 10 );
             if( ! t_result )
             {
                 f_vhost.reset();
@@ -284,8 +288,7 @@ namespace dripline
 
         // Create alerts producer
         {
-            f_alerts_ex.f_exchange = f_alerts_ex.f_topo.addExchange( bsl::string(f_alerts_ex.f_name), rmqt::ExchangeType::TOPIC );
-            auto t_result = f_vhost->createProducer( f_alerts_ex.f_topo, f_alerts_ex.f_exchange, 10 );
+            auto t_result = f_vhost->createProducer( f_topology, f_alerts_ex.f_exchange, 10 );
             if( ! t_result )
             {
                 f_requests_ex.f_producer.reset();
@@ -299,49 +302,56 @@ namespace dripline
         LINFO( dlog, "AMQP connection established" );
     }
 
-    BloombergLP::rmqt::QueueHandle core::add_requests_queue( const std::string& a_queue_name )
+    BloombergLP::rmqt::QueueHandle core::add_requests_durable_queue( const std::string& a_queue_name )
     {
-        return f_requests_ex.add_queue( a_queue_name );
+        return f_requests_ex.add_durable_queue( f_topology, a_queue_name );
+    }
+
+    BloombergLP::rmqt::QueueHandle core::add_requests_ephemeral_queue( const std::string& a_queue_name )
+    {
+        return f_requests_ex.add_ephemeral_queue( f_topology, a_queue_name );
     }
 
     void core::bind_requests_key( const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue )
     {
-        f_requests_ex.bind_key( a_queue_name, a_routing_key, a_queue );
-        return;
+        f_requests_ex.bind_key( f_topology, a_queue_name, a_routing_key, a_queue );
     }
 
-    BloombergLP::rmqt::QueueHandle core::add_alerts_queue( const std::string& a_queue_name )
+    BloombergLP::rmqt::QueueHandle core::add_alerts_durable_queue( const std::string& a_queue_name )
     {
-        return f_alerts_ex.add_queue( a_queue_name );
+        return f_alerts_ex.add_durable_queue( f_topology, a_queue_name );
+    }
+
+    BloombergLP::rmqt::QueueHandle core::add_alerts_ephemeral_queue( const std::string& a_queue_name )
+    {
+        return f_alerts_ex.add_ephemeral_queue( f_topology, a_queue_name );
     }
 
     void core::bind_alerts_key( const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue )
     {
-        f_alerts_ex.bind_key( a_queue_name, a_routing_key, a_queue );
-        return;
+        f_alerts_ex.bind_key( f_topology, a_queue_name, a_routing_key, a_queue );
     }
 
-    BloombergLP::rmqt::QueueHandle core::exchange_store::add_queue( const std::string& a_queue_name )
+    BloombergLP::rmqt::QueueHandle core::exchange_store::add_durable_queue( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name )
     {
         using namespace BloombergLP;
-
-        auto t_handle = f_topo.addQueue( bsl::string(a_queue_name), rmqt::AutoDelete::OFF, rmqt::Durable::ON );
-        f_queues[a_queue_name] = t_handle;
-        return t_handle;
+        LDEBUG_NOTHREAD( "Declaring durable queue <" << a_queue_name << "> on exchange <" << f_name << ">" );
+        return a_topo.addQueue( bsl::string(a_queue_name), rmqt::AutoDelete::OFF, rmqt::Durable::ON );
     }
 
-    void core::exchange_store::bind_key( const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue )
+    BloombergLP::rmqt::QueueHandle core::exchange_store::add_ephemeral_queue( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name )
     {
-        if( f_queues.count(a_queue_name) == 0 )
-        {
-            throw connection_error() << "Cannot bind queue <" << a_queue_name << "> to routing key <" << a_routing_key << ">; queue does not exist";
-        }
+        using namespace BloombergLP;
+        LDEBUG_NOTHREAD( "Declaring ephemeral queue <" << a_queue_name << "> on exchange <" << f_name << ">" );
+        return a_topo.addQueue( bsl::string(a_queue_name), rmqt::AutoDelete::ON, rmqt::Durable::OFF );
+    }
 
-        f_topo.bind( f_exchange, 
-                     a_queue, 
+    void core::exchange_store::bind_key( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue )
+    {
+        LDEBUG_NOTHREAD( "Binding queue <" << a_queue_name << "> to exchange <" << f_name << "> with routing key <" << a_routing_key << ">" );
+        a_topo.bind( f_exchange,
+                     a_queue,
                      bsl::string(a_routing_key) );
-
-        return;
     }
 
     void core::send_withreply( message_ptr_t a_message, const std::string& a_exchange, sent_msg_pkg_ptr a_pkg ) const
@@ -353,7 +363,9 @@ namespace dripline
         a_message->reply_to() = t_reply_to;
         LDEBUG( dlog, "Reply-to for request: " << t_reply_to );
 
-        // Build topology: declare the exchange (idempotent), add auto-delete reply queue, bind
+        // Build a local topology for the temporary reply queue only.
+        // This topology is separate from f_topology so that the transient queue does not
+        // pollute the persistent topology passed to message_dispatcher::start_listening().
         rmqa::Topology t_reply_topo;
         auto t_ex = t_reply_topo.addExchange( a_exchange, rmqt::ExchangeType::TOPIC );
         auto t_queue = t_reply_topo.addQueue( t_reply_to, rmqt::AutoDelete::ON, rmqt::Durable::OFF );
