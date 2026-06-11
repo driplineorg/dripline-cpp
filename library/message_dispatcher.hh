@@ -30,6 +30,11 @@ namespace dripline
      A class deriving from `message_dispatcher` must implement `submit_message()` to
      define what happens with each received message.
 
+     The topology and queue for this dispatcher are populated by `service::add_queues()`
+     (which sets `f_queue` via `core::add_requests_queue()` and builds `f_topology` with
+     the exchange + queue declaration) and `service::bind_keys()` (which adds bindings to
+     `f_topology`).  Both must be called before `start_listening()`.
+
      @note
      The name `concurrent_receiver` was used for this class prior to the rmqcpp migration.
      After the migration the class no longer manages any concurrency itself — rmqcpp's
@@ -50,14 +55,31 @@ namespace dripline
             /// Dispatches the message directly to `submit_message()`.
             virtual void process_message( message_ptr_t a_message );
 
-            /// Creates an rmqcpp consumer on the given queue and begins receiving messages.
-            /// Each received message is passed to handle_message_chunk().
+            /*!
+             @brief Creates an rmqcpp consumer using this dispatcher's own topology and queue,
+                    then begins receiving messages.
+
+             @details
+             `f_topology` and `f_queue` must be fully populated before calling this method.
+             `f_topology` is built by `service::add_queues()` (exchange + queue declaration) and
+             `service::bind_keys()` (bindings).  `f_queue` is set by `service::add_queues()` via
+             `core::add_requests_queue()`.
+
+             Throws `connection_error` if the rmqcpp consumer cannot be created.
+
+             @param a_vhost  The rmqcpp VHost to create the consumer on.
+             @param a_label  Optional label for the consumer (used for logging/identification).
+            */
             void start_listening( bsl::shared_ptr< BloombergLP::rmqa::VHost > a_vhost,
-                                  const BloombergLP::rmqa::Topology& a_topology,
-                                  const BloombergLP::rmqt::QueueHandle& a_queue_handle,
                                   const std::string& a_label = "" );
 
-            /// Cancels the rmqcpp consumer, drains in-flight messages, and releases it.
+            /*!
+             @brief Cancels the rmqcpp consumer, drains in-flight messages, and releases it.
+
+             @details
+             This method is idempotent: it is safe to call even if `start_listening()` was never
+             called or if the consumer has already been stopped.
+            */
             void stop_listening();
 
             /// Handles messages according to the use case.  Must be implemented by the
@@ -67,6 +89,20 @@ namespace dripline
 
         protected:
             bsl::shared_ptr< BloombergLP::rmqa::Consumer > f_consumer;
+
+            /// The queue this dispatcher consumes from.
+            /// Set by `service::add_queues()` (via `core::add_requests_queue()`) before
+            /// `start_listening()` is called.
+            BloombergLP::rmqt::QueueHandle f_queue;
+
+            /// The topology that declares the queue and its bindings for this dispatcher.
+            /// Populated by `service::add_queues()` (exchange + queue) and
+            /// `service::bind_keys()` (bindings).  Passed to rmqcpp's `createConsumer()`
+            /// inside `start_listening()` so that the broker can redeclare the topology
+            /// after a connection restart.
+            BloombergLP::rmqa::Topology f_topology;
+
+
     };
 
 } /* namespace dripline */

@@ -79,13 +79,11 @@ namespace dripline
             enum class status
             {
                 nothing = 0,
-                channel_created = 10,
-                exchange_declared = 20,
-                queue_declared = 30,
-                queue_bound = 40,
-                consuming = 50,
-                listening = 60,
-                processing = 70
+                connected = 10,
+                topology_set = 30,
+                queues_bound = 40,
+                threads_started = 50,
+                listening = 60
             };
 
         public:
@@ -175,6 +173,17 @@ namespace dripline
             bool stop();
 
             mv_accessible( uuid_t, id );
+
+        protected:
+            virtual void open_channels();
+
+            virtual void add_queues();
+
+            virtual void bind_keys();
+
+            virtual void start_threads();
+
+            virtual void stop_threads();
 
         public:
             typedef std::map< std::string, endpoint_ptr_t > sync_map_t;

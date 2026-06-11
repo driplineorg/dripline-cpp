@@ -257,10 +257,28 @@ namespace dripline
      @class endpoint_listener_receiver
      @author N.S. Oblath
 
-     @brief Decorator class for a plain endpoint: adds message_dispatcher capabilities.
+     @brief Decorator class for a plain endpoint: adds message_dispatcher capabilities for asynchronous message consumption.
 
      @details
-     The endpoint_listener_receiver is used by @ref service to wrap an endpoint that is to listen for messages asynchronously.
+     `endpoint_listener_receiver` (ELR) is the bridge between the AMQP consumer layer
+     (`message_dispatcher`) and a user-supplied `endpoint`.  It is used by @ref service to
+     wrap any endpoint that is registered as an **asynchronous child** via
+     `service::add_async_child()`.
+
+     An endpoint passed to `add_async_child()` is either already an ELR (in which case it
+     is used directly) or is wrapped in a new ELR automatically.  The resulting ELR:
+
+     - Gets its own AMQP queue declared by `service::add_queues()`.
+     - Gets its own set of routing-key bindings added by `service::bind_keys()`.
+     - Gets its own rmqcpp consumer started by `service::listen()` via
+       `message_dispatcher::start_listening()`.
+     - Receives messages independently of the service's main queue; its
+       `submit_message()` implementation forwards each assembled Dripline message to the
+       decorated endpoint's `sort_message()`.
+
+     The `f_topology` and `f_queue` members (inherited from `message_dispatcher`) are
+     populated by `service` before `start_listening()` is called — the same lifecycle as
+     the service itself.
     */
     class DRIPLINE_API endpoint_listener_receiver : public message_dispatcher
     {

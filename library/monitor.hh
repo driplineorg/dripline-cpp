@@ -16,7 +16,7 @@ namespace scarab
     class authentication;
 }
 
-namespace DRIPLINE_API dripline
+namespace dripline
 {
 
     /*!
@@ -40,7 +40,7 @@ namespace DRIPLINE_API dripline
      requests keys are bound to the requests exchange.  The monitor then waits to receive 
      a message.  When a message is seen, it prints it to stdout.
     */
-    class monitor :
+    class DRIPLINE_API monitor :
             public core,
             public message_dispatcher
     {

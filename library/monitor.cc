@@ -56,7 +56,7 @@ namespace dripline
         if( a_config.has( "alert_keys" ) && a_config["alert_keys"].is_array() )
         {
             const scarab::param_array& t_req_keys = a_config["alert_keys"].as_array();
-            f_requests_keys.reserve( t_req_keys.size() );
+            f_alerts_keys.reserve( t_req_keys.size() );
             for( auto t_it = t_req_keys.begin(); t_it != t_req_keys.end(); ++t_it )
             {
                 LPROG( dlog, "Monitor <" << f_name << "> will monitor key <" << (*t_it)().as_string() << "> on the alerts exchange" );
@@ -112,26 +112,27 @@ namespace dripline
         {
             using namespace BloombergLP;
 
-            // Monitor queue: ephemeral (auto-delete, non-durable); f_name already contains a UUID
-            rmqa::Topology t_topo;
-            auto t_monitor_queue = t_topo.addQueue( bsl::string(f_name), rmqt::AutoDelete::ON, rmqt::Durable::OFF );
+            // Monitor queue: ephemeral (auto-delete, non-durable); f_name already contains a UUID.
+            // Build the topology, then store it on the dispatcher's f_topology and f_queue so that
+            // start_listening() can pass a self-contained topology to rmqcpp.
+            f_queue = f_topology.addQueue( bsl::string(f_name), rmqt::AutoDelete::ON, rmqt::Durable::OFF );
             if( ! f_requests_keys.empty() )
             {
-                auto t_req_ex = t_topo.addExchange( bsl::string(f_requests_exchange), rmqt::ExchangeType::TOPIC );
+                auto t_req_ex = f_topology.addExchange( bsl::string(f_requests_exchange), rmqt::ExchangeType::TOPIC );
                 for( const auto& t_key : f_requests_keys )
                 {
-                    t_topo.bind( t_req_ex, t_monitor_queue, bsl::string(t_key) );
+                    f_topology.bind( t_req_ex, f_queue, bsl::string(t_key) );
                 }
             }
             if( ! f_alerts_keys.empty() )
             {
-                auto t_alerts_ex = t_topo.addExchange( bsl::string(f_alerts_exchange), rmqt::ExchangeType::TOPIC );
+                auto t_alerts_ex = f_topology.addExchange( bsl::string(f_alerts_exchange), rmqt::ExchangeType::TOPIC );
                 for( const auto& t_key : f_alerts_keys )
                 {
-                    t_topo.bind( t_alerts_ex, t_monitor_queue, bsl::string(t_key) );
+                    f_topology.bind( t_alerts_ex, f_queue, bsl::string(t_key) );
                 }
             }
-            start_listening( f_vhost, t_topo, t_monitor_queue, f_name );
+            start_listening( f_vhost, f_name );
         }
         catch( connection_error& e )
         {

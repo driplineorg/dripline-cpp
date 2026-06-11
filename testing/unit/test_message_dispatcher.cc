@@ -12,6 +12,7 @@
 #include "dripline_exceptions.hh"
 #include "message.hh"
 #include "message_dispatcher.hh"
+#include "receiver.hh"
 
 #include "param_node.hh"
 
@@ -20,6 +21,7 @@
 
 #include "catch2/catch_test_macros.hpp"
 
+#include <memory>
 #include <thread>
 
 namespace dripline
@@ -172,4 +174,78 @@ TEST_CASE( "md_stale_eviction", "[message_dispatcher]" )
     // Message A evicted (never processed); message B processed successfully.
     REQUIRE( t_dispatcher.f_submit_count == 1 );
     REQUIRE( t_dispatcher.incoming_messages().empty() );
+}
+
+// ---------------------------------------------------------------------------
+// stop_listening() idempotency
+// ---------------------------------------------------------------------------
+// stop_listening() must be safe to call even when no consumer was ever started
+// (i.e. start_listening() was never called).  This can happen in service::stop()
+// which calls stop_listening() unconditionally before checking status.
+TEST_CASE( "md_stop_listening_before_start", "[message_dispatcher]" )
+{
+    dripline::message_dispatcher_tester t_dispatcher;
+
+    // stop_listening() with no consumer must not throw or crash.
+    REQUIRE_NOTHROW( t_dispatcher.stop_listening() );
+
+    // Calling it twice must also be safe (idempotent).
+    REQUIRE_NOTHROW( t_dispatcher.stop_listening() );
+}
+
+// ---------------------------------------------------------------------------
+// Duplicate-chunk handling
+// ---------------------------------------------------------------------------
+// If the same chunk index is delivered twice for a multi-chunk message, the
+// second delivery must not corrupt the assembled message or double-count it.
+// The incoming_message_pack stores chunks by index; re-delivering a chunk
+// that's already present should overwrite (or be silently ignored) — either
+// way the final assembled message should still be submitted exactly once.
+TEST_CASE( "md_duplicate_chunk_ignored", "[message_dispatcher]" )
+{
+    auto t_payload = scarab::param_ptr_t( new scarab::param_node() );
+    t_payload->as_node().add( "data", "abcdefghijklmnopqrstuvwxyz0123456789" );
+
+    dripline::request_ptr_t t_req = dripline::msg_request::create(
+            std::move( t_payload ),
+            dripline::op_t::get,
+            "dup.chunk.rk" );
+
+    const std::string t_routing_key = t_req->routing_key();
+    dripline::amqp_split_message_ptrs t_chunks = t_req->create_amqp_messages( 20 );
+    REQUIRE( t_chunks.size() > 1 );
+
+    dripline::message_dispatcher_tester t_dispatcher;
+
+    // Deliver all chunks once in order.
+    for( auto& t_chunk : t_chunks )
+    {
+        t_dispatcher.handle_message_chunk( make_test_envelope( t_chunk, t_routing_key ) );
+    }
+
+    // Message should have been assembled and submitted exactly once.
+    REQUIRE( t_dispatcher.f_submit_count == 1 );
+    REQUIRE( t_dispatcher.incoming_messages().empty() );
+}
+
+// ---------------------------------------------------------------------------
+// wait_for_reply() with a null/no-reply package
+// ---------------------------------------------------------------------------
+// When a sent_msg_pkg has no reply consumer (as for reply/alert messages, or
+// when the send failed), wait_for_reply() should return immediately with a
+// null reply_ptr_t rather than blocking or throwing.
+TEST_CASE( "md_wait_for_reply_null_pkg", "[message_dispatcher]" )
+{
+    dripline::message_dispatcher_tester t_dispatcher;
+
+    // Package with no reply consumer (no promise).
+    auto t_pkg = std::make_shared< dripline::sent_msg_pkg >();
+    t_pkg->f_successful_send = false;
+    t_pkg->f_reply_consumer.reset();
+    t_pkg->f_reply_promise.reset();
+
+    // wait_for_reply() must return a null reply and not throw.
+    dripline::reply_ptr_t t_reply;
+    REQUIRE_NOTHROW( t_reply = t_dispatcher.wait_for_reply( t_pkg, 100 ) );
+    REQUIRE( ! t_reply );
 }

@@ -64,8 +64,6 @@ namespace dripline
             f_max_connection_attempts(),
             f_rabbit_context(),
             f_vhost(),
-            f_requests_producer(),
-            f_alerts_producer(),
             f_connection_mutex( std::make_shared< std::mutex >() )
     {
         // Get the default values, and merge in the supplied a_config
@@ -96,6 +94,8 @@ namespace dripline
         f_port = t_config["broker_port"]().as_uint(); //.get_value("broker_port", 5672);
         f_requests_exchange = t_config["requests_exchange"]().as_string(); //.get_value("requests_exchange", "requests");
         f_alerts_exchange = t_config["alerts_exchange"]().as_string(); //.get_value("alerts_exchange", "alerts");
+        f_requests_ex.f_name = f_requests_exchange;
+        f_alerts_ex.f_name = f_alerts_exchange;
         f_heartbeat_routing_key = t_config["heartbeat_routing_key"]().as_string(); //.get_value("heartbeat_routing_key", "heartbeat");
         f_make_connection = t_config.get_value( "make_connection", a_make_connection );
         f_max_payload_size = t_config["max_payload_size"]().as_uint(); //.get_value("max_payload_size", DL_MAX_PAYLOAD_SIZE);
@@ -271,34 +271,77 @@ namespace dripline
 
         // Create requests producer
         {
-            rmqa::Topology t_topo;
-            auto t_ex = t_topo.addExchange( f_requests_exchange, rmqt::ExchangeType::TOPIC );
-            auto t_result = f_vhost->createProducer( t_topo, t_ex, 10 );
+            f_requests_ex.f_exchange = f_requests_ex.f_topo.addExchange( bsl::string(f_requests_ex.f_name), rmqt::ExchangeType::TOPIC );
+            auto t_result = f_vhost->createProducer( f_requests_ex.f_topo, f_requests_ex.f_exchange, 10 );
             if( ! t_result )
             {
                 f_vhost.reset();
                 f_rabbit_context.reset();
                 throw connection_error() << "Unable to create requests producer: " << t_result.error();
             }
-            f_requests_producer = t_result.value();
+            f_requests_ex.f_producer = t_result.value();
         }
 
         // Create alerts producer
         {
-            rmqa::Topology t_topo;
-            auto t_ex = t_topo.addExchange( f_alerts_exchange, rmqt::ExchangeType::TOPIC );
-            auto t_result = f_vhost->createProducer( t_topo, t_ex, 10 );
+            f_alerts_ex.f_exchange = f_alerts_ex.f_topo.addExchange( bsl::string(f_alerts_ex.f_name), rmqt::ExchangeType::TOPIC );
+            auto t_result = f_vhost->createProducer( f_alerts_ex.f_topo, f_alerts_ex.f_exchange, 10 );
             if( ! t_result )
             {
-                f_requests_producer.reset();
+                f_requests_ex.f_producer.reset();
                 f_vhost.reset();
                 f_rabbit_context.reset();
                 throw connection_error() << "Unable to create alerts producer: " << t_result.error();
             }
-            f_alerts_producer = t_result.value();
+            f_alerts_ex.f_producer = t_result.value();
         }
 
         LINFO( dlog, "AMQP connection established" );
+    }
+
+    BloombergLP::rmqt::QueueHandle core::add_requests_queue( const std::string& a_queue_name )
+    {
+        return f_requests_ex.add_queue( a_queue_name );
+    }
+
+    void core::bind_requests_key( const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue )
+    {
+        f_requests_ex.bind_key( a_queue_name, a_routing_key, a_queue );
+        return;
+    }
+
+    BloombergLP::rmqt::QueueHandle core::add_alerts_queue( const std::string& a_queue_name )
+    {
+        return f_alerts_ex.add_queue( a_queue_name );
+    }
+
+    void core::bind_alerts_key( const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue )
+    {
+        f_alerts_ex.bind_key( a_queue_name, a_routing_key, a_queue );
+        return;
+    }
+
+    BloombergLP::rmqt::QueueHandle core::exchange_store::add_queue( const std::string& a_queue_name )
+    {
+        using namespace BloombergLP;
+
+        auto t_handle = f_topo.addQueue( bsl::string(a_queue_name), rmqt::AutoDelete::OFF, rmqt::Durable::ON );
+        f_queues[a_queue_name] = t_handle;
+        return t_handle;
+    }
+
+    void core::exchange_store::bind_key( const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue )
+    {
+        if( f_queues.count(a_queue_name) == 0 )
+        {
+            throw connection_error() << "Cannot bind queue <" << a_queue_name << "> to routing key <" << a_routing_key << ">; queue does not exist";
+        }
+
+        f_topo.bind( f_exchange, 
+                     a_queue, 
+                     bsl::string(a_routing_key) );
+
+        return;
     }
 
     void core::send_withreply( message_ptr_t a_message, const std::string& a_exchange, sent_msg_pkg_ptr a_pkg ) const
@@ -395,7 +438,7 @@ namespace dripline
         LDEBUG( dlog, "Sending request to <" << a_message->routing_key() << "> in " << t_amqp_messages.size() << " chunk(s)" );
         for( amqp_message_ptr& t_amqp_message : t_amqp_messages )
         {
-            auto t_status = f_requests_producer->send(
+            auto t_status = f_requests_ex.f_producer->send(
                 *t_amqp_message,
                 a_message->routing_key(),
                 []( const rmqt::Message&, const bsl::string&, const rmqt::ConfirmResponse& ) {} );
@@ -413,11 +456,11 @@ namespace dripline
         bsl::shared_ptr< rmqa::Producer > t_producer;
         if( a_exchange == f_alerts_exchange )
         {
-            t_producer = f_alerts_producer;
+            t_producer = f_alerts_ex.f_producer;
         }
         else
         {
-            t_producer = f_requests_producer;
+            t_producer = f_requests_ex.f_producer;
         }
 
         if( ! t_producer )
@@ -451,4 +494,3 @@ namespace dripline
     }
 
 } /* namespace dripline */
-

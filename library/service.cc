@@ -61,7 +61,7 @@ namespace dripline
             this->cancel( dl_success().rc_value() );
             std::this_thread::sleep_for( std::chrono::milliseconds(1100) );
         }
-        if( f_status > status::exchange_declared ) stop();
+        if( f_status > status::nothing ) stop();
     }
 
     service& service::operator=( service&& a_orig )
@@ -171,11 +171,6 @@ namespace dripline
 
     bool service::start()
     {
-        if( ! f_make_connection )
-        {
-            LWARN( dlog, "Should not start service when make_connection is disabled" );
-            return true;
-        }
         if( f_name.empty() )
         {
             LERROR( dlog, "Service requires a queue name to be started" );
@@ -186,53 +181,43 @@ namespace dripline
         endpoint::f_service = this;
         heartbeater::f_service = this;
 
-        LINFO( dlog, "Connecting to <" << f_address << ":" << f_port << ">" );
+        if( ! f_make_connection )
+        {
+            LWARN( dlog, "Make-connection is disabled" );
+        }
+        else
+        {
+            LINFO( dlog, "Connecting to <" << f_address << ":" << f_port << ">" );
+
+            try
+            {
+                open_channels();
+                f_status = status::connected;
+
+                add_queues();
+                f_status = status::topology_set;
+
+                bind_keys();
+                f_status = status::queues_bound;
+
+            }
+            catch( connection_error& e )
+            {
+                LERROR( dlog, "Error while starting AMQP connection: " << e.what() );
+                return false;
+            }
+        }
 
         try
         {
-            open_connection();
+            start_threads();
+            f_status = status::threads_started;            
         }
-        catch( connection_error& e )
+        catch(const dripline_error& e)
         {
-            LERROR( dlog, "Unable to connect to the broker: " << e.what() );
+            LERROR( dlog, "Error while starting threads: " << e.what() );
             return false;
         }
-        f_status = status::channel_created;
-
-        try
-        {
-            using namespace BloombergLP;
-
-            // Build service queue topology: non-durable, auto-delete
-            rmqa::Topology t_topo;
-            auto t_req_ex = t_topo.addExchange( bsl::string(f_requests_exchange), rmqt::ExchangeType::TOPIC );
-            auto t_service_queue = t_topo.addQueue( bsl::string(f_name), rmqt::AutoDelete::ON, rmqt::Durable::OFF );
-            t_topo.bind( t_req_ex, t_service_queue, bsl::string(f_name + ".#") );
-            t_topo.bind( t_req_ex, t_service_queue, bsl::string(f_broadcast_key + ".#") );
-            for( const auto& t_child_pair : f_sync_children )
-            {
-                // Sync children share the service queue
-                t_topo.bind( t_req_ex, t_service_queue, bsl::string(t_child_pair.first + ".#") );
-            }
-            start_listening( f_vhost, t_topo, t_service_queue, f_name );
-
-            // Each async child gets its own durable queue
-            for( auto& t_child_pair : f_async_children )
-            {
-                const std::string& t_child_name = t_child_pair.first;
-                rmqa::Topology t_child_topo;
-                auto t_child_ex = t_child_topo.addExchange( bsl::string(f_requests_exchange), rmqt::ExchangeType::TOPIC );
-                auto t_child_queue = t_child_topo.addQueue( bsl::string(t_child_name), rmqt::AutoDelete::ON, rmqt::Durable::OFF );
-                t_child_topo.bind( t_child_ex, t_child_queue, bsl::string(t_child_name + ".#") );
-                t_child_pair.second->start_listening( f_vhost, t_child_topo, t_child_queue, t_child_name );
-            }
-        }
-        catch( connection_error& e )
-        {
-            LERROR( dlog, "Unable to set up service topology: " << e.what() );
-            return false;
-        }
-        f_status = status::consuming;
 
         return true;
     }
@@ -245,8 +230,137 @@ namespace dripline
             return true;
         }
 
+        try
+        {
+            start_listening( f_vhost, f_name );
+
+            // Each async child gets its own durable queue
+            for( auto& t_child_pair : f_async_children )
+            {
+                const std::string& t_child_name = t_child_pair.first;
+                t_child_pair.second->start_listening( f_vhost, t_child_name );
+            }
+        }
+        catch( connection_error& e )
+        {
+            LERROR( dlog, "Unable to set up service topology: " << e.what() );
+            return false;
+        }
+
         f_status = status::listening;
 
+        try
+        {
+            // Block until canceled
+            while( ! is_canceled() )
+            {
+                std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
+            }
+
+            stop_threads();
+
+        }
+        catch( std::exception& e )
+        {
+            LERROR( dlog, "Error while running service: " << e.what() );
+            return false;
+        }
+
+        return true;
+    }
+
+    bool service::stop()
+    {
+        LINFO( dlog, "Stopping service on <" << f_name << ">" );
+
+        if( f_status >= status::listening )
+        {
+            this->cancel( dl_success().rc_value() );
+        }
+
+        stop_listening();
+
+        for( auto& t_child_pair : f_async_children )
+        {
+            t_child_pair.second->stop_listening();
+        }
+
+        stop_threads();
+
+        f_status = status::nothing;
+        return true;
+    }
+
+    void service::open_channels()
+    {
+        open_connection();
+        return;
+    }
+
+    void service::add_queues()
+    {
+        using namespace BloombergLP;
+
+        // Service's own queue: declare on the requests exchange topology and record
+        // the handle and a consumer-specific topology on this dispatcher.
+        LDEBUG( dlog, "Adding queue for service <" << f_name << ">" );
+        f_queue = add_requests_queue( f_name );
+        // Seed this dispatcher's topology with the exchange + queue declaration so
+        // that start_listening() can pass a self-contained topology to rmqcpp.
+        f_topology = f_requests_ex.f_topo;
+
+        for( async_map_t::iterator t_child_it = f_async_children.begin();
+                t_child_it != f_async_children.end();
+                ++t_child_it )
+        {
+            LDEBUG( dlog, "Adding queue for async child <" << t_child_it->first << ">" );
+            t_child_it->second->f_queue = add_requests_queue( t_child_it->first );
+            // Each async child gets its own snapshot of the topology (exchange + its queue).
+            t_child_it->second->f_topology = f_requests_ex.f_topo;
+        }
+
+        return;
+    }
+
+    void service::bind_keys()
+    {
+        using namespace BloombergLP;
+
+        LDEBUG( dlog, "Binding primary service keys" );
+        bind_requests_key( f_name, f_name + ".#", f_queue );
+        bind_requests_key( f_name, f_broadcast_key + ".#", f_queue );
+
+        LDEBUG( dlog, "Binding keys for synchronous children" );
+        for( sync_map_t::const_iterator t_child_it = f_sync_children.begin();
+                t_child_it != f_sync_children.end();
+                ++t_child_it )
+        {
+            bind_requests_key( f_name, t_child_it->first + ".#", f_queue );
+        }
+
+        LDEBUG( dlog, "Binding keys for asynchronous children" );
+        for( async_map_t::iterator t_child_it = f_async_children.begin();
+                t_child_it != f_async_children.end();
+                ++t_child_it )
+        {
+            bind_requests_key( t_child_it->first, t_child_it->first + ".#", t_child_it->second->f_queue );
+        }
+
+        // After all bindings are recorded on f_requests_ex.f_topo, update each
+        // dispatcher's topology snapshot so it includes the bindings too.
+        f_topology = f_requests_ex.f_topo;
+        for( async_map_t::iterator t_child_it = f_async_children.begin();
+                t_child_it != f_async_children.end();
+                ++t_child_it )
+        {
+            t_child_it->second->f_topology = f_requests_ex.f_topo;
+        }
+
+        return;
+    }
+
+    void service::start_threads()
+    {
         try
         {
             if( f_heartbeat_interval_s != 0 )
@@ -268,13 +382,25 @@ namespace dripline
             {
                 LINFO( dlog, "Scheduler disabled" );
             }
+        }
+        catch( std::system_error& e )
+        {
+            throw dripline_error() << "Could not start threads due to a system error: " << e.what();
+        }
+        catch( dripline_error& e )
+        {
+            throw dripline_error() << "Dripline error while starting threads: " << e.what();
+        }
+        catch( std::exception& e )
+        {
+            throw dripline_error() << "Error while starting threads: " << e.what();
+        }
 
-            // Block until canceled
-            while( ! is_canceled() )
-            {
-                std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
-            }
+        return;
+    }
 
+    void service::stop_threads()
+    {
             if( f_heartbeat_thread.joinable() )
             {
                 f_heartbeat_thread.join();
@@ -283,45 +409,8 @@ namespace dripline
             {
                 f_scheduler_thread.join();
             }
-        }
-        catch( std::system_error& e )
-        {
-            LERROR( dlog, "Could not start a thread due to a system error: " << e.what() );
-            return false;
-        }
-        catch( dripline_error& e )
-        {
-            LERROR( dlog, "Dripline error while running service: " << e.what() );
-            return false;
-        }
-        catch( std::exception& e )
-        {
-            LERROR( dlog, "Error while running service: " << e.what() );
-            return false;
-        }
 
-        return true;
-    }
-
-    bool service::stop()
-    {
-        LINFO( dlog, "Stopping service on <" << f_name << ">" );
-
-        if( f_status >= status::listening )
-        {
-            this->cancel( dl_success().rc_value() );
-            f_status = status::consuming;
-        }
-
-        stop_listening();
-
-        for( auto& t_child_pair : f_async_children )
-        {
-            t_child_pair.second->stop_listening();
-        }
-
-        f_status = status::nothing;
-        return true;
+            return;
     }
 
     void service::submit_message( message_ptr_t a_message )
