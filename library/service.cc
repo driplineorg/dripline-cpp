@@ -16,6 +16,8 @@
 #include "authentication.hh"
 #include "logger.hh"
 
+#include "rmqt_queue.h"
+
 using scarab::authentication;
 using scarab::param_node;
 using scarab::param_value;
@@ -312,7 +314,7 @@ namespace dripline
                 ++t_child_it )
         {
             LDEBUG( dlog, "Adding ephemeral queue for async child <" << t_child_it->first << ">" );
-            t_child_it->second->f_queue = add_requests_ephemeral_queue( t_child_it->first );
+            t_child_it->second->set_queue( add_requests_ephemeral_queue( t_child_it->first ) );
         }
 
         return;
@@ -337,7 +339,7 @@ namespace dripline
                 t_child_it != f_async_children.end();
                 ++t_child_it )
         {
-            bind_requests_key( t_child_it->first, t_child_it->first + ".#", t_child_it->second->f_queue );
+            bind_requests_key( t_child_it->first, t_child_it->first + ".#", t_child_it->second->get_queue() );
         }
 
         // All queue and binding declarations are accumulated in core::f_topology.

@@ -16,9 +16,8 @@
 #include "rmqa_rabbitcontext.h"
 #include "rmqa_vhost.h"
 #include "rmqa_producer.h"
-#include "rmqa_topology.h"
-#include "rmqp_producer.h"
 #include "rmqp_messageguard.h"
+#include "rmqt_queue.h"
 #include "rmqt_simpleendpoint.h"
 #include "rmqt_plaincredentials.h"
 
@@ -335,20 +334,20 @@ namespace dripline
     BloombergLP::rmqt::QueueHandle core::exchange_store::add_durable_queue( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name )
     {
         using namespace BloombergLP;
-        LDEBUG_NOTHREAD( "Declaring durable queue <" << a_queue_name << "> on exchange <" << f_name << ">" );
+        LDEBUG( dlog, "Declaring durable queue <" << a_queue_name << "> on exchange <" << f_name << ">" );
         return a_topo.addQueue( bsl::string(a_queue_name), rmqt::AutoDelete::OFF, rmqt::Durable::ON );
     }
 
     BloombergLP::rmqt::QueueHandle core::exchange_store::add_ephemeral_queue( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name )
     {
         using namespace BloombergLP;
-        LDEBUG_NOTHREAD( "Declaring ephemeral queue <" << a_queue_name << "> on exchange <" << f_name << ">" );
+        LDEBUG( dlog, "Declaring ephemeral queue <" << a_queue_name << "> on exchange <" << f_name << ">" );
         return a_topo.addQueue( bsl::string(a_queue_name), rmqt::AutoDelete::ON, rmqt::Durable::OFF );
     }
 
     void core::exchange_store::bind_key( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue )
     {
-        LDEBUG_NOTHREAD( "Binding queue <" << a_queue_name << "> to exchange <" << f_name << "> with routing key <" << a_routing_key << ">" );
+        LDEBUG( dlog, "Binding queue <" << a_queue_name << "> to exchange <" << f_name << "> with routing key <" << a_routing_key << ">" );
         a_topo.bind( f_exchange,
                      a_queue,
                      bsl::string(a_routing_key) );

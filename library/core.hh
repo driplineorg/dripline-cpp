@@ -11,6 +11,9 @@
 #include "dripline_config.hh"
 #include "message.hh"
 
+#include "rmqa_topology.h"
+#include "rmqt_exchange.h"
+
 #include <future>
 #include <memory>
 #include <mutex>
@@ -23,8 +26,14 @@ namespace scarab
     class param_node;
 }
 
-namespace BloombergLP { namespace rmqa { class Consumer; class RabbitContext; class Topology; class VHost; class Producer; } }
-namespace BloombergLP { namespace rmqt { class QueueHandle; } }
+namespace BloombergLP { 
+    namespace rmqa { class Consumer; class RabbitContext; class VHost; class Producer; }
+    namespace rmqt 
+    { 
+        class Queue; 
+        typedef bsl::weak_ptr<Queue> QueueHandle;
+    } 
+}
 
 namespace dripline
 {

@@ -215,7 +215,7 @@ TEST_CASE( "add_requests_durable_queue", "[core]" )
     BloombergLP::rmqt::QueueHandle t_handle;
     REQUIRE_NOTHROW( t_handle = t_core.add_requests_durable_queue( "test_durable_requests" ) );
     // The returned handle should be non-null.
-    REQUIRE( t_handle );
+    REQUIRE( t_handle.lock() );
 }
 
 TEST_CASE( "add_requests_ephemeral_queue", "[core]" )
@@ -227,7 +227,7 @@ TEST_CASE( "add_requests_ephemeral_queue", "[core]" )
 
     BloombergLP::rmqt::QueueHandle t_handle;
     REQUIRE_NOTHROW( t_handle = t_core.add_requests_ephemeral_queue( "test_ephemeral_requests" ) );
-    REQUIRE( t_handle );
+    REQUIRE( t_handle.lock() );
 }
 
 TEST_CASE( "add_alerts_durable_queue", "[core]" )
@@ -239,7 +239,7 @@ TEST_CASE( "add_alerts_durable_queue", "[core]" )
 
     BloombergLP::rmqt::QueueHandle t_handle;
     REQUIRE_NOTHROW( t_handle = t_core.add_alerts_durable_queue( "test_durable_alerts" ) );
-    REQUIRE( t_handle );
+    REQUIRE( t_handle.lock() );
 }
 
 TEST_CASE( "add_alerts_ephemeral_queue", "[core]" )
@@ -251,7 +251,7 @@ TEST_CASE( "add_alerts_ephemeral_queue", "[core]" )
 
     BloombergLP::rmqt::QueueHandle t_handle;
     REQUIRE_NOTHROW( t_handle = t_core.add_alerts_ephemeral_queue( "test_ephemeral_alerts" ) );
-    REQUIRE( t_handle );
+    REQUIRE( t_handle.lock() );
 }
 
 // ---------------------------------------------------------------------------
@@ -278,8 +278,8 @@ TEST_CASE( "add_queue_returns_valid_handle_for_requests_and_alerts", "[core]" )
     auto t_h3 = t_core.add_alerts_ephemeral_queue(   "shared_topo_q3" );
     auto t_h4 = t_core.add_alerts_durable_queue(     "shared_topo_q4" );
 
-    REQUIRE( t_h1 );
-    REQUIRE( t_h2 );
-    REQUIRE( t_h3 );
-    REQUIRE( t_h4 );
+    REQUIRE( t_h1.lock() );
+    REQUIRE( t_h2.lock() );
+    REQUIRE( t_h3.lock() );
+    REQUIRE( t_h4.lock() );
 }

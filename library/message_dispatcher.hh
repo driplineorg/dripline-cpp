@@ -10,7 +10,14 @@
 
 #include "receiver.hh"
 
-namespace BloombergLP { namespace rmqa { class Topology; } }
+namespace BloombergLP { 
+    namespace rmqa { class Consumer; class RabbitContext; class VHost; class Producer; }
+    namespace rmqt 
+    { 
+        class Queue; 
+        typedef bsl::weak_ptr<Queue> QueueHandle;
+    } 
+}
 
 namespace dripline
 {
@@ -103,13 +110,14 @@ namespace dripline
             /// For a concrete example, see @ref service or @ref endpoint_listener_receiver.
             virtual void submit_message( message_ptr_t a_message ) = 0;
 
+            // The queue this dispatcher consumes from.
+            // Set by the concrete subclass (e.g. via `service::add_queues()` calling
+            // `core::add_requests_ephemeral_queue()`) before `start_listening()` is called.
+            mv_accessible( BloombergLP::rmqt::QueueHandle, queue );
+
         protected:
             bsl::shared_ptr< BloombergLP::rmqa::Consumer > f_consumer;
-
-            /// The queue this dispatcher consumes from.
-            /// Set by the concrete subclass (e.g. via `service::add_queues()` calling
-            /// `core::add_requests_ephemeral_queue()`) before `start_listening()` is called.
-            BloombergLP::rmqt::QueueHandle f_queue;
+            
     };
 
 } /* namespace dripline */

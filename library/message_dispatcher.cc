@@ -25,14 +25,14 @@ namespace dripline
 
     message_dispatcher::message_dispatcher() :
             receiver(),
-            f_consumer(),
-            f_queue()
+            f_queue(),
+            f_consumer()
     {}
 
     message_dispatcher::message_dispatcher( message_dispatcher&& a_orig ) :
             receiver( std::move(a_orig) ),
-            f_consumer( std::move(a_orig.f_consumer) ),
-            f_queue( std::move(a_orig.f_queue) )
+            f_queue( std::move(a_orig.f_queue) ),
+            f_consumer( std::move(a_orig.f_consumer) )
     {}
 
     message_dispatcher::~message_dispatcher()
@@ -41,8 +41,8 @@ namespace dripline
     message_dispatcher& message_dispatcher::operator=( message_dispatcher&& a_orig )
     {
         receiver::operator=( std::move(a_orig) );
-        f_consumer = std::move(a_orig.f_consumer);
         f_queue    = std::move(a_orig.f_queue);
+        f_consumer = std::move(a_orig.f_consumer);
         return *this;
     }
 
