@@ -174,7 +174,7 @@ namespace dripline
 
             mv_accessible( uuid_t, id );
 
-        protected:
+        public:
             virtual void open_channels();
 
             virtual void add_queues();

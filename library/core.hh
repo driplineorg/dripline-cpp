@@ -179,73 +179,7 @@ namespace dripline
             mv_accessible( bool, make_connection );
             mv_accessible( unsigned, max_connection_attempts );
 
-        protected:
-            friend class receiver;
-
-            /*!
-             @struct exchange_store
-             @brief Bundles the rmqcpp exchange handle and producer for a single AMQP exchange.
-
-             @details
-             One `exchange_store` is held by `core` for the requests exchange (`f_requests_ex`)
-             and one for the alerts exchange (`f_alerts_ex`).  Both are populated lazily inside
-             `open_connection()`.
-
-             Queue and binding declarations are made directly on `core::f_topology` (the single
-             shared topology), passed in by the `core` helpers.  `exchange_store` no longer owns
-             a topology object.
-
-             The helper methods `add_durable_queue()`, `add_ephemeral_queue()`, and `bind_key()`
-             must only be called after `open_connection()` has populated `f_exchange`.
-            */
-            struct exchange_store
-            {
-                std::string f_name;  ///< Exchange name (e.g. "requests" or "alerts")
-                BloombergLP::rmqt::ExchangeHandle f_exchange;
-                bsl::shared_ptr< BloombergLP::rmqa::Producer > f_producer;
-
-                /*!
-                 @brief Declares a durable (non-auto-delete) queue on the supplied topology.
-                 @param a_topo        The shared topology owned by `core`.
-                 @param a_queue_name  Unique name for the queue.
-                 @return Handle to the newly declared queue.
-                */
-                BloombergLP::rmqt::QueueHandle add_durable_queue( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name );
-
-                /*!
-                 @brief Declares an ephemeral (auto-delete, non-durable) queue on the supplied topology.
-                 @details Ephemeral queues are removed from the broker when the last consumer
-                          disconnects and are not restored after a broker restart.  They are
-                          appropriate for real-time consumers such as `service` and `monitor`.
-                 @param a_topo        The shared topology owned by `core`.
-                 @param a_queue_name  Unique name for the queue (typically includes a UUID or service name).
-                 @return Handle to the newly declared queue.
-                */
-                BloombergLP::rmqt::QueueHandle add_ephemeral_queue( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name );
-
-                /*!
-                 @brief Binds a queue to this exchange with the supplied routing key.
-                 @details The routing key is used verbatim; include any desired wildcard suffixes
-                          (e.g. `"my-service.#"`).  The queue handle may come from either
-                          `add_durable_queue()` or `add_ephemeral_queue()` on **any** exchange
-                          store — this is intentional, since `monitor` binds a single queue to
-                          both the requests and the alerts exchange.
-                 @param a_topo         The shared topology owned by `core`.
-                 @param a_queue_name   Queue name (informational; used in error messages).
-                 @param a_routing_key  Routing key pattern to bind (verbatim).
-                 @param a_queue        Queue handle to bind.
-                */
-                void bind_key( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue );
-            };
-
-            sent_msg_pkg_ptr do_send( message_ptr_t a_message, const std::string& a_exchange, bool a_expect_reply ) const;
-
-            /// Sets up a temporary reply queue, starts an rmqcpp consumer on it, then sends the
-            /// message.  Stores the consumer and reply promise in `a_pkg`.
-            void send_withreply( message_ptr_t a_message, const std::string& a_exchange, sent_msg_pkg_ptr a_pkg ) const;
-
-            bool send_noreply( message_ptr_t a_message, const std::string& a_exchange ) const;
-
+        public:
             /*!
              @brief Lazily establishes the RabbitMQ connection, declares both exchanges in
                     `f_topology`, and creates the requests and alerts producers.
@@ -313,6 +247,73 @@ namespace dripline
              @param a_queue        QueueHandle to bind.
             */
             void bind_alerts_key( const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue );
+
+        protected:
+            friend class receiver;
+
+            /*!
+             @struct exchange_store
+             @brief Bundles the rmqcpp exchange handle and producer for a single AMQP exchange.
+
+             @details
+             One `exchange_store` is held by `core` for the requests exchange (`f_requests_ex`)
+             and one for the alerts exchange (`f_alerts_ex`).  Both are populated lazily inside
+             `open_connection()`.
+
+             Queue and binding declarations are made directly on `core::f_topology` (the single
+             shared topology), passed in by the `core` helpers.  `exchange_store` no longer owns
+             a topology object.
+
+             The helper methods `add_durable_queue()`, `add_ephemeral_queue()`, and `bind_key()`
+             must only be called after `open_connection()` has populated `f_exchange`.
+            */
+            struct exchange_store
+            {
+                std::string f_name;  ///< Exchange name (e.g. "requests" or "alerts")
+                BloombergLP::rmqt::ExchangeHandle f_exchange;
+                bsl::shared_ptr< BloombergLP::rmqa::Producer > f_producer;
+
+                /*!
+                 @brief Declares a durable (non-auto-delete) queue on the supplied topology.
+                 @param a_topo        The shared topology owned by `core`.
+                 @param a_queue_name  Unique name for the queue.
+                 @return Handle to the newly declared queue.
+                */
+                BloombergLP::rmqt::QueueHandle add_durable_queue( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name );
+
+                /*!
+                 @brief Declares an ephemeral (auto-delete, non-durable) queue on the supplied topology.
+                 @details Ephemeral queues are removed from the broker when the last consumer
+                          disconnects and are not restored after a broker restart.  They are
+                          appropriate for real-time consumers such as `service` and `monitor`.
+                 @param a_topo        The shared topology owned by `core`.
+                 @param a_queue_name  Unique name for the queue (typically includes a UUID or service name).
+                 @return Handle to the newly declared queue.
+                */
+                BloombergLP::rmqt::QueueHandle add_ephemeral_queue( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name );
+
+                /*!
+                 @brief Binds a queue to this exchange with the supplied routing key.
+                 @details The routing key is used verbatim; include any desired wildcard suffixes
+                          (e.g. `"my-service.#"`).  The queue handle may come from either
+                          `add_durable_queue()` or `add_ephemeral_queue()` on **any** exchange
+                          store — this is intentional, since `monitor` binds a single queue to
+                          both the requests and the alerts exchange.
+                 @param a_topo         The shared topology owned by `core`.
+                 @param a_queue_name   Queue name (informational; used in error messages).
+                 @param a_routing_key  Routing key pattern to bind (verbatim).
+                 @param a_queue        Queue handle to bind.
+                */
+                void bind_key( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue );
+            };
+
+            sent_msg_pkg_ptr do_send( message_ptr_t a_message, const std::string& a_exchange, bool a_expect_reply ) const;
+
+            /// Sets up a temporary reply queue, starts an rmqcpp consumer on it, then sends the
+            /// message.  Stores the consumer and reply promise in `a_pkg`.
+            void send_withreply( message_ptr_t a_message, const std::string& a_exchange, sent_msg_pkg_ptr a_pkg ) const;
+
+            bool send_noreply( message_ptr_t a_message, const std::string& a_exchange ) const;
 
             mutable bsl::shared_ptr< BloombergLP::rmqa::RabbitContext > f_rabbit_context;
             mutable bsl::shared_ptr< BloombergLP::rmqa::VHost > f_vhost;
