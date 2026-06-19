@@ -48,6 +48,9 @@ namespace dripline
             f_broadcast_key( a_config.get_value( "broadcast_key", "broadcast" ) )
     {
         LDEBUG( dlog, "Service (cpp) created with config:\n" << a_config );
+        // setup endpoint's f_service pointer
+        endpoint::f_service = this;
+        heartbeater::f_service = this;
         // get more values from the config
         heartbeater::f_check_timeout_ms = a_config.get_value( "loop_timeout_ms", 1000 );
         // default of f_single_message_wait_ms is in the receiver class
