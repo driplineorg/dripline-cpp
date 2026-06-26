@@ -7,7 +7,7 @@
   },
   "item": [
     {
-      "name": "rabbit-broker:15672/api/exchanges/%2f/requests",
+      "name": "localhost:15672/api/exchanges/%2f/requests",
       "event": [
         {
           "listen": "test",
@@ -51,9 +51,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "rabbit-broker:15672/api/exchanges/%2f/requests",
+          "raw": "localhost:15672/api/exchanges/%2f/requests",
           "host": [
-            "rabbit-broker"
+            "localhost"
           ],
           "port": "15672",
           "path": [
@@ -67,7 +67,7 @@
       "response": []
     },
     {
-      "name": "rabbit-broker:15672/api/exchanges/%2f/alerts",
+      "name": "localhost:15672/api/exchanges/%2f/alerts",
       "event": [
         {
           "listen": "test",
@@ -111,9 +111,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "rabbit-broker:15672/api/exchanges/%2f/alerts",
+          "raw": "localhost:15672/api/exchanges/%2f/alerts",
           "host": [
-            "rabbit-broker"
+            "localhost"
           ],
           "port": "15672",
           "path": [
@@ -127,7 +127,7 @@
       "response": []
     },
     {
-      "name": "rabbit-broker:15672/api/queues/%2f/simple",
+      "name": "localhost:15672/api/queues/%2f/simple",
       "event": [
         {
           "listen": "test",
@@ -140,7 +140,7 @@
               "pm.test(\"The response has the expected properties\", function () {",
               "    const responseJson = pm.response.json();",
               "    pm.expect(responseJson.durable).to.be.a(\"boolean\");",
-              "    pm.expect(responseJson.durable).to.eql(false);",
+              "    pm.expect(responseJson.durable).to.eql(true);",
               "    pm.expect(responseJson.name).to.eql(\"simple\");",
               "});",
               ""
@@ -170,9 +170,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "rabbit-broker:15672/api/queues/%2f/simple",
+          "raw": "localhost:15672/api/queues/%2f/simple",
           "host": [
-            "rabbit-broker"
+            "localhost"
           ],
           "port": "15672",
           "path": [
@@ -186,7 +186,7 @@
       "response": []
     },
     {
-      "name": "rabbit-broker:15672/api/bindings/%2f/e/requests/q/simple",
+      "name": "localhost:15672/api/bindings/%2f/e/requests/q/simple",
       "event": [
         {
           "listen": "test",
@@ -227,9 +227,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "rabbit-broker:15672/api/bindings/%2f/e/requests/q/simple",
+          "raw": "localhost:15672/api/bindings/%2f/e/requests/q/simple",
           "host": [
-            "rabbit-broker"
+            "localhost"
           ],
           "port": "15672",
           "path": [

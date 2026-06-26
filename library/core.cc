@@ -276,8 +276,8 @@ namespace dripline
         }
 
         // Declare both exchanges on the single shared topology
-        f_requests_ex.f_exchange = f_topology.addExchange( bsl::string(f_requests_ex.f_name), rmqt::ExchangeType::TOPIC, rmqt::AutoDelete::OFF, rmqt::Durable::OFF, rmqt::Internal::NO );
-        f_alerts_ex.f_exchange   = f_topology.addExchange( bsl::string(f_alerts_ex.f_name),   rmqt::ExchangeType::TOPIC, rmqt::AutoDelete::OFF, rmqt::Durable::OFF, rmqt::Internal::NO );
+        f_requests_ex.f_exchange = f_topology.addExchange( bsl::string(f_requests_ex.f_name), rmqt::ExchangeType::TOPIC, rmqt::AutoDelete::OFF, rmqt::Durable::ON, rmqt::Internal::NO );
+        f_alerts_ex.f_exchange   = f_topology.addExchange( bsl::string(f_alerts_ex.f_name),   rmqt::ExchangeType::TOPIC, rmqt::AutoDelete::OFF, rmqt::Durable::ON, rmqt::Internal::NO );
 
         // Create requests producer
         {
