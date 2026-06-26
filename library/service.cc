@@ -307,17 +307,19 @@ namespace dripline
 
     void service::add_queues()
     {
-        // Service's own queue: ephemeral (auto-delete, non-durable) so that stale
-        // messages from a previous run are discarded when the service is offline.
+        // Service's own queue
+        // Default properties are used: auto-delete=off, durable=on, exclusive=off, single-active-consumer=on
         LDEBUG( dlog, "Adding ephemeral queue for service <" << f_name << ">" );
-        f_queue = add_requests_ephemeral_queue( f_name );
+        f_queue = add_requests_queue( f_name );
 
+        // Queues for asynchronous endpoints
+        // Default properties are used: auto-delete=off, durable=on, exclusive=off, single-active-consumer=on
         for( async_map_t::iterator t_child_it = f_async_children.begin();
                 t_child_it != f_async_children.end();
                 ++t_child_it )
         {
             LDEBUG( dlog, "Adding ephemeral queue for async child <" << t_child_it->first << ">" );
-            t_child_it->second->set_queue( add_requests_ephemeral_queue( t_child_it->first ) );
+            t_child_it->second->set_queue( add_requests_queue( t_child_it->first ) );
         }
 
         return;

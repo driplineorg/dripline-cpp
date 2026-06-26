@@ -11,6 +11,8 @@
 #include "dripline_config.hh"
 #include "message.hh"
 
+#include "param_helpers_impl.hh"
+
 #include "rmqa_topology.h"
 #include "rmqt_exchange.h"
 
@@ -197,7 +199,9 @@ namespace dripline
              @param a_queue_name  Unique name for this queue (e.g. a service or endpoint name).
              @return QueueHandle to pass to `bind_requests_key()` and `message_dispatcher::start_listening()`.
             */
-            BloombergLP::rmqt::QueueHandle add_requests_durable_queue( const std::string& a_queue_name );
+            BloombergLP::rmqt::QueueHandle add_requests_queue( const std::string& a_queue_name, 
+                bool a_auto_delete=false, bool a_durable=true, 
+                const scarab::param_node& a_field_table=scarab::param_node(scarab::kwarg("x-single-active-consumer")=true) );
 
             /*!
              @brief Declares an **ephemeral** (auto-delete, non-durable) queue on the requests exchange topology.
@@ -207,7 +211,7 @@ namespace dripline
              @param a_queue_name  Unique name for this queue (typically the service name).
              @return QueueHandle to pass to `bind_requests_key()` and `message_dispatcher::start_listening()`.
             */
-            BloombergLP::rmqt::QueueHandle add_requests_ephemeral_queue( const std::string& a_queue_name );
+            //BloombergLP::rmqt::QueueHandle add_requests_ephemeral_queue( const std::string& a_queue_name );
 
             /*!
              @brief Binds a queue on the requests exchange to the given routing key.
@@ -226,7 +230,9 @@ namespace dripline
              @param a_queue_name  Unique name for this queue.
              @return QueueHandle to pass to `bind_alerts_key()` and `message_dispatcher::start_listening()`.
             */
-            BloombergLP::rmqt::QueueHandle add_alerts_durable_queue( const std::string& a_queue_name );
+            BloombergLP::rmqt::QueueHandle add_alerts_queue( const std::string& a_queue_name, 
+                bool a_auto_delete=false, bool a_durable=true, 
+                const scarab::param_node& a_field_table=scarab::param_node(scarab::kwarg("x-single-active-consumer")=true) );
 
             /*!
              @brief Declares an **ephemeral** (auto-delete, non-durable) queue on the alerts exchange topology.
@@ -234,7 +240,7 @@ namespace dripline
              @param a_queue_name  Unique name for this queue.
              @return QueueHandle to pass to `bind_alerts_key()` and `message_dispatcher::start_listening()`.
             */
-            BloombergLP::rmqt::QueueHandle add_alerts_ephemeral_queue( const std::string& a_queue_name );
+            //BloombergLP::rmqt::QueueHandle add_alerts_ephemeral_queue( const std::string& a_queue_name );
 
             /*!
              @brief Binds a queue on the alerts exchange to the given routing key.
@@ -279,7 +285,9 @@ namespace dripline
                  @param a_queue_name  Unique name for the queue.
                  @return Handle to the newly declared queue.
                 */
-                BloombergLP::rmqt::QueueHandle add_durable_queue( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name );
+                BloombergLP::rmqt::QueueHandle add_queue( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name, 
+                    bool a_auto_delete, bool a_durable, 
+                    const scarab::param_node& a_field_table );
 
                 /*!
                  @brief Declares an ephemeral (auto-delete, non-durable) queue on the supplied topology.
@@ -290,7 +298,7 @@ namespace dripline
                  @param a_queue_name  Unique name for the queue (typically includes a UUID or service name).
                  @return Handle to the newly declared queue.
                 */
-                BloombergLP::rmqt::QueueHandle add_ephemeral_queue( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name );
+                //BloombergLP::rmqt::QueueHandle add_ephemeral_queue( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name );
 
                 /*!
                  @brief Binds a queue to this exchange with the supplied routing key.

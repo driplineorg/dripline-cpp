@@ -20,6 +20,7 @@
 #include "rmqt_queue.h"
 #include "rmqt_simpleendpoint.h"
 #include "rmqt_plaincredentials.h"
+#include "rmqt_properties.h"
 
 #include "authentication.hh"
 #include "exponential_backoff.hh"
@@ -257,7 +258,12 @@ namespace dripline
 
         using namespace BloombergLP;
 
-        f_rabbit_context = bsl::make_shared< rmqa::RabbitContext >();
+        // Set any options we need in the RabbitContext
+        rmqa::RabbitContextOptions t_options;
+        using namespace bsls::TimeIntervalLiterals;
+        t_options.setConnectionErrorThreshold( 10_s ); // TODO: make this appropriately configurable via dripline_config
+
+        f_rabbit_context = bsl::make_shared< rmqa::RabbitContext >( t_options );
 
         auto t_endpoint = bsl::make_shared< rmqt::SimpleEndpoint >( f_address, "/", (bsl::uint16_t)f_port );
         auto t_credentials = bsl::make_shared< rmqt::PlainCredentials >( f_username, f_password );
@@ -270,8 +276,8 @@ namespace dripline
         }
 
         // Declare both exchanges on the single shared topology
-        f_requests_ex.f_exchange = f_topology.addExchange( bsl::string(f_requests_ex.f_name), rmqt::ExchangeType::TOPIC );
-        f_alerts_ex.f_exchange   = f_topology.addExchange( bsl::string(f_alerts_ex.f_name),   rmqt::ExchangeType::TOPIC );
+        f_requests_ex.f_exchange = f_topology.addExchange( bsl::string(f_requests_ex.f_name), rmqt::ExchangeType::TOPIC, rmqt::AutoDelete::OFF, rmqt::Durable::OFF, rmqt::Internal::NO );
+        f_alerts_ex.f_exchange   = f_topology.addExchange( bsl::string(f_alerts_ex.f_name),   rmqt::ExchangeType::TOPIC, rmqt::AutoDelete::OFF, rmqt::Durable::OFF, rmqt::Internal::NO );
 
         // Create requests producer
         {
@@ -301,49 +307,58 @@ namespace dripline
         LINFO( dlog, "AMQP connection established" );
     }
 
-    BloombergLP::rmqt::QueueHandle core::add_requests_durable_queue( const std::string& a_queue_name )
+    BloombergLP::rmqt::QueueHandle core::add_requests_queue( const std::string& a_queue_name, 
+                bool a_auto_delete, bool a_durable, 
+                const scarab::param_node& a_field_table )
     {
-        return f_requests_ex.add_durable_queue( f_topology, a_queue_name );
+        return f_requests_ex.add_queue( f_topology, a_queue_name, a_auto_delete, a_durable, a_field_table );
     }
 
-    BloombergLP::rmqt::QueueHandle core::add_requests_ephemeral_queue( const std::string& a_queue_name )
-    {
-        return f_requests_ex.add_ephemeral_queue( f_topology, a_queue_name );
-    }
+//    BloombergLP::rmqt::QueueHandle core::add_requests_ephemeral_queue( const std::string& a_queue_name )
+//    {
+//        return f_requests_ex.add_ephemeral_queue( f_topology, a_queue_name );
+//    }
 
     void core::bind_requests_key( const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue )
     {
         f_requests_ex.bind_key( f_topology, a_queue_name, a_routing_key, a_queue );
     }
 
-    BloombergLP::rmqt::QueueHandle core::add_alerts_durable_queue( const std::string& a_queue_name )
+    BloombergLP::rmqt::QueueHandle core::add_alerts_queue( const std::string& a_queue_name, 
+                bool a_auto_delete, bool a_durable, 
+                const scarab::param_node& a_field_table )
     {
-        return f_alerts_ex.add_durable_queue( f_topology, a_queue_name );
+        return f_alerts_ex.add_queue( f_topology, a_queue_name, a_auto_delete, a_durable, a_field_table );
     }
 
-    BloombergLP::rmqt::QueueHandle core::add_alerts_ephemeral_queue( const std::string& a_queue_name )
-    {
-        return f_alerts_ex.add_ephemeral_queue( f_topology, a_queue_name );
-    }
+//    BloombergLP::rmqt::QueueHandle core::add_alerts_ephemeral_queue( const std::string& a_queue_name )
+//    {
+//        return f_alerts_ex.add_ephemeral_queue( f_topology, a_queue_name );
+//    }
 
     void core::bind_alerts_key( const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue )
     {
         f_alerts_ex.bind_key( f_topology, a_queue_name, a_routing_key, a_queue );
     }
 
-    BloombergLP::rmqt::QueueHandle core::exchange_store::add_durable_queue( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name )
+    BloombergLP::rmqt::QueueHandle core::exchange_store::add_queue( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name, 
+                bool a_auto_delete, bool a_durable, 
+                const scarab::param_node& a_field_table )
     {
         using namespace BloombergLP;
         LDEBUG( dlog, "Declaring durable queue <" << a_queue_name << "> on exchange <" << f_name << ">" );
-        return a_topo.addQueue( bsl::string(a_queue_name), rmqt::AutoDelete::OFF, rmqt::Durable::ON );
+        bsl::shared_ptr<rmqt::FieldTable> t_bsl_field_table = param_to_table(a_field_table).the< bsl::shared_ptr<rmqt::FieldTable> >();
+        return a_topo.addQueue( bsl::string(a_queue_name), 
+                rmqt::AutoDelete::Value(int(a_auto_delete)), rmqt::Durable::Value(int(a_durable)), 
+                *t_bsl_field_table );
     }
 
-    BloombergLP::rmqt::QueueHandle core::exchange_store::add_ephemeral_queue( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name )
-    {
-        using namespace BloombergLP;
-        LDEBUG( dlog, "Declaring ephemeral queue <" << a_queue_name << "> on exchange <" << f_name << ">" );
-        return a_topo.addQueue( bsl::string(a_queue_name), rmqt::AutoDelete::ON, rmqt::Durable::OFF );
-    }
+//    BloombergLP::rmqt::QueueHandle core::exchange_store::add_ephemeral_queue( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name )
+//    {
+//        using namespace BloombergLP;
+//        LDEBUG( dlog, "Declaring ephemeral queue <" << a_queue_name << "> on exchange <" << f_name << ">" );
+//        return a_topo.addQueue( bsl::string(a_queue_name), rmqt::AutoDelete::ON, rmqt::Durable::ON );
+//    }
 
     void core::exchange_store::bind_key( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue )
     {

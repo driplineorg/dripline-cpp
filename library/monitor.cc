@@ -114,7 +114,7 @@ namespace dripline
             // One queue is bound to both the requests and alerts exchanges via the core helpers.
             // All declarations land in core::f_topology so that rmqcpp can redeclare the full
             // topology after a connection restart.
-            f_queue = add_requests_ephemeral_queue( f_name );
+            f_queue = add_requests_queue( f_name );
 
             for( const auto& t_key : f_requests_keys )
             {
