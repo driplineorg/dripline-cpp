@@ -7,7 +7,7 @@
   },
   "item": [
     {
-      "name": "localhost:15672/api/exchanges/%2f/requests",
+      "name": "rabbit-broker:15672/api/exchanges/%2f/requests",
       "event": [
         {
           "listen": "test",
@@ -51,9 +51,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "localhost:15672/api/exchanges/%2f/requests",
+          "raw": "rabbit-broker:15672/api/exchanges/%2f/requests",
           "host": [
-            "localhost"
+            "rabbit-broker"
           ],
           "port": "15672",
           "path": [
@@ -67,7 +67,7 @@
       "response": []
     },
     {
-      "name": "localhost:15672/api/exchanges/%2f/alerts",
+      "name": "rabbit-broker:15672/api/exchanges/%2f/alerts",
       "event": [
         {
           "listen": "test",
@@ -111,9 +111,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "localhost:15672/api/exchanges/%2f/alerts",
+          "raw": "rabbit-broker:15672/api/exchanges/%2f/alerts",
           "host": [
-            "localhost"
+            "rabbit-broker"
           ],
           "port": "15672",
           "path": [
@@ -127,7 +127,7 @@
       "response": []
     },
     {
-      "name": "localhost:15672/api/queues/%2f/simple",
+      "name": "rabbit-broker:15672/api/queues/%2f/simple",
       "event": [
         {
           "listen": "test",
@@ -170,9 +170,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "localhost:15672/api/queues/%2f/simple",
+          "raw": "rabbit-broker:15672/api/queues/%2f/simple",
           "host": [
-            "localhost"
+            "rabbit-broker"
           ],
           "port": "15672",
           "path": [
@@ -186,7 +186,7 @@
       "response": []
     },
     {
-      "name": "localhost:15672/api/bindings/%2f/e/requests/q/simple",
+      "name": "rabbit-broker:15672/api/bindings/%2f/e/requests/q/simple",
       "event": [
         {
           "listen": "test",
@@ -227,9 +227,9 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "localhost:15672/api/bindings/%2f/e/requests/q/simple",
+          "raw": "rabbit-broker:15672/api/bindings/%2f/e/requests/q/simple",
           "host": [
-            "localhost"
+            "rabbit-broker"
           ],
           "port": "15672",
           "path": [
