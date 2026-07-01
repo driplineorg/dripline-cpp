@@ -56,8 +56,6 @@ namespace dripline
             f_port(),
             f_username(),
             f_password(),
-            f_requests_exchange(),
-            f_alerts_exchange(),
             f_heartbeat_routing_key(),
             f_max_payload_size(),
             f_make_connection(),
@@ -93,10 +91,8 @@ namespace dripline
         // Replace local parameters with values from the config
         f_address = t_config["broker"]().as_string();
         f_port = t_config["broker_port"]().as_uint();
-        f_requests_exchange = t_config["requests_exchange"]().as_string();
-        f_alerts_exchange = t_config["alerts_exchange"]().as_string();
-        f_requests_ex.f_name = f_requests_exchange;
-        f_alerts_ex.f_name = f_alerts_exchange;
+        f_requests_ex.f_name = t_config["requests_exchange"]().as_string();
+        f_alerts_ex.f_name = t_config["alerts_exchange"]().as_string();
         f_heartbeat_routing_key = t_config["heartbeat_routing_key"]().as_string();
         f_make_connection = t_config.get_value( "make_connection", a_make_connection );
         f_max_payload_size = t_config["max_payload_size"]().as_uint();
@@ -165,7 +161,7 @@ namespace dripline
         {
             throw a_request;
         }
-        return do_send( std::static_pointer_cast< message >( a_request ), f_requests_exchange, true );
+        return do_send( std::static_pointer_cast< message >( a_request ), f_requests_ex.f_name, true );
     }
 
     sent_msg_pkg_ptr core::send( reply_ptr_t a_reply ) const
@@ -175,7 +171,7 @@ namespace dripline
         {
             throw a_reply;
         }
-        return do_send( std::static_pointer_cast< message >( a_reply ), f_requests_exchange, false );
+        return do_send( std::static_pointer_cast< message >( a_reply ), f_requests_ex.f_name, false );
     }
 
     sent_msg_pkg_ptr core::send( alert_ptr_t a_alert ) const
@@ -185,7 +181,7 @@ namespace dripline
         {
             throw a_alert;
         }
-        return do_send( std::static_pointer_cast< message >( a_alert ), f_alerts_exchange, false );
+        return do_send( std::static_pointer_cast< message >( a_alert ), f_alerts_ex.f_name, false );
     }
 
     sent_msg_pkg_ptr core::do_send( message_ptr_t a_message, const std::string& a_exchange, bool a_expect_reply ) const
@@ -381,7 +377,7 @@ namespace dripline
         // This topology is separate from f_topology so that the transient queue does not
         // pollute the persistent topology passed to message_dispatcher::start_listening().
         rmqa::Topology t_reply_topo;
-        auto t_ex = t_reply_topo.addExchange( a_exchange, rmqt::ExchangeType::TOPIC );
+        auto t_ex = t_reply_topo.addExchange( a_exchange, rmqt::ExchangeType::TOPIC, rmqt::AutoDelete::OFF, rmqt::Durable::ON, rmqt::Internal::NO );
         auto t_queue = t_reply_topo.addQueue( t_reply_to, rmqt::AutoDelete::ON, rmqt::Durable::OFF );
         t_reply_topo.bind( t_ex, t_queue, t_reply_to );
 
@@ -480,7 +476,7 @@ namespace dripline
         using namespace BloombergLP;
 
         bsl::shared_ptr< rmqa::Producer > t_producer;
-        if( a_exchange == f_alerts_exchange )
+        if( a_exchange == f_alerts_ex.f_name )
         {
             t_producer = f_alerts_ex.f_producer;
         }

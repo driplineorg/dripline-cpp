@@ -166,13 +166,16 @@ namespace dripline
             /// Sends an alert message.  Default exchange is "alerts".
             virtual sent_msg_pkg_ptr send( alert_ptr_t a_alert ) const;
 
+            const std::string& requests_exchange() const;
+            std::string& requests_exchange();
+
+            const std::string& alerts_exchange() const;
+            std::string& alerts_exchange();
+
             mv_referrable( std::string, address );
             mv_accessible( unsigned, port );
             mv_referrable( std::string, username );
             mv_referrable( std::string, password );
-
-            mv_referrable( std::string, requests_exchange );
-            mv_referrable( std::string, alerts_exchange );
 
             mv_referrable( std::string, heartbeat_routing_key );
 
@@ -344,6 +347,26 @@ namespace dripline
             /// `message_dispatcher::start_listening()`.
             const BloombergLP::rmqa::Topology& topology() const { return f_topology; }
     };
+
+    inline const std::string& core::requests_exchange() const
+    {
+        return f_requests_ex.f_name;
+    }
+
+    inline std::string& core::requests_exchange()
+    {
+        return f_requests_ex.f_name;
+    }
+
+    inline const std::string& core::alerts_exchange() const
+    {
+        return f_alerts_ex.f_name;
+    }
+
+    inline std::string& core::alerts_exchange()
+    {
+        return f_alerts_ex.f_name;
+    }
 
 } /* namespace dripline */
 
