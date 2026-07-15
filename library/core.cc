@@ -62,7 +62,6 @@ namespace dripline
             f_max_connection_attempts(),
             f_rabbit_context(),
             f_vhost(),
-            f_topology(),
             f_connection_mutex( std::make_shared< std::mutex >() )
     {
         // Get the default values, and merge in the supplied a_config
@@ -271,13 +270,15 @@ namespace dripline
             throw connection_error() << "Unable to create vhost connection to " << f_address << ":" << f_port;
         }
 
-        // Declare both exchanges on the single shared topology
-        f_requests_ex.f_exchange = f_topology.addExchange( bsl::string(f_requests_ex.f_name), rmqt::ExchangeType::TOPIC, rmqt::AutoDelete::OFF, rmqt::Durable::ON, rmqt::Internal::NO );
-        f_alerts_ex.f_exchange   = f_topology.addExchange( bsl::string(f_alerts_ex.f_name),   rmqt::ExchangeType::TOPIC, rmqt::AutoDelete::OFF, rmqt::Durable::ON, rmqt::Internal::NO );
+        // Declare both exchanges
+        f_requests_ex.create_exchange();
+        f_alerts_ex.create_exchange();
+        //f_requests_ex.f_exchange = f_topology.addExchange( bsl::string(f_requests_ex.f_name), rmqt::ExchangeType::TOPIC, rmqt::AutoDelete::OFF, rmqt::Durable::ON, rmqt::Internal::NO );
+        //f_alerts_ex.f_exchange   = f_topology.addExchange( bsl::string(f_alerts_ex.f_name),   rmqt::ExchangeType::TOPIC, rmqt::AutoDelete::OFF, rmqt::Durable::ON, rmqt::Internal::NO );
 
         // Create requests producer
         {
-            auto t_result = f_vhost->createProducer( f_topology, f_requests_ex.f_exchange, 10 );
+            auto t_result = f_vhost->createProducer( f_requests_ex.f_topology, f_requests_ex.f_exchange, 10 );
             if( ! t_result )
             {
                 f_vhost.reset();
@@ -289,7 +290,7 @@ namespace dripline
 
         // Create alerts producer
         {
-            auto t_result = f_vhost->createProducer( f_topology, f_alerts_ex.f_exchange, 10 );
+            auto t_result = f_vhost->createProducer( f_alerts_ex.f_topology, f_alerts_ex.f_exchange, 10 );
             if( ! t_result )
             {
                 f_requests_ex.f_producer.reset();
@@ -307,7 +308,7 @@ namespace dripline
                 bool a_auto_delete, bool a_durable, 
                 const scarab::param_node& a_field_table )
     {
-        return f_requests_ex.add_queue( f_topology, a_queue_name, a_auto_delete, a_durable, a_field_table );
+        return f_requests_ex.add_queue( a_queue_name, a_auto_delete, a_durable, a_field_table );
     }
 
 //    BloombergLP::rmqt::QueueHandle core::add_requests_ephemeral_queue( const std::string& a_queue_name )
@@ -317,14 +318,14 @@ namespace dripline
 
     void core::bind_requests_key( const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue )
     {
-        f_requests_ex.bind_key( f_topology, a_queue_name, a_routing_key, a_queue );
+        f_requests_ex.bind_key( a_queue_name, a_routing_key, a_queue );
     }
 
     BloombergLP::rmqt::QueueHandle core::add_alerts_queue( const std::string& a_queue_name, 
                 bool a_auto_delete, bool a_durable, 
                 const scarab::param_node& a_field_table )
     {
-        return f_alerts_ex.add_queue( f_topology, a_queue_name, a_auto_delete, a_durable, a_field_table );
+        return f_alerts_ex.add_queue( a_queue_name, a_auto_delete, a_durable, a_field_table );
     }
 
 //    BloombergLP::rmqt::QueueHandle core::add_alerts_ephemeral_queue( const std::string& a_queue_name )
@@ -334,17 +335,28 @@ namespace dripline
 
     void core::bind_alerts_key( const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue )
     {
-        f_alerts_ex.bind_key( f_topology, a_queue_name, a_routing_key, a_queue );
+        f_alerts_ex.bind_key( a_queue_name, a_routing_key, a_queue );
     }
 
-    BloombergLP::rmqt::QueueHandle core::exchange_store::add_queue( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name, 
+    //***************************
+    // Exchange store definitions
+    //***************************
+
+    void core::exchange_store::create_exchange()
+    {
+        using namespace BloombergLP;
+        f_exchange = f_topology.addExchange( bsl::string(f_name), rmqt::ExchangeType::TOPIC, rmqt::AutoDelete::OFF, rmqt::Durable::ON, rmqt::Internal::NO );
+        return;
+    }
+
+    BloombergLP::rmqt::QueueHandle core::exchange_store::add_queue( const std::string& a_queue_name, 
                 bool a_auto_delete, bool a_durable, 
                 const scarab::param_node& a_field_table )
     {
         using namespace BloombergLP;
         LDEBUG( dlog, "Declaring durable queue <" << a_queue_name << "> on exchange <" << f_name << ">" );
         bsl::shared_ptr<rmqt::FieldTable> t_bsl_field_table = param_to_table(a_field_table).the< bsl::shared_ptr<rmqt::FieldTable> >();
-        return a_topo.addQueue( bsl::string(a_queue_name), 
+        return f_topology.addQueue( bsl::string(a_queue_name), 
                 rmqt::AutoDelete::Value(int(a_auto_delete)), rmqt::Durable::Value(int(a_durable)), 
                 *t_bsl_field_table );
     }
@@ -356,13 +368,16 @@ namespace dripline
 //        return a_topo.addQueue( bsl::string(a_queue_name), rmqt::AutoDelete::ON, rmqt::Durable::ON );
 //    }
 
-    void core::exchange_store::bind_key( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue )
+    void core::exchange_store::bind_key( const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue )
     {
         LDEBUG( dlog, "Binding queue <" << a_queue_name << "> to exchange <" << f_name << "> with routing key <" << a_routing_key << ">" );
-        a_topo.bind( f_exchange,
+        f_topology.bind( f_exchange,
                      a_queue,
                      bsl::string(a_routing_key) );
     }
+
+    //***************************
+    //***************************
 
     void core::send_withreply( message_ptr_t a_message, const std::string& a_exchange, sent_msg_pkg_ptr a_pkg ) const
     {

@@ -278,9 +278,15 @@ namespace dripline
             */
             struct exchange_store
             {
+                BloombergLP::rmqa::Topology f_topology;
                 std::string f_name;  ///< Exchange name (e.g. "requests" or "alerts")
                 BloombergLP::rmqt::ExchangeHandle f_exchange;
                 bsl::shared_ptr< BloombergLP::rmqa::Producer > f_producer;
+
+                /*!
+                ...
+                */
+                void create_exchange();
 
                 /*!
                  @brief Declares a durable (non-auto-delete) queue on the supplied topology.
@@ -288,7 +294,7 @@ namespace dripline
                  @param a_queue_name  Unique name for the queue.
                  @return Handle to the newly declared queue.
                 */
-                BloombergLP::rmqt::QueueHandle add_queue( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name, 
+                BloombergLP::rmqt::QueueHandle add_queue( const std::string& a_queue_name, 
                     bool a_auto_delete, bool a_durable, 
                     const scarab::param_node& a_field_table );
 
@@ -315,7 +321,7 @@ namespace dripline
                  @param a_routing_key  Routing key pattern to bind (verbatim).
                  @param a_queue        Queue handle to bind.
                 */
-                void bind_key( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue );
+                void bind_key( const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue );
             };
 
             sent_msg_pkg_ptr do_send( message_ptr_t a_message, const std::string& a_exchange, bool a_expect_reply ) const;
@@ -332,20 +338,7 @@ namespace dripline
             mutable exchange_store f_requests_ex;
             mutable exchange_store f_alerts_ex;
 
-            /// The single shared AMQP topology for this core object.
-            /// Populated by `open_connection()` (exchange declarations) and then by the
-            /// `add_*_queue()` / `bind_*_key()` helpers.  Passed read-only via `topology()`.
-            /// Passed to `message_dispatcher::start_listening()` so that rmqcpp can redeclare
-            /// the full topology after a connection restart.
-            mutable BloombergLP::rmqa::Topology f_topology;
-
             mutable std::shared_ptr< std::mutex > f_connection_mutex;
-
-        public:
-            /// Read-only access to the shared AMQP topology.
-            /// Concrete subclasses (e.g. `service`, `monitor`) pass this to
-            /// `message_dispatcher::start_listening()`.
-            const BloombergLP::rmqa::Topology& topology() const { return f_topology; }
     };
 
     inline const std::string& core::requests_exchange() const

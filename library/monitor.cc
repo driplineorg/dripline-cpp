@@ -128,7 +128,8 @@ namespace dripline
                 bind_alerts_key( f_name, t_key, f_queue );
             }
 
-            start_listening( f_vhost, f_topology, f_name );
+            start_listening( f_vhost, f_requests_ex.f_topology, f_name+"_requests" );
+            start_listening( f_vhost, f_alerts_ex.f_topology, f_name+"_alerts" );
         }
         catch( connection_error& e )
         {

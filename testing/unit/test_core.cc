@@ -29,7 +29,6 @@ namespace dripline
             using core::core;
             using core::f_requests_ex;
             using core::f_alerts_ex;
-            using core::f_topology;
     };
 } // namespace dripline
 

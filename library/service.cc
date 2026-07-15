@@ -239,14 +239,16 @@ namespace dripline
         {
             // Pass the shared topology (owned by core) so that rmqcpp can redeclare
             // exchanges, queues, and bindings after a connection restart.
-            start_listening( f_vhost, f_topology, f_name );
+            start_listening( f_vhost, f_requests_ex.f_topology, f_name+"_requests" );
+            start_listening( f_vhost, f_alerts_ex.f_topology, f_name+"_alerts" );
 
             // Each async child gets its own ephemeral queue; they all share the same
             // core topology which already contains all queue and binding declarations.
             for( auto& t_child_pair : f_async_children )
             {
                 const std::string& t_child_name = t_child_pair.first;
-                t_child_pair.second->start_listening( f_vhost, f_topology, t_child_name );
+                t_child_pair.second->start_listening( f_vhost, f_requests_ex.f_topology, t_child_name+"_requests" );
+                t_child_pair.second->start_listening( f_vhost, f_alerts_ex.f_topology, t_child_name+"_alerts" );
             }
         }
         catch( connection_error& e )
