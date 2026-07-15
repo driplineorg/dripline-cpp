@@ -356,9 +356,14 @@ namespace dripline
         using namespace BloombergLP;
         LDEBUG( dlog, "Declaring durable queue <" << a_queue_name << "> on exchange <" << f_name << ">" );
         bsl::shared_ptr<rmqt::FieldTable> t_bsl_field_table = param_to_table(a_field_table).the< bsl::shared_ptr<rmqt::FieldTable> >();
-        return f_topology.addQueue( bsl::string(a_queue_name), 
+        rmqt::QueueHandle t_queue = f_topology.addQueue( bsl::string(a_queue_name), 
                 rmqt::AutoDelete::Value(int(a_auto_delete)), rmqt::Durable::Value(int(a_durable)), 
                 *t_bsl_field_table );
+        if( ! t_queue.lock() )
+        {
+            throw dripline_error() << "Queue could not be created. See log for error message.";
+        }
+        return t_queue;
     }
 
 //    BloombergLP::rmqt::QueueHandle core::exchange_store::add_ephemeral_queue( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name )
@@ -372,8 +377,8 @@ namespace dripline
     {
         LDEBUG( dlog, "Binding queue <" << a_queue_name << "> to exchange <" << f_name << "> with routing key <" << a_routing_key << ">" );
         f_topology.bind( f_exchange,
-                     a_queue,
-                     bsl::string(a_routing_key) );
+                         a_queue,
+                         bsl::string(a_routing_key) );
     }
 
     //***************************

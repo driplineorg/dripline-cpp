@@ -209,6 +209,10 @@ TEST_CASE( "add_requests_queue", "[core]" )
     REQUIRE_NOTHROW( t_handle = t_core.add_requests_queue( "test_durable_requests" ) );
     // The returned handle should be non-null.
     REQUIRE( t_handle.lock() );
+
+    // If we add a second queue with the same name we should get an exception thrown
+    BloombergLP::rmqt::QueueHandle t_handle_2;
+    REQUIRE_THROWS_AS( t_handle_2 = t_core.add_requests_queue( "test_durable_requests" ), dripline::dripline_error );
 }
 
 TEST_CASE( "add_alerts_queue", "[core]" )
@@ -221,4 +225,8 @@ TEST_CASE( "add_alerts_queue", "[core]" )
     BloombergLP::rmqt::QueueHandle t_handle;
     REQUIRE_NOTHROW( t_handle = t_core.add_alerts_queue( "test_durable_alerts" ) );
     REQUIRE( t_handle.lock() );
+
+    // If we add a second queue with the same name we should get an exception thrown
+    BloombergLP::rmqt::QueueHandle t_handle_2;
+    REQUIRE_THROWS_AS( t_handle_2 = t_core.add_alerts_queue( "test_durable_alerts" ), dripline::dripline_error );
 }
