@@ -5,6 +5,11 @@ cmake_minimum_required (VERSION 3.12)
 # setup #
 #########
 
+if( DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+    set( CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" )
+    message( STATUS "Setting vcpkg toolchain file: ${CMAKE_TOOLCHAIN_FILE}" )
+endif()
+
 cmake_policy( SET CMP0048 NEW ) # version in project()
 project( Dripline VERSION 2.10.12 )
 
