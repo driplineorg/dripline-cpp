@@ -9,15 +9,26 @@ ARG build_examples=FALSE
 ARG enable_testing=FALSE
 ARG narg=2
 
+# automatically filled by docker
+ARG TARGETARCH
+
 ENV VCPKG_FORCE_SYSTEM_BINARIES=1
 ENV VCPKG_ROOT=/usr/local/vcpkg
+
+# as of 8/14/26 the vcpkg installation process required CMake >=4.3 for use of the STRING JSON STRING_ENCODE mode
+ARG cmake_version=4.4.2
+
+# use pybind11_checkout to specify a tag or branch name to checkout
+ARG pybind11_checkout=v3.0.1
+ARG pybind11_repo=https://github.com/pybind/pybind11.git
+ARG pybind11_name=pybind11
 
 # Most dependencies
 RUN apt-get update && \
     apt-get clean && \
     apt-get --fix-missing  -y install \
         build-essential \
-        cmake \
+#        cmake \
 #        gdb \
         git \
         libyaml-cpp-dev \
@@ -30,16 +41,22 @@ RUN apt-get update && \
         curl \
         tar \
         unzip \
-        zip && \
+        zip \
 #        pybind11-dev \
-#        wget && \
-    rm -rf /var/lib/apt/lists/*
-
-# use pybind11_checkout to specify a tag or branch name to checkout
-ARG pybind11_checkout=v3.0.1
-ARG pybind11_repo=https://github.com/pybind/pybind11.git
-ARG pybind11_name=pybind11
-RUN cd /usr/local && \
+        wget && \
+    rm -rf /var/lib/apt/lists/* && \
+    # CMake install
+    cd /usr/local && \
+    ARCH=$(case "${TARGETARCH}" in\
+        amd64) echo "x86_64" ;; \
+        arm64) echo "aarch64" ;; \
+        *) echo "${TARGETARCH}" ;; \
+    esac) && \
+    wget -O cmake-install.sh https://github.com/Kitware/CMake/releases/download/v${cmake_version}/cmake-${cmake_version}-linux-${ARCH}.sh && \
+    chmod a+x cmake-install.sh && \
+    ./cmake-install.sh --skip-license --prefix=/usr/local && \
+    # Pybind11 install
+    cd /usr/local && \
     git clone ${pybind11_repo} ${pybind11_name} && \
     cd ${pybind11_name} && \
     git checkout ${pybind11_checkout} && \
@@ -50,8 +67,7 @@ RUN cd /usr/local && \
     cd / && \
     rm -rf /usr/local/${pybind11_name}
 
-ARG TARGETARCH
-ARG rmqcpp_checkout=cc6885319ccb97b8a6d13e09e83a52c43aab16c7
+ARG rmqcpp_checkout=9bf4f6dae956d83e00b83ca7cb56d87beb5beff9
 RUN cd /usr/local && \
     git clone https://github.com/Microsoft/vcpkg.git && \
     /usr/local/vcpkg/bootstrap-vcpkg.sh && \
