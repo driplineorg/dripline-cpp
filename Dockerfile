@@ -117,8 +117,14 @@ RUN cd /usr/local && \
     test -n "${RMQCPP_CONFIG}" && \
     if ! grep -q 'find_dependency(zstd' "${RMQCPP_CONFIG}"; then \
         sed -i '/include.*rmqcppTargets/i find_dependency(zstd CONFIG)' "${RMQCPP_CONFIG}"; \
-    fi
-    #rm -rf /usr/local/rmqcpp /usr/local/vcpkg /root/.cache/vcpkg
+    fi && \
+    rm -rf \
+        /usr/local/rmqcpp/build \
+        /usr/local/vcpkg/downloads \
+        /usr/local/vcpkg/ports \
+        /usr/local/vcpkg/buildtrees \
+        /usr/local/vcpkg/.git \
+        /root/.cache/vcpkg
 
 FROM base AS devel
 
