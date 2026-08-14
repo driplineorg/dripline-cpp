@@ -290,8 +290,10 @@ namespace dripline
 
                 /*!
                  @brief Declares a durable (non-auto-delete) queue on the supplied topology.
-                 @param a_topo        The shared topology owned by `core`.
                  @param a_queue_name  Unique name for the queue.
+                 @param a_auto_delete  Sets auto-delete queue property: whether queue is deleted after last consumer disconnects
+                 @param a_durable  Sets the durability queue property: whether queue is maintained after broker restarts
+                 @param a_field_table  Options for further queue properties
                  @return Handle to the newly declared queue.
                 */
                 BloombergLP::rmqt::QueueHandle add_queue( const std::string& a_queue_name, 
@@ -324,13 +326,13 @@ namespace dripline
                 void bind_key( const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue );
             };
 
-            sent_msg_pkg_ptr do_send( message_ptr_t a_message, const std::string& a_exchange, bool a_expect_reply ) const;
+            sent_msg_pkg_ptr do_send( message_ptr_t a_message, exchange_store& a_exchange, bool a_expect_reply ) const;
 
             /// Sets up a temporary reply queue, starts an rmqcpp consumer on it, then sends the
             /// message.  Stores the consumer and reply promise in `a_pkg`.
-            void send_withreply( message_ptr_t a_message, const std::string& a_exchange, sent_msg_pkg_ptr a_pkg ) const;
+            void send_withreply( message_ptr_t a_message, exchange_store& a_exchange, sent_msg_pkg_ptr a_pkg ) const;
 
-            bool send_noreply( message_ptr_t a_message, const std::string& a_exchange ) const;
+            bool send_noreply( message_ptr_t a_message, exchange_store& a_exchange ) const;
 
             mutable bsl::shared_ptr< BloombergLP::rmqa::RabbitContext > f_rabbit_context;
             mutable bsl::shared_ptr< BloombergLP::rmqa::VHost > f_vhost;

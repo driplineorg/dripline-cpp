@@ -17,6 +17,7 @@
 #include "rmqa_vhost.h"
 #include "rmqa_producer.h"
 #include "rmqp_messageguard.h"
+#include "rmqt_consumerconfig.h"
 #include "rmqt_queue.h"
 #include "rmqt_simpleendpoint.h"
 #include "rmqt_plaincredentials.h"
@@ -160,7 +161,7 @@ namespace dripline
         {
             throw a_request;
         }
-        return do_send( std::static_pointer_cast< message >( a_request ), f_requests_ex.f_name, true );
+        return do_send( std::static_pointer_cast< message >( a_request ), f_requests_ex, true );
     }
 
     sent_msg_pkg_ptr core::send( reply_ptr_t a_reply ) const
@@ -170,7 +171,7 @@ namespace dripline
         {
             throw a_reply;
         }
-        return do_send( std::static_pointer_cast< message >( a_reply ), f_requests_ex.f_name, false );
+        return do_send( std::static_pointer_cast< message >( a_reply ), f_requests_ex, false );
     }
 
     sent_msg_pkg_ptr core::send( alert_ptr_t a_alert ) const
@@ -180,10 +181,10 @@ namespace dripline
         {
             throw a_alert;
         }
-        return do_send( std::static_pointer_cast< message >( a_alert ), f_alerts_ex.f_name, false );
+        return do_send( std::static_pointer_cast< message >( a_alert ), f_alerts_ex, false );
     }
 
-    sent_msg_pkg_ptr core::do_send( message_ptr_t a_message, const std::string& a_exchange, bool a_expect_reply ) const
+    sent_msg_pkg_ptr core::do_send( message_ptr_t a_message, exchange_store& a_exchange, bool a_expect_reply ) const
     {
         // throws connection_error if it could not connect with the broker
         // throws dripline_error if there's a problem creating the AMQP message object(s)
@@ -384,7 +385,7 @@ namespace dripline
     //***************************
     //***************************
 
-    void core::send_withreply( message_ptr_t a_message, const std::string& a_exchange, sent_msg_pkg_ptr a_pkg ) const
+    void core::send_withreply( message_ptr_t a_message, exchange_store& a_exchange, sent_msg_pkg_ptr a_pkg ) const
     {
         using namespace BloombergLP;
 
@@ -397,8 +398,20 @@ namespace dripline
         // This topology is separate from f_topology so that the transient queue does not
         // pollute the persistent topology passed to message_dispatcher::start_listening().
         rmqa::Topology t_reply_topo;
-        auto t_ex = t_reply_topo.addExchange( a_exchange, rmqt::ExchangeType::TOPIC, rmqt::AutoDelete::OFF, rmqt::Durable::ON, rmqt::Internal::NO );
-        auto t_queue = t_reply_topo.addQueue( t_reply_to, rmqt::AutoDelete::ON, rmqt::Durable::OFF );
+        auto t_ex = t_reply_topo.addPassiveExchange( a_exchange.f_name );
+        if( ! t_ex.lock() )
+        {
+            throw connection_error() << "Unable to use exchange <" << a_exchange.f_name << ">";
+        }
+        // Queue properties:
+        //   Exclusive: OFF -- currently the only option given by the rmqcpp API
+        //   Auto-delete: ON -- Queue will be deleted after the last consumer disconnects
+        //   Durable: ON -- Queue will survive if broker is disrupted
+        auto t_queue = t_reply_topo.addQueue( t_reply_to, rmqt::AutoDelete::ON, rmqt::Durable::ON );
+        if( ! t_queue.lock() )
+        {
+            throw connection_error() << "Unable to create queue to receive reply";
+        }
         t_reply_topo.bind( t_ex, t_queue, t_reply_to );
 
         // Create promise; the consumer callback will fulfil it when the complete reply is assembled
@@ -463,7 +476,8 @@ namespace dripline
         };
 
         // Create the reply consumer on the temporary queue
-        auto t_consumer_result = f_vhost->createConsumer( t_reply_topo, t_queue, t_callback, "reply-" + t_reply_to, 1 );
+        rmqt::ConsumerConfig t_consumer_conf( "reply-" + t_reply_to, 1, 0, rmqt::Exclusive::ON );
+        auto t_consumer_result = f_vhost->createConsumer( t_reply_topo, t_queue, t_callback, t_consumer_conf );
         if( ! t_consumer_result )
         {
             throw connection_error() << "Unable to create reply consumer: " << t_consumer_result.error();
@@ -491,23 +505,14 @@ namespace dripline
         }
     }
 
-    bool core::send_noreply( message_ptr_t a_message, const std::string& a_exchange ) const
+    bool core::send_noreply( message_ptr_t a_message, exchange_store& a_exchange ) const
     {
         using namespace BloombergLP;
 
-        bsl::shared_ptr< rmqa::Producer > t_producer;
-        if( a_exchange == f_alerts_ex.f_name )
-        {
-            t_producer = f_alerts_ex.f_producer;
-        }
-        else
-        {
-            t_producer = f_requests_ex.f_producer;
-        }
-
+        bsl::shared_ptr< rmqa::Producer > t_producer = a_exchange.f_producer;
         if( ! t_producer )
         {
-            LERROR( dlog, "No producer available for exchange <" << a_exchange << ">" );
+            LERROR( dlog, "No producer available for exchange <" << a_exchange.f_name << ">" );
             return false;
         }
 
