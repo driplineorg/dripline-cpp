@@ -88,7 +88,7 @@ namespace dripline
             std::string encode_full_message( unsigned a_max_size, const scarab::param_node& a_options = scarab::param_node() ) const;
 
         protected:
-            virtual void derived_modify_amqp_message( amqp_message_ptr a_amqp_msg, AmqpClient::Table& a_properties ) const = 0;
+            virtual void derived_modify_amqp_message( BloombergLP::rmqt::FieldTable& a_headers ) const = 0;
 
             virtual void derived_modify_message_param( scarab::param_node& a_message_node ) const = 0;
 
@@ -200,7 +200,7 @@ namespace dripline
             reply_ptr_t reply( const unsigned a_return_code, const std::string& a_ret_msg, scarab::param_ptr_t a_payload = scarab::param_ptr_t( new scarab::param() ) ) const;
 
         private:
-            void derived_modify_amqp_message( amqp_message_ptr a_amqp_msg, AmqpClient::Table& a_properties ) const;
+            void derived_modify_amqp_message( BloombergLP::rmqt::FieldTable& a_headers ) const;
             virtual void derived_modify_message_param( scarab::param_node& a_message_node ) const;
 
         public:
@@ -261,7 +261,7 @@ namespace dripline
             bool is_alert() const;
 
         private:
-            void derived_modify_amqp_message( amqp_message_ptr a_amqp_msg, AmqpClient::Table& a_properties ) const;
+            void derived_modify_amqp_message( BloombergLP::rmqt::FieldTable& a_headers ) const;
             virtual void derived_modify_message_param( scarab::param_node& a_message_node ) const;
 
         public:
@@ -315,7 +315,7 @@ namespace dripline
             bool is_alert() const;
 
         private:
-            void derived_modify_amqp_message( amqp_message_ptr a_amqp_msg, AmqpClient::Table& a_properties ) const;
+            void derived_modify_amqp_message( BloombergLP::rmqt::FieldTable& a_headers ) const;
             virtual void derived_modify_message_param( scarab::param_node& a_message_node ) const;
 
         public:
@@ -381,10 +381,10 @@ namespace dripline
         return false;
     }
 
-    inline void msg_request::derived_modify_amqp_message( amqp_message_ptr /*a_amqp_msg*/, AmqpClient::Table& a_properties ) const
+    inline void msg_request::derived_modify_amqp_message( BloombergLP::rmqt::FieldTable& a_headers ) const
     {
-        a_properties.insert( AmqpClient::TableEntry( "message_operation", AmqpClient::TableValue(to_uint(f_message_operation)) ) );
-        a_properties.insert( AmqpClient::TableEntry( "lockout_key", AmqpClient::TableValue(string_from_uuid(lockout_key())) ) );
+        a_headers[bsl::string("message_operation")] = BloombergLP::rmqt::FieldValue( (bsl::uint32_t)to_uint(f_message_operation) );
+        a_headers[bsl::string("lockout_key")] = BloombergLP::rmqt::FieldValue( bsl::string(string_from_uuid(lockout_key())) );
         return;
     }
 
@@ -435,10 +435,10 @@ namespace dripline
         return false;
     }
 
-    inline void msg_reply::derived_modify_amqp_message( amqp_message_ptr, AmqpClient::Table& a_properties ) const
+    inline void msg_reply::derived_modify_amqp_message( BloombergLP::rmqt::FieldTable& a_headers ) const
     {
-        a_properties.insert( AmqpClient::TableEntry( "return_code", AmqpClient::TableValue(f_return_code) ) );
-        a_properties.insert( AmqpClient::TableEntry( "return_message", AmqpClient::TableValue(f_return_message) ) );
+        a_headers[bsl::string("return_code")] = BloombergLP::rmqt::FieldValue( (bsl::uint32_t)f_return_code );
+        a_headers[bsl::string("return_message")] = BloombergLP::rmqt::FieldValue( bsl::string(f_return_message) );
         return;
     }
 
@@ -467,7 +467,7 @@ namespace dripline
         return true;
     }
 
-    inline void msg_alert::derived_modify_amqp_message( amqp_message_ptr, AmqpClient::Table& ) const
+    inline void msg_alert::derived_modify_amqp_message( BloombergLP::rmqt::FieldTable& ) const
     {
         return;
     }

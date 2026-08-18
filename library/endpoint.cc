@@ -431,4 +431,43 @@ namespace dripline
         return a_request->reply( dl_success(), "Hello, " + a_request->sender_exe() );
     }
 
+    endpoint_listener_receiver::endpoint_listener_receiver( endpoint_ptr_t a_endpoint_ptr ) :
+            message_dispatcher(),
+            f_endpoint( a_endpoint_ptr )
+    {}
+
+    endpoint_listener_receiver::endpoint_listener_receiver( endpoint_listener_receiver&& a_orig ) :
+            message_dispatcher( std::move(a_orig) ),
+            f_endpoint( std::move(a_orig.f_endpoint) )
+    {}
+
+    endpoint_listener_receiver::~endpoint_listener_receiver()
+    {}
+
+    endpoint_listener_receiver& endpoint_listener_receiver::operator=( endpoint_listener_receiver&& a_orig )
+    {
+        message_dispatcher::operator=( std::move(a_orig) );
+        f_endpoint = std::move(a_orig.f_endpoint);
+        return *this;
+    }
+
+    void endpoint_listener_receiver::submit_message( message_ptr_t a_message )
+    {
+        try
+        {
+            f_endpoint->sort_message( a_message );
+            return;
+        }
+        catch( dripline_error& e )
+        {
+            LERROR( dlog, "<" << f_endpoint->name() << ">: Dripline exception caught while handling message: " << e.what() );
+            throw;
+        }
+        catch( std::exception& e )
+        {
+            LERROR( dlog, "<" << f_endpoint->name() << ">: Standard exception caught while handling message: " << e.what() );
+            throw;
+        }
+    }
+
 } /* namespace dripline */

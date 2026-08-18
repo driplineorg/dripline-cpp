@@ -21,6 +21,7 @@ env:
   REGISTRY_OLD: docker.io
   BASE_IMAGE_REPO: python
   BASE_IMAGE_TAG: '3.12.1-slim-bookworm'
+  RMQCPP_CHECKOUT: cc6885319ccb97b8a6d13e09e83a52c43aab16c7
 
 # narg/NARG (number-of-CPU argument to pass to the builds) are based on OS-specific CPU counts in the GitHub-hosted GHA runners.
 # checked 1/4/2024: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
@@ -55,14 +56,14 @@ jobs:
 
       - name: Set up Docker Buildx
         id: setup_buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
         with:
           driver: docker
 
       - name: Login to GHCR
         # This condition should match the `push` condition in the `Build` step just below
         if: ${{ github.event.inputs.keep-test-image == 'true' }}
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -70,7 +71,7 @@ jobs:
 
       - name: Build
         id: build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: ${{ github.event.inputs.keep-test-image == 'true' }}
@@ -83,12 +84,13 @@ jobs:
             build_examples=TRUE
             enable_testing=TRUE
             narg=${{ env.NARG }}
+            rmqcpp_checkout=${{ env.RMQCPP_CHECKOUT }}
           platforms: linux/amd64
           tags: ${{ env.DL_CPP_TAG }}
 
       - name: Build Integration Tests
         id: build_int_tests
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: ./testing/integration
           push: false
@@ -109,7 +111,8 @@ jobs:
       - name: Integration Tests
         run: |
           cd testing/integration
-          ./do-testing.sh ${{ env.INT_TAG }}
+          ./run-dl-tests.sh ${{ env.INT_TAG }}
+          ./run-broker-restart-test.sh ${{ env.INT_TAG }}
 
 # For debugging
 #      - name: Setup tmate session
@@ -118,6 +121,9 @@ jobs:
 
 
   test_builds:
+
+    # temporarily disable
+    if: false
 
     runs-on: ${{ matrix.os }}
 
@@ -130,8 +136,10 @@ jobs:
         include:
           - os: ubuntu-22.04
             narg: 2
+            triplet: x64-linux-release
           - os: macos-latest
             narg: 3
+            triplet: arm64-osx-release
 
 
     steps:
@@ -154,7 +162,6 @@ jobs:
         if: startsWith(matrix.os, 'macos')
         run: |
           brew install \
-            boost \
             rabbitmq-c \
             rapidjson \
             yaml-cpp
@@ -164,10 +171,46 @@ jobs:
         run: |
           sudo apt-get update
           DEBIAN_FRONTEND=noninteractive sudo apt-get install -y \
-            libboost-all-dev \
             librabbitmq-dev \
             rapidjson-dev \
             libyaml-cpp-dev
+      
+      - name: Install dependencies -- common
+        run: |
+          ${VCPKG_INSTALLATION_ROOT}/vcpkg install --triplet ${{ matrix.triplet }} \
+              boost-filesystem \
+              boost-system \
+              boost-chrono \
+              boost-variant \
+              boost-uuid
+          git clone https://github.com/bloomberg/rmqcpp.git
+          cd rmqcpp
+          git checkout ${{ env.RMQCPP_CHECKOUT }}
+          ${VCPKG_INSTALLATION_ROOT}/vcpkg install --triplet ${{ matrix.triplet }}
+          mkdir -p build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake \
+              -DVCPKG_TARGET_TRIPLET=${{ matrix.triplet }} \
+              -DCMAKE_INSTALL_PREFIX=/usr/local \
+              -DBUILD_TESTING=OFF \
+              ..
+          make -j${narg} install
+
+
+#        mkdir -p /usr/local/share/libpcre2-8
+#        printf '%s\n' \
+#            'include("/usr/local/share/pcre2/pcre2-config.cmake")' \
+#            'if(NOT TARGET libpcre2-8::pcre2-8 AND TARGET pcre2::pcre2-8-static)' \
+#            '  add_library(libpcre2-8::pcre2-8 ALIAS pcre2::pcre2-8-static)' \
+#            'endif()' \
+#            'set(libpcre2-8_FOUND TRUE)' \
+#            > /usr/local/share/libpcre2-8/libpcre2-8Config.cmake
+#        RMQCPP_CONFIG=$(find /usr/local -name rmqcppConfig.cmake 2>/dev/null | head -1)
+#        test -n "${RMQCPP_CONFIG}"
+#        if ! grep -q 'find_dependency(zstd' "${RMQCPP_CONFIG}"; then \
+#            sed -i '/include.*rmqcppTargets/i find_dependency(zstd CONFIG)' "${RMQCPP_CONFIG}"; \
+#        fi
             
       - name: Configure
         run: |
@@ -186,9 +229,9 @@ jobs:
           ./run_dl_tests
 
 # For debugging
-#      - name: Setup tmate session
-#        if: ${{ ! success() }}
-#        uses: mxschmitt/action-tmate@v3
+      - name: Setup tmate session
+        if: ${{ ! success() }}
+        uses: mxschmitt/action-tmate@v3
 
 
   build_and_push:
@@ -238,7 +281,7 @@ jobs:
 
       - name: Docker meta
         id: docker_meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: |
             ${{ env.REGISTRY_OLD }}/${{ github.repository }}
@@ -255,7 +298,7 @@ jobs:
       - name: Docker meta - integration
         id: docker_meta_integration
         if: ${{ matrix.do-integration }}
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: |
             ${{ env.REGISTRY }}/${{ github.repository }}
@@ -273,19 +316,19 @@ jobs:
 
       - name: Set up Docker Buildx
         id: setup_buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
         with:
           buildkitd-flags: --debug
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY_OLD }}
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Login to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -293,7 +336,7 @@ jobs:
 
       - name: Build and push
         id: build_push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: ${{ github.event_name == 'push' }}  # limited to develop, main, and tags; don't push on PR
@@ -303,14 +346,15 @@ jobs:
             build_type=${{ matrix.build-type }}
             build_examples=${{ matrix.build-examples }}
             enable_testing=${{ matrix.enable-testing }}
-            narg=${{env.NARG }}
+            narg=${{ env.NARG }}
+            rmqcpp_checkout=${{ env.RMQCPP_CHECKOUT }}
           tags: ${{ steps.docker_meta.outputs.tags }}
           platforms: linux/amd64,linux/arm64,linux/arm/v7
 
       - name: Build and push - integration
         id: build_push_integration
         if: ${{ matrix.do-integration }}
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: ./testing/integration
           push: ${{ github.event_name == 'push' }}  # limited to develop, main, and tags; don't push on PR

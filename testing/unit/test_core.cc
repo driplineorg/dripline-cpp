@@ -14,9 +14,23 @@
 #include "authentication.hh"
 #include "param_codec.hh"
 
+#include "rmqt_queue.h"
+
 #include "catch2/catch_test_macros.hpp"
 
 #include <boost/filesystem.hpp>
+
+namespace dripline
+{
+    /// Exposes protected members of core for unit testing.
+    class core_tester : public core
+    {
+        public:
+            using core::core;
+            using core::f_requests_ex;
+            using core::f_alerts_ex;
+    };
+} // namespace dripline
 
 
 TEST_CASE( "configuration", "[core]" )
@@ -141,4 +155,78 @@ TEST_CASE( "config_retcode_fromfile", "[core]" )
 
     std::remove( t_temp_filename.c_str() );
 
+}
+
+TEST_CASE( "exchange_store_name_from_config", "[core]" )
+{
+    // Verify that f_requests_ex.f_name and f_alerts_ex.f_name are populated from the config.
+    using scarab::authentication;
+    using scarab::param_node;
+
+    dripline::core_tester t_core( param_node(), authentication(), false );
+
+    dripline::dripline_config t_default_config;
+    REQUIRE( t_core.f_requests_ex.f_name == t_default_config["requests_exchange"]().as_string() );
+    REQUIRE( t_core.f_alerts_ex.f_name == t_default_config["alerts_exchange"]().as_string() );
+}
+
+TEST_CASE( "exchange_store_name_from_custom_config", "[core]" )
+{
+    // Verify that custom exchange names in the config are propagated into the exchange stores.
+    using scarab::authentication;
+    using scarab::param_node;
+
+    param_node t_config;
+    t_config.add( "requests_exchange", "my_requests" );
+    t_config.add( "alerts_exchange", "my_alerts" );
+
+    dripline::core_tester t_core( t_config, authentication(), false );
+
+    REQUIRE( t_core.f_requests_ex.f_name == "my_requests" );
+    REQUIRE( t_core.f_alerts_ex.f_name == "my_alerts" );
+}
+
+// ---------------------------------------------------------------------------
+// Queue declaration and binding helpers (offline / dry-run tests)
+// ---------------------------------------------------------------------------
+// These tests exercise the add_*_queue() and bind_*_key() helpers in offline
+// mode (make_connection=false).  They verify that the functions complete
+// without throwing and that they operate on core::f_topology.
+//
+// NOTE: In offline mode open_connection() is a no-op, so f_requests_ex.f_exchange
+// and f_alerts_ex.f_exchange remain default-constructed.  The rmqcpp Topology
+// API still allows addQueue() and bind() on a topology that has no live broker
+// connection, which is sufficient to exercise the helpers in unit tests.
+
+TEST_CASE( "add_requests_queue", "[core]" )
+{
+    using scarab::authentication;
+    using scarab::param_node;
+
+    dripline::core_tester t_core( param_node(), authentication(), false );
+
+    BloombergLP::rmqt::QueueHandle t_handle;
+    REQUIRE_NOTHROW( t_handle = t_core.add_requests_queue( "test_durable_requests" ) );
+    // The returned handle should be non-null.
+    REQUIRE( t_handle.lock() );
+
+    // If we add a second queue with the same name we should get an exception thrown
+    BloombergLP::rmqt::QueueHandle t_handle_2;
+    REQUIRE_THROWS_AS( t_handle_2 = t_core.add_requests_queue( "test_durable_requests" ), dripline::dripline_error );
+}
+
+TEST_CASE( "add_alerts_queue", "[core]" )
+{
+    using scarab::authentication;
+    using scarab::param_node;
+
+    dripline::core_tester t_core( param_node(), authentication(), false );
+
+    BloombergLP::rmqt::QueueHandle t_handle;
+    REQUIRE_NOTHROW( t_handle = t_core.add_alerts_queue( "test_durable_alerts" ) );
+    REQUIRE( t_handle.lock() );
+
+    // If we add a second queue with the same name we should get an exception thrown
+    BloombergLP::rmqt::QueueHandle t_handle_2;
+    REQUIRE_THROWS_AS( t_handle_2 = t_core.add_alerts_queue( "test_durable_alerts" ), dripline::dripline_error );
 }

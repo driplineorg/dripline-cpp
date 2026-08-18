@@ -9,31 +9,55 @@ ARG build_examples=FALSE
 ARG enable_testing=FALSE
 ARG narg=2
 
-# Most dependencies
+# automatically filled by docker
+ARG TARGETARCH
 
-RUN apt-get update && \
-    apt-get clean && \
-    apt-get --fix-missing  -y install \
-        build-essential \
-        cmake \
-#        gdb \
-        git \
-        libboost-chrono-dev \
-        libboost-filesystem-dev \
-        libboost-system-dev \
-        librabbitmq-dev \
-        libyaml-cpp-dev \
-        rapidjson-dev && \
-#        pybind11-dev \
-#        wget && \
-    rm -rf /var/lib/apt/lists/*
+ENV VCPKG_FORCE_SYSTEM_BINARIES=1
+ENV VCPKG_ROOT=/usr/local/vcpkg
+
+# as of 8/14/26 the vcpkg installation process required CMake >=4.3 for use of the STRING JSON STRING_ENCODE mode
+ARG cmake_version=4.4.2
 
 # use pybind11_checkout to specify a tag or branch name to checkout
 ARG pybind11_checkout=v3.0.1
 ARG pybind11_repo=https://github.com/pybind/pybind11.git
 ARG pybind11_name=pybind11
-RUN cd /usr/local && \
-    git clone ${pybind11_repo} && \
+
+# Most dependencies
+RUN apt-get update && \
+    apt-get clean && \
+    apt-get --fix-missing  -y install \
+        build-essential \
+#        cmake \
+#        gdb \
+        git \
+        libyaml-cpp-dev \
+        rapidjson-dev \
+        libssl-dev \
+        zlib1g-dev \
+        libzstd-dev \
+        ninja-build \
+        pkg-config \
+        curl \
+        tar \
+        unzip \
+        zip \
+#        pybind11-dev \
+        wget && \
+    rm -rf /var/lib/apt/lists/* && \
+    # CMake install
+    cd /usr/local && \
+    ARCH=$(case "${TARGETARCH}" in\
+        amd64) echo "x86_64" ;; \
+        arm64) echo "aarch64" ;; \
+        *) echo "${TARGETARCH}" ;; \
+    esac) && \
+    wget -O cmake-install.sh https://github.com/Kitware/CMake/releases/download/v${cmake_version}/cmake-${cmake_version}-linux-${ARCH}.sh && \
+    chmod a+x cmake-install.sh && \
+    ./cmake-install.sh --skip-license --prefix=/usr/local && \
+    # Pybind11 install
+    cd /usr/local && \
+    git clone ${pybind11_repo} ${pybind11_name} && \
     cd ${pybind11_name} && \
     git checkout ${pybind11_checkout} && \
     mkdir build && \
@@ -42,6 +66,66 @@ RUN cd /usr/local && \
     make -j${narg} install && \
     cd / && \
     rm -rf /usr/local/${pybind11_name}
+
+ARG rmqcpp_checkout=feature/optional-tests
+RUN cd /usr/local && \
+    git clone https://github.com/Microsoft/vcpkg.git && \
+    /usr/local/vcpkg/bootstrap-vcpkg.sh && \
+    git clone https://github.com/driplineorg/rmqcpp.git && \
+    cd /usr/local/rmqcpp && \
+    git checkout ${rmqcpp_checkout} && \
+    case "${TARGETARCH}" in \
+        amd64) TRIPLET="x64-linux-release" ;; \
+        arm64) TRIPLET="arm64-linux-release" ;; \
+        *) echo "Unsupported architecture: ${TARGETARCH}"; exit 1 ;; \
+    esac && \
+    ${VCPKG_ROOT}/vcpkg install --triplet ${TRIPLET} && \
+    mkdir -p /usr/local/rmqcpp/build && \
+    cd /usr/local/rmqcpp/build && \
+    cmake -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake \
+        -DVCPKG_TARGET_TRIPLET=${TRIPLET} \
+        -DCMAKE_INSTALL_PREFIX=/usr/local \
+        -DBUILD_TESTING=OFF \
+        -Drmqcpp_ENABLE_TESTING=OFF \
+        .. && \
+    make -j${narg} install && \
+    cd / && \
+    ${VCPKG_ROOT}/vcpkg install --triplet ${TRIPLET} \
+        boost-filesystem \
+        boost-system \
+        boost-chrono \
+        boost-variant \
+        boost-uuid && \
+    cp -a /usr/local/rmqcpp/vcpkg_installed/${TRIPLET}/include/. /usr/local/include/ && \
+    cp -a /usr/local/rmqcpp/vcpkg_installed/${TRIPLET}/lib/. /usr/local/lib/ && \
+    cp -a /usr/local/rmqcpp/vcpkg_installed/${TRIPLET}/share/. /usr/local/share/ && \
+    cp -a ${VCPKG_ROOT}/installed/${TRIPLET}/include/. /usr/local/include/ && \
+    cp -a ${VCPKG_ROOT}/installed/${TRIPLET}/lib/. /usr/local/lib/ && \
+    cp -a ${VCPKG_ROOT}/installed/${TRIPLET}/share/. /usr/local/share/ && \
+    rm -rf /usr/local/share/zstd && \
+    # Create a shim file to adapt the vcpkg install of "pcre2" to the expected standard "libpcre2-8"
+    mkdir -p /usr/local/share/libpcre2-8 && \
+    printf '%s\n' \
+        'include("/usr/local/share/pcre2/pcre2-config.cmake")' \
+        'if(NOT TARGET libpcre2-8::pcre2-8 AND TARGET pcre2::pcre2-8-static)' \
+        '  add_library(libpcre2-8::pcre2-8 ALIAS pcre2::pcre2-8-static)' \
+        'endif()' \
+        'set(libpcre2-8_FOUND TRUE)' \
+        > /usr/local/share/libpcre2-8/libpcre2-8Config.cmake && \
+    # rmqcpp's rmqcppConfig.cmake is missing the use of find_dependency(zstd), so we add it
+    RMQCPP_CONFIG=$(find /usr/local -name rmqcppConfig.cmake 2>/dev/null | head -1) && \
+    test -n "${RMQCPP_CONFIG}" && \
+    if ! grep -q 'find_dependency(zstd' "${RMQCPP_CONFIG}"; then \
+        sed -i '/include.*rmqcppTargets/i find_dependency(zstd CONFIG)' "${RMQCPP_CONFIG}"; \
+    fi && \
+    rm -rf \
+        /usr/local/rmqcpp/build \
+        /usr/local/vcpkg/downloads \
+        /usr/local/vcpkg/ports \
+        /usr/local/vcpkg/buildtrees \
+        /usr/local/vcpkg/.git \
+        /root/.cache/vcpkg
 
 FROM base AS devel
 
@@ -58,7 +142,6 @@ FROM base
 # note that the build dir is *not* in source, this is so that the source can me mounted onto the container without covering the build target
 
 COPY .git /usr/local/src/.git
-COPY external /usr/local/src/external
 COPY documentation /usr/local/src/documentation
 COPY scarab /usr/local/src/scarab
 COPY library /usr/local/src/library
@@ -74,7 +157,7 @@ RUN mkdir -p /usr/local/build && \
     cmake ../src && \
     # unclear why I have to run cmake twice
     cmake -DCMAKE_BUILD_TYPE=${build_type} \
-        -DCMAKE_INSTALL_PREFIX:PATH=/usr/local \ 
+        -DCMAKE_INSTALL_PREFIX:PATH=/usr/local \
         -DDripline_BUILD_EXAMPLES:BOOL=${build_examples} \
         -DDripline_ENABLE_TESTING:BOOL=${enable_testing} \
         -DDripline_BUILD_PYTHON:BOOL=TRUE \

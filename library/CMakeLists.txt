@@ -22,8 +22,8 @@ set( dripline_HEADERS
     endpoint.hh
     heartbeater.hh
     hub.hh
-    listener.hh
     message.hh
+    message_dispatcher.hh
     monitor.hh
     monitor_config.hh
     receiver.hh
@@ -49,8 +49,8 @@ set( dripline_SOURCES
     endpoint.cc
     heartbeater.cc
     hub.cc
-    listener.cc
     message.cc
+    message_dispatcher.cc
     monitor.cc
     monitor_config.cc
     receiver.cc

@@ -5,6 +5,11 @@ cmake_minimum_required (VERSION 3.12)
 # setup #
 #########
 
+if( DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+    set( CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" )
+    message( STATUS "Setting vcpkg toolchain file: ${CMAKE_TOOLCHAIN_FILE}" )
+endif()
+
 cmake_policy( SET CMP0048 NEW ) # version in project()
 project( Dripline VERSION 2.10.12 )
 
@@ -75,57 +80,14 @@ if( Dripline_ENABLE_TESTING )
 endif()
 
 
-####################
-# SimpleAmqpClient #
-####################
+##########
+# rmqcpp #
+##########
 
-# SimpleAmqpClient needs to be built independently from, but as a submodule and dependency of, dripline-cpp.  
-# In other words, the configuration and build environments need to be kept separate.
-
-# First we run the configure stage of SimpleAmqpClient during the configure (cmake) process of dripline-cpp.
-# This build takes place in its own build directory, but it installs in the same place as dripline-cpp.
-# We do this here instead of below in the ExternalProject so that dripline-cpp can learn about the SimpleAmqpClient targets at the configure stage.
-
-if( NOT EXISTS ${PROJECT_BINARY_DIR}/external )
-    execute_process( 
-        COMMAND mkdir external
-        WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
-    )
-endif()
-
-execute_process( 
-    COMMAND cmake -D CMAKE_INSTALL_PREFIX:STRING=${CMAKE_INSTALL_PREFIX} 
-                    -D PACKAGE_CONFIG_PREFIX:STRING=${PACKAGE_CONFIG_PREFIX}
-                    -D TOP_PROJECT_CMAKE_CONFIG_DIR:STRING=${TOP_PROJECT_CMAKE_CONFIG_DIR}
-                    -D LIB_INSTALL_DIR:STRING=${LIB_INSTALL_DIR}
-                    -D BIN_INSTALL_DIR:STRING=${BIN_INSTALL_DIR}
-                    -D CMAKE_BUILD_TYPE=RELEASE
-                    -D CMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD}
-                    ${PROJECT_SOURCE_DIR}/external
-    WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/external
-)
-
-# Second we use the ExternalProject module to build and install SimpleAmqpClient.
-# This takes place during the build phase of dripline-cpp.
-# Note that we disable the configure stage of the ExternalProject because we already took care of the configure stage above.
-include(ExternalProject)
-
-ExternalProject_Add( DriplineExternal
-    PREFIX            ${CMAKE_INSTALL_PREFIX}
-    SOURCE_DIR        ${PROJECT_SOURCE_DIR}/external
-    BINARY_DIR        ${PROJECT_BINARY_DIR}/external
-    CONFIGURE_COMMAND ""
-    BUILD_ALWAYS      1
-    BUILD_COMMAND     $(MAKE)
-    INSTALL_DIR       ${CMAKE_INSTALL_PREFIX}
-    INSTALL_COMMAND   $(MAKE) install
-)
-
-# Finally we use find_package() to learn about the Kassiopeia build targets.
-find_package( SimpleAmqpClient REQUIRED CONFIG HINTS ${PROJECT_BINARY_DIR}/external )
+find_package( rmqcpp REQUIRED )
 
 # Added to the public libraries so that downstream code can successfully get the necessary include directories
-list( APPEND PUBLIC_EXT_LIBS SimpleAmqpClient::SimpleAmqpClient )
+list( APPEND PUBLIC_EXT_LIBS rmqcpp::rmq )
 
 
 ##################
@@ -142,10 +104,6 @@ if( Dripline_BUILD_PYTHON )
 else( Dripline_BUILD_PYTHON )
     set_option( Scarab_BUILD_PYTHON FALSE )
 endif( Dripline_BUILD_PYTHON )
-
-# SimpleAmqpClient needs system and chrono
-list( APPEND Scarab_BOOST_COMPONENTS chrono )
- 
 
 #####################
 # Prepare for Build #
@@ -195,7 +153,7 @@ endif()
 #########
 
 if( Dripline_ENABLE_TESTING )
-    add_subdirectory( testing )
+    add_subdirectory( testing/unit )
 endif()
 
 ##################

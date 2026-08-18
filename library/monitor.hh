@@ -9,15 +9,14 @@
 #define DRIPLINE_MONITOR_HH_
 
 #include "core.hh"
-#include "listener.hh"
-#include "receiver.hh"
+#include "message_dispatcher.hh"
 
 namespace scarab
 {
     class authentication;
 }
 
-namespace DRIPLINE_API dripline
+namespace dripline
 {
 
     /*!
@@ -41,20 +40,17 @@ namespace DRIPLINE_API dripline
      requests keys are bound to the requests exchange.  The monitor then waits to receive 
      a message.  When a message is seen, it prints it to stdout.
     */
-    class monitor :
+    class DRIPLINE_API monitor :
             public core,
-            public listener_receiver
+            public message_dispatcher
     {
         protected:
             enum class status
             {
                 nothing = 0,
-                channel_created = 10,
-                exchange_declared = 20,
-                queue_declared = 30,
-                queue_bound = 40,
-                consuming = 50,
-                listening = 60
+                channel_created = 10,  ///< broker connection established
+                consuming = 50,        ///< queue declared, keys bound, consumer started
+                listening = 60         ///< actively waiting for messages
             };
 
         public:
@@ -93,14 +89,7 @@ namespace DRIPLINE_API dripline
             /// Stops listening for messages and closes the AMQP connection.
             bool stop();
 
-        protected:
-            bool bind_keys();
-
         public:
-            /// Waits for a single AMQP message and processes it.
-            /// Returns false if the return is due to an error in this function; returns true otherwise (namely because it was canceled)
-            virtual bool listen_on_queue();
-
             /// Handles a single Dripline message by printing it to stdout.
             /// Printing is done via a prog-level message in the logger.
             virtual void submit_message( message_ptr_t a_message );

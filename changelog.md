@@ -9,6 +9,21 @@ Types of changes: Added, Changed, Deprecated, Removed, Fixed, Security
 
 ## [Unreleased]
 
+### Changed
+
+- Replaced SimpleAmqpClient with rmqcpp (Bloomberg) as the AMQP backend.
+  - `concurrent_receiver` renamed to `message_dispatcher`; extracted into `library/message_dispatcher.hh` / `library/message_dispatcher.cc`.
+  - `listener` and `listener_receiver` classes deleted; Consumer lifecycle absorbed into `message_dispatcher`.
+  - Message delivery is now callback-based (rmqcpp thread pool); dripline-cpp no longer manages listener or receiver threads.
+  - Stale incomplete multi-chunk messages are lazily evicted after `single_message_wait_ms` ms.
+  - `core::send()` no longer accepts an `amqp_channel_ptr` parameter (breaking API change).
+  - `receiver::wait_for_reply()` now uses a `std::future` instead of a polling loop.
+
+### Removed
+
+- `library/listener.hh` and `library/listener.cc` (deleted).
+- `external/SimpleAmqpClient/` submodule (deleted).
+
 
 ## [2.10.12] -- 2026-06-05
 
