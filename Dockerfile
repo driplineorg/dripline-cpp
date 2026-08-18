@@ -67,11 +67,11 @@ RUN apt-get update && \
     cd / && \
     rm -rf /usr/local/${pybind11_name}
 
-ARG rmqcpp_checkout=9bf4f6dae956d83e00b83ca7cb56d87beb5beff9
+ARG rmqcpp_checkout=feature/optional-tests
 RUN cd /usr/local && \
     git clone https://github.com/Microsoft/vcpkg.git && \
     /usr/local/vcpkg/bootstrap-vcpkg.sh && \
-    git clone https://github.com/bloomberg/rmqcpp.git && \
+    git clone https://github.com/driplineorg/rmqcpp.git && \
     cd /usr/local/rmqcpp && \
     git checkout ${rmqcpp_checkout} && \
     case "${TARGETARCH}" in \
@@ -87,6 +87,7 @@ RUN cd /usr/local && \
         -DVCPKG_TARGET_TRIPLET=${TRIPLET} \
         -DCMAKE_INSTALL_PREFIX=/usr/local \
         -DBUILD_TESTING=OFF \
+        -Drmqcpp_ENABLE_TESTING=OFF \
         .. && \
     make -j${narg} install && \
     cd / && \
