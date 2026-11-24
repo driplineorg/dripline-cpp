@@ -60,6 +60,7 @@ struct fake_message_guard : public BloombergLP::rmqp::MessageGuard
     const BloombergLP::rmqt::Envelope& envelope() const override { return d_envelope; }
     void ack() override {}
     void nack( bool ) override {}
+    void reject( bool ) override {}
     BloombergLP::rmqp::Consumer* consumer() const override { return nullptr; }
     BloombergLP::rmqp::TransferrableMessageGuard transferOwnership() override
     {

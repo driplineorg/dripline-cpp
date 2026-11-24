@@ -36,7 +36,6 @@ set( testing_SOURCES
     test_lockout.cc
     test_message_dispatcher.cc
     test_messages.cc
-    test_reply_cache.cc
     test_return_codes.cc
     test_scheduler.cc
     test_service.cc
@@ -46,7 +45,16 @@ set( testing_SOURCES
     test_version_store.cc
 )
 
-set( testing_LIBS 
+# reply_cache is only compiled into the library when Scarab_BUILD_PYTHON is on
+# (see library/CMakeLists.txt), so its test can only be linked in that case
+if( Scarab_BUILD_PYTHON )
+    set( testing_SOURCES
+        ${testing_SOURCES}
+        test_reply_cache.cc
+    )
+endif( Scarab_BUILD_PYTHON )
+
+set( testing_LIBS
     Dripline
 )
 
