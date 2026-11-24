@@ -9,6 +9,10 @@ Types of changes: Added, Changed, Deprecated, Removed, Fixed, Security
 
 ## [Unreleased]
 
+### Added
+
+- Non-Docker builds are documented; see `documentation/source/building.rst`.
+
 ### Changed
 
 - Replaced SimpleAmqpClient with rmqcpp (Bloomberg) as the AMQP backend.
@@ -18,11 +22,21 @@ Types of changes: Added, Changed, Deprecated, Removed, Fixed, Security
   - Stale incomplete multi-chunk messages are lazily evicted after `single_message_wait_ms` ms.
   - `core::send()` no longer accepts an `amqp_channel_ptr` parameter (breaking API change).
   - `receiver::wait_for_reply()` now uses a `std::future` instead of a polling loop.
+- rmqcpp and the BDE libraries are now built from pinned sources by `install_dependencies.sh`
+  instead of being installed with vcpkg.
+
+### Fixed
+
+- `test_reply_cache.cc` is now only compiled when `Scarab_BUILD_PYTHON` is on, matching the
+  condition under which `reply_cache.cc` is compiled into the library. Builds without the
+  Python components previously failed to link `run_dl_tests`.
 
 ### Removed
 
 - `library/listener.hh` and `library/listener.cc` (deleted).
 - `external/SimpleAmqpClient/` submodule (deleted).
+- All use of vcpkg, including the `VCPKG_ROOT` toolchain-file detection in the top-level
+  `CMakeLists.txt`.
 
 
 ## [2.10.12] -- 2026-06-05
