@@ -13,14 +13,18 @@ What's Included
 Requirements
 ============
 
-* CMake 3.12
+* CMake 3.25 (3.12 for dripline-cpp itself, but 3.25 to build rmqcpp and BDE)
 * C++17
-* Boost 1.46 (including Boost.Asio)
+* Boost 1.70 (including Boost.Asio)
 * `rmqcpp <https://github.com/bloomberg/rmqcpp>`_ (Bloomberg AMQP client library)
 * BDE libraries (Bloomberg Development Environment; required by rmqcpp)
+* OpenSSL, zlib, and zstd (required by rmqcpp)
 * libyaml-cpp
 * rapidjson
 * quill (logging library)
+
+rmqcpp and BDE have no system packages; see :ref:`Dependencies <dependencies>`
+for the script that builds and installs them.
 
 
 Included Packages
