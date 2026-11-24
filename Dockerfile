@@ -9,52 +9,34 @@ ARG build_examples=FALSE
 ARG enable_testing=FALSE
 ARG narg=2
 
-# automatically filled by docker
-ARG TARGETARCH
-
-ENV VCPKG_FORCE_SYSTEM_BINARIES=1
-ENV VCPKG_ROOT=/usr/local/vcpkg
-
-# as of 8/14/26 the vcpkg installation process required CMake >=4.3 for use of the STRING JSON STRING_ENCODE mode
-ARG cmake_version=4.4.2
-
 # use pybind11_checkout to specify a tag or branch name to checkout
 ARG pybind11_checkout=v3.0.1
 ARG pybind11_repo=https://github.com/pybind/pybind11.git
 ARG pybind11_name=pybind11
 
 # Most dependencies
+# The apt-provided cmake is new enough: bde requires 3.24 and rmqcpp requires 3.25, and Debian
+# bookworm and trixie provide 3.25.1 and 3.31.6 respectively.
 RUN apt-get update && \
     apt-get clean && \
-    apt-get --fix-missing  -y install \
+    apt-get --fix-missing  -y install --no-install-recommends \
         build-essential \
-#        cmake \
+        cmake \
 #        gdb \
+#        pybind11-dev \
         git \
         libyaml-cpp-dev \
         rapidjson-dev \
+        libboost-dev \
+        libboost-filesystem-dev \
+        libboost-system-dev \
+        libboost-chrono-dev \
         libssl-dev \
         zlib1g-dev \
         libzstd-dev \
         ninja-build \
-        pkg-config \
-        curl \
-        tar \
-        unzip \
-        zip \
-#        pybind11-dev \
-        wget && \
+        pkg-config && \
     rm -rf /var/lib/apt/lists/* && \
-    # CMake install
-    cd /usr/local && \
-    ARCH=$(case "${TARGETARCH}" in\
-        amd64) echo "x86_64" ;; \
-        arm64) echo "aarch64" ;; \
-        *) echo "${TARGETARCH}" ;; \
-    esac) && \
-    wget -O cmake-install.sh https://github.com/Kitware/CMake/releases/download/v${cmake_version}/cmake-${cmake_version}-linux-${ARCH}.sh && \
-    chmod a+x cmake-install.sh && \
-    ./cmake-install.sh --skip-license --prefix=/usr/local && \
     # Pybind11 install
     cd /usr/local && \
     git clone ${pybind11_repo} ${pybind11_name} && \
@@ -67,65 +49,26 @@ RUN apt-get update && \
     cd / && \
     rm -rf /usr/local/${pybind11_name}
 
-ARG rmqcpp_checkout=feature/optional-tests
-RUN cd /usr/local && \
-    git clone https://github.com/Microsoft/vcpkg.git && \
-    /usr/local/vcpkg/bootstrap-vcpkg.sh && \
-    git clone https://github.com/driplineorg/rmqcpp.git && \
-    cd /usr/local/rmqcpp && \
-    git checkout ${rmqcpp_checkout} && \
-    case "${TARGETARCH}" in \
-        amd64) TRIPLET="x64-linux-release" ;; \
-        arm64) TRIPLET="arm64-linux-release" ;; \
-        *) echo "Unsupported architecture: ${TARGETARCH}"; exit 1 ;; \
-    esac && \
-    ${VCPKG_ROOT}/vcpkg install --triplet ${TRIPLET} && \
-    mkdir -p /usr/local/rmqcpp/build && \
-    cd /usr/local/rmqcpp/build && \
-    cmake -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake \
-        -DVCPKG_TARGET_TRIPLET=${TRIPLET} \
-        -DCMAKE_INSTALL_PREFIX=/usr/local \
-        -DBUILD_TESTING=OFF \
-        -Drmqcpp_ENABLE_TESTING=OFF \
-        .. && \
-    make -j${narg} install && \
-    cd / && \
-    ${VCPKG_ROOT}/vcpkg install --triplet ${TRIPLET} \
-        boost-filesystem \
-        boost-system \
-        boost-chrono \
-        boost-variant \
-        boost-uuid && \
-    cp -a /usr/local/rmqcpp/vcpkg_installed/${TRIPLET}/include/. /usr/local/include/ && \
-    cp -a /usr/local/rmqcpp/vcpkg_installed/${TRIPLET}/lib/. /usr/local/lib/ && \
-    cp -a /usr/local/rmqcpp/vcpkg_installed/${TRIPLET}/share/. /usr/local/share/ && \
-    cp -a ${VCPKG_ROOT}/installed/${TRIPLET}/include/. /usr/local/include/ && \
-    cp -a ${VCPKG_ROOT}/installed/${TRIPLET}/lib/. /usr/local/lib/ && \
-    cp -a ${VCPKG_ROOT}/installed/${TRIPLET}/share/. /usr/local/share/ && \
-    rm -rf /usr/local/share/zstd && \
-    # Create a shim file to adapt the vcpkg install of "pcre2" to the expected standard "libpcre2-8"
-    mkdir -p /usr/local/share/libpcre2-8 && \
-    printf '%s\n' \
-        'include("/usr/local/share/pcre2/pcre2-config.cmake")' \
-        'if(NOT TARGET libpcre2-8::pcre2-8 AND TARGET pcre2::pcre2-8-static)' \
-        '  add_library(libpcre2-8::pcre2-8 ALIAS pcre2::pcre2-8-static)' \
-        'endif()' \
-        'set(libpcre2-8_FOUND TRUE)' \
-        > /usr/local/share/libpcre2-8/libpcre2-8Config.cmake && \
-    # rmqcpp's rmqcppConfig.cmake is missing the use of find_dependency(zstd), so we add it
-    RMQCPP_CONFIG=$(find /usr/local -name rmqcppConfig.cmake 2>/dev/null | head -1) && \
-    test -n "${RMQCPP_CONFIG}" && \
-    if ! grep -q 'find_dependency(zstd' "${RMQCPP_CONFIG}"; then \
-        sed -i '/include.*rmqcppTargets/i find_dependency(zstd CONFIG)' "${RMQCPP_CONFIG}"; \
-    fi && \
-    rm -rf \
-        /usr/local/rmqcpp/build \
-        /usr/local/vcpkg/downloads \
-        /usr/local/vcpkg/ports \
-        /usr/local/vcpkg/buildtrees \
-        /usr/local/vcpkg/.git \
-        /root/.cache/vcpkg
+# rmqcpp and the Bloomberg BDE libraries it is built on have no system packages, so they are
+# built from source.  install_dependencies.sh clones and builds in a temporary directory, which
+# it removes when it is done, so this stays a single self-contained layer.
+ARG bde_version=4.39.0.0
+ARG rmqcpp_repo=https://github.com/driplineorg/rmqcpp.git
+ARG rmqcpp_ref=6f00fab8d4e5cd90f1548fc90679dcff8f3a753f
+
+COPY install_dependencies.sh /usr/local/bin/install_dependencies.sh
+RUN chmod +x /usr/local/bin/install_dependencies.sh && \
+    /usr/local/bin/install_dependencies.sh \
+        --prefix=/usr/local \
+        --jobs=${narg} \
+        --bde-version=${bde_version} \
+        --rmqcpp-repo=${rmqcpp_repo} \
+        --rmqcpp-ref=${rmqcpp_ref} && \
+    # Drop debug info from the installed dependency libraries.  The static archives get
+    # --strip-debug rather than --strip-unneeded, which would discard symbols that consumers
+    # of the archives still need to link against.
+    find /usr/local/lib -name '*.a' -type f -exec strip --strip-debug {} + && \
+    find /usr/local/lib -name '*.so*' -type f -exec strip --strip-unneeded {} +
 
 FROM base AS devel
 
