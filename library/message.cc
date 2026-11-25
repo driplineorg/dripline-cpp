@@ -21,6 +21,9 @@
 #include "time.hh"
 #include "version_wrapper.hh"
 
+#include "bsl_vector.h"
+#include "rmqt_properties.h"
+
 #include <cmath>
 #include <map>
 
@@ -101,16 +104,6 @@ namespace dripline
         }
     }
 
-/*
-    message_ptr_t message::process_envelope( amqp_envelope_ptr a_envelope )
-    {
-        if( ! a_envelope )
-        {
-            throw dripline_error() << "Empty envelope received";
-        }
-        return message::process_message( a_envelope->Message(), a_envelope->RoutingKey() );
-    }
-*/
     std::tuple< std::string, unsigned, unsigned > message::parse_message_id( const string& a_message_id )
     {
         std::string::size_type t_first_separator = a_message_id.find_first_of( s_message_id_separator );
@@ -152,16 +145,18 @@ namespace dripline
             throw dripline_error() << "All messages provided for processing were invalid";
         }
 
-        unsigned t_payload_chunk_length = t_first_valid_message->Body().size();
+        unsigned t_payload_chunk_length = t_first_valid_message->payloadSize();
 
         encoding t_encoding;
-        if( t_first_valid_message->ContentEncoding() == "application/json" )
+        const std::string t_content_encoding = t_first_valid_message->properties().contentEncoding.isNull() ? "" :
+            std::string( t_first_valid_message->properties().contentEncoding.value() );
+        if( t_content_encoding == "application/json" )
         {
             t_encoding = encoding::json;
         }
         else
         {
-            throw dripline_error() << "Unable to parse message with content type <" << t_first_valid_message->ContentEncoding() << ">";
+            throw dripline_error() << "Unable to parse message with content type <" << t_content_encoding << ">";
         }
 
         // Build up the body
@@ -177,7 +172,7 @@ namespace dripline
                 continue;
             }
 
-            t_payload_str += t_message->Body();
+            t_payload_str += std::string( reinterpret_cast< const char* >( t_message->payload() ), t_message->payloadSize() );
         }
 
         // Attempt to parse
@@ -214,28 +209,46 @@ namespace dripline
 
         using scarab::at;
 
-        using AmqpClient::Table;
-        using AmqpClient::TableEntry;
-        using AmqpClient::TableValue;
-        Table t_properties = t_first_valid_message->HeaderTable();
+        const auto& t_hdr_ptr = t_first_valid_message->headers();
+        const BloombergLP::rmqt::FieldTable& t_properties = t_hdr_ptr ? *t_hdr_ptr : BloombergLP::rmqt::FieldTable();
+
+        auto t_hdr_uint = [&t_properties]( const char* a_key, unsigned a_default ) -> unsigned {
+            auto it = t_properties.find( bsl::string(a_key) );
+            if( it == t_properties.end() || !it->second.is< bsl::uint32_t >() ) return a_default;
+            return (unsigned)it->second.the< bsl::uint32_t >();
+        };
+        auto t_hdr_str = [&t_properties]( const char* a_key, const char* a_default ) -> std::string {
+            auto it = t_properties.find( bsl::string(a_key) );
+            if( it == t_properties.end() || !it->second.is< bsl::string >() ) return a_default;
+            return std::string( it->second.the< bsl::string >() );
+        };
+        auto t_hdr_table = [&t_properties]( const char* a_key ) -> const BloombergLP::rmqt::FieldTable* {
+            auto it = t_properties.find( bsl::string(a_key) );
+            if( it == t_properties.end() ||
+                !it->second.is< bsl::shared_ptr< BloombergLP::rmqt::FieldTable > >() ) return nullptr;
+            const auto& p = it->second.the< bsl::shared_ptr< BloombergLP::rmqt::FieldTable > >();
+            return p ? p.get() : nullptr;
+        };
 
         // Create the message, of whichever type
         message_ptr_t t_message;
-        msg_t t_msg_type = to_msg_t( at( t_properties, std::string("message_type"), TableValue(to_uint(msg_t::unknown)) ).GetInteger() );
+        msg_t t_msg_type = to_msg_t( t_hdr_uint("message_type", to_uint(msg_t::unknown)) );
         switch( t_msg_type )
         {
             case msg_t::request:
             {
+                const std::string t_reply_to = t_first_valid_message->properties().replyTo.isNull() ? "" :
+                    std::string( t_first_valid_message->properties().replyTo.value() );
                 request_ptr_t t_request = msg_request::create(
                         std::move(t_payload),
-                        to_op_t( at( t_properties, std::string("message_operation"), TableValue(to_uint(op_t::unknown)) ).GetInteger() ),
+                        to_op_t( t_hdr_uint("message_operation", to_uint(op_t::unknown)) ),
                         a_routing_key,
-                        at( t_properties, std::string("specifier"), TableValue("") ).GetString(),
-                        t_first_valid_message->ReplyTo(),
+                        t_hdr_str("specifier", ""),
+                        t_reply_to,
                         t_encoding);
 
                 bool t_lockout_key_valid = true;
-                t_request->lockout_key() = uuid_from_string( at( t_properties, std::string("lockout_key"), TableValue("") ).GetString(), t_lockout_key_valid );
+                t_request->lockout_key() = uuid_from_string( t_hdr_str("lockout_key", ""), t_lockout_key_valid );
                 t_request->set_lockout_key_valid( t_lockout_key_valid );
 
                 t_message = t_request;
@@ -244,11 +257,11 @@ namespace dripline
             case msg_t::reply:
             {
                 reply_ptr_t t_reply = msg_reply::create(
-                        at( t_properties, std::string("return_code"), TableValue(999U) ).GetInteger(),
-                        at( t_properties, std::string("return_message"), TableValue("") ).GetString(),
+                        t_hdr_uint("return_code", 999U),
+                        t_hdr_str("return_message", ""),
                         std::move(t_payload),
                         a_routing_key,
-                        at( t_properties, std::string("specifier"), TableValue("") ).GetString(),
+                        t_hdr_str("specifier", ""),
                         t_encoding);
 
                 t_message = t_reply;
@@ -259,7 +272,7 @@ namespace dripline
                 alert_ptr_t t_alert = msg_alert::create(
                         std::move(t_payload),
                         a_routing_key,
-                        at( t_properties, std::string("specifier"), TableValue("") ).GetString(),
+                        t_hdr_str("specifier", ""),
                         t_encoding);
 
                 t_message = t_alert;
@@ -278,17 +291,19 @@ namespace dripline
             t_message->set_is_valid( false );
         }
 
-        t_message->correlation_id() = t_first_valid_message->CorrelationId();
-        t_message->message_id() = t_first_valid_message->MessageId();
+        t_message->correlation_id() = t_first_valid_message->properties().correlationId.isNull() ? "" :
+            std::string( t_first_valid_message->properties().correlationId.value() );
+        t_message->message_id() = std::string( t_first_valid_message->messageId() );
         // remove the message chunk information from the message id
         t_message->message_id() = t_message->message_id().substr( 0, t_message->message_id().find_first_of(s_message_id_separator) );
-        t_message->timestamp() = at( t_properties, std::string("timestamp"), TableValue("") ).GetString();
+        t_message->timestamp() = t_hdr_str("timestamp", "");
 
-        Table t_sender_info = at( t_properties, std::string("sender_info"), TableValue(Table()) ).GetTable();
-        scarab::param_ptr_t t_sender_info_param = table_to_param( t_sender_info );
-        t_message->set_sender_info( t_sender_info_param->as_node() );
-
-        t_message->payload() = *t_payload;
+        const BloombergLP::rmqt::FieldTable* t_si_tbl = t_hdr_table("sender_info");
+        if( t_si_tbl )
+        {
+            scarab::param_ptr_t t_sender_info_param = table_to_param( *t_si_tbl );
+            t_message->set_sender_info( t_sender_info_param->as_node() );
+        }
 
         return t_message;
     }
@@ -315,22 +330,32 @@ namespace dripline
             unsigned i_chunk = 0;
             for( string& t_body_part : t_body_parts )
             {
-                amqp_message_ptr t_message = AmqpClient::BasicMessage::Create( t_body_part );
+                // Build raw payload bytes
+                auto t_raw_data = bsl::make_shared< bsl::vector< bsl::uint8_t > >(
+                    t_body_part.begin(), t_body_part.end() );
 
-                t_message->ContentEncoding( interpret_encoding() );
-                t_message->CorrelationId( f_correlation_id );
-                t_message->MessageId( t_base_message_id + std::to_string(i_chunk) + t_total_chunks_str );
-                t_message->ReplyTo( f_reply_to );
+                // Build AMQP properties
+                BloombergLP::rmqt::Properties t_props;
+                t_props.contentEncoding = bsl::string( interpret_encoding() );
+                t_props.correlationId   = bsl::string( f_correlation_id );
+                t_props.messageId       = bsl::string( t_base_message_id + std::to_string(i_chunk) + t_total_chunks_str );
+                if( ! f_reply_to.empty() )
+                {
+                    t_props.replyTo = bsl::string( f_reply_to );
+                }
 
-                AmqpClient::Table t_properties;
-                t_properties.insert( AmqpClient::TableEntry( "message_type", to_uint(message_type()) ) );
-                t_properties.insert( AmqpClient::TableEntry( "specifier", f_specifier.to_string() ) );
-                t_properties.insert( AmqpClient::TableEntry( "timestamp", f_timestamp ) );
-                t_properties.insert( AmqpClient::TableEntry( "sender_info", param_to_table( get_sender_info() ) ) );
+                // Build header FieldTable
+                auto t_headers = bsl::make_shared< BloombergLP::rmqt::FieldTable >();
+                (*t_headers)[bsl::string("message_type")] = BloombergLP::rmqt::FieldValue( (bsl::uint32_t)to_uint(message_type()) );
+                (*t_headers)[bsl::string("specifier")]    = BloombergLP::rmqt::FieldValue( bsl::string(f_specifier.to_string()) );
+                (*t_headers)[bsl::string("timestamp")]    = BloombergLP::rmqt::FieldValue( bsl::string(f_timestamp) );
+                (*t_headers)[bsl::string("sender_info")]  = param_to_table( get_sender_info() );
 
-                this->derived_modify_amqp_message( t_message, t_properties );
+                this->derived_modify_amqp_message( *t_headers );
 
-                t_message->HeaderTable( t_properties );
+                t_props.headers = t_headers;
+
+                amqp_message_ptr t_message = bsl::make_shared< BloombergLP::rmqt::Message >( t_raw_data, t_props );
 
                 t_message_parts[i_chunk] = t_message;
 

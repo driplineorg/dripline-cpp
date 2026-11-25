@@ -17,7 +17,7 @@ cleanup () {
 }
 trap 'cleanup ; printf "${RED}Tests Failed For Unexpected Reasons${NC}\n"' HUP INT QUIT PIPE TERM
 
-IMG_TAG=$1 docker compose -p integration -f docker-compose.yaml -f docker-compose-test.yaml build && IMG_TAG=$1 docker compose -p integration -f docker-compose.yaml -f docker-compose-test.yaml up -d
+IMG_TAG=$1 docker compose -p integration -f docker-compose.yaml -f docker-compose-test.yaml build && IMG_TAG=$1 docker compose -p integration -f docker-compose.yaml -f docker-compose-test.yaml up --exit-code-from test
 
 if [ $? -ne 0 ] ; then
   printf "${RED}Docker Compose Failed${NC}\n"

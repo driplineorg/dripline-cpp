@@ -4,10 +4,77 @@
 Building Dripline
 =================
 
-Dripline is typically built either in the :ref:`Standalone<standalone-option>` configuration, 
+Dripline is typically built either in the :ref:`Standalone<standalone-option>` configuration,
 or as a :ref:`Submodule<submodule-option>`.
 
-For either build option, a number of :ref:`build options<build-options>` can be used to customize the build.
+For either build option, the :ref:`dependencies<dependencies>` must be installed first,
+and a number of :ref:`build options<build-options>` can be used to customize the build.
+
+.. _dependencies:
+
+Dependencies
+============
+
+Most of the dependencies are available as system packages:
+
+* Debian/Ubuntu::
+
+    apt-get install build-essential cmake ninja-build git pkg-config \
+        libyaml-cpp-dev rapidjson-dev libboost-dev libboost-filesystem-dev \
+        libboost-system-dev libboost-chrono-dev libssl-dev zlib1g-dev libzstd-dev
+
+* macOS (Homebrew)::
+
+    brew install cmake ninja yaml-cpp rapidjson boost openssl@3 zstd
+
+.. note::
+   CMake 3.25 or newer is needed to build rmqcpp and BDE.
+   Some still-supported distributions package an older one -- Ubuntu 22.04 is at 3.22 -- in which
+   case the packaged ``cmake`` above is not sufficient, and a newer CMake has to come from
+   `Kitware's APT repository <https://apt.kitware.com>`_ or from ``pip install cmake``.
+   ``install_dependencies.sh`` checks the CMake version before it builds anything.
+
+Two dependencies are not packaged anywhere: `rmqcpp <https://github.com/bloomberg/rmqcpp>`_,
+the AMQP client library, and the `BDE <https://github.com/bloomberg/bde>`_ libraries that
+rmqcpp is built on.
+Both are built from pinned sources by the ``install_dependencies.sh`` script in the top-level
+directory of the repository::
+
+    ./install_dependencies.sh --prefix=/usr/local
+
+Run ``./install_dependencies.sh --help`` for the full set of options, which include the
+install prefix, the number of parallel build jobs, and the dependency versions.
+The script builds in a temporary directory and removes it when it is finished.
+Note that building BDE takes several minutes.
+
+If the install prefix is not one that CMake searches by default, pass it on to the
+dripline-cpp build with ``CMAKE_PREFIX_PATH``::
+
+    ./install_dependencies.sh --prefix=${HOME}/dripline-deps
+    cmake -DCMAKE_PREFIX_PATH=${HOME}/dripline-deps ..
+
+On success the script writes a ``dripline-deps.env`` file into the install prefix, recording the
+``CMAKE_PREFIX_PATH`` and the ``OPENSSL_ROOT_DIR`` it resolved.
+Sourcing it is the simplest way to configure dripline-cpp against the same OpenSSL that rmqcpp
+was built against, which matters on macOS, where Homebrew can have several in parallel::
+
+    . ${HOME}/dripline-deps/dripline-deps.env
+    cmake -DCMAKE_PREFIX_PATH="${DRIPLINE_DEPS_CMAKE_PREFIX_PATH}" \
+        -DOPENSSL_ROOT_DIR="${DRIPLINE_DEPS_OPENSSL_ROOT_DIR}" ..
+
+An existing install can be checked with ``./install_dependencies.sh --prefix=<dir> --verify-only``,
+which confirms that everything the dripline-cpp build needs is present and then exits.
+
+Note that vcpkg is neither used nor required.
+
+.. note::
+   rmqcpp uses ``find_package(zstd CONFIG)``, which needs a zstd CMake package config file.
+   A few distributions ship zstd without one (Ubuntu 22.04, for example).
+   On those, run the script with ``--no-compression``, which builds rmqcpp without its zstd
+   compression support.
+
+The ``Dockerfile`` in the repository performs all of these steps, and is the most complete
+reference for setting up a build environment.
 
 .. _build-options:
 
@@ -32,6 +99,12 @@ Dripline build options include:
 
    ``Dripline_MAX_PAYLOAD_SIZE`` (INT)
       Maximum payload size in bytes
+
+   ``Dripline_OFFLINE`` (BOOL)
+      if ON, builds the library in offline mode (no broker connection required).
+      In this mode, sending a message throws the message object rather than transmitting it,
+      which is useful for unit testing.
+      See :ref:`Offline & No-Connection <offline>` for more details.
 
    ``Dripline_PYTHON_THROW_REPLY_KEYWORD``
       keyword used by the python wrapping that indicates that the thrown object is a reply message to be sent
@@ -64,17 +137,21 @@ The steps are:
 
     git clone https://github.com/driplineorg/dripline-cpp --recurse-submodules
 
-2. Create a build directory::
+2. Install the :ref:`dependencies <dependencies>`, including rmqcpp and BDE::
 
     cd dripline-cpp
+    ./install_dependencies.sh
+
+3. Create a build directory::
+
     mkdir build
     cd build
 
-3. Run CMake::
+4. Run CMake::
 
     cmake ..
 
-4. Build and install::
+5. Build and install::
 
     make install
 

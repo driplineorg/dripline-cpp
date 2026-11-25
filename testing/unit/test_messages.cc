@@ -161,5 +161,36 @@ TEST_CASE( "message-conversion", "[message]" )
         REQUIRE( *t_alert_ptr == *t_conv_alert_ptr );
     }
 
+    SECTION( "multi_chunk" )
+    {
+        // Payload serializes to ~50 chars of JSON; max_size=20 forces 3 chunks.
+        auto t_payload = scarab::param_ptr_t( new scarab::param_node() );
+        t_payload->as_node().add( "data", "abcdefghijklmnopqrstuvwxyz0123456789" );
+
+        dripline::request_ptr_t t_req_ptr = dripline::msg_request::create(
+                std::move( t_payload ),
+                dripline::op_t::set,
+                "multi.chunk.rk" );
+
+        REQUIRE( t_req_ptr );
+
+        dripline::amqp_split_message_ptrs t_amqp_msg_ptrs = t_req_ptr->create_amqp_messages( 20 );
+
+        REQUIRE( t_amqp_msg_ptrs.size() > 1 );
+
+        dripline::message_ptr_t t_conv_msg_ptr = dripline::message::process_message( t_amqp_msg_ptrs, "multi.chunk.rk" );
+
+        REQUIRE( t_conv_msg_ptr );
+        REQUIRE( t_conv_msg_ptr->get_is_valid() );
+        REQUIRE( t_conv_msg_ptr->is_request() );
+        REQUIRE( t_conv_msg_ptr->routing_key() == "multi.chunk.rk" );
+        REQUIRE( t_conv_msg_ptr->correlation_id() == t_req_ptr->correlation_id() );
+        REQUIRE( t_conv_msg_ptr->message_type() == dripline::msg_t::request );
+
+        dripline::request_ptr_t t_conv_req_ptr = std::static_pointer_cast< dripline::msg_request >( t_conv_msg_ptr );
+        REQUIRE( t_conv_req_ptr->get_message_operation() == dripline::op_t::set );
+        REQUIRE( *t_req_ptr == *t_conv_req_ptr );
+    }
+
 
 }

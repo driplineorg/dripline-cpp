@@ -11,9 +11,8 @@
 #include "core.hh"
 #include "endpoint.hh"
 #include "heartbeater.hh"
+#include "message_dispatcher.hh"
 #include "scheduler.hh"
-#include "listener.hh"
-#include "receiver.hh"
 
 #include "dripline_exceptions.hh"
 #include "service_config.hh"
@@ -57,21 +56,14 @@ namespace dripline
      A service has a number of key characteristics (most of which come from its parent classes):
        * `core` -- Has all of the basic AMQP capabilities, sending messages, and making and manipulating connections
        * `endpoint` -- Handles Dripline messages
-       * `listener_receiver` -- Asynchronously recieves AMQP messages and turns them into Dripline messages
+        * `message_dispatcher` -- Receives AMQP messages via rmqcpp callbacks and dispatches them as Dripline messages
        * `heartbeater` -- Sends periodic heartbeat messages
        * `scheduler` -- Can schedule events
     
-     As is apparent from the above descriptions, a service is responsible for a number of threads 
-     when it executes:
-       * Listening -- grabs AMQP messages off the channel when they arrive
-       * Message-wait -- any incomplete multi-part Dripline message will setup a thread to wait 
-       *                 until the message is complete, and then submits it for handling
-       * Receiver -- grabs completed Dripline messages and handles it
-       * Async endpoint listening -- same as abovefor each asynchronous endpoint
-       * Async endpoint message-wait -- same as above for each asynchronous endpoint
-       * Async endpoint receiver -- same as above for each asynchronous endpoint
-       * Heatbeater -- sends regular heartbeat messages
-       * Scheduler -- executes scheduled events
+      Message delivery is handled by rmqcpp's internal thread pool via callbacks; dripline-cpp
+      manages only the following threads:
+        * Heartbeater -- sends regular heartbeat messages
+        * Scheduler -- executes scheduled events
 
      In addition to receiving messages from the broker, a user or client code can give messages directly to the service 
      using `process_message(message)`.
@@ -79,7 +71,7 @@ namespace dripline
     class DRIPLINE_API service :
             public core,
             public endpoint,
-            public listener_receiver,
+            public message_dispatcher,
             public heartbeater,
             public scheduler<>
     {
@@ -87,13 +79,11 @@ namespace dripline
             enum class status
             {
                 nothing = 0,
-                channel_created = 10,
-                exchange_declared = 20,
-                queue_declared = 30,
-                queue_bound = 40,
-                consuming = 50,
-                listening = 60,
-                processing = 70
+                connected = 10,
+                topology_set = 30,
+                queues_bound = 40,
+                threads_started = 50,
+                listening = 60
             };
 
         public:
@@ -147,14 +137,14 @@ namespace dripline
             bool add_async_child( endpoint_ptr_t a_endpoint_ptr );
 
         public:
-            /// Sends a request message and returns a channel on which to listen for a reply.
-            virtual sent_msg_pkg_ptr send( request_ptr_t a_request, amqp_channel_ptr a_channel = amqp_channel_ptr() ) const;
+            /// Sends a request message
+            virtual sent_msg_pkg_ptr send( request_ptr_t a_request ) const;
 
             /// Sends a reply message
-            virtual sent_msg_pkg_ptr send( reply_ptr_t a_reply, amqp_channel_ptr a_channel = amqp_channel_ptr() ) const;
+            virtual sent_msg_pkg_ptr send( reply_ptr_t a_reply ) const;
 
             /// Sends an alert message
-            virtual sent_msg_pkg_ptr send( alert_ptr_t a_alert, amqp_channel_ptr a_channel = amqp_channel_ptr() ) const;
+            virtual sent_msg_pkg_ptr send( alert_ptr_t a_alert ) const;
 
         public:
             /**
@@ -182,40 +172,30 @@ namespace dripline
             /// If this returns false, the service should quit with an error
             bool stop();
 
-        protected:
-            virtual bool open_channels();
-
-            virtual bool setup_queues();
-
-            virtual bool bind_keys();
-
-            virtual bool start_consuming();
-
-            virtual bool stop_consuming();
-
-            virtual bool remove_queue();
+            mv_accessible( uuid_t, id );
 
         public:
-            /// Waits for AMQP messages arriving on the channel
-            /// Returns false if the return is due to an error in this function; returns true otherwise (namely because it was canceled)
-            virtual bool listen_on_queue();
+            virtual void open_channels();
 
-            /// Sends a reply message
-            virtual void send_reply( reply_ptr_t a_reply ) const;
+            virtual void add_queues();
 
-            mv_accessible( uuid_t, id );
+            virtual void bind_keys();
+
+            virtual void start_threads();
+
+            virtual void stop_threads();
 
         public:
             typedef std::map< std::string, endpoint_ptr_t > sync_map_t;
             mv_referrable( sync_map_t, sync_children );
 
-            typedef std::map< std::string, lr_ptr_t > async_map_t;
+            typedef std::map< std::string, elr_ptr_t > async_map_t;
             mv_referrable( async_map_t, async_children );
 
             mv_referrable( std::string, broadcast_key );
 
         protected:
-            /// Implementation of submit_message (from concurrent_receiver)
+            /// Implementation of submit_message (from message_dispatcher)
             virtual void submit_message( message_ptr_t a_message );
 
             virtual reply_ptr_t on_request_message( const request_ptr_t a_request );
@@ -224,28 +204,22 @@ namespace dripline
             virtual void do_cancellation( int a_code );
     };
 
-    inline sent_msg_pkg_ptr service::send( request_ptr_t a_request, amqp_channel_ptr a_channel ) const
+    inline sent_msg_pkg_ptr service::send( request_ptr_t a_request ) const
     {
         a_request->sender_service_name() = f_name;
-        // we don't use f_channel on this core::send command because a channel can only be used in a single thread, 
-        // and f_channel is primarily meant for listening with the listener thread.
-        return core::send( a_request, a_channel );
+        return core::send( a_request );
     }
 
-    inline sent_msg_pkg_ptr service::send( reply_ptr_t a_reply, amqp_channel_ptr a_channel ) const
+    inline sent_msg_pkg_ptr service::send( reply_ptr_t a_reply ) const
     {
-        a_reply->sender_service_name() = f_name ;
-        // we don't use f_channel on this core::send command because a channel can only be used in a single thread, 
-        // and f_channel is primarily meant for listening with the listener thread.
-        return core::send( a_reply, a_channel );
+        a_reply->sender_service_name() = f_name;
+        return core::send( a_reply );
     }
 
-    inline sent_msg_pkg_ptr service::send( alert_ptr_t a_alert, amqp_channel_ptr a_channel ) const
+    inline sent_msg_pkg_ptr service::send( alert_ptr_t a_alert ) const
     {
         a_alert->sender_service_name() = f_name;
-        // we don't use f_channel on this core::send command because a channel can only be used in a single thread, 
-        // and f_channel is primarily meant for listening with the listener thread.
-        return core::send( a_alert, a_channel );
+        return core::send( a_alert );
     }
 
 } /* namespace dripline */

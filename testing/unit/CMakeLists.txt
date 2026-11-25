@@ -1,4 +1,4 @@
-# CMakeLists.txt for dripline-cpp/testing
+# CMakeLists.txt for dripline-cpp/testing/unit
 # Author: N. Oblath
 # Created: Aug 14, 2018
 
@@ -26,11 +26,15 @@ set( testing_SOURCES
     run_dl_tests.cc
     test_agent.cc
     test_amqp.cc
-    test_concurrent_receiver.cc
+    test_configs.cc
     test_core.cc
+    test_dripline_constants.cc
     test_dripline_error.cc
     test_endpoint.cc
+    test_endpoint_handlers.cc
+    test_hub.cc
     test_lockout.cc
+    test_message_dispatcher.cc
     test_messages.cc
     test_return_codes.cc
     test_scheduler.cc
@@ -41,7 +45,16 @@ set( testing_SOURCES
     test_version_store.cc
 )
 
-set( testing_LIBS 
+# reply_cache is only compiled into the library when Scarab_BUILD_PYTHON is on
+# (see library/CMakeLists.txt), so its test can only be linked in that case
+if( Scarab_BUILD_PYTHON )
+    set( testing_SOURCES
+        ${testing_SOURCES}
+        test_reply_cache.cc
+    )
+endif( Scarab_BUILD_PYTHON )
+
+set( testing_LIBS
     Dripline
 )
 

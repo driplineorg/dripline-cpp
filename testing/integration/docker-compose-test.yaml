@@ -8,7 +8,9 @@ services:
       - oscillator-endpoints
     command: >
       bash -c "sleep 1 &&
+              echo 'Running newman tests' &&
               newman run /root/rabbitmq_for_dl_collection.json &&
+              echo 'Running DL tests' &&
               /root/dl-tests.sh"
     volumes:
       - ./dl-tests.sh:/root/dl-tests.sh

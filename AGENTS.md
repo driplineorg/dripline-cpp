@@ -18,9 +18,9 @@ The goal is to make safe, minimal, style-consistent changes to dripline-cpp.
 
 - `core` owns AMQP connectivity and send/listen primitives.
 - `message` and derived types (`msg_request`, `msg_reply`, `msg_alert`) implement protocol objects and chunking.
-- `receiver` and `listener` manage chunk assembly and concurrent processing.
+- `receiver` manages chunk assembly; `message_dispatcher` (formerly `concurrent_receiver`) holds the rmqcpp Consumer and dispatches assembled messages.
 - `endpoint` implements request dispatch and lockout semantics.
-- `service` composes endpoint + listener/receiver + heartbeater + scheduler.
+- `service` composes endpoint + message_dispatcher + heartbeater + scheduler.
 - `hub` maps message specifiers to user-registered handlers.
 - `agent` and `monitor` provide CLI-oriented message send/observe tooling.
 

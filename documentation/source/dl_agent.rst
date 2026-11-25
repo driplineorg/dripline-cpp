@@ -37,8 +37,8 @@ Options
   --requests-exchange TEXT      Set the name of the requests exchange
   --alerts-exchange TEXT        Set the name of the alerts exchange
   --max-payload UINT            Set the maximum payload size (in bytes)
-  --loop-timeout-msdripline.loop-timeout-ms UINT
-  --message-wait-msdripline.message-wait-ms UINT
+  --loop-timeout-ms UINT        Set the loop timeout in ms
+  --message-wait-ms UINT        Set the message wait time in ms
   --heartbeat-routing-key TEXT  Set the first token of heartbeat routing keys: [token].[origin]
   --heartbeat-interval-s UINT   Set the interval between heartbeats in s
   -s,--specifier TEXT           Set the specifier

@@ -20,16 +20,37 @@ env:
   REGISTRY: ghcr.io
   REGISTRY_OLD: docker.io
   BASE_IMAGE_REPO: python
-  BASE_IMAGE_TAG: '3.12.1-slim-bookworm'
+  BASE_IMAGE_TAG: '3.15-slim-trixie'
+  # The pinned rmqcpp and BDE versions live in install_dependencies.sh; nothing here overrides them.
+  # Bump CACHE_VERSION to discard the cached rmqcpp/BDE installs without touching the script.
+  CACHE_VERSION: 1
 
 # narg/NARG (number-of-CPU argument to pass to the builds) are based on OS-specific CPU counts in the GitHub-hosted GHA runners.
 # checked 1/4/2024: https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
 
 jobs:
 
+  script_checks:
+
+    runs-on: ubuntu-latest
+
+    # This job runs for all events that trigger this workflow
+
+    steps:
+
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+
+      - name: Shellcheck
+        run: shellcheck install_dependencies.sh
+
+      - name: Usage message
+        run: ./install_dependencies.sh --help
+
+
   test_docker:
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-26.04
 
     env:
       NARG: 2
@@ -55,14 +76,14 @@ jobs:
 
       - name: Set up Docker Buildx
         id: setup_buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
         with:
           driver: docker
 
       - name: Login to GHCR
         # This condition should match the `push` condition in the `Build` step just below
         if: ${{ github.event.inputs.keep-test-image == 'true' }}
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -70,7 +91,7 @@ jobs:
 
       - name: Build
         id: build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: ${{ github.event.inputs.keep-test-image == 'true' }}
@@ -85,10 +106,14 @@ jobs:
             narg=${{ env.NARG }}
           platforms: linux/amd64
           tags: ${{ env.DL_CPP_TAG }}
+          # mode=max so that the expensive `base` stage (rmqcpp + BDE from source) is cached too.
+          # Each build gets its own scope; they would otherwise evict each other.
+          cache-from: type=gha,scope=dl-cpp-test
+          cache-to: type=gha,mode=max,scope=dl-cpp-test
 
       - name: Build Integration Tests
         id: build_int_tests
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: ./testing/integration
           push: false
@@ -99,6 +124,8 @@ jobs:
             img_tag=${{ env.TAG }}
           platforms: linux/amd64
           tags: ${{ env.DL_CPP_INT_TAG }}
+          cache-from: type=gha,scope=dl-cpp-int-test
+          cache-to: type=gha,mode=min,scope=dl-cpp-int-test
 
       - name: Unit Tests
         run: |
@@ -109,7 +136,8 @@ jobs:
       - name: Integration Tests
         run: |
           cd testing/integration
-          ./do-testing.sh ${{ env.INT_TAG }}
+          ./run-dl-tests.sh ${{ env.INT_TAG }}
+          ./run-broker-restart-test.sh ${{ env.INT_TAG }}
 
 # For debugging
 #      - name: Setup tmate session
@@ -126,64 +154,90 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-latest]
-        include:
-          - os: ubuntu-22.04
-            narg: 2
-          - os: macos-latest
-            narg: 3
+        os: [ubuntu-latest, macos-latest]
 
 
     steps:
 
-      - name: Checkout the repo 
+      - name: Checkout the repo
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Select CC version
-        # Scarab requires GCC 12 or higher if using GCC
-        # The default GCC for Ubuntu 22.04 is 11, but 12 is available
-        # This can be removed once a newer Ubuntu version can be used
-        if: ${{ matrix.os == 'ubuntu-22.04' }}
-        run: |
-          echo "CC=gcc-12" >> $GITHUB_ENV
-          echo "CXX=g++-12" >> $GITHUB_ENV
-
-      - name: Install dependencies -- Mac
+      - name: Install system packages -- Mac
         if: startsWith(matrix.os, 'macos')
         run: |
           brew install \
-            boost \
-            rabbitmq-c \
             rapidjson \
-            yaml-cpp
+            yaml-cpp \
+            boost \
+            openssl@3 \
+            zstd \
+            ninja
 
-      - name: Install dependencies -- Linux
+      - name: Install system packages -- Linux
         if: startsWith(matrix.os, 'ubuntu')
         run: |
           sudo apt-get update
           DEBIAN_FRONTEND=noninteractive sudo apt-get install -y \
-            libboost-all-dev \
-            librabbitmq-dev \
             rapidjson-dev \
-            libyaml-cpp-dev
-            
+            libyaml-cpp-dev \
+            libboost-dev \
+            libboost-filesystem-dev \
+            libboost-system-dev \
+            libboost-chrono-dev \
+            libssl-dev \
+            zlib1g-dev \
+            libzstd-dev \
+            ninja-build
+
+      - name: Record the runner image version
+        # $ImageVersion is a runner environment variable, so it is NOT available in the `env`
+        # expression context.  It has to be copied into $GITHUB_ENV to be usable in the cache key.
+        run: echo "IMAGE_VERSION=${ImageVersion:-unknown}" >> $GITHUB_ENV
+
+      - name: Cache the rmqcpp and BDE install
+        # Building BDE takes a long time, and the result only changes when the build script (which
+        # is also where the pinned versions live), the runner image, or CACHE_VERSION change.
+        # Deliberately no restore-keys: a partial match would hand the build stale BDE archives.
+        id: cache_deps
+        uses: actions/cache@v4
+        with:
+          path: ~/dripline-deps
+          key: dripline-deps-${{ env.CACHE_VERSION }}-${{ matrix.os }}-${{ env.IMAGE_VERSION }}-${{ hashFiles('install_dependencies.sh') }}
+
+      - name: Build rmqcpp and BDE
+        if: steps.cache_deps.outputs.cache-hit != 'true'
+        run: |
+          # --jobs is omitted so that the script auto-detects the runner's CPU count
+          ./install_dependencies.sh --prefix="${HOME}/dripline-deps"
+
+      - name: Verify the rmqcpp and BDE install
+        # Runs on the cache-hit path too, where the build step above is skipped: a truncated cache
+        # would otherwise surface as a confusing dripline-cpp configure failure
+        run: ./install_dependencies.sh --prefix="${HOME}/dripline-deps" --verify-only
+
       - name: Configure
         run: |
+          # rmqcpp and BDE were installed to a non-standard prefix by the step above, which recorded
+          # the prefix path and the OpenSSL it resolved.  Sourcing that keeps dripline-cpp and
+          # rmqcpp on the same OpenSSL.
+          . "${HOME}/dripline-deps/dripline-deps.env"
           mkdir build
           cd build
-          cmake -DScarab_BUILD_PYTHON=FALSE -DDripline_ENABLE_TESTING=TRUE .. 
+          cmake -DScarab_BUILD_PYTHON=FALSE -DDripline_ENABLE_TESTING=TRUE \
+              -DCMAKE_PREFIX_PATH="${DRIPLINE_DEPS_CMAKE_PREFIX_PATH}" \
+              ${DRIPLINE_DEPS_OPENSSL_ROOT_DIR:+-DOPENSSL_ROOT_DIR="${DRIPLINE_DEPS_OPENSSL_ROOT_DIR}"} \
+              ..
 
       - name: Build
         run: |
           cd build
-          make -j${{ matrix.narg }} install
+          make -j$(getconf _NPROCESSORS_ONLN) install
 
-      - name: Run tests
+      - name: Run unit tests
         run: |
-          cd build/testing
-          ./run_dl_tests
+          build/bin/run_dl_tests
 
 # For debugging
 #      - name: Setup tmate session
@@ -193,14 +247,10 @@ jobs:
 
   build_and_push:
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     env:
       NARG: 2
-      # Scarab requires GCC 12 or higher, but Ubuntu 22.04 defaults to 11
-      # This can be removed once a newer OS can be used
-      CC: gcc-12
-      CXX: g++-12
 
     # This job runs on push (limited above to develop, main and tags) and pull_requests marked read_for_review
     # Pushing images is limited below to push events
@@ -208,7 +258,7 @@ jobs:
       github.event_name == 'push' ||
       (github.event_name == 'pull_request' && github.event.pull_request.draft == false)
 
-    needs: [test_docker, test_builds]
+    needs: [script_checks, test_docker, test_builds]
 
     strategy:
       matrix:
@@ -238,7 +288,7 @@ jobs:
 
       - name: Docker meta
         id: docker_meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: |
             ${{ env.REGISTRY_OLD }}/${{ github.repository }}
@@ -255,7 +305,7 @@ jobs:
       - name: Docker meta - integration
         id: docker_meta_integration
         if: ${{ matrix.do-integration }}
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: |
             ${{ env.REGISTRY }}/${{ github.repository }}
@@ -273,19 +323,19 @@ jobs:
 
       - name: Set up Docker Buildx
         id: setup_buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
         with:
           buildkitd-flags: --debug
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY_OLD }}
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Login to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -293,7 +343,7 @@ jobs:
 
       - name: Build and push
         id: build_push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: ${{ github.event_name == 'push' }}  # limited to develop, main, and tags; don't push on PR
@@ -303,14 +353,16 @@ jobs:
             build_type=${{ matrix.build-type }}
             build_examples=${{ matrix.build-examples }}
             enable_testing=${{ matrix.enable-testing }}
-            narg=${{env.NARG }}
+            narg=${{ env.NARG }}
           tags: ${{ steps.docker_meta.outputs.tags }}
-          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha,scope=dl-cpp-${{ matrix.build }}
+          cache-to: type=gha,mode=max,scope=dl-cpp-${{ matrix.build }}
 
       - name: Build and push - integration
         id: build_push_integration
         if: ${{ matrix.do-integration }}
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: ./testing/integration
           push: ${{ github.event_name == 'push' }}  # limited to develop, main, and tags; don't push on PR
@@ -319,7 +371,9 @@ jobs:
             img_repo=dripline-cpp
             img_tag=latest-dev
           tags: ${{ steps.docker_meta_integration.outputs.tags }}
-          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha,scope=dl-cpp-int-${{ matrix.build }}
+          cache-to: type=gha,mode=min,scope=dl-cpp-int-${{ matrix.build }}
 
       - name: Release with a changelog
         uses: rasmus-saks/release-a-changelog-action@v1.2.0

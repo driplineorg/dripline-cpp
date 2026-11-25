@@ -12,6 +12,11 @@
     dl-agent -vv set simple 500
 }
 
+@test "multi-chunk set" {
+    LARGE_VALUE=$(python3 -c "print('x' * 12000)")
+    dl-agent -vv --max-payload 500 set simple "${LARGE_VALUE}"
+}
+
 @test "user/pass on CL" {
     dl-agent -vv -u dripline --password dripline get simple
 }

@@ -12,6 +12,17 @@
 #include "dripline_exceptions.hh"
 #include "message.hh"
 
+#include "rmqa_consumer.h"
+#include "rmqa_rabbitcontext.h"
+#include "rmqa_vhost.h"
+#include "rmqa_producer.h"
+#include "rmqp_messageguard.h"
+#include "rmqt_consumerconfig.h"
+#include "rmqt_queue.h"
+#include "rmqt_simpleendpoint.h"
+#include "rmqt_plaincredentials.h"
+#include "rmqt_properties.h"
+
 #include "authentication.hh"
 #include "exponential_backoff.hh"
 #include "logger.hh"
@@ -28,20 +39,13 @@ namespace dripline
 
     sent_msg_pkg::~sent_msg_pkg()
     {
-        if( f_channel )
+        if( f_reply_consumer )
         {
-            try
+            LDEBUG( dlog, "Canceling reply consumer" );
+            auto t_result = f_reply_consumer->cancelAndDrain();
+            if( ! t_result )
             {
-                LDEBUG( dlog, "Stopping consuming messages" );
-                f_channel->BasicCancel( f_consumer_tag );
-            }
-            catch( amqp_exception& e )
-            {
-                LERROR( dlog, "AMQP exception caught while canceling the channel: (" << e.reply_code() << ") " << e.reply_text() );
-            }
-            catch( amqp_lib_exception& e )
-            {
-                LERROR( dlog, "AMQP library exception caught while canceling the channel: (" << e.ErrorCode() << ") " << e.what() );
+                LWARN( dlog, "Error while canceling reply consumer: " << t_result.error() );
             }
         }
     }
@@ -53,12 +57,13 @@ namespace dripline
             f_port(),
             f_username(),
             f_password(),
-            f_requests_exchange(),
-            f_alerts_exchange(),
             f_heartbeat_routing_key(),
             f_max_payload_size(),
             f_make_connection(),
-            f_max_connection_attempts()
+            f_max_connection_attempts(),
+            f_rabbit_context(),
+            f_vhost(),
+            f_connection_mutex( std::make_shared< std::mutex >() )
     {
         // Get the default values, and merge in the supplied a_config
         // a_config's default value is also dripline_config, but the user can supply an arbitrary node.
@@ -84,14 +89,14 @@ namespace dripline
         f_password = t_auth.get( t_auth_group, "password", f_password );
 */
         // Replace local parameters with values from the config
-        f_address = t_config["broker"]().as_string(); //.get_value("broker", "localhost");
-        f_port = t_config["broker_port"]().as_uint(); //.get_value("broker_port", 5672);
-        f_requests_exchange = t_config["requests_exchange"]().as_string(); //.get_value("requests_exchange", "requests");
-        f_alerts_exchange = t_config["alerts_exchange"]().as_string(); //.get_value("alerts_exchange", "alerts");
-        f_heartbeat_routing_key = t_config["heartbeat_routing_key"]().as_string(); //.get_value("heartbeat_routing_key", "heartbeat");
+        f_address = t_config["broker"]().as_string();
+        f_port = t_config["broker_port"]().as_uint();
+        f_requests_ex.f_name = t_config["requests_exchange"]().as_string();
+        f_alerts_ex.f_name = t_config["alerts_exchange"]().as_string();
+        f_heartbeat_routing_key = t_config["heartbeat_routing_key"]().as_string();
         f_make_connection = t_config.get_value( "make_connection", a_make_connection );
-        f_max_payload_size = t_config["max_payload_size"]().as_uint(); //.get_value("max_payload_size", DL_MAX_PAYLOAD_SIZE);
-        f_max_connection_attempts = t_config["max_connection_attempts"]().as_uint(); //.get_value("max_connection_attempts", 10);
+        f_max_payload_size = t_config["max_payload_size"]().as_uint();
+        f_max_connection_attempts = t_config["max_connection_attempts"]().as_uint();
 
         f_username = a_auth.get("dripline", "username", "guest");
         f_password = a_auth.get("dripline", "password", "guest");
@@ -149,451 +154,390 @@ namespace dripline
         }
     }
 
-    sent_msg_pkg_ptr core::send( request_ptr_t a_request, amqp_channel_ptr a_channel ) const
+    sent_msg_pkg_ptr core::send( request_ptr_t a_request ) const
     {
         LDEBUG( dlog, "Sending request with routing key <" << a_request->routing_key() << ">" );
         if ( ! f_make_connection || core::s_offline )
         {
             throw a_request;
-            //throw dripline_error() << "cannot send reply when make_connection is false";
         }
-        return do_send( std::static_pointer_cast< message >( a_request ), f_requests_exchange, true, a_channel );
+        return do_send( std::static_pointer_cast< message >( a_request ), f_requests_ex, true );
     }
 
-    sent_msg_pkg_ptr core::send( reply_ptr_t a_reply, amqp_channel_ptr a_channel ) const
+    sent_msg_pkg_ptr core::send( reply_ptr_t a_reply ) const
     {
         LDEBUG( dlog, "Sending reply with routing key <" << a_reply->routing_key() << ">" );
         if ( ! f_make_connection || core::s_offline )
         {
             throw a_reply;
-            //throw dripline_error() << "cannot send reply when make_connection is false";
         }
-        return do_send( std::static_pointer_cast< message >( a_reply ), f_requests_exchange, false, a_channel );
+        return do_send( std::static_pointer_cast< message >( a_reply ), f_requests_ex, false );
     }
 
-    sent_msg_pkg_ptr core::send( alert_ptr_t a_alert, amqp_channel_ptr a_channel ) const
+    sent_msg_pkg_ptr core::send( alert_ptr_t a_alert ) const
     {
         LDEBUG( dlog, "Sending alert with routing key <" << a_alert->routing_key() << ">" );
         if ( ! f_make_connection || core::s_offline )
         {
             throw a_alert;
-            //throw dripline_error() << "cannot send reply when make_connection is false";
         }
-        return do_send( std::static_pointer_cast< message >( a_alert ), f_alerts_exchange, false, a_channel );
+        return do_send( std::static_pointer_cast< message >( a_alert ), f_alerts_ex, false );
     }
 
-    sent_msg_pkg_ptr core::do_send( message_ptr_t a_message, const std::string& a_exchange, bool a_expect_reply, amqp_channel_ptr a_channel ) const
+    sent_msg_pkg_ptr core::do_send( message_ptr_t a_message, exchange_store& a_exchange, bool a_expect_reply ) const
     {
         // throws connection_error if it could not connect with the broker
-        // throws dripline_error if there's a problem with the exchange or creating the AMQP message object(s)
-        // returns the receive_reply package if the message was completely or partially sent
-        // the f_successful_send flag will be set accordingly: true if completely sent; false if partially sent
-        // if there was an error sending the message, that will be returned in f_send_error_message, which will be empty otherwise
+        // throws dripline_error if there's a problem creating the AMQP message object(s)
+        // returns the sent_msg_pkg; f_successful_send indicates whether the send succeeded
 
-        // lambda to create a string with the basic information about the send attempt
         auto t_diagnostic_string_maker = [a_message, this]() -> std::string {
-            return std::string("Broker: ") + f_address +"\nPort: " + std::to_string(f_port) + "\nRouting Key: " + a_message->routing_key();
+            return std::string("Broker: ") + f_address + "\nPort: " + std::to_string(f_port) + "\nRouting Key: " + a_message->routing_key();
         };
 
-        amqp_channel_ptr t_channel = a_channel ? a_channel : open_channel();
-        if( ! t_channel )
+        open_connection();
+
+        if( ! f_vhost )
         {
-            throw connection_error() << "Unable to open channel to send message\n" << t_diagnostic_string_maker();
+            throw connection_error() << "Not connected to broker\n" << t_diagnostic_string_maker();
         }
 
-        if( ! setup_exchange( t_channel, a_exchange ) )
-        {
-            throw dripline_error() << "Unable to setup the exchange <" << a_exchange << "> to send message\n" << t_diagnostic_string_maker();
-        }
-
-        // create empty receive-reply object
         sent_msg_pkg_ptr t_receive_reply = std::make_shared< sent_msg_pkg >();
-        std::unique_lock< std::mutex > t_rr_lock( t_receive_reply->f_mutex );
-
-        if( a_expect_reply )
-        {
-            t_receive_reply->f_channel = t_channel;
-
-            // create the reply-to queue, and bind the queue to the routing key over the given exchange
-            std::string t_reply_to = t_channel->DeclareQueue( "" );
-            t_channel->BindQueue( t_reply_to, a_exchange, t_reply_to );
-            // set the reply-to in the message because now we have the queue to which to reply
-            a_message->reply_to() = t_reply_to;
-
-            // begin consuming on the reply-to queue
-            t_receive_reply->f_consumer_tag = t_channel->BasicConsume( t_reply_to );
-            LDEBUG( dlog, "Reply-to for request: " << t_reply_to );
-            LDEBUG( dlog, "Consumer tag for reply: " << t_receive_reply->f_consumer_tag );
-        }
-
-        // convert the dripline::message object to an AMQP message
-        amqp_split_message_ptrs t_amqp_messages = a_message->create_amqp_messages( f_max_payload_size );
-        if( t_amqp_messages.empty() )
-        {
-            throw dripline_error() << "Unable to convert the dripline::message object to AMQP message(s) to be sent\n" << t_diagnostic_string_maker();
-        }
 
         try
         {
-            LDEBUG( dlog, "Sending message to <" << a_message->routing_key() << ">" );
-            for( amqp_message_ptr& t_amqp_message : t_amqp_messages )
+            if( a_expect_reply )
             {
-                // send the message
-                // the first boolean argument is whether it's mandatory that the message be delivered to a queue.
-                // this is only the case for requests, where we expect something to be listening.
-                t_channel->BasicPublish( a_exchange, a_message->routing_key(), t_amqp_message, a_message->is_request(), false );
+                send_withreply( a_message, a_exchange, t_receive_reply );
             }
-            LDEBUG( dlog, "Message sent in " << t_amqp_messages.size() << " chunks" );
+            else
+            {
+                if( ! send_noreply( a_message, a_exchange ) )
+                {
+                    t_receive_reply->f_successful_send = false;
+                    t_receive_reply->f_send_error_message = "Error in send_noreply\n" + t_diagnostic_string_maker();
+                    return t_receive_reply;
+                }
+            }
+            LDEBUG( dlog, "Message sent to <" << a_message->routing_key() << ">" );
             t_receive_reply->f_successful_send = true;
             t_receive_reply->f_send_error_message.clear();
         }
-        catch( AmqpClient::ConnectionClosedException& e )
+        catch( connection_error& )
         {
-            LERROR( dlog, "Unable to send message because the connection is closed: " << e.what() );
-            throw connection_error() << "Unable to send message because the connection is closed: " << e.what() << '\n' << t_diagnostic_string_maker();
-        }
-        catch( AmqpClient::AmqpLibraryException& e )
-        {
-            LERROR( dlog, "AMQP error while sending message: " << e.what() );
-            t_receive_reply->f_successful_send = false;
-            t_receive_reply->f_send_error_message = std::string("AMQP error while sending message: ") + std::string(e.what()) + '\n' + t_diagnostic_string_maker();
-        }
-        catch( AmqpClient::MessageReturnedException& e )
-        {
-            LERROR( dlog, "Message was returned: " << e.what() );
-            t_receive_reply->f_successful_send = false;
-            t_receive_reply->f_send_error_message = std::string("Message was returned: ") + std::string(e.what()) + '\n' + t_diagnostic_string_maker();
+            throw;
         }
         catch( std::exception& e )
         {
             LERROR( dlog, "Error while sending message: " << e.what() );
             t_receive_reply->f_successful_send = false;
-            t_receive_reply->f_send_error_message = std::string("Error while sending message: ") + std::string(e.what()) + '\n' + t_diagnostic_string_maker();
+            t_receive_reply->f_send_error_message = std::string("Error while sending message: ") + e.what() + '\n' + t_diagnostic_string_maker();
         }
 
         return t_receive_reply;
     }
 
-    amqp_channel_ptr core::open_channel() const
+    void core::open_connection() const
     {
-        // Exceptions that can be encountered while opening a channel
-        //   SimpleAmqpClient::Channel::Open(opts)
-        //       std::runtime_error -- options are invalid; auth not specified
-        //       std::logic_error -- unhandled auth type
-        //       std::bad_alloc -- connection is null
-        //       amqp_exception -- unsure of what would cause this
-        //       amqp_lib_exception -- unable to make connection to the broker; maybe other things
+        std::lock_guard< std::mutex > t_lock( *f_connection_mutex );
 
-        if ( ! f_make_connection || core::s_offline )
+        if( f_vhost )
         {
-            return amqp_channel_ptr();
-            //throw dripline_error() << "Should not call open_channel when offline";
+            return; // already connected
         }
-
-        amqp_channel_ptr t_ret_ptr = amqp_channel_ptr();
-
-        auto t_open_conn_fcn = [&]()->bool
+        if( ! f_make_connection || s_offline )
         {
-            try
-            {
-                LINFO( dlog, "Opening AMQP connection and creating channel to " << f_address << ":" << f_port );
-                LDEBUG( dlog, "Using broker authentication: " << f_username << ":" << f_password );
-                struct AmqpClient::Channel::OpenOpts opts;
-                opts.host = f_address;
-                opts.port = f_port;
-                opts.auth = AmqpClient::Channel::OpenOpts::BasicAuth(f_username, f_password);
-                t_ret_ptr = AmqpClient::Channel::Open( opts );
-                return true;
-            }
-            catch( amqp_exception& e )
-            {
-                if( e.is_soft_error() ) 
-                {
-                    LWARN( dlog, "Recoverable AMQP exception caught while opening channel: (" << e.reply_code() << ") " << e.reply_text() );
-                    return false;
-                }
-                // otherwise error is non-recoverable
-                throw;
-            }
-            catch( amqp_lib_exception& e )
-            {
-                LERROR( dlog, "AMQP Library Exception caught while creating channel: (" << e.ErrorCode() << ") " << e.what() );
-                if( e.ErrorCode() == -9 )
-                {
-                    LERROR( dlog, "This error means the client could not connect to the broker.\n" <<
-                            "Check that you have the address and port correct, and that the broker is running.")
-                }
-                return false;
-            }
-            // std::exceptions are non-recoverable, so don't catch them
-        };
-
-        scarab::exponential_backoff<> t_open_conn_backoff( t_open_conn_fcn, f_max_connection_attempts );
-        auto t_exp_cancel_wrap = wrap_cancelable( t_open_conn_backoff );
-        scarab::signal_handler::add_cancelable( t_exp_cancel_wrap );
-
-        int t_expback_return = 0;
-        try
-        {
-            LDEBUG( dlog, "Attempting to open channel; will make up to " << f_max_connection_attempts << " attempts" );
-            t_expback_return = t_open_conn_backoff.go();
-            // either succeeded or failed after multiple attempts
-        }
-        catch( amqp_exception& e )
-        {
-            LERROR( dlog, "Unrecoverable AMQP exception caught while opening channel: (" << e.reply_code() << ") " << e.reply_text() );
-        }
-        catch(const std::exception& e)
-        {
-            // unrecoverable error causing a std::exception
-            LERROR( dlog, "Standard exception caught while creating channel: " << e.what() );
-        }
-
-        if( t_expback_return == 0 )
-        {
-            LERROR( dlog, "Failed to open a channel; no more attempts will be made" );
-        }
-        
-        return t_ret_ptr;
-    }
-
-    bool core::setup_exchange( amqp_channel_ptr a_channel, const std::string& a_exchange )
-    {
-        if( s_offline || ! a_channel )
-        {
-            return false;
-        }
-
-        try
-        {
-            LDEBUG( dlog, "Declaring exchange <" << a_exchange << ">" );
-            a_channel->DeclareExchange( a_exchange, AmqpClient::Channel::EXCHANGE_TYPE_TOPIC, false, false, false );
-            return true;
-        }
-        catch( amqp_exception& e )
-        {
-            LERROR( dlog, "AMQP exception caught while declaring exchange: (" << e.reply_code() << ") " << e.reply_text() );
-            return false;
-        }
-        catch( amqp_lib_exception& e )
-        {
-            LERROR( dlog, "AMQP library exception caught while declaring exchange: (" << e.ErrorCode() << ") " << e.what() );
-            return false;
-        }
-    }
-
-    bool core::setup_queue( amqp_channel_ptr a_channel, const std::string& a_queue_name )
-    {
-        if( s_offline || ! a_channel )
-        {
-            return false;
-        }
-
-        try
-        {
-            LDEBUG( dlog, "Declaring queue <" << a_queue_name << ">" );
-            a_channel->DeclareQueue( a_queue_name, false, false, true, true );
-            return true;
-        }
-        catch( amqp_exception& e )
-        {
-            LERROR( dlog, "AMQP exception caught while declaring queue: (" << e.reply_code() << ") " << e.reply_text() );
-            return false;
-        }
-        catch( amqp_lib_exception& e )
-        {
-            LERROR( dlog, "AMQP library exception caught while declaring queue: (" << e.ErrorCode() << ") " << e.what() );
-            return false;
-        }
-
-    }
-
-    bool core::bind_key( amqp_channel_ptr a_channel, const std::string& a_exchange, const std::string& a_queue_name, const std::string& a_routing_key )
-    {
-        if( s_offline || ! a_channel )
-        {
-            return false;
-        }
-
-        try
-        {
-            LDEBUG( dlog, "Binding key <" << a_routing_key << "> to queue <" << a_queue_name << "> over exchange <" << a_exchange << ">" );
-            a_channel->BindQueue( a_queue_name, a_exchange, a_routing_key );
-
-            return true;
-        }
-        catch( amqp_exception& e )
-        {
-            LERROR( dlog, "AMQP exception caught while declaring binding key <" << a_routing_key << ">: (" << e.reply_code() << ") " << e.reply_text() );
-            return false;
-        }
-        catch( amqp_lib_exception& e )
-        {
-            LERROR( dlog, "AMQP library exception caught while binding key <" << a_routing_key << ">: (" << e.ErrorCode() << ") " << e.what() );
-            return false;
-        }
-    }
-
-    std::string core::start_consuming( amqp_channel_ptr a_channel, const std::string& a_queue_name )
-    {
-        if( s_offline || ! a_channel )
-        {
-            return std::string();
-        }
-
-        try
-        {
-            LDEBUG( dlog, "Starting to consume messages on queue <" << a_queue_name << ">" );
-            // second bool is setting no_ack to false
-            return a_channel->BasicConsume( a_queue_name, "", true, false );
-        }
-        catch( amqp_exception& e )
-        {
-            LERROR( dlog, "AMQP exception caught while starting consuming messages on <" << a_queue_name << ">: (" << e.reply_code() << ") " << e.reply_text() );
-            return std::string();
-        }
-        catch( amqp_lib_exception& e )
-        {
-            LERROR( dlog, "AMQP library exception caught while starting consuming messages on <" << a_queue_name << ">: (" << e.ErrorCode() << ") " << e.what() );
-            return std::string();
-        }
-    }
-
-    bool core::stop_consuming( amqp_channel_ptr a_channel, std::string& a_consumer_tag )
-    {
-        if( s_offline || ! a_channel )
-        {
-            return false;
-        }
-
-        try
-        {
-            LDEBUG( dlog, "Stopping consuming messages for consumer <" << a_consumer_tag << ">" );
-            a_channel->BasicCancel( a_consumer_tag );
-            a_consumer_tag.clear();
-            return true;
-        }
-        catch( amqp_exception& e )
-        {
-            LERROR( dlog, "AMQP exception caught while stopping consuming messages on <" << a_consumer_tag << ">: (" << e.reply_code() << ") " << e.reply_text() );
-            return false;
-        }
-        catch( amqp_lib_exception& e )
-        {
-            LERROR( dlog, "AMQP library exception caught while stopping consuming messages on <" << a_consumer_tag << ">: (" << e.ErrorCode() << ") " << e.what() );
-            return false;
-        }
-        catch( AmqpClient::ConsumerTagNotFoundException& e )
-        {
-            LERROR( dlog, "Fatal AMQP exception encountered while stopping consuming messages on <" << a_consumer_tag << ">: " << e.what() );
-            return false;
-        }
-        catch( std::exception& e )
-        {
-            LERROR( dlog, "Standard exception caught while stopping consuming messages on <" << a_consumer_tag << ">: " << e.what() );
-            return false;
-        }
-    }
-
-    bool core::remove_queue( amqp_channel_ptr a_channel, const std::string& a_queue_name )
-    {
-        if( s_offline || ! a_channel )
-        {
-            return false;
-        }
-
-        try
-        {
-            LDEBUG( dlog, "Deleting queue <" << a_queue_name << ">" );
-            a_channel->DeleteQueue( a_queue_name, false );
-            return true;
-        }
-        catch( AmqpClient::ConnectionClosedException& e )
-        {
-            LERROR( dlog, "Fatal AMQP exception encountered removing queue <" << a_queue_name << ">: " << e.what() );
-            return false;
-        }
-        catch( amqp_lib_exception& e )
-        {
-            LERROR( dlog, "AMQP library exception caught while removing queue <" << a_queue_name << ">: (" << e.ErrorCode() << ") " << e.what() );
-            return false;
-        }
-        catch( std::exception& e )
-        {
-            LERROR( dlog, "Standard exception caught while removing queue <" << a_queue_name << ">: " << e.what() );
-            return false;
-        }
-    }
-
-    void core::listen_for_message( amqp_envelope_ptr& a_envelope, core::post_listen_status& a_status, amqp_channel_ptr a_channel, const std::string& a_consumer_tag, int a_timeout_ms, bool a_do_ack )
-    {
-        if( s_offline || ! a_channel )
-        {
-            a_status = core::post_listen_status::unknown;
             return;
         }
 
-        while( true )
+        LINFO( dlog, "Opening AMQP connection to " << f_address << ":" << f_port );
+        LDEBUG( dlog, "Using broker authentication: " << f_username << ":" << f_password );
+
+        using namespace BloombergLP;
+
+        // Set any options we need in the RabbitContext
+        rmqa::RabbitContextOptions t_options;
+        using namespace bsls::TimeIntervalLiterals;
+        t_options.setConnectionErrorThreshold( 10_s ); // TODO: make this appropriately configurable via dripline_config
+
+        f_rabbit_context = bsl::make_shared< rmqa::RabbitContext >( t_options );
+
+        auto t_endpoint = bsl::make_shared< rmqt::SimpleEndpoint >( f_address, "/", (bsl::uint16_t)f_port );
+        auto t_credentials = bsl::make_shared< rmqt::PlainCredentials >( f_username, f_password );
+        f_vhost = f_rabbit_context->createVHostConnection( "dripline", t_endpoint, t_credentials );
+
+        if( ! f_vhost )
         {
-            try
+            f_rabbit_context.reset();
+            throw connection_error() << "Unable to create vhost connection to " << f_address << ":" << f_port;
+        }
+
+        // Declare both exchanges
+        f_requests_ex.create_exchange();
+        f_alerts_ex.create_exchange();
+        //f_requests_ex.f_exchange = f_topology.addExchange( bsl::string(f_requests_ex.f_name), rmqt::ExchangeType::TOPIC, rmqt::AutoDelete::OFF, rmqt::Durable::ON, rmqt::Internal::NO );
+        //f_alerts_ex.f_exchange   = f_topology.addExchange( bsl::string(f_alerts_ex.f_name),   rmqt::ExchangeType::TOPIC, rmqt::AutoDelete::OFF, rmqt::Durable::ON, rmqt::Internal::NO );
+
+        // Create requests producer
+        {
+            auto t_result = f_vhost->createProducer( f_requests_ex.f_topology, f_requests_ex.f_exchange, 10 );
+            if( ! t_result )
             {
-                if( a_timeout_ms > 0 )
-                {
-                    a_channel->BasicConsumeMessage( a_consumer_tag, a_envelope, a_timeout_ms );
-                }
-                else
-                {
-                    a_envelope = a_channel->BasicConsumeMessage( a_consumer_tag );
-                }
-                if( a_envelope )
-                {
-                    if( a_do_ack )  a_channel->BasicAck( a_envelope );
-                    a_status = post_listen_status::message_received;
-                }
-                else
-                {
-                    a_status = post_listen_status::timeout;
-                }
-                return;
+                f_vhost.reset();
+                f_rabbit_context.reset();
+                throw connection_error() << "Unable to create requests producer: " << t_result.error();
             }
-            catch( AmqpClient::ConnectionClosedException& e )
+            f_requests_ex.f_producer = t_result.value();
+        }
+
+        // Create alerts producer
+        {
+            auto t_result = f_vhost->createProducer( f_alerts_ex.f_topology, f_alerts_ex.f_exchange, 10 );
+            if( ! t_result )
             {
-                LERROR( dlog, "Fatal AMQP exception encountered: " << e.what() );
-                a_status = post_listen_status::hard_error;
-                return;
+                f_requests_ex.f_producer.reset();
+                f_vhost.reset();
+                f_rabbit_context.reset();
+                throw connection_error() << "Unable to create alerts producer: " << t_result.error();
             }
-            catch( AmqpClient::ConsumerCancelledException& e )
+            f_alerts_ex.f_producer = t_result.value();
+        }
+
+        LINFO( dlog, "AMQP connection established" );
+    }
+
+    BloombergLP::rmqt::QueueHandle core::add_requests_queue( const std::string& a_queue_name, 
+                bool a_auto_delete, bool a_durable, 
+                const scarab::param_node& a_field_table )
+    {
+        return f_requests_ex.add_queue( a_queue_name, a_auto_delete, a_durable, a_field_table );
+    }
+
+//    BloombergLP::rmqt::QueueHandle core::add_requests_ephemeral_queue( const std::string& a_queue_name )
+//    {
+//        return f_requests_ex.add_ephemeral_queue( f_topology, a_queue_name );
+//    }
+
+    void core::bind_requests_key( const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue )
+    {
+        f_requests_ex.bind_key( a_queue_name, a_routing_key, a_queue );
+    }
+
+    BloombergLP::rmqt::QueueHandle core::add_alerts_queue( const std::string& a_queue_name, 
+                bool a_auto_delete, bool a_durable, 
+                const scarab::param_node& a_field_table )
+    {
+        return f_alerts_ex.add_queue( a_queue_name, a_auto_delete, a_durable, a_field_table );
+    }
+
+//    BloombergLP::rmqt::QueueHandle core::add_alerts_ephemeral_queue( const std::string& a_queue_name )
+//    {
+//        return f_alerts_ex.add_ephemeral_queue( f_topology, a_queue_name );
+//    }
+
+    void core::bind_alerts_key( const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue )
+    {
+        f_alerts_ex.bind_key( a_queue_name, a_routing_key, a_queue );
+    }
+
+    //***************************
+    // Exchange store definitions
+    //***************************
+
+    void core::exchange_store::create_exchange()
+    {
+        using namespace BloombergLP;
+        f_exchange = f_topology.addExchange( bsl::string(f_name), rmqt::ExchangeType::TOPIC, rmqt::AutoDelete::OFF, rmqt::Durable::ON, rmqt::Internal::NO );
+        return;
+    }
+
+    BloombergLP::rmqt::QueueHandle core::exchange_store::add_queue( const std::string& a_queue_name, 
+                bool a_auto_delete, bool a_durable, 
+                const scarab::param_node& a_field_table )
+    {
+        using namespace BloombergLP;
+        LDEBUG( dlog, "Declaring durable queue <" << a_queue_name << "> on exchange <" << f_name << ">" );
+        bsl::shared_ptr<rmqt::FieldTable> t_bsl_field_table = param_to_table(a_field_table).the< bsl::shared_ptr<rmqt::FieldTable> >();
+        rmqt::QueueHandle t_queue = f_topology.addQueue( bsl::string(a_queue_name), 
+                rmqt::AutoDelete::Value(int(a_auto_delete)), rmqt::Durable::Value(int(a_durable)), 
+                *t_bsl_field_table );
+        if( ! t_queue.lock() )
+        {
+            throw dripline_error() << "Queue could not be created. See log for error message.";
+        }
+        return t_queue;
+    }
+
+//    BloombergLP::rmqt::QueueHandle core::exchange_store::add_ephemeral_queue( BloombergLP::rmqa::Topology& a_topo, const std::string& a_queue_name )
+//    {
+//        using namespace BloombergLP;
+//        LDEBUG( dlog, "Declaring ephemeral queue <" << a_queue_name << "> on exchange <" << f_name << ">" );
+//        return a_topo.addQueue( bsl::string(a_queue_name), rmqt::AutoDelete::ON, rmqt::Durable::ON );
+//    }
+
+    void core::exchange_store::bind_key( const std::string& a_queue_name, const std::string& a_routing_key, BloombergLP::rmqt::QueueHandle a_queue )
+    {
+        LDEBUG( dlog, "Binding queue <" << a_queue_name << "> to exchange <" << f_name << "> with routing key <" << a_routing_key << ">" );
+        f_topology.bind( f_exchange,
+                         a_queue,
+                         bsl::string(a_routing_key) );
+    }
+
+    //***************************
+    //***************************
+
+    void core::send_withreply( message_ptr_t a_message, exchange_store& a_exchange, sent_msg_pkg_ptr a_pkg ) const
+    {
+        using namespace BloombergLP;
+
+        // Generate a unique name for the temporary reply queue
+        std::string t_reply_to = string_from_uuid( generate_random_uuid() );
+        a_message->reply_to() = t_reply_to;
+        LDEBUG( dlog, "Reply-to for request: " << t_reply_to );
+
+        // Build a local topology for the temporary reply queue only.
+        // This topology is separate from f_topology so that the transient queue does not
+        // pollute the persistent topology passed to message_dispatcher::start_listening().
+        rmqa::Topology t_reply_topo;
+        auto t_ex = t_reply_topo.addPassiveExchange( a_exchange.f_name );
+        if( ! t_ex.lock() )
+        {
+            throw connection_error() << "Unable to use exchange <" << a_exchange.f_name << ">";
+        }
+        // Queue properties:
+        //   Exclusive: OFF -- currently the only option given by the rmqcpp API
+        //   Auto-delete: ON -- Queue will be deleted after the last consumer disconnects
+        //   Durable: ON -- Queue will survive if broker is disrupted
+        auto t_queue = t_reply_topo.addQueue( t_reply_to, rmqt::AutoDelete::ON, rmqt::Durable::ON );
+        if( ! t_queue.lock() )
+        {
+            throw connection_error() << "Unable to create queue to receive reply";
+        }
+        t_reply_topo.bind( t_ex, t_queue, t_reply_to );
+
+        // Create promise; the consumer callback will fulfil it when the complete reply is assembled
+        a_pkg->f_reply_promise = std::make_shared< std::promise< reply_ptr_t > >();
+        auto t_promise = a_pkg->f_reply_promise;
+
+        // Inline accumulator struct for multi-chunk replies
+        struct reply_pack
+        {
+            amqp_split_message_ptrs f_messages;
+            unsigned f_chunks_received;
+            std::string f_routing_key;
+            std::mutex f_mutex;
+            reply_pack() : f_messages(), f_chunks_received( 0 ), f_routing_key(), f_mutex() {}
+        };
+        auto t_pack = std::make_shared< reply_pack >();
+
+        auto t_callback = [t_pack, t_promise]( rmqp::MessageGuard& guard )
+        {
+            auto t_amqp_message = bsl::make_shared< rmqt::Message >( guard.message() );
+            const std::string t_msg_id( t_amqp_message->messageId() );
+            auto t_parsed_id = message::parse_message_id( t_msg_id );
+            unsigned t_chunk_idx = std::get< 1 >( t_parsed_id );
+            unsigned t_total_chunks = std::get< 2 >( t_parsed_id );
+
+            bool t_complete = false;
             {
-                LERROR( dlog, "Fatal AMQP exception encountered: " << e.what() );
-                a_status = post_listen_status::hard_error;
-                return;
-            }
-            catch( AmqpClient::AmqpException& e )
-            {
-                if( e.is_soft_error() )
+                std::lock_guard< std::mutex > t_lock( t_pack->f_mutex );
+                if( t_pack->f_messages.empty() )
                 {
-                    LWARN( dlog, "Non-fatal AMQP exception encountered: " << e.reply_text() );
-                    a_status = post_listen_status::soft_error;
-                    return;
+                    t_pack->f_messages.resize( t_total_chunks );
+                    t_pack->f_routing_key = std::string( guard.envelope().routingKey() );
                 }
-                LERROR( dlog, "Fatal AMQP exception encountered: " << e.reply_text() );
-                a_status = post_listen_status::hard_error;
-                return;
+                t_pack->f_messages[t_chunk_idx] = t_amqp_message;
+                ++t_pack->f_chunks_received;
+                t_complete = ( t_pack->f_chunks_received == t_pack->f_messages.size() );
             }
-            catch( std::exception& e )
+
+            guard.ack();
+
+            if( t_complete )
             {
-                LERROR( dlog, "Standard exception caught: " << e.what() );
-                a_status = post_listen_status::hard_error;
-                return;
+                try
+                {
+                    message_ptr_t t_message = message::process_message( t_pack->f_messages, t_pack->f_routing_key );
+                    reply_ptr_t t_reply = std::dynamic_pointer_cast< msg_reply >( t_message );
+                    if( t_reply )
+                    {
+                        t_promise->set_value( t_reply );
+                    }
+                    else
+                    {
+                        t_promise->set_exception( std::make_exception_ptr(
+                            dripline_error() << "Expected reply but received a different message type" ) );
+                    }
+                }
+                catch( ... )
+                {
+                    t_promise->set_exception( std::current_exception() );
+                }
             }
-            catch(...)
+        };
+
+        // Create the reply consumer on the temporary queue
+        rmqt::ConsumerConfig t_consumer_conf( "reply-" + t_reply_to, 1, 0, rmqt::Exclusive::ON );
+        auto t_consumer_result = f_vhost->createConsumer( t_reply_topo, t_queue, t_callback, t_consumer_conf );
+        if( ! t_consumer_result )
+        {
+            throw connection_error() << "Unable to create reply consumer: " << t_consumer_result.error();
+        }
+        a_pkg->f_reply_consumer = t_consumer_result.value();
+
+        // Send message chunks via the requests producer
+        amqp_split_message_ptrs t_amqp_messages = a_message->create_amqp_messages( f_max_payload_size );
+        if( t_amqp_messages.empty() )
+        {
+            throw dripline_error() << "Unable to convert dripline::message to AMQP message(s)";
+        }
+
+        LDEBUG( dlog, "Sending request to <" << a_message->routing_key() << "> in " << t_amqp_messages.size() << " chunk(s)" );
+        for( amqp_message_ptr& t_amqp_message : t_amqp_messages )
+        {
+            auto t_status = f_requests_ex.f_producer->send(
+                *t_amqp_message,
+                a_message->routing_key(),
+                []( const rmqt::Message&, const bsl::string&, const rmqt::ConfirmResponse& ) {} );
+            if( t_status != rmqp::Producer::SENDING )
             {
-                LERROR( dlog, "Unknown exception caught" );
-                a_status = post_listen_status::hard_error;
-                return;
+                throw dripline_error() << "Failed to enqueue request chunk for sending; status=" << t_status;
             }
         }
     }
 
-} /* namespace dripline */
+    bool core::send_noreply( message_ptr_t a_message, exchange_store& a_exchange ) const
+    {
+        using namespace BloombergLP;
 
+        bsl::shared_ptr< rmqa::Producer > t_producer = a_exchange.f_producer;
+        if( ! t_producer )
+        {
+            LERROR( dlog, "No producer available for exchange <" << a_exchange.f_name << ">" );
+            return false;
+        }
+
+        amqp_split_message_ptrs t_amqp_messages = a_message->create_amqp_messages( f_max_payload_size );
+        if( t_amqp_messages.empty() )
+        {
+            LERROR( dlog, "Unable to convert dripline::message to AMQP message(s)" );
+            return false;
+        }
+
+        LDEBUG( dlog, "Sending message to <" << a_message->routing_key() << "> in " << t_amqp_messages.size() << " chunk(s)" );
+        bool t_all_sent = true;
+        for( amqp_message_ptr& t_amqp_message : t_amqp_messages )
+        {
+            auto t_status = t_producer->send(
+                *t_amqp_message,
+                a_message->routing_key(),
+                []( const rmqt::Message&, const bsl::string&, const rmqt::ConfirmResponse& ) {} );
+            if( t_status != rmqp::Producer::SENDING )
+            {
+                LERROR( dlog, "Failed to enqueue message chunk for sending; status=" << t_status );
+                t_all_sent = false;
+            }
+        }
+        return t_all_sent;
+    }
+
+} /* namespace dripline */

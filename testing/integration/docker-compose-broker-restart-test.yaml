@@ -1,0 +1,16 @@
+services:
+  test:
+    image: ghcr.io/driplineorg/dripline-cpp:${IMG_TAG:-latest-testing}
+    depends_on:
+      - rabbit-broker
+      - simple-service
+    command: >
+      bash -c "sleep 5 &&
+              echo 'Running broker-restart test' &&
+              /root/broker-restart-test.sh"
+    volumes:
+      - ./broker-restart-test.sh:/root/broker-restart-test.sh
+      - ./dripline_mesh.yaml:/root/.dripline_mesh.yaml
+    environment:
+      - DRIPLINE_USER=dripline
+      - DRIPLINE_PASSWORD=dripline 

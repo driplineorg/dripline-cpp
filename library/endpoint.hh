@@ -9,6 +9,7 @@
 #define DRIPLINE_ENDPOINT_HH_
 
 #include "message.hh"
+#include "message_dispatcher.hh"
 #include "return_codes.hh"
 
 namespace dripline
@@ -251,6 +252,52 @@ namespace dripline
     {
         return a_request->reply( dl_success(), "No action taken (this is the default method)" );
     }
+
+    /*!
+     @class endpoint_listener_receiver
+     @author N.S. Oblath
+
+     @brief Decorator class for a plain endpoint: adds message_dispatcher capabilities for asynchronous message consumption.
+
+     @details
+     `endpoint_listener_receiver` (ELR) is the bridge between the AMQP consumer layer
+     (`message_dispatcher`) and a user-supplied `endpoint`.  It is used by @ref service to
+     wrap any endpoint that is registered as an **asynchronous child** via
+     `service::add_async_child()`.
+
+     An endpoint passed to `add_async_child()` is either already an ELR (in which case it
+     is used directly) or is wrapped in a new ELR automatically.  The resulting ELR:
+
+     - Gets its own AMQP queue declared by `service::add_queues()`.
+     - Gets its own set of routing-key bindings added by `service::bind_keys()`.
+     - Gets its own rmqcpp consumer started by `service::listen()` via
+       `message_dispatcher::start_listening()`.
+     - Receives messages independently of the service's main queue; its
+       `submit_message()` implementation forwards each assembled Dripline message to the
+       decorated endpoint's `sort_message()`.
+
+     The `f_queue` member (inherited from `message_dispatcher`) is populated by
+     `service::add_queues()` before `start_listening()` is called.  The topology
+     (`core::f_topology`, owned by the enclosing `service`) is passed directly to
+     `start_listening()` — the ELR does not own a separate topology object.
+    */
+    class DRIPLINE_API endpoint_listener_receiver : public message_dispatcher
+    {
+        public:
+            explicit endpoint_listener_receiver( endpoint_ptr_t a_endpoint_ptr );
+            endpoint_listener_receiver( const endpoint_listener_receiver& ) = delete;
+            endpoint_listener_receiver( endpoint_listener_receiver&& a_orig );
+            virtual ~endpoint_listener_receiver();
+
+            endpoint_listener_receiver& operator=( const endpoint_listener_receiver& ) = delete;
+            endpoint_listener_receiver& operator=( endpoint_listener_receiver&& a_orig );
+
+            /// Direct submission of messages to the endpoint
+            virtual void submit_message( message_ptr_t a_message ) override;
+
+            /// Pointer to the decorated endpoint
+            mv_referrable( endpoint_ptr_t, endpoint );
+    };
 
 } /* namespace dripline */
 
