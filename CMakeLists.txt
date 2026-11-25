@@ -90,7 +90,7 @@ list( APPEND PUBLIC_EXT_LIBS rmqcpp::rmq )
 ##################
 
 # set authentication build to TRUE
-# this will require Boost 1.46 or better
+# this will require Boost 1.70 or better
 set_option( Scarab_BUILD_AUTHENTICATION TRUE )
 set_option( Scarab_BUILD_CODEC_JSON TRUE )
 

@@ -22,21 +22,14 @@ Types of changes: Added, Changed, Deprecated, Removed, Fixed, Security
   - Stale incomplete multi-chunk messages are lazily evicted after `single_message_wait_ms` ms.
   - `core::send()` no longer accepts an `amqp_channel_ptr` parameter (breaking API change).
   - `receiver::wait_for_reply()` now uses a `std::future` instead of a polling loop.
-- rmqcpp and the BDE libraries are now built from pinned sources by `install_dependencies.sh`
-  instead of being installed with vcpkg.
-
-### Fixed
-
-- `test_reply_cache.cc` is now only compiled when `Scarab_BUILD_PYTHON` is on, matching the
-  condition under which `reply_cache.cc` is compiled into the library. Builds without the
-  Python components previously failed to link `run_dl_tests`.
+  - rmqcpp and the BDE libraries it is built on have no system packages, so they are built from
+    pinned sources by the new `install_dependencies.sh` script. Boost, OpenSSL, zlib, and zstd are
+    new system-package requirements, and CMake 3.25 is needed to build those two from source.
 
 ### Removed
 
 - `library/listener.hh` and `library/listener.cc` (deleted).
 - `external/SimpleAmqpClient/` submodule (deleted).
-- All use of vcpkg, including the `VCPKG_ROOT` toolchain-file detection in the top-level
-  `CMakeLists.txt`.
 
 
 ## [2.10.12] -- 2026-06-05

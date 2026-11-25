@@ -27,6 +27,13 @@ Most of the dependencies are available as system packages:
 
     brew install cmake ninja yaml-cpp rapidjson boost openssl@3 zstd
 
+.. note::
+   CMake 3.25 or newer is needed to build rmqcpp and BDE.
+   Some still-supported distributions package an older one -- Ubuntu 22.04 is at 3.22 -- in which
+   case the packaged ``cmake`` above is not sufficient, and a newer CMake has to come from
+   `Kitware's APT repository <https://apt.kitware.com>`_ or from ``pip install cmake``.
+   ``install_dependencies.sh`` checks the CMake version before it builds anything.
+
 Two dependencies are not packaged anywhere: `rmqcpp <https://github.com/bloomberg/rmqcpp>`_,
 the AMQP client library, and the `BDE <https://github.com/bloomberg/bde>`_ libraries that
 rmqcpp is built on.
@@ -45,6 +52,18 @@ dripline-cpp build with ``CMAKE_PREFIX_PATH``::
 
     ./install_dependencies.sh --prefix=${HOME}/dripline-deps
     cmake -DCMAKE_PREFIX_PATH=${HOME}/dripline-deps ..
+
+On success the script writes a ``dripline-deps.env`` file into the install prefix, recording the
+``CMAKE_PREFIX_PATH`` and the ``OPENSSL_ROOT_DIR`` it resolved.
+Sourcing it is the simplest way to configure dripline-cpp against the same OpenSSL that rmqcpp
+was built against, which matters on macOS, where Homebrew can have several in parallel::
+
+    . ${HOME}/dripline-deps/dripline-deps.env
+    cmake -DCMAKE_PREFIX_PATH="${DRIPLINE_DEPS_CMAKE_PREFIX_PATH}" \
+        -DOPENSSL_ROOT_DIR="${DRIPLINE_DEPS_OPENSSL_ROOT_DIR}" ..
+
+An existing install can be checked with ``./install_dependencies.sh --prefix=<dir> --verify-only``,
+which confirms that everything the dripline-cpp build needs is present and then exits.
 
 Note that vcpkg is neither used nor required.
 

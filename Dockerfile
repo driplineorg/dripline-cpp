@@ -52,18 +52,21 @@ RUN apt-get update && \
 # rmqcpp and the Bloomberg BDE libraries it is built on have no system packages, so they are
 # built from source.  install_dependencies.sh clones and builds in a temporary directory, which
 # it removes when it is done, so this stays a single self-contained layer.
-ARG bde_version=4.39.0.0
-ARG rmqcpp_repo=https://github.com/driplineorg/rmqcpp.git
-ARG rmqcpp_ref=6f00fab8d4e5cd90f1548fc90679dcff8f3a753f
+#
+# The pinned versions live in install_dependencies.sh and nowhere else.  These args default to
+# empty and are passed on only when set, so that the script's own defaults apply otherwise.
+ARG bde_version=
+ARG rmqcpp_repo=
+ARG rmqcpp_ref=
 
 COPY install_dependencies.sh /usr/local/bin/install_dependencies.sh
 RUN chmod +x /usr/local/bin/install_dependencies.sh && \
     /usr/local/bin/install_dependencies.sh \
         --prefix=/usr/local \
         --jobs=${narg} \
-        --bde-version=${bde_version} \
-        --rmqcpp-repo=${rmqcpp_repo} \
-        --rmqcpp-ref=${rmqcpp_ref} && \
+        ${bde_version:+--bde-version=${bde_version}} \
+        ${rmqcpp_repo:+--rmqcpp-repo=${rmqcpp_repo}} \
+        ${rmqcpp_ref:+--rmqcpp-ref=${rmqcpp_ref}} && \
     # Drop debug info from the installed dependency libraries.  The static archives get
     # --strip-debug rather than --strip-unneeded, which would discard symbols that consumers
     # of the archives still need to link against.

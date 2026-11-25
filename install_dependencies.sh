@@ -24,9 +24,11 @@ set -euo pipefail
 ###############################################################################
 # Pinned dependency versions
 #
-# bde and bde-tools are released in lockstep and share a tag.  The rmqcpp ref
-# must be kept in sync with the rmqcpp_ref build arg in the Dockerfile and the
-# RMQCPP_REF value in .github/workflows/publish.yaml.
+# This is the only place the pinned versions live.  The Dockerfile and
+# .github/workflows/publish.yaml both defer to these defaults; the Dockerfile
+# build args exist only to override them.
+#
+# bde and bde-tools are released in lockstep and share a tag.
 ###############################################################################
 
 BDE_REPO="${BDE_REPO:-https://github.com/bloomberg/bde.git}"
@@ -51,6 +53,14 @@ GENERATOR="${GENERATOR:-}"      # empty means "Ninja if available"
 OPENSSL_ROOT="${OPENSSL_ROOT:-}"
 EXTRA_PREFIX_PATH="${EXTRA_PREFIX_PATH:-}"
 JOBS="${JOBS:-}"
+VERIFY_ONLY="${VERIFY_ONLY:-FALSE}"
+
+# The minimum CMake that the dependencies themselves require: bde needs 3.24, rmqcpp needs 3.25
+REQUIRED_CMAKE_VERSION=3.25
+
+# Written into the install prefix so that the dripline-cpp build can be pointed at the same
+# CMAKE_PREFIX_PATH and the same OpenSSL that rmqcpp was built against
+DEPS_ENV_NAME=dripline-deps.env
 
 ###############################################################################
 # Usage
@@ -82,14 +92,18 @@ Options:
                           package, since rmqcpp requires find_package(zstd
                           CONFIG).
   --openssl-root=DIR      Value for OPENSSL_ROOT_DIR (default: on macOS,
-                          \$(brew --prefix openssl@3); otherwise unset)
+                          \$(brew --prefix openssl@3) when that formula is
+                          installed; otherwise left to CMake)
   --extra-prefix-path=P   Appended to CMAKE_PREFIX_PATH (default: on macOS,
                           \$(brew --prefix); otherwise empty)
+  --verify-only           Check that an existing install under --prefix is
+                          complete, then exit without building anything
   -h, --help              Show this message
 
 Every option can also be given as an environment variable: PREFIX, JOBS,
 BUILD_TYPE, GENERATOR, SRC_DIR, KEEP_SOURCES, BDE_VERSION, BDE_TOOLS_VERSION,
-RMQCPP_REPO, RMQCPP_REF, COMPRESSION, OPENSSL_ROOT, EXTRA_PREFIX_PATH.
+RMQCPP_REPO, RMQCPP_REF, COMPRESSION, OPENSSL_ROOT, EXTRA_PREFIX_PATH,
+VERIFY_ONLY.
 
 Required system packages
   Debian/Ubuntu:
@@ -98,13 +112,36 @@ Required system packages
   macOS (Homebrew):
       brew install cmake ninja boost openssl@3 zstd
 
-  CMake 3.25 or newer is required (bde needs 3.24, rmqcpp needs 3.25).
+  CMake ${REQUIRED_CMAKE_VERSION} or newer is required (bde needs 3.24, rmqcpp needs 3.25).
+  Some still-supported distributions package an older CMake than that --
+  Ubuntu 22.04 is at 3.22 -- in which case install a newer one from Kitware's
+  APT repository (https://apt.kitware.com) or with "pip install cmake".
   rmqcpp needs only the Boost headers, but dripline-cpp also links
   Boost.Filesystem, so a full Boost installation is the simpler choice.
+
+On success the install prefix gets a ${DEPS_ENV_NAME} file recording the
+CMAKE_PREFIX_PATH and OPENSSL_ROOT_DIR that dripline-cpp should be configured
+with, so that it resolves the same OpenSSL that rmqcpp was built against.
 
 Note that dripline-cpp itself additionally needs yaml-cpp and RapidJSON, which
 are not handled here because they are available as system packages everywhere.
 EOF
+}
+
+usage_error()
+{
+    echo "Error: $*" >&2
+    echo "Run \"$( basename "$0" ) --help\" for usage." >&2
+    exit 1
+}
+
+# require_value <option> <number of remaining arguments>
+#
+# Checks that a space-separated option was actually given a value, so that e.g. a trailing
+# "--prefix" produces a usage error instead of an "unbound variable" abort under "set -u".
+require_value()
+{
+    [ "$2" -ge 2 ] || usage_error "option \"$1\" requires a value"
 }
 
 ###############################################################################
@@ -120,35 +157,32 @@ while [ $# -gt 0 ]; do
 
     case "$1" in
         --prefix=*)            PREFIX="${ARG_VALUE}" ;;
-        --prefix)              PREFIX="$2"; shift ;;
+        --prefix)              require_value "$1" $#; PREFIX="$2"; shift ;;
         --jobs=*)              JOBS="${ARG_VALUE}" ;;
-        --jobs)                JOBS="$2"; shift ;;
+        --jobs)                require_value "$1" $#; JOBS="$2"; shift ;;
         --build-type=*)        BUILD_TYPE="${ARG_VALUE}" ;;
-        --build-type)          BUILD_TYPE="$2"; shift ;;
+        --build-type)          require_value "$1" $#; BUILD_TYPE="$2"; shift ;;
         --generator=*)         GENERATOR="${ARG_VALUE}" ;;
-        --generator)           GENERATOR="$2"; shift ;;
+        --generator)           require_value "$1" $#; GENERATOR="$2"; shift ;;
         --src-dir=*)           SRC_DIR="${ARG_VALUE}" ;;
-        --src-dir)             SRC_DIR="$2"; shift ;;
+        --src-dir)             require_value "$1" $#; SRC_DIR="$2"; shift ;;
         --keep-sources)        KEEP_SOURCES=TRUE ;;
         --bde-version=*)       BDE_VERSION="${ARG_VALUE}" ;;
-        --bde-version)         BDE_VERSION="$2"; shift ;;
+        --bde-version)         require_value "$1" $#; BDE_VERSION="$2"; shift ;;
         --bde-tools-version=*) BDE_TOOLS_VERSION="${ARG_VALUE}" ;;
-        --bde-tools-version)   BDE_TOOLS_VERSION="$2"; shift ;;
+        --bde-tools-version)   require_value "$1" $#; BDE_TOOLS_VERSION="$2"; shift ;;
         --rmqcpp-repo=*)       RMQCPP_REPO="${ARG_VALUE}" ;;
-        --rmqcpp-repo)         RMQCPP_REPO="$2"; shift ;;
+        --rmqcpp-repo)         require_value "$1" $#; RMQCPP_REPO="$2"; shift ;;
         --rmqcpp-ref=*)        RMQCPP_REF="${ARG_VALUE}" ;;
-        --rmqcpp-ref)          RMQCPP_REF="$2"; shift ;;
+        --rmqcpp-ref)          require_value "$1" $#; RMQCPP_REF="$2"; shift ;;
         --no-compression)      COMPRESSION=OFF ;;
         --openssl-root=*)      OPENSSL_ROOT="${ARG_VALUE}" ;;
-        --openssl-root)        OPENSSL_ROOT="$2"; shift ;;
+        --openssl-root)        require_value "$1" $#; OPENSSL_ROOT="$2"; shift ;;
         --extra-prefix-path=*) EXTRA_PREFIX_PATH="${ARG_VALUE}" ;;
-        --extra-prefix-path)   EXTRA_PREFIX_PATH="$2"; shift ;;
+        --extra-prefix-path)   require_value "$1" $#; EXTRA_PREFIX_PATH="$2"; shift ;;
+        --verify-only)         VERIFY_ONLY=TRUE ;;
         -h|--help)             usage; exit 0 ;;
-        *)
-            echo "Error: unrecognized option \"$1\"" >&2
-            echo "Run \"$( basename "$0" ) --help\" for usage." >&2
-            exit 1
-            ;;
+        *)                     usage_error "unrecognized option \"$1\"" ;;
     esac
     shift
 done
@@ -191,6 +225,57 @@ has_sized_deallocation()
     "${CXX:-c++}" -std=c++17 "$@" -fsyntax-only "${probe}" > /dev/null 2>&1
 }
 
+# verify_install
+#
+# Checks that everything the dripline-cpp build needs is present under PREFIX.  A wrong
+# CMAKE_INSTALL_LIBDIR, an install that quietly skipped a component, or a partially restored CI
+# cache shows up here rather than much later in the dripline-cpp build.
+verify_install()
+{
+    local f
+    local n_missing=0
+
+    for f in \
+        "${PREFIX}/${DEPS_ENV_NAME}" \
+        "${PREFIX}/lib/cmake/bsl/bslConfig.cmake" \
+        "${PREFIX}/lib/cmake/bdl/bdlConfig.cmake" \
+        "${PREFIX}/lib/cmake/bal/balConfig.cmake" \
+        "${PREFIX}/lib/libbsl.a" \
+        "${PREFIX}/lib/librmq.a" \
+        "${PREFIX}/share/rmqcpp/rmqcppConfig.cmake" \
+        "${PREFIX}/share/rmqcpp/rmqcppTargets.cmake" \
+        "${PREFIX}/include/rmqa_rabbitcontext.h" \
+        "${PREFIX}/include/bsl_memory.h"
+    do
+        if [ -e "${f}" ]; then
+            echo "    ok      ${f}"
+        else
+            echo "    MISSING ${f}"
+            n_missing=$(( n_missing + 1 ))
+        fi
+    done
+
+    if [ "${n_missing}" -ne 0 ]; then
+        echo "Error: ${n_missing} expected file(s) are not installed under ${PREFIX}" >&2
+        return 1
+    fi
+}
+
+# write_deps_env
+#
+# Records what the dripline-cpp build needs to be told about this install.  It lives inside the
+# prefix so that it travels with the prefix, including when the prefix is restored from a cache.
+write_deps_env()
+{
+    cat > "${PREFIX}/${DEPS_ENV_NAME}" <<EOF
+# Generated by install_dependencies.sh -- source this, then pass the values to CMake:
+#     . ${PREFIX}/${DEPS_ENV_NAME}
+#     cmake -S . -B build -DCMAKE_PREFIX_PATH="\${DRIPLINE_DEPS_CMAKE_PREFIX_PATH}"
+DRIPLINE_DEPS_CMAKE_PREFIX_PATH='${CMAKE_PREFIX_PATH_ARG}'
+DRIPLINE_DEPS_OPENSSL_ROOT_DIR='${OPENSSL_ROOT}'
+EOF
+}
+
 # fetch_repo <url> <ref> <destination>
 #
 # Shallow-fetches a single ref, which may be a branch, a tag, or a commit SHA.
@@ -210,6 +295,23 @@ fetch_repo()
     run git -C "${dest}" checkout --quiet --detach FETCH_HEAD
     echo "    ${repo} @ ${ref} -> $( git -C "${dest}" rev-parse HEAD )"
 }
+
+###############################################################################
+# --verify-only
+#
+# Checks an existing install and exits.  Nothing is fetched, built, or created.
+###############################################################################
+
+if [ "${VERIFY_ONLY}" = "TRUE" ]; then
+    [ -d "${PREFIX}" ] || usage_error "prefix \"${PREFIX}\" does not exist"
+    PREFIX="$( cd "${PREFIX}" && pwd )"
+
+    info "Verifying the installation in ${PREFIX}"
+    verify_install
+    echo
+    echo "The installation is complete."
+    exit 0
+fi
 
 ###############################################################################
 # Setup
@@ -241,8 +343,17 @@ fi
 # Homebrew installs outside of CMake's default search path, so point CMake at it
 if [ "$( uname -s )" = "Darwin" ] && command -v brew > /dev/null 2>&1; then
     [ -n "${EXTRA_PREFIX_PATH}" ] || EXTRA_PREFIX_PATH="$( brew --prefix )"
-    if [ -z "${OPENSSL_ROOT}" ] && brew --prefix openssl@3 > /dev/null 2>&1; then
-        OPENSSL_ROOT="$( brew --prefix openssl@3 )"
+    # "brew --prefix openssl@3" exits 0 and prints a path even when the formula is not installed,
+    # which would hand CMake an OPENSSL_ROOT_DIR that does not exist.  FindOpenSSL treats that as a
+    # hint rather than a constraint, so it would silently fall back to some other OpenSSL.
+    # "--installed" makes brew exit non-zero instead.
+    if [ -z "${OPENSSL_ROOT}" ]; then
+        if brew --prefix --installed openssl@3 > /dev/null 2>&1; then
+            OPENSSL_ROOT="$( brew --prefix --installed openssl@3 )"
+        else
+            echo "Note: openssl@3 is not installed; leaving the OpenSSL choice to CMake."
+            echo "      Pass --openssl-root=DIR to pin it."
+        fi
     fi
 fi
 
@@ -277,7 +388,58 @@ dripline-cpp dependency build
   bde-tools:        ${BDE_TOOLS_VERSION}
   rmqcpp:           ${RMQCPP_REF}
   zstd compression: ${COMPRESSION}
+  OpenSSL root:     ${OPENSSL_ROOT:-(left to CMake)}
 EOF
+
+###############################################################################
+# Preflight
+#
+# Everything checked here would otherwise fail much later: a too-old CMake fails partway into
+# bde's configure, and a missing zstd CMake package fails in rmqcpp's configure, which is step
+# 3/3 and so lands only after the long bde build.
+###############################################################################
+
+info "Checking the build environment"
+
+command -v cmake > /dev/null 2>&1 || usage_error "cmake was not found on PATH"
+command -v git > /dev/null 2>&1 || usage_error "git was not found on PATH"
+
+CMAKE_VERSION="$( cmake --version | head -1 | awk '{ print $3 }' )"
+if [ "$( printf '%s\n%s\n' "${REQUIRED_CMAKE_VERSION}" "${CMAKE_VERSION}" | sort -V | head -1 )" \
+        != "${REQUIRED_CMAKE_VERSION}" ]; then
+    echo "Error: CMake ${REQUIRED_CMAKE_VERSION} or newer is required, but ${CMAKE_VERSION} was found" >&2
+    echo "Install a newer CMake from https://apt.kitware.com or with \"pip install cmake\"." >&2
+    exit 1
+fi
+echo "    ok      cmake ${CMAKE_VERSION}"
+
+printf '%s\n' 'int main() { return 0; }' > "${SRC_DIR}/cxx17-probe.cc"
+if ! "${CXX:-c++}" -std=c++17 -fsyntax-only "${SRC_DIR}/cxx17-probe.cc" > /dev/null 2>&1; then
+    echo "Error: \"${CXX:-c++}\" cannot compile C++17" >&2
+    exit 1
+fi
+echo "    ok      ${CXX:-c++} accepts -std=c++17"
+
+# rmqcpp uses find_package(zstd CONFIG), so a zstd without a CMake config package is not enough.
+# Probing with CMake itself is the only way to answer this the same way rmqcpp will.
+if [ "${COMPRESSION}" = "ON" ]; then
+    mkdir -p "${SRC_DIR}/zstd-probe"
+    cat > "${SRC_DIR}/zstd-probe/CMakeLists.txt" <<EOF
+cmake_minimum_required( VERSION ${REQUIRED_CMAKE_VERSION} )
+# CXX rather than NONE: zstdConfig.cmake does find_dependency( Threads ), and FindThreads
+# requires that either C or CXX be enabled
+project( zstd_probe LANGUAGES CXX )
+find_package( zstd CONFIG REQUIRED )
+EOF
+    if cmake -S "${SRC_DIR}/zstd-probe" -B "${SRC_DIR}/zstd-probe-build" \
+            "-DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH_ARG}" > /dev/null 2>&1; then
+        echo "    ok      zstd CMake config package"
+    else
+        echo "Error: find_package(zstd CONFIG) failed, which rmqcpp requires when compression is on" >&2
+        echo "Install a zstd that ships a CMake config package, or re-run with --no-compression." >&2
+        exit 1
+    fi
+fi
 
 ###############################################################################
 # 1/3: bde-tools
@@ -382,35 +544,13 @@ run cmake --install "${SRC_DIR}/rmqcpp-build"
 
 ###############################################################################
 # Verification
-#
-# A wrong CMAKE_INSTALL_LIBDIR, or an install that quietly skipped a component,
-# shows up here rather than much later in the dripline-cpp build.
 ###############################################################################
 
 info "Verifying the installation"
 
-N_MISSING=0
-for f in \
-    "${PREFIX}/lib/cmake/bsl/bslConfig.cmake" \
-    "${PREFIX}/lib/cmake/bdl/bdlConfig.cmake" \
-    "${PREFIX}/lib/cmake/bal/balConfig.cmake" \
-    "${PREFIX}/lib/libbsl.a" \
-    "${PREFIX}/lib/librmq.a" \
-    "${PREFIX}/share/rmqcpp/rmqcppConfig.cmake" \
-    "${PREFIX}/share/rmqcpp/rmqcppTargets.cmake" \
-    "${PREFIX}/include/rmqa_rabbitcontext.h" \
-    "${PREFIX}/include/bsl_memory.h"
-do
-    if [ -e "${f}" ]; then
-        echo "    ok      ${f}"
-    else
-        echo "    MISSING ${f}"
-        N_MISSING=$(( N_MISSING + 1 ))
-    fi
-done
+write_deps_env
 
-if [ "${N_MISSING}" -ne 0 ]; then
-    echo "Error: ${N_MISSING} expected file(s) were not installed" >&2
+if ! verify_install; then
     echo "The source and build trees were left in ${SRC_DIR}" >&2
     exit 1
 fi
@@ -429,5 +569,9 @@ fi
 cat <<EOF
 
 Done.  Configure dripline-cpp with:
-    cmake -S . -B build -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH_ARG}
+    cmake -S . -B build -DCMAKE_PREFIX_PATH="${CMAKE_PREFIX_PATH_ARG}"${OPENSSL_ROOT:+ \\
+        -DOPENSSL_ROOT_DIR="${OPENSSL_ROOT}"}
+
+These values were also written to ${PREFIX}/${DEPS_ENV_NAME}:
+    . ${PREFIX}/${DEPS_ENV_NAME}
 EOF
