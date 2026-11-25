@@ -154,7 +154,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-26.04, macos-latest]
+        os: [ubuntu-latest, macos-latest]
 
 
     steps:
@@ -235,10 +235,9 @@ jobs:
           cd build
           make -j$(getconf _NPROCESSORS_ONLN) install
 
-      - name: Run tests
+      - name: Run unit tests
         run: |
-          cd build/testing
-          ./run_dl_tests
+          build/bin/run_dl_tests
 
 # For debugging
 #      - name: Setup tmate session
@@ -248,7 +247,7 @@ jobs:
 
   build_and_push:
 
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
 
     env:
       NARG: 2
